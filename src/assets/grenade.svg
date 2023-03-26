@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="17.502224mm"
+   height="30.080812mm"
+   viewBox="0 0 17.502224 30.080812"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="grenade.png"
+   inkscape:export-xdpi="54.041092"
+   inkscape:export-ydpi="54.041092"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="grenade.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.587745"
+     inkscape:cx="-2.7050579"
+     inkscape:cy="131.19531"
+     inkscape:window-width="2486"
+     inkscape:window-height="1326"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid351"
+       originx="-7.0626773"
+       originy="-1.7325692" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-7.0626774,-1.7325692)">
+    <ellipse
+       style="fill:#225500;stroke-width:0.767814;stroke-linecap:round;stroke-dasharray:1.53564, 4.6069"
+       id="path349-3"
+       cx="15.813789"
+       cy="20.38559"
+       rx="8.751112"
+       ry="11.427792" />
+    <ellipse
+       style="fill:#338000;stroke-width:0.390472;stroke-linecap:round;stroke-dasharray:0.780946, 2.34284"
+       id="path349"
+       cx="15.804202"
+       cy="6.8845463"
+       rx="5.0201769"
+       ry="5.1519771" />
+    <path
+       style="fill:#ff0000;stroke-width:0.767814;stroke-linecap:round;stroke-dasharray:1.53564, 4.6069;fill-opacity:0.24148551"
+       d="M 15.792164,1.6474984 C 11.618477,1.4764896 9.2203676,7.0265413 11.915915,10.069206 4.7379216,14.99042 5.4597596,28.584469 14.094763,31.50872 20.590628,33.048081 25.116228,25.493093 24.543492,19.771493 24.413365,16.06455 22.865636,12.160134 19.680299,10.056287 22.394111,6.9065195 19.961008,1.5429949 15.792164,1.6474984 Z"
+       id="path950"
+       inkscape:label="collision" />
+  </g>
+</svg>
