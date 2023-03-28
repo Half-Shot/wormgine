@@ -1,24 +1,30 @@
-import { Application, Assets, Graphics, GraphicsGeometry, Rectangle, RoundedRectangle } from 'pixi.js';
+import { Application, Assets } from 'pixi.js';
 import { manifest } from './assets/manifest';
 import { Grenade } from './entities/grenade';
-import Matter, { Bodies, Common, Composite, Engine } from "matter-js";
+import Matter, { Common, Engine, Events } from "matter-js";
 
 import * as polyDecomp from 'poly-decomp-es';
 
 import "pathseg";
+import { IGameEntity, IMatterEntity } from './entities/entity';
+import { Terrain } from './entities/terrain';
+import { BazookaShell } from './entities/bazookaShell';
+import { BitmapTerrain } from './entities/bitmapTerrain';
 
 export class Game {
     private readonly pixiApp: Application;
     private readonly matterEngine: Engine;
+    private readonly matterBodiesToEntity = new Map<number, IMatterEntity>();
+
     constructor() {
         // The application will create a renderer using WebGL, if possible,
         // with a fallback to a canvas render. It will also setup the ticker
         // and the root stage PIXI.Container
-        this.pixiApp = new Application({ });
+        this.pixiApp = new Application({ width: 1280, height: 720 });
         this.matterEngine = Engine.create({
             gravity: {
-                // x: 0.75,
-                y: 0.75
+                x: 0.75,
+                y: 0.5,
             }
             // gravity: {
             //     scale: 1,
@@ -34,50 +40,66 @@ export class Game {
             Assets.loadBundle(bundle.name)
         ));
         Grenade.texture = b[0].grenade;
+        BazookaShell.texture = b[0].grenade;
+        BitmapTerrain.texture = b[0].island1;
     }
 
-    public setupMatter() {
-        const width = this.pixiApp.view.width;
-        const height = this.pixiApp.view.height - 10;
-        const wallBottom = Bodies.rectangle(
-            width / 2,
-            height,
-            this.pixiApp.view.width,
-            10,
-            // this.pixiApp.stage.width / 2,
-            // this.pixiApp.stage.height,
-            // this.pixiApp.stage.width,
-            // 10,
-            {
-              isStatic: true,
-            }
-        );
-        const rect = new Rectangle(wallBottom.position.x - (width/2), wallBottom.position.y - 5, width, 50);
-        const gfx = new Graphics();
-        gfx.lineStyle(10, 0xFFBD01, 1);
-        gfx.beginFill(0xC34288, 1);
-        gfx.drawShape(rect);
-        gfx.endFill();
-        this.pixiApp.stage.addChild(gfx);
-        Composite.add(this.matterEngine.world, [ wallBottom ]);
-    }
-
-    public async run() {
-        console.log('Running');
-        this.setupMatter();
-        
-        const entity = new Grenade({ x: 50, y: 50 }, { x: 0.001, y: 0 });
+    public async addEntity(entity: IGameEntity) {
         await entity.create(this.pixiApp.stage, this.matterEngine.world);
+        let entLabels: number[] = [];
+        if ('bodies' in entity) {
+            const matEnt = entity as IMatterEntity;
+            for (const body of matEnt.bodies) { 
+                this.matterBodiesToEntity.set(body.id, matEnt);
+                entLabels.push(body.id);
+            }
+            console.log("Logged ", entLabels, "for", matEnt);
+        }
 
         if (entity.update) {
             const tickerFn = (dt: number) => {
-                entity.update(dt);
+                entity.update!(dt);
                 if (entity.destroyed) {
-                    this.pixiApp.ticker.remove(tickerFn)
+                    this.pixiApp.ticker.remove(tickerFn);
+                    entLabels.forEach(l => this.matterBodiesToEntity.delete(l));
                 }
             };
             this.pixiApp.ticker.add(tickerFn, undefined, entity.priority)
         }
+    }
+
+    public async run() {
+        console.log('Running');
+        this.addEntity(new BitmapTerrain(this.pixiApp.view.width, this.pixiApp.view.height, this.matterEngine.world));
+        let angle = 0;
+        this.canvas.addEventListener('click', (evt: MouseEvent) => {
+            angle += 0.25;
+            console.log('Click', angle);
+            const rect = (evt.target as HTMLCanvasElement).getBoundingClientRect();
+            const entity = new BazookaShell({ x: evt.x - rect.left, y: evt.y - rect.top }, angle, 0.001, 0.03);
+            this.addEntity(entity);
+        });
+
+        // an example of using collisionStart event on an engine
+        Events.on(this.matterEngine, 'collisionStart', (event) => {
+            const [pairA] = event.pairs;
+            console.log('collisionStart', pairA);
+            console.log(this.matterBodiesToEntity);
+            const entA = this.matterBodiesToEntity.get(pairA.bodyA.id) ?? this.matterBodiesToEntity.get(pairA.bodyA.parent.id);
+            const entB = this.matterBodiesToEntity.get(pairA.bodyB.id) ?? this.matterBodiesToEntity.get(pairA.bodyB.parent.id);
+
+            
+
+            if (!entA || !entB) {
+                console.warn(`Untracked collision between ${pairA.bodyA.id} (${entA}) and ${pairA.bodyB.id} (${entB})`);
+                return;
+            }
+
+            const contact = pairA.activeContacts[0];
+
+            entA.onCollision?.(entB, contact);
+            entB.onCollision?.(entA, contact);
+        });
 
         Matter.Runner.run(this.matterEngine);
     }

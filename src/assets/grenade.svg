@@ -28,9 +28,9 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="2.587745"
-     inkscape:cx="-2.7050579"
-     inkscape:cy="131.19531"
-     inkscape:window-width="2486"
+     inkscape:cx="-6.9558631"
+     inkscape:cy="132.35462"
+     inkscape:window-width="809"
      inkscape:window-height="1326"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -66,7 +66,7 @@
     <path
        style="fill:#ff0000;stroke-width:0.767814;stroke-linecap:round;stroke-dasharray:1.53564, 4.6069;fill-opacity:0.24148551"
        d="M 15.792164,1.6474984 C 11.618477,1.4764896 9.2203676,7.0265413 11.915915,10.069206 4.7379216,14.99042 5.4597596,28.584469 14.094763,31.50872 20.590628,33.048081 25.116228,25.493093 24.543492,19.771493 24.413365,16.06455 22.865636,12.160134 19.680299,10.056287 22.394111,6.9065195 19.961008,1.5429949 15.792164,1.6474984 Z"
-       id="path950"
+       id="collision"
        inkscape:label="collision" />
   </g>
 </svg>
