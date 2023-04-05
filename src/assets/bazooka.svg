@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="9.144146mm"
+   height="20.320208mm"
+   viewBox="0 0 9.1441459 20.320207"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="bazooka.png"
+   inkscape:export-xdpi="54.041092"
+   inkscape:export-ydpi="54.041092"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="bazooka.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="5.17549"
+     inkscape:cx="15.457474"
+     inkscape:cy="69.848459"
+     inkscape:window-width="1228"
+     inkscape:window-height="1326"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid351"
+       originx="-10.934212"
+       originy="-3.3782161" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-10.934212,-3.3782161)">
+    <g
+       id="g1320">
+      <rect
+         style="fill:#ffcc00;stroke-width:0.431468;stroke-linecap:round;stroke-dasharray:0.862936, 2.58881"
+         id="rect1272-5"
+         width="7.3557525"
+         height="14.056303"
+         x="11.900608"
+         y="9.6441402"
+         ry="7.0281515"
+         rx="0.93412143" />
+      <ellipse
+         style="fill:#ffcc00;stroke-width:0.499999;stroke-linecap:round;stroke-dasharray:1, 3"
+         id="path930"
+         cx="15.481341"
+         cy="8.6149616"
+         rx="3.0591547"
+         ry="5.2344518" />
+      <ellipse
+         style="fill:#ff0000;stroke-width:0.591778;stroke-linecap:round;stroke-dasharray:1.18356, 3.55067"
+         id="ellipse1135"
+         cx="15.481341"
+         cy="10.20246"
+         rx="4.2852931"
+         ry="5.2344518" />
+      <rect
+         style="fill:#1a1a1a;stroke-width:0.499999;stroke-linecap:round;stroke-dasharray:1, 3"
+         id="rect1272"
+         width="9.1445618"
+         height="15.1837"
+         x="10.947462"
+         y="7.0940189"
+         ry="7.5918498"
+         rx="1.1612859" />
+    </g>
+    <path
+       id="collision"
+       style="fill:#ffffff;fill-opacity:0.01;stroke-width:0.431468;stroke-linecap:round;stroke-dasharray:0.862936, 2.58881"
+       d="M 15.467786,3.3782161 A 3.0591547,5.2344518 0 0 0 12.775443,6.13257 4.2852931,5.2344518 0 0 0 12.009599,7.1123551 c -0.21492,0.101411 -0.412996,0.583188 -0.579293,1.3415202 a 4.2852931,5.2344518 0 0 0 -0.239262,1.458826 c -0.16071,1.3020887 -0.256832,2.9603447 -0.256832,4.7712847 0,4.20588 0.517818,7.591785 1.16117,7.591785 h 0.16123 c 0.156642,0.893073 0.352259,1.422652 0.564823,1.422652 h 5.487521 c 0.212564,0 0.408181,-0.529579 0.564823,-1.422652 h 0.04341 c 0.643351,0 1.161169,-3.385905 1.161169,-7.591785 0,-4.205881 -0.517818,-7.5923015 -1.161169,-7.5923015 h -0.0016 A 4.2852931,5.2344518 0 0 0 18.160645,6.1284358 3.0591547,5.2344518 0 0 0 15.467786,3.3782161 Z"
+       inkscape:label="collision" />
+  </g>
+</svg>

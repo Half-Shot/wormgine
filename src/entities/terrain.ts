@@ -1,8 +1,7 @@
-import Matter, { Composite, Body, Vector, Bodies, Collision, Detector, Query, Bounds, Vertices } from "matter-js";
-import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, ViewSystem, Rectangle } from "pixi.js";
-import { IMatterEntity } from "./entity";
+import { Composite, Body, Vector, Bodies, Query } from "matter-js";
+import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, Rectangle } from "pixi.js";
 
-export class Terrain implements IMatterEntity {
+export class Terrain {
     priority = UPDATE_PRIORITY.NORMAL;
     destroyed = false;
 
@@ -38,7 +37,6 @@ export class Terrain implements IMatterEntity {
             const newY = Math.min(last.y, curr.y);
             parts.push(Bodies.rectangle(last.x, newY, curr.x - last.x, Terrain.TERRIAN_HEIGHT, { isStatic: true }));
         }
-        console.log(parts);
         this.parts = parts;
 
         // // Convert to simple bodies
@@ -55,7 +53,6 @@ export class Terrain implements IMatterEntity {
     async create(parent: Container<DisplayObject>, composite: Composite) {
         parent.addChild(this.gfx);
         Composite.add(composite, this.parts);
-        //console.log(this.terrainBody.bounds);
     }
 
     update?(dt: number): void {

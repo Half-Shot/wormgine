@@ -1,17 +1,24 @@
 import { Container, UPDATE_PRIORITY } from "pixi.js";
-import { Body, Contact } from "matter-js";
+import { Body, Contact, Vector } from "matter-js";
 
 export interface IGameEntity {
 
     priority: UPDATE_PRIORITY;
     destroyed: boolean;
 
-    create(parent: Container, composite: Matter.Composite): PromiseLike<void>;
     update?(dt: number): void;
     destroy(): void;
 }
 
 export interface IMatterEntity extends IGameEntity {
-    bodies: Body[];
-    onCollision?(other: IMatterEntity, contactPoint: Contact): void;
+    // TODO: Wrong shape?
+    explodeHandler?: (point: Vector, radius: number) => void;
+    entityOwnsBody(bodyId: number): boolean;
+    /**
+     * 
+     * @param other 
+     * @param contactPoint 
+     * @returns True if the collision should stop being processed
+     */
+    onCollision?(other: IMatterEntity, contactPoint: Vector): boolean;
 }

@@ -1,17 +1,8 @@
-import Matter, { Composite, Body, Vector, Bodies, Collision, Detector, Query, Bounds, Vertices } from "matter-js";
-import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, ViewSystem, Rectangle, Texture, Sprite, RenderTexture, ImageResource, ImageBitmapResource } from "pixi.js";
+import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
+import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, Rectangle, Texture, Sprite, ImageBitmapResource } from "pixi.js";
 import { IMatterEntity } from "./entity";
-import { SpriteEntity } from "./spriteEntity";
 
-function rgbaToUint(red: number, green: number, blue: number, alpha = 255): number {
-    const r = red & 0xFF;
-    const g = green & 0xFF;
-    const b = blue & 0xFF;
-    const a = alpha & 0xFF;
-    
-    return (r << 24) + (g << 16) + (b << 8) + (a);
-    
-}
+
 
 export class BitmapTerrain implements IMatterEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
@@ -21,26 +12,44 @@ export class BitmapTerrain implements IMatterEntity {
         return false;
     }
 
-    public static texture: Texture;
-
-    private static SEGMENT_WIDTH = 5;
-    private static TERRIAN_HEIGHT = 5;
-    private static TERRAIN_VARIANCE = 15;
-
     private readonly gfx: Graphics = new Graphics();
-    private readonly parts: Body[] = [];
+    private parts: Body[] = [];
+
+    private bounds: Rectangle;
 
     private readonly canvas: HTMLCanvasElement;
     private texture: Texture;
+    private textureBackdrop: Texture;
     private readonly sprite: Sprite;
+    private readonly spriteBackdrop: Sprite;
+    private lastBoundaryChange?: Rectangle;
 
-    private textureModified: boolean;
-
-    get bodies() {
-        return this.parts;
+    public entityOwnsBody(bodyId: number) {
+        // TODO: Use a set
+        return this.parts.some(b => b.id === bodyId);
     }
 
-    constructor(viewWidth: number, viewHeight: number, private readonly composite: Composite) {
+    public castRay(point: Vector, distance: number, angle: number): Collision[] {
+        // https://stackoverflow.com/a/839931
+        const x = point.x + (distance * Math.cos(angle));
+        const y = point.y + (distance * Math.sin(angle));
+        return Query.ray(this.parts, point, Vector.create(x, y)).map(r => r);
+    }
+
+    public pointInTerrain(point: Vector, radius: number): Collision[] {
+        // Avoid costly iteration with this one neat trick.
+        if (!this.bounds.contains(point.x, point.y)) {
+            return [];
+        }
+        return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
+    }
+    
+    static create(viewWidth: number, viewHeight: number, composite: Composite, texture: Texture) {
+        const terrain = new BitmapTerrain(viewWidth, viewHeight, composite, texture);
+        return terrain;
+    }
+
+    private constructor(viewWidth: number, viewHeight: number, private readonly composite: Composite, texture: Texture) {
         this.canvas = document.createElement('canvas');
         this.canvas.width = viewWidth;
         this.canvas.height = viewHeight;
@@ -48,77 +57,169 @@ export class BitmapTerrain implements IMatterEntity {
         if (!context) {
             throw Error('Failed to get render context of canvas');
         }
-        const bitmap = (BitmapTerrain.texture.baseTexture.resource as ImageBitmapResource).source;
-        context.drawImage(bitmap as CanvasImageSource, 0, 0);
+        
+
+        const bitmap = (texture.baseTexture.resource as ImageBitmapResource).source;
+        context.drawImage(bitmap as CanvasImageSource,  (viewWidth / 2) - (texture.width / 2), viewHeight - texture.height);
         this.texture = Texture.from(this.canvas);
+        this.textureBackdrop = Texture.from(this.canvas.toDataURL());
         this.sprite = new Sprite(this.texture);
-        this.sprite.x = 0
-        this.sprite.y = 20;
+        this.sprite.anchor.x = 0;
+        this.sprite.anchor.y = 0;
+
+        // Somehow make rain fall infront of this.
+        this.spriteBackdrop = new Sprite(this.textureBackdrop);
+        this.spriteBackdrop.anchor.x = 0;
+        this.spriteBackdrop.anchor.y = 0;
+        this.spriteBackdrop.tint = '0x220000';
+
+        this.bounds = new Rectangle(Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,0,0);
 
         // Calculate bounding boxes
         this.calculateBoundaryVectors();
     }
 
-    calculateBoundaryVectors() {
+    addToWorld(parent: Container<DisplayObject>) {
+        parent.addChild(this.spriteBackdrop, this.sprite, this.gfx);
+    }
+
+    calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.canvas.width, boundaryHeight = this.canvas.height) {
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');
         }
-        const imgData = context.getImageData(0,0,this.canvas.width, this.canvas.height);
+
+        this.lastBoundaryChange = new Rectangle(boundaryX, boundaryY, boundaryWidth, boundaryHeight);
+
+        // Remove everything within the boundaries 
+        const removableBodies = this.parts.filter(
+            (b) => (b.position.x >= boundaryX && b.position.x <= boundaryX + boundaryWidth) && 
+            (b.position.y >= boundaryY && b.position.y <= boundaryY + boundaryHeight)
+        )
+
+        console.log("Removing", removableBodies.length, "bodies");
+        for (const body of removableBodies) {
+            Composite.remove(this.composite, body);
+        }
+        this.parts = this.parts.filter(b => !removableBodies.some(rB => b.id === rB.id));
+
+
+        const imgData = context.getImageData(boundaryX, boundaryY, boundaryWidth, boundaryHeight);
         const boundaryVectors = new Set<Vector>();
         const xBoundaryTracker= new Array(imgData.width);
         const yBoundaryTracker = new Array(imgData.height);
-        const lengthOfOneRow = this.canvas.width*4;
+
+        const lengthOfOneRow = imgData.width*4;
         for (let i = 0; i < imgData.data.length; i += 4) {
-            const x = i % lengthOfOneRow;
+            const x = (i % lengthOfOneRow) / 4;
             const y = Math.ceil(i / lengthOfOneRow);
-            const [r,g,b,a] = imgData.data.slice(i, i+4);
-            if (a !== 0) {
-                if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
-                    boundaryVectors.add(Vector.create(x,y));
-                    xBoundaryTracker[x] = true;
-                    yBoundaryTracker[y] = true;
-                    imgData.data[i] = 255;
-                    imgData.data[i+1] = 0;
-                    imgData.data[i+2] = 0;
-                    imgData.data[i+3] = 255;
-                }
-            } else if (a === 0 && (xBoundaryTracker[x] || yBoundaryTracker[y])) {
-                boundaryVectors.add(Vector.create(x,y));
-                imgData.data[i] = 255;
-                imgData.data[i+1] = 0;
-                imgData.data[i+2] = 0;
-                imgData.data[i+3] = 255;
-                xBoundaryTracker[x] = false;
-                yBoundaryTracker[y] = false;
-            } else {
+            const realX = x + boundaryX;
+            const realY = y + boundaryY;
+            const [_r,_g,_b,a] = imgData.data.slice(i, i+4);
+
+            if (x === 0) {
                 xBoundaryTracker[x] = false;
                 yBoundaryTracker[y] = false;
             }
+
+            if (a > 5) {
+                if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
+                    // This is to stop us from drawing straight lines down
+                    // when we have a boundary, but I don't know why this works.
+                    if (x > 1 && y > 1) {
+                        boundaryVectors.add(Vector.create(realX,realY));
+                    }
+                    xBoundaryTracker[x] = true;
+                    yBoundaryTracker[y] = true;
+
+                    this.bounds.x = Math.min(this.bounds.x, realX);
+                    this.bounds.y = Math.min(this.bounds.y, realY);
+                    this.bounds.width = Math.max(this.bounds.width, x-this.bounds.x);
+                    this.bounds.height = Math.max(this.bounds.height, y-this.bounds.y);
+                }
+            } else if (a === 0) {
+                if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
+                    boundaryVectors.add(Vector.create(realX,realY));
+                    xBoundaryTracker[x] = false;
+                    yBoundaryTracker[y] = false;
+                }
+            }
         }
-        context.putImageData(imgData, 0,0);
-        console.log(boundaryVectors);
-        
-    }
 
-    async create(parent: Container<DisplayObject>, composite: Composite) {
-        parent.addChild(this.gfx);
-        parent.addChild(this.sprite);
-        Composite.add(composite, this.parts);
-    }
+        // Now create the pieces
+        const newParts: Body[] = [];
+        for (const vertex of boundaryVectors) {
+            const body = Bodies.rectangle(vertex.x + this.sprite.x, vertex.y + this.sprite.y, 1, 1, { isStatic: true });
+            newParts.push(body);
+        }
+        this.parts.push(...newParts);
 
-    update?(dt: number): void {
+        Composite.add(this.composite, newParts);
+
         this.gfx.clear();
-        this.gfx.lineStyle(1, 0xFFBD01, 1);
-        if (this.textureModified) {
-            this.texture.update();
-            this.textureModified = false;
+        if (this.lastBoundaryChange) {
+            this.gfx.drawRect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height);
         }
 
-        // for (const rect of this.parts) {
-        //     const gfxR = new Rectangle(rect.bounds.min.x, rect.bounds.min.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y);
-        //     this.gfx.drawShape(gfxR);
-        // }
+        for (const rect of this.parts) {
+            this.gfx.lineStyle(1, rect.isSleeping ? 0x00AA00 : 0xFFBD01, 1);
+            const gfxR = new Rectangle(rect.position.x, rect.position.y, 1, 1);
+            this.gfx.drawShape(gfxR);
+        }
+
+        console.log("Calculated bounds to be", this.bounds);
+    }
+
+    onDamage(point: Vector, radius: number) {
+        const context = this.canvas.getContext('2d');
+        if (!context) {
+            throw Error('Failed to get context');
+        }
+
+        console.log('onDamage', point, radius);
+
+        // Optmise this check!
+        const imageX = point.x - this.sprite.x;
+        const imageY = point.y - this.sprite.y;
+        const snapshotX = (imageX-radius) - 30;
+        const snapshotY = (imageY-radius) - 30;
+        const snapshotWidth = (radius*3);
+        const snapshotHeight = (radius*3);
+
+        // Fetch the current image
+        const before = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
+        // Draw a circle
+        context.beginPath();
+        console.log(imageX, imageY);
+        context.arc(imageX, imageY, radius, 0, 2 * Math.PI);
+        context.fillStyle = 'red';
+        context.fill();
+
+        // Fetch the new image
+        const after = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
+
+        // See what has changed, hopefully a red cricle!
+        let diffPixels = 0;
+        for (let i = 0; i < before.data.length; i += 4) {
+            const oldDataValue = before.data[i]+before.data[i+1]+before.data[i+2]+before.data[i+3];
+            const newDataValue = after.data[i]+after.data[i+1]+after.data[i+2]+after.data[i+3];
+            if (oldDataValue !== newDataValue) {
+                // Zero the alpha channel for anything that has changed...like a red cricle
+                after.data[i+0] = 0;
+                after.data[i+1] = 0;
+                after.data[i+2] = 0;
+                after.data[i+3] = 0;
+                diffPixels++;
+            }
+        }
+
+        // Show the new image with our newly created hole.
+        context.putImageData(after, snapshotX, snapshotY);
+        console.log('Updated texture', diffPixels);
+
+        // Remember to recalculate the collision paths
+        this.calculateBoundaryVectors(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
+        this.texture.update();
     }
 
     destroy(): void {

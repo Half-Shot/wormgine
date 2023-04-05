@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@pixi/sound": "^5.1.1",
+    "@timohausmann/quadtree-ts": "^2.0.0-beta.1",
     "@types/matter-js": "^0.18.2",
     "@types/pixi.js": "^5.0.0",
     "matter-js": "^0.19.0",
