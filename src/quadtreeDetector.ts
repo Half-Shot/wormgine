@@ -26,6 +26,7 @@ export class QuadtreeDetector {
             const height = (body.bounds.max.y - body.bounds.min.y);
             const x = body.position.x - width/2;
             const y = body.position.y - height/2;
+
             rect.x = Math.min(rect.x, x);
             rect.y = Math.min(rect.y, y);
             rect.width = Math.max(rect.width, x + width/2);
@@ -50,7 +51,7 @@ export class QuadtreeDetector {
 
     constructor(private width: number,private height: number) {
 
-        this.tree = new Quadtree({width,height});
+        this.tree = new Quadtree({width,height, maxObjects: 8});
     }
 
     reconstructQuads() {

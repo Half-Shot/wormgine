@@ -21,10 +21,13 @@ export class Worm extends PhysicsEntity {
 
     private state: WormState;
 
+    private terrainPosition: Vector = Vector.create(0,0);
+
     static async create(parent: Container, composite: Composite, position: { x: number, y: number }, terrain: BitmapTerrain) {
         const ent = new Worm(position, composite, terrain);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite);
+        parent.addChild(ent.gfx);
         return ent;
     }
 
@@ -38,10 +41,22 @@ export class Worm extends PhysicsEntity {
             sleepThreshold: 30,
             friction: Worm.FRICTION,
             restitution: Worm.RESITITUTION,
+            label: "worm",
+            timeScale: 0.1,
+            density: 500,
         });
         super(sprite, body, composite);
         this.state = WormState.InMotion;
         this.parent = composite;
+
+        window.onkeydown = (evt) => {
+            if(evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
+                this.onMove(evt.key === "ArrowLeft" ? "left" : "right");
+            }
+        }
+    }
+
+    onMove(direction: "left"|"right") {
         // Either a Query.ray or a Query.point to determine if the worm is up against terrain geometry.
 
         // Broadly we want to know if the worm can move N pixels to the direction without colliding or falling.
@@ -51,9 +66,36 @@ export class Worm extends PhysicsEntity {
         // - If lower, can I slide or will I fall?
         // - Having moved, will I trigger any mines?
 
-        window.onkeydown = (evt) => {
-            if(evt.key === "ArrowLeft") {
-                Body.translate(this.body!, Vector.create(-1, 0));
+        if (this.state === WormState.InMotion) {
+            // Falling, can't move
+            return;
+        }
+        const move = Vector.create(direction === "left" ? -3 : 3, 0);
+        const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
+        const tp = this.terrain.getNearestTerrainPosition(
+            Vector.add(this.terrainPosition, move),
+            30,
+            50,
+            move.x,
+        );
+        if (!tp) {
+            console.log('Nowhere to move in this direction');
+        } else {
+            if (tp.y - this.terrainPosition.y > 50) {
+                // We're falling
+                console.log('Fell!');
+                this.body.position.x -= 30;
+                Body.setPosition(this.body, this.body.position);
+                this.state = WormState.InMotion;
+                Body.setStatic(this.body, false);
+                Body.setVelocity(this.body, Vector.create(0,0));
+                this.body.isSleeping = false;
+                console.log(this.body);
+            } else {
+                console.log('Moving!', this.terrainPosition, tp);
+                this.body.position.x = tp.x;
+                this.body.position.y = tp.y - height;
+                this.terrainPosition = tp;
             }
         }
     }
@@ -62,6 +104,20 @@ export class Worm extends PhysicsEntity {
         this.state = WormState.Idle;
         Body.setStatic(this.body!, true);
         this.body.angle = 0;
+        const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
+        const tp = this.terrain.getNearestTerrainPosition(
+            Vector.create(this.body.position.x, this.body.position.y + height),
+            30,
+            50,
+        );
+        if (tp) {
+            this.body.position.x = tp.x;
+            this.body.position.y = tp.y - height;
+            this.terrainPosition = tp;
+            console.log("Stopped at:", this.terrainPosition);
+        } else {
+            console.warn("Stopped moving but could not find a terrain position");
+        }
     }
 
     update(dt: number): void {
@@ -70,16 +126,13 @@ export class Worm extends PhysicsEntity {
             return;
         }
 
-        if (this.state === WormState.InMotion) {
-            console.log("Worm has", this.body.motion);
+        if (this.state === WormState.InMotion && this.terrainPosition.x === 0) {
             // We're in motion, either we've been blown up, falling, or otherwise not in control.
             if (this.body.isSleeping) {
                 this.onStoppedMoving();
             }
         }
 
-        this.sprite.position = this.body.position;
-        this.sprite.rotation = this.body.angle;
         if (Worm.boundingWireframe) {
             this.gfx.clear();
             this.gfx.lineStyle(1, 0xFFBD01, 1);

@@ -1,6 +1,6 @@
 import { Container, DisplayObject, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
-import { Composite, Vector } from "matter-js";
+import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 
@@ -85,7 +85,7 @@ export class Background implements IGameEntity {
             }
             
             particle.x += 0.25;
-            particle.y += 2;
+            particle.y += 1;
             this.rainGraphic.lineStyle(3, 'rgb(255,255,255)').moveTo(particle.x-4, particle.y-8).lineTo(particle.x, particle.y);
         }
     }

@@ -29,11 +29,49 @@ export class BitmapTerrain implements IMatterEntity {
         return this.parts.some(b => b.id === bodyId);
     }
 
-    public castRay(point: Vector, distance: number, angle: number): Collision[] {
-        // https://stackoverflow.com/a/839931
-        const x = point.x + (distance * Math.cos(angle));
-        const y = point.y + (distance * Math.sin(angle));
-        return Query.ray(this.parts, point, Vector.create(x, y)).map(r => r);
+    public collidesWithTerrain(point: Vector, width: number, height: number): Collision|undefined {
+        console.log(point, width, height);
+        return Query.collides(
+            Bodies.rectangle(
+                point.x - width/2,
+                point.y - height/2,
+                width,
+                height,
+            ),
+            this.parts,
+        ).sort((a,b) => b.depth - a.depth)[0];
+    }
+
+    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0) {
+        let body: Body|undefined;
+        let distance = Number.MAX_SAFE_INTEGER;
+        for (const part of this.parts) {
+            const distX = Math.abs(part.position.x - point.x);
+            if (distX > width / 2) {
+                continue;
+            }
+            if (xDirection < 0 && part.position.x - point.x > xDirection) {
+                // If moving left, -3
+                continue;
+            }
+            if (xDirection > 0 && part.position.x - point.x < xDirection) {
+                // If moving left, -3
+                continue;
+            }
+            const distY = Math.abs(part.position.y - point.y);
+            if (point.y - part.position.y > maxHeightDiff) {
+                // This is too high for us to scale
+                continue;
+            } else if (part.position.y - point.y > maxHeightDiff) {
+                // This is a fall, allow it.
+            }
+            const newDistance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+            if (newDistance < distance) {
+                body = part;
+                distance = newDistance;
+            }
+        }
+        return body?.position;
     }
 
     public pointInTerrain(point: Vector, radius: number): Collision[] {
@@ -45,8 +83,7 @@ export class BitmapTerrain implements IMatterEntity {
     }
     
     static create(viewWidth: number, viewHeight: number, composite: Composite, texture: Texture) {
-        const terrain = new BitmapTerrain(viewWidth, viewHeight, composite, texture);
-        return terrain;
+        return new BitmapTerrain(viewWidth, viewHeight, composite, texture);
     }
 
     private constructor(viewWidth: number, viewHeight: number, private readonly composite: Composite, texture: Texture) {

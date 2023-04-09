@@ -1,20 +1,19 @@
-import { Application, Assets, Graphics, UPDATE_PRIORITY, Text } from 'pixi.js';
-import { manifest } from './assets/manifest';
-import { Grenade } from './entities/phys/grenade';
-import Matter, { Common, Engine, Events, Body, Bodies, Query } from "matter-js";
-
-import * as polyDecomp from 'poly-decomp-es';
-
 import "pathseg";
-import { IGameEntity, IMatterEntity } from './entities/entity';
+import { Application, Assets, UPDATE_PRIORITY, Text } from 'pixi.js';
+import { Background } from './entities/background';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { BitmapTerrain } from './entities/bitmapTerrain';
-import { Worm } from './entities/phys/worm';
-import { QuadtreeDetector } from './quadtreeDetector';
 import { Explosion } from './entities/explosion';
+import { Grenade } from './entities/phys/grenade';
+import { IGameEntity, IMatterEntity } from './entities/entity';
+import { manifest } from './assets/manifest';
+import { QuadtreeDetector } from './quadtreeDetector';
 import { Water } from './entities/water';
-import { Background } from './entities/background';
+import { Worm } from './entities/phys/worm';
+import * as polyDecomp from 'poly-decomp-es';
+import Matter, { Common, Engine, Events, Body, Bodies, Query } from "matter-js";
 
+Common.setDecomp(polyDecomp);
 
 export class Game {
     private readonly pixiApp: Application;
@@ -40,9 +39,8 @@ export class Game {
                 y: 0.2,
             },
             enableSleeping: true,
-            detector: this.quadtreeDetector,
+            // detector: this.quadtreeDetector,
         });
-        Common.setDecomp(polyDecomp);
     }
 
     public async loadResources() {
@@ -64,7 +62,7 @@ export class Game {
             ];
     }
 
-    public async addEntity<T extends IGameEntity>(entity: T): Promise<T> {
+    public addEntity<T extends IGameEntity>(entity: T): T {
         this.entities.push(entity);
         const tickerFn = (dt: number) => {
             entity.update?.(dt);
@@ -100,11 +98,43 @@ export class Game {
         await this.addEntity(terrain);
         bg.addToWorld(parent);
         terrain.addToWorld(parent);
+        console.log(terrain);
+
+        const water = await this.addEntity(new Water(width,height));
+        water.create(parent, composite);
+        this.addEntity(await Worm.create(parent, composite, {x: 900, y: 400} , terrain));
+
+        this.overlay.position.x = 50;
+        this.overlay.position.y = 10;
+
+        this.pixiApp.ticker.add(() => {
+            this.overlay.text = `Total bodies: ${this.matterEngine.world.bodies.length} | ` +
+            `Active bodies: ${this.quadtreeDetector.activeBodies}`;
+        }, undefined, UPDATE_PRIORITY.LOW);
+
+        this.pixiApp.stage.addChild(this.overlay);
+
+        Events.on(this.matterEngine, 'collisionStart', (event) => {
+            console.log('Collision!');
+            const [pairA] = event.pairs;
+            const [entA, entB] = this.findEntityByBodies(pairA.bodyA, pairA.bodyB.parent);
+
+            if (!entA || !entB) {
+                console.warn(`Untracked collision between ${pairA.bodyA.id} (${entA}) and ${pairA.bodyB.id} (${entB})`);
+                return;
+            }
+
+            const contact = pairA.activeContacts[0];
+
+            entA.onCollision?.(entB, contact.vertex);
+            entB.onCollision?.(entA, contact.vertex);
+        });
+
         this.canvas.addEventListener('click', async (evt: MouseEvent) => {
             const rect = (evt.target as HTMLCanvasElement).getBoundingClientRect();
             const position = { x: evt.x - rect.left, y: evt.y - rect.top };
-            //const entity = new BazookaShell(position, 0.5, 0.1, 0.03);
-            const entity = await Grenade.create(parent, composite, position, {x:0,y:0} /*{x: 0.005, y: -0.01}*/);
+            const entity = await Grenade.create(parent, composite, position, {x: 0.005, y: -0.01});
+            //const entity = await BazookaShell.create(parent, composite, position, 0, 0, 0 /*{x: 0.005, y: -0.01}*/);
             entity.explodeHandler = (point, radius) => {
                 // Detect if anything is around us.
                 const circ = Bodies.circle(point.x, point.y, radius);
@@ -120,34 +150,6 @@ export class Game {
             this.addEntity(entity);
         });
 
-        const water = await this.addEntity(new Water(width,height));
-        water.create(parent, composite);
-        // this.addEntity(await Worm.create(parent, composite, {x: 900, y: 400} , terrain));
-
-        this.overlay.position.x = 50;
-        this.overlay.position.y = 10;
-
-        this.pixiApp.ticker.add(() => {
-            this.overlay.text = `Total bodies: ${this.matterEngine.world.bodies.length} | ` +
-            `Active bodies: ${this.quadtreeDetector.activeBodies}`;
-        }, undefined, UPDATE_PRIORITY.LOW);
-
-        Events.on(this.matterEngine, 'collisionStart', (event) => {
-            const [pairA] = event.pairs;
-            const [entA, entB] = this.findEntityByBodies(pairA.bodyA, pairA.bodyB.parent);
-
-            if (!entA || !entB) {
-                console.warn(`Untracked collision between ${pairA.bodyA.id} (${entA}) and ${pairA.bodyB.id} (${entB})`);
-                return;
-            }
-
-            const contact = pairA.activeContacts[0];
-
-            entA.onCollision?.(entB, contact.vertex);
-            entB.onCollision?.(entA, contact.vertex);
-        });
-
-        this.pixiApp.stage.addChild(this.overlay);
         Matter.Runner.run(this.matterEngine);
     }
 
