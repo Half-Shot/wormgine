@@ -68,7 +68,6 @@ export class Water implements IGameEntity {
     }
 
     async create(parent: Container, engine: Composite) {
-        const segmentSize = 50;
         parent.addChild(this.gfx);
         const waterMesh = new Mesh(this.geometry, this.shader);
         this.shader.uniforms['iTime'] = performance.now();
@@ -80,16 +79,6 @@ export class Water implements IGameEntity {
 
     update(dt: number): void {
         this.shader.uniforms['iTime'] = performance.now() / 1000;
-
-        this.gfx.clear();
-        this.gfx.lineStyle(1, 0xFFBD01, 1);
-        const gfxR = new Rectangle(
-            this.body.bounds.min.x,
-            this.body.bounds.min.y,
-            this.body.bounds.max.x - this.body.bounds.min.x,
-            this.body.bounds.max.y - this.body.bounds.min.y
-        );
-        this.gfx.drawShape(gfxR);
     }
 
     destroy(): void {

@@ -1,6 +1,9 @@
-import { Container, UPDATE_PRIORITY } from "pixi.js";
-import { Body, Contact, Vector } from "matter-js";
+import { UPDATE_PRIORITY } from "pixi.js";
+import { Vector } from "matter-js";
 
+/**
+ * Base entity which all game objects implement
+ */
 export interface IGameEntity {
 
     priority: UPDATE_PRIORITY;
@@ -10,6 +13,10 @@ export interface IGameEntity {
     destroy(): void;
 }
 
+/**
+ * Any entity that has an attached Matter body will use this
+ * interface.
+ */
 export interface IMatterEntity extends IGameEntity {
     // TODO: Wrong shape?
     explodeHandler?: (point: Vector, radius: number) => void;

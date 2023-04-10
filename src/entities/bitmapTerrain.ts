@@ -2,8 +2,7 @@ import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
 import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, Rectangle, Texture, Sprite, ImageBitmapResource } from "pixi.js";
 import { IMatterEntity } from "./entity";
 
-
-
+export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
     private static readonly explosionBorderSize = 10;
 
@@ -26,64 +25,7 @@ export class BitmapTerrain implements IMatterEntity {
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
     private lastBoundaryChange?: Rectangle;
-
-    public entityOwnsBody(bodyId: number) {
-        // TODO: Use a set
-        return this.parts.some(b => b.id === bodyId);
-    }
-
-    public collidesWithTerrain(point: Vector, width: number, height: number): Collision|undefined {
-        console.log(point, width, height);
-        return Query.collides(
-            Bodies.rectangle(
-                point.x - width/2,
-                point.y - height/2,
-                width,
-                height,
-            ),
-            this.parts,
-        ).sort((a,b) => b.depth - a.depth)[0];
-    }
-
-    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0) {
-        let body: Body|undefined;
-        let distance = Number.MAX_SAFE_INTEGER;
-        for (const part of this.parts) {
-            const distX = Math.abs(part.position.x - point.x);
-            if (distX > width / 2) {
-                continue;
-            }
-            if (xDirection < 0 && part.position.x - point.x > xDirection) {
-                // If moving left, -3
-                continue;
-            }
-            if (xDirection > 0 && part.position.x - point.x < xDirection) {
-                // If moving left, -3
-                continue;
-            }
-            const distY = Math.abs(part.position.y - point.y);
-            if (point.y - part.position.y > maxHeightDiff) {
-                // This is too high for us to scale
-                continue;
-            } else if (part.position.y - point.y > maxHeightDiff) {
-                // This is a fall, allow it.
-            }
-            const newDistance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
-            if (newDistance < distance) {
-                body = part;
-                distance = newDistance;
-            }
-        }
-        return body?.position;
-    }
-
-    public pointInTerrain(point: Vector, radius: number): Collision[] {
-        // Avoid costly iteration with this one neat trick.
-        if (!this.bounds.contains(point.x, point.y)) {
-            return [];
-        }
-        return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
-    }
+    private registeredDamageFunctions = new Map<string,OnDamage>();
     
     static create(viewWidth: number, viewHeight: number, composite: Composite, texture: Texture) {
         return new BitmapTerrain(viewWidth, viewHeight, composite, texture);
@@ -140,6 +82,12 @@ export class BitmapTerrain implements IMatterEntity {
         console.log("Removing", removableBodies.length, "bodies");
         for (const body of removableBodies) {
             Composite.remove(this.composite, body);
+            const key = body.position.x + "," + body.position.y;
+            let damageFn = this.registeredDamageFunctions.get(key);
+            if (damageFn) {
+                this.registeredDamageFunctions.delete(key);
+                damageFn?.();
+            }
         }
         this.parts = this.parts.filter(b => !removableBodies.some(rB => b.id === rB.id));
 
@@ -267,6 +215,68 @@ export class BitmapTerrain implements IMatterEntity {
         // Remember to recalculate the collision paths
         this.calculateBoundaryVectors(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
         this.texture.update();
+    }
+
+    public entityOwnsBody(bodyId: number) {
+        // TODO: Use a set
+        return this.parts.some(b => b.id === bodyId);
+    }
+
+    public collidesWithTerrain(point: Vector, width: number, height: number): Collision|undefined {
+        console.log(point, width, height);
+        return Query.collides(
+            Bodies.rectangle(
+                point.x - width/2,
+                point.y - height/2,
+                width,
+                height,
+            ),
+            this.parts,
+        ).sort((a,b) => b.depth - a.depth)[0];
+    }
+
+    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0) {
+        let body: Body|undefined;
+        let distance = Number.MAX_SAFE_INTEGER;
+        for (const part of this.parts) {
+            const distX = Math.abs(part.position.x - point.x);
+            if (distX > width / 2) {
+                continue;
+            }
+            if (xDirection < 0 && part.position.x - point.x > xDirection) {
+                // If moving left, -3
+                continue;
+            }
+            if (xDirection > 0 && part.position.x - point.x < xDirection) {
+                // If moving left, -3
+                continue;
+            }
+            const distY = Math.abs(part.position.y - point.y);
+            if (point.y - part.position.y > maxHeightDiff) {
+                // This is too high for us to scale
+                continue;
+            } else if (part.position.y - point.y > maxHeightDiff) {
+                // This is a fall, allow it.
+            }
+            const newDistance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+            if (newDistance < distance) {
+                body = part;
+                distance = newDistance;
+            }
+        }
+        return body?.position;
+    }
+
+    public pointInTerrain(point: Vector, radius: number): Collision[] {
+        // Avoid costly iteration with this one neat trick.
+        if (!this.bounds.contains(point.x, point.y)) {
+            return [];
+        }
+        return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
+    }
+
+    public registerDamageListener(point: Vector, fn: OnDamage) {
+        this.registeredDamageFunctions.set(point.x + "," + point.y, fn);
     }
 
     destroy(): void {

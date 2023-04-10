@@ -4,6 +4,7 @@ import { Body, Bodies, Composite, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { loadSvg } from '../../loadSvg';
 
+// TODO: This is buggy as all hell.
 
 export class BazookaShell extends TimedExplosive {
     private static readonly boundingWireframe = true;

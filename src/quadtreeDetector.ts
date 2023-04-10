@@ -1,8 +1,16 @@
-import { Bodies, Body, Pairs } from "matter-js";
+import { Body, Pairs } from "matter-js";
 import { Quadtree, Rectangle } from "@timohausmann/quadtree-ts";
 
 type QuadtreeItem = Rectangle<Body>;
 
+// TODO: This doesn't handle *roaming* bodies that might move
+// between quads.
+
+/**
+ * Uses a basic quadtree to calculate which objects within our world need to be
+ * checked. Essentially stores all bodies in the world on behalf of the 
+ * Detector class and returns a subset based on activity.
+ */
 export class QuadtreeDetector {
     public pairs: Pairs[] = [];
     private allBodies: Body[] = [];
@@ -11,6 +19,7 @@ export class QuadtreeDetector {
 
     public set bodies(newBodies) {
         this.allBodies = newBodies;
+        // TODO: Do we need to reconstruct the *entire* quad for this.
         this.reconstructQuads();
     }
 
@@ -19,7 +28,6 @@ export class QuadtreeDetector {
     }
 
     public get bodies() {
-
         const rect = new Rectangle<any>({ x: 0, y: 0, width: 0, height: 0 });
         this.allBodies.filter(b => !b.isSleeping).forEach((body) => {
             const width = (body.bounds.max.x - body.bounds.min.x);
@@ -49,11 +57,20 @@ export class QuadtreeDetector {
 
     private readonly tree: Quadtree<QuadtreeItem>;
 
+    /**
+     * @param width Width of the world.
+     * @param height Height of the world.
+     */
     constructor(private width: number,private height: number) {
-
-        this.tree = new Quadtree({width,height, maxObjects: 8});
+        this.tree = new Quadtree({
+            width,
+            height
+        });
     }
 
+    /**
+     * Reconstruct the quad tree.
+     */
     reconstructQuads() {
         this.tree.clear();
         for (const body of this.allBodies) {

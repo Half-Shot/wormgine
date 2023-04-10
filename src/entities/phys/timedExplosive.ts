@@ -10,6 +10,10 @@ interface Opts {
     timerSecs: number,
 }
 
+/**
+ * Any projectile type that can explode after a set timer. Currently does not handle
+ * the rendering of a timer.
+ */
 export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
     protected timer: number;
     protected isSinking = false;
@@ -43,7 +47,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.timer = 0;
-                this.body!.angle = 0.15;
+                this.body.angle = 0.15;
             }
             return true;
         }

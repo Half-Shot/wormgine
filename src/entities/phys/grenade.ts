@@ -1,46 +1,31 @@
-import { Container, Graphics, Rectangle, Sprite, Text, Texture, Ticker } from 'pixi.js';
+import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import grenadePaths from "../../assets/grenade.svg";
-import { Body, Bodies, Composite, Vector, Vertices, Svg } from "matter-js";
+import { Body, Bodies, Composite, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
-function loadSvg(url: string) {
-        return fetch(url)
-            .then(function(response) { return response.text(); })
-            .then(function(raw) { return (new DOMParser()).parseFromString(raw, 'image/svg+xml'); });
-    };
-    
-    const select = function(root: Document, selector: string) {
-        return Array.prototype.slice.call(root.querySelectorAll(selector));
-    };
-    
-        
+import { loadSvg } from '../../loadSvg';
+       
+/**
+ * Standard grenade projectile.
+ */
 export class Grenade extends TimedExplosive {
-    private static readonly boundingWireframe = true;
     private static readonly FRICTION = 0.5;
     private static readonly RESITITUTION = 0.9;
     private static readonly density = 0.005;
-    private static bodyVertices = loadSvg(grenadePaths).then(root => { 
-        console.log(root);
-        return select(root, 'path#collision').map(path => 
-            Vertices.scale(Svg.pathToVertices(path, 50), 1, 1, Vector.create(0.5, 0.5))
-        )
-    });
+    private static bodyVertices = loadSvg(grenadePaths, 50, 1, 1, Vector.create(0.5, 0.5));
     public static texture: Texture;
     public static bounceSound: Sound;
 
     static async create(parent: Container, composite: Composite, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
         const ent = new Grenade(position, await Grenade.bodyVertices, initialForce, composite);
         Composite.add(composite, ent.body);
-        console.log(ent.body);
-        parent.addChild(ent.sprite);
-        parent.addChild(ent.gfx);
+        parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
 
     private timerText: Text;
-    private gfx = new Graphics();
 
     private get timerTextValue() {
         return `${(this.timer / (Ticker.targetFPMS*1000)).toFixed(1)}`
@@ -70,6 +55,7 @@ export class Grenade extends TimedExplosive {
             align: 'center',
         });
         this.sprite.addChild(this.timerText);
+        this.wireframe.enabled = true;
     }
 
     update(dt: number): void {
@@ -83,18 +69,11 @@ export class Grenade extends TimedExplosive {
             this.timerText.rotation = -this.body.angle;
             this.timerText.text = this.timerTextValue;
         }
-        if (Grenade.boundingWireframe) {
-            this.gfx.clear();
-            this.gfx.lineStyle(1, 0xFFBD01, 1);
-            const width = (this.body.bounds.max.x - this.body.bounds.min.x);
-            const height = (this.body.bounds.max.y - this.body.bounds.min.y);
-            this.gfx.drawShape(new Rectangle(this.body.position.x - width/2, this.body.position.y - height/2,width,height));
-        }
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
-        console.log("Grenade collision");
         if (super.onCollision(otherEnt, contactPoint)) {
+            this.timerText.destroy();
             return true;
         }
         // We don't explode, but we do make a noise.
@@ -114,6 +93,5 @@ export class Grenade extends TimedExplosive {
 
     destroy(): void {
         super.destroy();
-        this.gfx.destroy();
     }
 }

@@ -31,6 +31,7 @@ export class Game {
         // The application will create a renderer using WebGL, if possible,
         // with a fallback to a canvas render. It will also setup the ticker
         // and the root stage PIXI.Container
+        // TODO: Set a sensible static width/height and have the canvas pan it.
         this.quadtreeDetector = new QuadtreeDetector(width, height);
         this.pixiApp = new Application({ width, height });
         this.matterEngine = Engine.create({
@@ -46,12 +47,12 @@ export class Game {
     public async loadResources() {
         await Assets.init({ manifest });
 
+        // TODO: This is NOT the way I want to handle assets but it will do for now.
         const b = await Promise.all(manifest.bundles.map(bundle => 
             Assets.loadBundle(bundle.name)
         ));
         Grenade.texture = b[0].grenade;
         Grenade.bounceSound = b[1].bounce;
-        console.log(b);
         BazookaShell.texture = b[0].bazooka_shell;
         Worm.texture = b[0].grenade;
         Explosion.explosionSounds = 
@@ -77,8 +78,9 @@ export class Game {
 
     private findEntityByBodies(...bodies: Body[]) {
         const result: IMatterEntity[] = new Array(bodies.length);
+        // TODO: o(n^2) function
+        // TODO: Loose typing
         for (const entity of this.entities.filter(e => 'entityOwnsBody' in e) as IMatterEntity[]) {
-            // TODO: Skip 0 if we have a slot for zero already
             for (let bIdx = 0; bIdx < bodies.length; bIdx++) {
                 const body = bodies[bIdx];
                 if (entity?.entityOwnsBody(body.id)) {
@@ -93,6 +95,8 @@ export class Game {
         const parent = this.pixiApp.stage;
         const composite = this.matterEngine.world;
         const { width, height } = this.pixiApp.view;
+
+        // TODO: Port this to a scenario-style class and load them in, rather than having in the main function.
         const terrain = BitmapTerrain.create(this.pixiApp.view.width, this.pixiApp.view.height, this.matterEngine.world, Assets.get('island1'));
         const bg = await this.addEntity(Background.create(width, height, [20, 21, 50, 35], terrain));
         await this.addEntity(terrain);
@@ -115,7 +119,6 @@ export class Game {
         this.pixiApp.stage.addChild(this.overlay);
 
         Events.on(this.matterEngine, 'collisionStart', (event) => {
-            console.log('Collision!');
             const [pairA] = event.pairs;
             const [entA, entB] = this.findEntityByBodies(pairA.bodyA, pairA.bodyB.parent);
 

@@ -1,5 +1,5 @@
-import { Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
-import { Body, Bodies, Composite, Vector } from "matter-js";
+import { Container, Sprite, Texture } from 'pixi.js';
+import { Body, Bodies, Composite, Vector, Sleeping } from "matter-js";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
@@ -11,13 +11,9 @@ enum WormState {
 }
 
 export class Worm extends PhysicsEntity {
-    private static readonly boundingWireframe = true;
     private static readonly FRICTION = 0.5;
     private static readonly RESITITUTION = 0.2;
-    private static readonly MOTION_THRESHOLD = 0.2;
     public static texture: Texture;
-
-    private gfx = new Graphics();
 
     private state: WormState;
 
@@ -27,7 +23,7 @@ export class Worm extends PhysicsEntity {
         const ent = new Worm(position, composite, terrain);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite);
-        parent.addChild(ent.gfx);
+        parent.addChild(ent.wireframe.renderable);
         return ent;
     }
 
@@ -49,6 +45,7 @@ export class Worm extends PhysicsEntity {
         this.state = WormState.InMotion;
         this.parent = composite;
 
+        // TODO: Move this to a dedicated controller class.
         window.onkeydown = (evt) => {
             if(evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
                 this.onMove(evt.key === "ArrowLeft" ? "left" : "right");
@@ -57,32 +54,29 @@ export class Worm extends PhysicsEntity {
     }
 
     onMove(direction: "left"|"right") {
-        // Either a Query.ray or a Query.point to determine if the worm is up against terrain geometry.
-
-        // Broadly we want to know if the worm can move N pixels to the direction without colliding or falling.
-        // We need to do the following checks:
-        // - Is the space next to me free.
-        // - Is it higher or lower, if higher, can I climb?
-        // - If lower, can I slide or will I fall?
-        // - Having moved, will I trigger any mines?
-
         if (this.state === WormState.InMotion) {
             // Falling, can't move
             return;
         }
+
+        // Attempt to move to the left or right by 3 pixels
         const move = Vector.create(direction === "left" ? -3 : 3, 0);
         const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
+        // Try to find the terrain position for where we are moving to, to see
+        // if we can scale/fall it.
         const tp = this.terrain.getNearestTerrainPosition(
             Vector.add(this.terrainPosition, move),
             30,
             50,
             move.x,
         );
+
         if (!tp) {
+            // We've hit a wall, or something unmovable.
             console.log('Nowhere to move in this direction');
         } else {
             if (tp.y - this.terrainPosition.y > 50) {
-                // We're falling
+                // We're falling!
                 console.log('Fell!');
                 this.body.position.x -= 30;
                 Body.setPosition(this.body, this.body.position);
@@ -92,6 +86,7 @@ export class Worm extends PhysicsEntity {
                 this.body.isSleeping = false;
                 console.log(this.body);
             } else {
+                // Normal move along a point
                 console.log('Moving!', this.terrainPosition, tp);
                 this.body.position.x = tp.x;
                 this.body.position.y = tp.y - height;
@@ -101,8 +96,9 @@ export class Worm extends PhysicsEntity {
     }
 
     onStoppedMoving() {
+        // We are in a InMotion state but have come to rest.
         this.state = WormState.Idle;
-        Body.setStatic(this.body!, true);
+        Body.setStatic(this.body, true);
         this.body.angle = 0;
         const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
         const tp = this.terrain.getNearestTerrainPosition(
@@ -115,6 +111,15 @@ export class Worm extends PhysicsEntity {
             this.body.position.y = tp.y - height;
             this.terrainPosition = tp;
             console.log("Stopped at:", this.terrainPosition);
+            this.terrain.registerDamageListener(tp, () => {
+                // TODO: This current launches the worm into the water, not quite sure why.
+                console.log('Worm position damaged');
+                Body.setStatic(this.body, false);
+                Body.setPosition(this.body, Vector.sub(this.body.position, Vector.create(0,50)));
+                // Body.setVelocity(this.body, Vector.create(0,0));
+                Sleeping.set(this.body, false);
+                this.state = WormState.InMotion;
+            })
         } else {
             console.warn("Stopped moving but could not find a terrain position");
         }
@@ -126,29 +131,12 @@ export class Worm extends PhysicsEntity {
             return;
         }
 
-        if (this.state === WormState.InMotion && this.terrainPosition.x === 0) {
+        if (this.state === WormState.InMotion) {
             // We're in motion, either we've been blown up, falling, or otherwise not in control.
             if (this.body.isSleeping) {
                 this.onStoppedMoving();
             }
-        }
-
-        if (Worm.boundingWireframe) {
-            this.gfx.clear();
-            this.gfx.lineStyle(1, 0xFFBD01, 1);
-            const width = (this.body.bounds.max.x - this.body.bounds.min.x);
-            const height = (this.body.bounds.max.y - this.body.bounds.min.y);
-            this.gfx.drawShape(new Rectangle(this.body.position.x - width/2, this.body.position.y - height/2,width,height));
-        }
-        // const down = this.terrain.castRay(this.body.position, 100, degreesToRadians(180));
-        // console.log(down);
-        if (this.isSinking) {
-            this.body.position.y += 1 * dt;
-            // TODO: Hacks
-            if (this.body.position.y > 2000) {
-                this.destroy();
-            }
-        }
+        } // else, we're idle and not currently moving.
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
@@ -160,6 +148,5 @@ export class Worm extends PhysicsEntity {
 
     destroy(): void {
         super.destroy();
-        this.gfx.destroy();
     }
 }
