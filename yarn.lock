@@ -538,7 +538,7 @@
 
 "@pixi/sound@^5.1.1":
   version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@pixi/sound/-/sound-5.1.1.tgz#280720a455389eaf84e4772e1f7798c84691057f"
+  resolved "https://registry.npmjs.org/@pixi/sound/-/sound-5.1.1.tgz"
   integrity sha512-OkOtlzNCDkPePLNo56R2gNKiXPDUpz2fTXVbn1DmScgWfBCHMski4a/6zf+dsDxI7q/tIEtlFKKcC9+r9otWOA==
 
 "@pixi/sprite-animated@7.2.3":
@@ -648,7 +648,7 @@
 
 "@timohausmann/quadtree-ts@^2.0.0-beta.1":
   version "2.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@timohausmann/quadtree-ts/-/quadtree-ts-2.0.0-beta.1.tgz#4b8a9943d7838f688c172a3e0b3107117a91dc7f"
+  resolved "https://registry.npmjs.org/@timohausmann/quadtree-ts/-/quadtree-ts-2.0.0-beta.1.tgz"
   integrity sha512-zq8AnO1qoYM66OXkiC9d5wIIvNeHy3XIA0AwPtGRNkmX0uv9aktyyBRWzqPW/dZWMMkG4uLluer38QJc+QV/5w==
 
 "@types/css-font-loading-module@^0.0.7":
