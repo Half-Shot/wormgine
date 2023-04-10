@@ -1,4 +1,4 @@
-import { Container, DisplayObject, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { ColorSource, Container, DisplayObject, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
@@ -9,6 +9,8 @@ export class Background implements IGameEntity {
     static create(width: number, height: number, color: [number, number, number, number], terrain: BitmapTerrain): Background {
         return new Background(width, height, color, terrain);
     }
+
+    rainColor: ColorSource = 'rgba(100,100,100,0.5)';
 
     geometry: Geometry;
     priority = UPDATE_PRIORITY.LOW;
@@ -44,7 +46,7 @@ export class Background implements IGameEntity {
 
         this.rainGraphic.position.set(0,0);
         // Create some rain
-        const rainCount = Math.round(viewWidth * Math.random()) / 40;
+        const rainCount = Math.round(viewWidth * Math.random()) / 10;
         for (let rainIndex = 0; rainIndex < rainCount; rainIndex += 1) {
             const x = Math.round(Math.random()*viewWidth);
             const y = 0-Math.round(Math.random()*viewHeight);
@@ -86,7 +88,7 @@ export class Background implements IGameEntity {
             
             particle.x += 0.25;
             particle.y += 1;
-            this.rainGraphic.lineStyle(3, 'rgb(255,255,255)').moveTo(particle.x-4, particle.y-8).lineTo(particle.x, particle.y);
+            this.rainGraphic.lineStyle(3, this.rainColor).moveTo(particle.x-4, particle.y-8).lineTo(particle.x, particle.y);
         }
     }
 

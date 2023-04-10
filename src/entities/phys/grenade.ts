@@ -20,6 +20,7 @@ export class Grenade extends TimedExplosive {
     private static readonly boundingWireframe = true;
     private static readonly FRICTION = 0.5;
     private static readonly RESITITUTION = 0.9;
+    private static readonly density = 0.005;
     private static bodyVertices = loadSvg(grenadePaths).then(root => { 
         console.log(root);
         return select(root, 'path#collision').map(path => 
@@ -51,6 +52,7 @@ export class Grenade extends TimedExplosive {
             sleepThreshold: 60*(5+2),
             friction: Grenade.FRICTION,
             restitution: Grenade.RESITITUTION,
+            density: Grenade.density,
         });
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5, 0.5);

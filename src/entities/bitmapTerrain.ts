@@ -5,7 +5,10 @@ import { IMatterEntity } from "./entity";
 
 
 export class BitmapTerrain implements IMatterEntity {
+    private static readonly explosionBorderSize = 10;
+
     public readonly priority = UPDATE_PRIORITY.LOW;
+    public readonly drawDebugBorder = false;
 
     public get destroyed() {
         // Terrain cannot be destroyed...yet
@@ -193,18 +196,19 @@ export class BitmapTerrain implements IMatterEntity {
 
         Composite.add(this.composite, newParts);
 
-        this.gfx.clear();
-        if (this.lastBoundaryChange) {
-            this.gfx.drawRect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height);
+        if (this.drawDebugBorder) {
+            this.gfx.clear();
+            if (this.lastBoundaryChange) {
+                this.gfx.drawRect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height);
+            }
+    
+            for (const rect of this.parts) {
+                this.gfx.lineStyle(1, rect.isSleeping ? 0x00AA00 : 0xFFBD01, 1);
+                const gfxR = new Rectangle(rect.position.x, rect.position.y, 1, 1);
+                this.gfx.drawShape(gfxR);
+            }
         }
-
-        for (const rect of this.parts) {
-            this.gfx.lineStyle(1, rect.isSleeping ? 0x00AA00 : 0xFFBD01, 1);
-            const gfxR = new Rectangle(rect.position.x, rect.position.y, 1, 1);
-            this.gfx.drawShape(gfxR);
-        }
-
-        console.log("Calculated bounds to be", this.bounds);
+        console.log("Calculated bitmap terrain bounds to be", this.bounds);
     }
 
     onDamage(point: Vector, radius: number) {
@@ -227,9 +231,14 @@ export class BitmapTerrain implements IMatterEntity {
         const before = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
         // Draw a circle
         context.beginPath();
-        console.log(imageX, imageY);
+
+        // Give the exploded area a border
+        // context.fillStyle = 'gray';
+        // context.arc(imageX, imageY, radius + BitmapTerrain.explosionBorderSize, 0, 2 * Math.PI);
+        // context.fill();
+
+        context.fillStyle = 'gray';
         context.arc(imageX, imageY, radius, 0, 2 * Math.PI);
-        context.fillStyle = 'red';
         context.fill();
 
         // Fetch the new image
@@ -238,6 +247,7 @@ export class BitmapTerrain implements IMatterEntity {
         // See what has changed, hopefully a red cricle!
         let diffPixels = 0;
         for (let i = 0; i < before.data.length; i += 4) {
+            const newR = after.data[i];
             const oldDataValue = before.data[i]+before.data[i+1]+before.data[i+2]+before.data[i+3];
             const newDataValue = after.data[i]+after.data[i+1]+after.data[i+2]+after.data[i+3];
             if (oldDataValue !== newDataValue) {
