@@ -4,13 +4,24 @@ import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 
+interface RainParticle {
+    position: Vector;
+    length: number;
+    angle: number;
+    speed: number;
+}
+
+const MAX_RAIN_LENGTH = 15;
+const MIN_RAIN_LENGTH = 6;
 
 export class Background implements IGameEntity {
     static create(width: number, height: number, color: [number, number, number, number], terrain: BitmapTerrain): Background {
         return new Background(width, height, color, terrain);
     }
-
-    rainColor: ColorSource = 'rgba(100,100,100,0.5)';
+    rainSpeed = 3;
+    rainSpeedVariation = 1/2;
+    rainCount = 175;
+    rainColor: ColorSource = 'rgba(100,100,100,0.25)';
 
     geometry: Geometry;
     priority = UPDATE_PRIORITY.LOW;
@@ -19,7 +30,7 @@ export class Background implements IGameEntity {
     gradientMesh: Mesh<Shader>;
 
     rainGraphic = new Graphics();
-    rainParticles: Vector[] = [];
+    rainParticles: RainParticle[] = [];
 
     private constructor(private readonly viewWidth: number, private readonly viewHeight: number, color: [number, number, number, number], private readonly terrain: BitmapTerrain) {
         const halfViewWidth = viewWidth / 2;
@@ -46,12 +57,21 @@ export class Background implements IGameEntity {
 
         this.rainGraphic.position.set(0,0);
         // Create some rain
-        const rainCount = Math.round(viewWidth * Math.random()) / 10;
+        const rainCount = this.rainCount;
         for (let rainIndex = 0; rainIndex < rainCount; rainIndex += 1) {
-            const x = Math.round(Math.random()*viewWidth);
-            const y = 0-Math.round(Math.random()*viewHeight);
-            this.rainParticles.push(Vector.create(x, y));
+            this.addRainParticle();
         }
+    }
+    
+    addRainParticle() {
+        const x = Math.round(Math.random()*this.viewWidth);
+        const y = (0-Math.round(Math.random()*this.viewHeight) - 200);
+        this.rainParticles.push({
+            position: Vector.create(x, y),
+            length: MIN_RAIN_LENGTH + Math.round(Math.random()*(MAX_RAIN_LENGTH-MIN_RAIN_LENGTH)),
+            angle: 1 + (Math.random()-0.5)*0.1,
+            speed: (this.rainSpeed*(0.5 + (Math.random()*this.rainSpeedVariation)))
+        });
     }
 
     addToWorld(parent: Container<DisplayObject>) {
@@ -67,28 +87,30 @@ export class Background implements IGameEntity {
         this.rainGraphic.clear();
         for (let rainIndex = 0; rainIndex < this.rainParticles.length; rainIndex += 1) {
             const particle = this.rainParticles[rainIndex];
-            if (particle.y > this.viewHeight) {
+            if (particle.position.y > this.viewHeight) {
                 // TODO: Properly detect terrain
                 this.rainParticles.splice(rainIndex, 1);
                 // TODO: And splash
-                const x = Math.round(Math.random()*this.viewWidth);
-                this.rainParticles.push(Vector.create(x, 0));
+                this.addRainParticle();
                 continue;
             }
 
-            if (this.terrain.pointInTerrain(particle, 2).length) {
+            if (this.terrain.pointInTerrain(particle.position, 2).length) {
                 // TODO: Properly detect terrain
                 this.rainParticles.splice(rainIndex, 1);
                 // TODO: And splash
-                const x = Math.round(Math.random()*this.viewWidth);
-                this.rainParticles.push(Vector.create(x, 0));
+                this.addRainParticle();
                 continue;
 
             }
             
-            particle.x += 0.25;
-            particle.y += 1;
-            this.rainGraphic.lineStyle(3, this.rainColor).moveTo(particle.x-4, particle.y-8).lineTo(particle.x, particle.y);
+            particle.position.x += particle.speed/4;
+            particle.position.y += particle.speed;
+            const lengthX = particle.position.x-particle.length;
+            const lengthY = particle.position.y-(particle.length*particle.angle);
+            this.rainGraphic.lineStyle(3, this.rainColor).moveTo(
+                lengthX, lengthY
+            ).lineTo(particle.position.x, particle.position.y);
         }
     }
 
