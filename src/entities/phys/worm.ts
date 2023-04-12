@@ -3,31 +3,46 @@ import { Body, Bodies, Composite, Vector, Sleeping } from "matter-js";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
+import { IWeaponDefiniton } from '../../weapons/weapon';
+import { WeaponGrenade } from '../../weapons/grenade';
 
 
 enum WormState {
     Idle = 0,
     InMotion = 1,
+    Firing = 2,
 }
+
+type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
 
 export class Worm extends PhysicsEntity {
     private static readonly FRICTION = 0.5;
     private static readonly RESITITUTION = 0.2;
     public static texture: Texture;
 
+    private fireWeaponDuration = 0;
+    private currentWeapon: IWeaponDefiniton = WeaponGrenade;
     private state: WormState;
 
     private terrainPosition: Vector = Vector.create(0,0);
+    private facingAngle: number = 0;
 
-    static async create(parent: Container, composite: Composite, position: { x: number, y: number }, terrain: BitmapTerrain) {
-        const ent = new Worm(position, composite, terrain);
+    static async create(parent: Container, composite: Composite, position: { x: number, y: number }, terrain: BitmapTerrain, onFireWeapon: FireWeaponFn) {
+        const ent = new Worm(position, composite, terrain, onFireWeapon);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
     }
 
-    private constructor(position: { x: number, y: number }, composite: Composite, private readonly terrain: BitmapTerrain) {
+    get position() {
+        return this.body.position;
+    }
+
+    private constructor(position: { x: number, y: number }, composite: Composite,
+        private readonly terrain: BitmapTerrain,
+        private readonly onFireWeapon: FireWeaponFn,
+    ) {
         const sprite = new Sprite(Worm.texture);
         sprite.scale.set(1, 1);
         sprite.anchor.set(0.5, 0.5);
@@ -49,6 +64,15 @@ export class Worm extends PhysicsEntity {
         window.onkeydown = (evt) => {
             if(evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
                 this.onMove(evt.key === "ArrowLeft" ? "left" : "right");
+            }
+            if(evt.code === "Space") {
+                this.onBeginFireWeapon();
+            }
+        }
+
+        window.onkeyup = (evt) => {
+            if (evt.code === "Space") {
+                this.onEndFireWeapon();
             }
         }
     }
@@ -125,6 +149,21 @@ export class Worm extends PhysicsEntity {
         }
     }
 
+    onBeginFireWeapon() {
+        this.state = WormState.Firing;
+    }
+
+    onEndFireWeapon() {
+        if (this.state !== WormState.Firing) {
+            return;
+        }
+        this.state = WormState.Idle;
+        const duration = this.fireWeaponDuration;
+        this.fireWeaponDuration = 0;
+        console.log('Weapon fired with a duration of', duration);
+        this.onFireWeapon(this, this.currentWeapon, duration);
+    }
+
     update(dt: number): void {
         super.update(dt);
         if (!this.body || this.sprite.destroyed) {
@@ -135,6 +174,12 @@ export class Worm extends PhysicsEntity {
             // We're in motion, either we've been blown up, falling, or otherwise not in control.
             if (this.body.isSleeping) {
                 this.onStoppedMoving();
+            }
+        } else if (this.state === WormState.Firing) {
+            if (this.fireWeaponDuration > this.currentWeapon.maxDuration) {
+                this.onEndFireWeapon();
+            } else {
+                this.fireWeaponDuration += dt;
             }
         } // else, we're idle and not currently moving.
     }
