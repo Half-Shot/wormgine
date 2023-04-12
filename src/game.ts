@@ -12,12 +12,13 @@ import { Water } from './entities/water';
 import { Worm } from './entities/phys/worm';
 import * as polyDecomp from 'poly-decomp-es';
 import Matter, { Common, Engine, Events, Body, Bodies, Query } from "matter-js";
+import grenadeIsland from './scenarios/grenadeIsland';
 
 Common.setDecomp(polyDecomp);
 
 export class Game {
-    private readonly pixiApp: Application;
-    private readonly matterEngine: Engine; 
+    public readonly pixiApp: Application;
+    public readonly matterEngine: Engine; 
     private readonly entities: IGameEntity[] = [];
     private readonly overlay = new Text('', {
         fontFamily: 'Arial',
@@ -76,7 +77,7 @@ export class Game {
         return entity;
     }
 
-    private findEntityByBodies(...bodies: Body[]) {
+    public findEntityByBodies(...bodies: Body[]) {
         const result: IMatterEntity[] = new Array(bodies.length);
         // TODO: o(n^2) function
         // TODO: Loose typing
@@ -92,32 +93,6 @@ export class Game {
     }
 
     public async run() {
-        const parent = this.pixiApp.stage;
-        const composite = this.matterEngine.world;
-        const { width, height } = this.pixiApp.view;
-
-        // TODO: Port this to a scenario-style class and load them in, rather than having in the main function.
-        const terrain = BitmapTerrain.create(this.pixiApp.view.width, this.pixiApp.view.height, this.matterEngine.world, Assets.get('island1'));
-        const bg = await this.addEntity(Background.create(width, height, [20, 21, 50, 35], terrain));
-        await this.addEntity(terrain);
-        bg.addToWorld(parent);
-        terrain.addToWorld(parent);
-        console.log(terrain);
-
-        const water = await this.addEntity(new Water(width,height));
-        water.create(parent, composite);
-        this.addEntity(await Worm.create(parent, composite, {x: 900, y: 400} , terrain));
-
-        this.overlay.position.x = 50;
-        this.overlay.position.y = 10;
-
-        this.pixiApp.ticker.add(() => {
-            this.overlay.text = `Total bodies: ${this.matterEngine.world.bodies.length} | ` +
-            `Active bodies: ${this.quadtreeDetector.activeBodies}`;
-        }, undefined, UPDATE_PRIORITY.LOW);
-
-        this.pixiApp.stage.addChild(this.overlay);
-
         Events.on(this.matterEngine, 'collisionStart', (event) => {
             const [pairA] = event.pairs;
             const [entA, entB] = this.findEntityByBodies(pairA.bodyA, pairA.bodyB.parent);
@@ -133,25 +108,18 @@ export class Game {
             entB.onCollision?.(entA, contact.vertex);
         });
 
-        this.canvas.addEventListener('click', async (evt: MouseEvent) => {
-            const rect = (evt.target as HTMLCanvasElement).getBoundingClientRect();
-            const position = { x: evt.x - rect.left, y: evt.y - rect.top };
-            const entity = await Grenade.create(parent, composite, position, {x: 0.005, y: -0.01});
-            //const entity = await BazookaShell.create(parent, composite, position, 0, 0, 0 /*{x: 0.005, y: -0.01}*/);
-            entity.explodeHandler = (point, radius) => {
-                // Detect if anything is around us.
-                const circ = Bodies.circle(point.x, point.y, radius);
-                const hit = Query.collides(circ, this.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
-                this.addEntity(Explosion.create(parent, point, radius));
-                // Find contact point with any terrain
-                for (const hitBody of hit) {
-                    const [ent] = (this.findEntityByBodies(hitBody.bodyA, hitBody.bodyB)).filter(e => e !== entity);
-                    // TODO: Cheating massively
-                    entity.onCollision(ent, hitBody.bodyA.position);
-                }
-            }
-            this.addEntity(entity);
-        });
+        // Load this scenario
+        grenadeIsland(this);
+
+        this.overlay.position.x = 50;
+        this.overlay.position.y = 10;
+
+        this.pixiApp.ticker.add(() => {
+            this.overlay.text = `Total bodies: ${this.matterEngine.world.bodies.length} | ` +
+            `Active bodies: ${this.quadtreeDetector.activeBodies}`;
+        }, undefined, UPDATE_PRIORITY.LOW);
+
+        this.pixiApp.stage.addChild(this.overlay);
 
         Matter.Runner.run(this.matterEngine);
     }
