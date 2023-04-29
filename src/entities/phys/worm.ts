@@ -54,7 +54,7 @@ export class Worm extends PhysicsEntity {
             restitution: Worm.RESITITUTION,
             label: "worm",
             timeScale: 0.1,
-            density: 500,
+            density: 0.001,
         });
         super(sprite, body, composite);
         this.state = WormState.InMotion;
@@ -75,6 +75,7 @@ export class Worm extends PhysicsEntity {
                 this.onEndFireWeapon();
             }
         }
+        this.onStoppedMoving();
     }
 
     onMove(direction: "left"|"right") {
@@ -102,13 +103,12 @@ export class Worm extends PhysicsEntity {
             if (tp.y - this.terrainPosition.y > 50) {
                 // We're falling!
                 console.log('Fell!');
-                this.body.position.x -= 30;
+                this.body.position.x -= 3;
                 Body.setPosition(this.body, this.body.position);
                 this.state = WormState.InMotion;
                 Body.setStatic(this.body, false);
                 Body.setVelocity(this.body, Vector.create(0,0));
                 this.body.isSleeping = false;
-                console.log(this.body);
             } else {
                 // Normal move along a point
                 console.log('Moving!', this.terrainPosition, tp);

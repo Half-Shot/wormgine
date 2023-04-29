@@ -22,7 +22,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
         return this.body.id === bodyId || this.body.parent.id === bodyId;
     }
 
-    constructor(protected sprite: Sprite, protected body: Body, protected parent: Composite) {
+    constructor(public readonly sprite: Sprite, protected body: Body, protected parent: Composite) {
         this.wireframe = new BodyWireframe(this.body);
     }
 

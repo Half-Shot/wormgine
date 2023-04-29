@@ -53,7 +53,7 @@ export class Background implements IGameEntity {
         this.gradientShader = new Shader(GradientShader);
         this.gradientShader.uniforms['startColor'] = color.map(v => v/255);
         this.gradientMesh = new Mesh(this.geometry, this.gradientShader);
-        this.gradientMesh.position.set(viewWidth/2, viewHeight/2);
+        this.gradientMesh.position.set(viewWidth/3, viewHeight/4);
 
         this.rainGraphic.position.set(0,0);
         // Create some rain

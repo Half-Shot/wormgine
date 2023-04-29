@@ -1,23 +1,22 @@
 import "pathseg";
 import { Application, Assets, UPDATE_PRIORITY, Text } from 'pixi.js';
-import { Background } from './entities/background';
 import { BazookaShell } from './entities/phys/bazookaShell';
-import { BitmapTerrain } from './entities/bitmapTerrain';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
 import { IGameEntity, IMatterEntity } from './entities/entity';
 import { manifest } from './assets/manifest';
 import { QuadtreeDetector } from './quadtreeDetector';
-import { Water } from './entities/water';
 import { Worm } from './entities/phys/worm';
 import * as polyDecomp from 'poly-decomp-es';
-import Matter, { Common, Engine, Events, Body, Bodies, Query } from "matter-js";
+import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
+import { Viewport } from 'pixi-viewport';
 
 Common.setDecomp(polyDecomp);
 
 export class Game {
     public readonly pixiApp: Application;
+    public readonly viewport: Viewport;
     public readonly matterEngine: Engine; 
     private readonly entities: IGameEntity[] = [];
     private readonly overlay = new Text('', {
@@ -28,21 +27,57 @@ export class Game {
     });
     private readonly quadtreeDetector: QuadtreeDetector;
 
-    constructor(width: number, height: number) {
+    public get pixiRoot() {
+        return this.viewport;
+    }
+
+    constructor(screenWidth: number, screenHeight: number) {
+        const worldWidth = 1920;
+        const worldHeight = 1080;
         // The application will create a renderer using WebGL, if possible,
         // with a fallback to a canvas render. It will also setup the ticker
         // and the root stage PIXI.Container
         // TODO: Set a sensible static width/height and have the canvas pan it.
-        this.quadtreeDetector = new QuadtreeDetector(width, height);
-        this.pixiApp = new Application({ width, height });
+        this.quadtreeDetector = new QuadtreeDetector(worldWidth, worldHeight);
+        this.pixiApp = new Application({ width: screenWidth, height: screenHeight });
+        this.viewport = new Viewport({
+            screenHeight,
+            screenWidth,
+            worldWidth: worldWidth,
+            worldHeight: worldHeight,
+            events: this.pixiApp.renderer.events // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+        })
+        this.pixiApp.ticker.maxFPS = 90;
         this.matterEngine = Engine.create({
             gravity: {
                 x: 0.0,
                 y: 0.2,
             },
             enableSleeping: true,
+            timing: {
+                timeScale: 0.01,
+            }
             // detector: this.quadtreeDetector,
         });
+        this.pixiApp.stage.addChild(this.viewport);
+        this.viewport
+            .clamp({
+                // top: -screenHeight*3,
+                // bottom: screenHeight*2,
+                // left: -screenWidth*2,
+                // right: screenWidth*3,
+                top: -3000,
+                bottom: 2000,
+                left: -2000,
+                right: 3000,
+                direction: 'y',
+            })
+            .decelerate()
+            .drag()
+        this.viewport.zoom(5);
+    
+        //this.viewport.fit()
+        //this.viewport.moveCenter(worldWidth / 2, worldHeight / 2)   
     }
 
     public async loadResources() {
@@ -114,8 +149,16 @@ export class Game {
         this.overlay.position.x = 50;
         this.overlay.position.y = 10;
 
+        const fpsSamples: number[] = [];
+
+
         this.pixiApp.ticker.add(() => {
-            this.overlay.text = `Total bodies: ${this.matterEngine.world.bodies.length} | ` +
+            fpsSamples.splice(0, 0, this.pixiApp.ticker.FPS);
+            if (fpsSamples.length > this.pixiApp.ticker.maxFPS) {
+                fpsSamples.pop();
+            }
+            const avgFps = Math.round(fpsSamples.reduce((a,b) => a + b, 0) / fpsSamples.length);
+            this.overlay.text = `FPS: ${avgFps} | Total bodies: ${this.matterEngine.world.bodies.length} | ` +
             `Active bodies: ${this.quadtreeDetector.activeBodies}`;
         }, undefined, UPDATE_PRIORITY.LOW);
 
