@@ -20,4 +20,4 @@ jobs:
         with:
           node-version-file: '.node-version'
       - run: yarn
-      - run: yarn lint
+      - run: yarn build
