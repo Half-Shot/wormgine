@@ -11,3 +11,11 @@ jobs:
           node-version-file: '.node-version'
       - run: yarn
       - run: yarn lint
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.node-version'
+      - run: yarn
+      - run: yarn lint
