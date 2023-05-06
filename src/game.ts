@@ -56,6 +56,9 @@ export class Game {
             enableSleeping: true,
             timing: {
                 timeScale: 1,
+                timestamp: 0,
+                lastElapsed: 0,
+                lastDelta: 0,
             },
             detector: this.quadtreeDetector,
         });

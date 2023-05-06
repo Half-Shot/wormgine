@@ -1,5 +1,5 @@
 import { Composite, Body, Vector } from "matter-js";
-import { UPDATE_PRIORITY, Texture, Sprite } from "pixi.js";
+import { UPDATE_PRIORITY, Sprite } from "pixi.js";
 import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";

@@ -22,4 +22,4 @@ export async function loadSvg(url: string, sampleLength = 50, scaleX = 1, scaleY
     return collision.map(path => 
         Vertices.scale(Svg.pathToVertices(path, sampleLength), scaleX, scaleY, point)
     )
-};
+}

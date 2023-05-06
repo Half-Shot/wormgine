@@ -25,7 +25,7 @@ export class Worm extends PhysicsEntity {
     private state: WormState;
 
     private terrainPosition: Vector = Vector.create(0,0);
-    private facingAngle: number = 0;
+    private facingAngle = 0;
 
     static async create(parent: Container, composite: Composite, position: { x: number, y: number }, terrain: BitmapTerrain, onFireWeapon: FireWeaponFn) {
         const ent = new Worm(position, composite, terrain, onFireWeapon);

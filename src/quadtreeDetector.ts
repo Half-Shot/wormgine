@@ -17,18 +17,18 @@ export class QuadtreeDetector {
 
     private lastCalculatedActiveBodies = 0;
 
+    public get activeBodies() {
+        return this.lastCalculatedActiveBodies;
+    }
+
     public set bodies(newBodies) {
         this.allBodies = newBodies;
         // TODO: Do we need to reconstruct the *entire* quad for this.
         this.reconstructQuads();
     }
 
-    public get activeBodies() {
-        return this.lastCalculatedActiveBodies;
-    }
-
     public get bodies() {
-        const rect = new Rectangle<any>({ x: 0, y: 0, width: 0, height: 0 });
+        const rect = new Rectangle<void>({ x: 0, y: 0, width: 0, height: 0 });
         this.allBodies.filter(b => !b.isSleeping).forEach((body) => {
             const width = (body.bounds.max.x - body.bounds.min.x);
             const height = (body.bounds.max.y - body.bounds.min.y);

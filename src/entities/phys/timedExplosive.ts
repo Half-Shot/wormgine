@@ -1,5 +1,5 @@
 import Matter, { Composite, Body, Vector } from "matter-js";
-import { UPDATE_PRIORITY, Texture, Ticker, Sprite } from "pixi.js";
+import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";

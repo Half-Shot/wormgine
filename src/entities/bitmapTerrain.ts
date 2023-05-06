@@ -83,7 +83,7 @@ export class BitmapTerrain implements IMatterEntity {
         for (const body of removableBodies) {
             Composite.remove(this.composite, body);
             const key = body.position.x + "," + body.position.y;
-            let damageFn = this.registeredDamageFunctions.get(key);
+            const damageFn = this.registeredDamageFunctions.get(key);
             if (damageFn) {
                 this.registeredDamageFunctions.delete(key);
                 damageFn?.();
@@ -103,7 +103,7 @@ export class BitmapTerrain implements IMatterEntity {
             const y = Math.ceil(i / lengthOfOneRow);
             const realX = x + boundaryX;
             const realY = y + boundaryY;
-            const [_r,_g,_b,a] = imgData.data.slice(i, i+4);
+            const [,,,a] = imgData.data.slice(i, i+4);
 
             if (x === 0) {
                 xBoundaryTracker[x] = false;
@@ -195,7 +195,6 @@ export class BitmapTerrain implements IMatterEntity {
         // See what has changed, hopefully a red cricle!
         let diffPixels = 0;
         for (let i = 0; i < before.data.length; i += 4) {
-            const newR = after.data[i];
             const oldDataValue = before.data[i]+before.data[i+1]+before.data[i+2]+before.data[i+3];
             const newDataValue = after.data[i]+after.data[i+1]+after.data[i+2]+after.data[i+3];
             if (oldDataValue !== newDataValue) {

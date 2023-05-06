@@ -1,4 +1,4 @@
-import { Assets, Point } from "pixi.js";
+import { Assets } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";

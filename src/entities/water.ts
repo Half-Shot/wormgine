@@ -1,5 +1,5 @@
 import { Composite, Body, Bodies } from "matter-js";
-import { Container, Geometry, Graphics, Mesh, Program, Rectangle, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Geometry, Graphics, Mesh, Program, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 
 const shader = Program.from(`
@@ -41,7 +41,7 @@ export class Water implements IGameEntity {
 
     constructor(private readonly width: number, private readonly height: number) {
         this.geometry = new Geometry();
-        const indicies = new Array('a','b').flatMap((_v, i) => {
+        const indicies = ['a','b'].flatMap((_v, i) => {
             i = i * 3;
             if (i === 0) {
                 return [
@@ -77,7 +77,7 @@ export class Water implements IGameEntity {
         Composite.add(engine, this.body);
     }
 
-    update(dt: number): void {
+    update(): void {
         this.shader.uniforms['iTime'] = performance.now() / 1000;
     }
 

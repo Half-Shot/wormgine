@@ -83,7 +83,7 @@ export class Background implements IGameEntity {
         return this.gradientMesh.destroyed;
     }
 
-    update(dt: number): void {
+    update(): void {
         this.rainGraphic.clear();
         for (let rainIndex = 0; rainIndex < this.rainParticles.length; rainIndex += 1) {
             const particle = this.rainParticles[rainIndex];

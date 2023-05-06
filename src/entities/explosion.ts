@@ -1,4 +1,4 @@
-import { Composite, Vector } from "matter-js";
+import { Vector } from "matter-js";
 import { Container, Graphics, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { Sound } from "@pixi/sound";
