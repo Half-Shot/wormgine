@@ -55,9 +55,9 @@ export class Game {
             },
             enableSleeping: true,
             timing: {
-                timeScale: 0.01,
-            }
-            // detector: this.quadtreeDetector,
+                timeScale: 1,
+            },
+            detector: this.quadtreeDetector,
         });
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
