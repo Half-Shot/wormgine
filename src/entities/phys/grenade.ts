@@ -6,20 +6,21 @@ import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { loadSvg } from '../../loadSvg';
+import { Game } from '../../game';
        
 /**
  * Standard grenade projectile.
  */
 export class Grenade extends TimedExplosive {
     private static readonly FRICTION = 0.5;
-    private static readonly RESITITUTION = 0.9;
+    private static readonly RESITITUTION = 0.1;
     private static readonly density = 0.005;
     private static bodyVertices = loadSvg(grenadePaths, 50, 1, 1, Vector.create(0.5, 0.5));
     public static texture: Texture;
     public static bounceSound: Sound;
 
-    static async create(parent: Container, composite: Composite, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
-        const ent = new Grenade(position, await Grenade.bodyVertices, initialForce, composite);
+    static async create(game: Game, parent: Container, composite: Composite, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
+        const ent = new Grenade(game, position, await Grenade.bodyVertices, initialForce, composite);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
@@ -32,17 +33,20 @@ export class Grenade extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, parent: Composite) {
+    private constructor(game: Game, position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, parent: Composite) {
         const body = Bodies.fromVertices(position.x, position.y, bodyVerticies, {
             sleepThreshold: 60*(5+2),
             friction: Grenade.FRICTION,
             restitution: Grenade.RESITITUTION,
             density: Grenade.density,
+            isSleeping: false,
+            isStatic: false,
         });
+        console.log(body);
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
-        super(sprite, body, parent, {
+        super(game, sprite, body, parent, {
             explosionRadius: 60,
             explodeOnContact: false,
             timerSecs: 3,

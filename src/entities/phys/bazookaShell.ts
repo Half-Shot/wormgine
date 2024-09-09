@@ -3,6 +3,7 @@ import grenadePaths from "../../assets/bazooka.svg";
 import { Body, Bodies, Composite, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { loadSvg } from '../../loadSvg';
+import { Game } from '../../game';
 
 // TODO: This is buggy as all hell.
 
@@ -14,8 +15,8 @@ export class BazookaShell extends TimedExplosive {
     private readonly force: Vector = Vector.create(0);
     private readonly gfx = new Graphics();
     
-    static async create(parent: Container, composite: Composite, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
-        const ent = new BazookaShell(position, await BazookaShell.bodyVertices, initialAngle, composite, initialForce, wind);
+    static async create(game: Game, parent: Container, composite: Composite, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
+        const ent = new BazookaShell(game, position, await BazookaShell.bodyVertices, initialAngle, composite, initialForce, wind);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite);
         console.log("New zooka", ent.body);
@@ -23,12 +24,12 @@ export class BazookaShell extends TimedExplosive {
         return ent;
     }
 
-    private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialAngle: number, composite: Composite, initialForce: number, private readonly wind: number) {
+    private constructor(game: Game, position: { x: number, y: number }, bodyVerticies: Vector[][], initialAngle: number, composite: Composite, initialForce: number, private readonly wind: number) {
         const body = Bodies.fromVertices(position.x, position.y, bodyVerticies, {
             position,
         });
         const sprite = new Sprite(BazookaShell.texture);
-        super(sprite, body, composite, {
+        super(game, sprite, body, composite, {
             explosionRadius: 100,
             explodeOnContact: true,
             timerSecs: 30,
@@ -54,10 +55,11 @@ export class BazookaShell extends TimedExplosive {
         Body.applyForce(this.body, Vector.create(this.body.position.x, this.body.position.y), this.force);
         if (BazookaShell.boundingWireframe) {
             this.gfx.clear();
-            this.gfx.lineStyle(1, 0xFFBD01, 1);
             const width = (this.body.bounds.max.x - this.body.bounds.min.x);
             const height = (this.body.bounds.max.y - this.body.bounds.min.y);
-            this.gfx.drawShape(new Rectangle(this.body.position.x - width/2, this.body.position.y - height/2,width,height));
+            this.gfx.rect(this.body.position.x - width/2, this.body.position.y - height/2,width,height).stroke({
+                width: 1, color: 0xFFBD01, alpha: 1
+            });
         }
     }
 

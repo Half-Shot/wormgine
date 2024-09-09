@@ -1,5 +1,5 @@
 import "pathseg";
-import { Application, Assets, UPDATE_PRIORITY, Text } from 'pixi.js';
+import { Application, Assets, UPDATE_PRIORITY, Text, Ticker } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
@@ -14,8 +14,10 @@ import { Viewport } from 'pixi-viewport';
 
 Common.setDecomp(polyDecomp);
 
+const worldWidth = 1920;
+const worldHeight = 1080;
+
 export class Game {
-    public readonly pixiApp: Application;
     public readonly viewport: Viewport;
     public readonly matterEngine: Engine; 
     private readonly entities: IGameEntity[] = [];
@@ -31,27 +33,22 @@ export class Game {
         return this.viewport;
     }
 
-    constructor(screenWidth: number, screenHeight: number) {
-        const worldWidth = 1920;
-        const worldHeight = 1080;
+    public static async create(screenWidth: number, screenHeight: number): Promise<Game> {
+        const pixiApp = new Application();
+        await pixiApp.init({ width: screenWidth, height: screenHeight, preference: 'webgl', });
+        return new Game(pixiApp);
+    }
+
+    constructor(public readonly pixiApp: Application) {
         // The application will create a renderer using WebGL, if possible,
         // with a fallback to a canvas render. It will also setup the ticker
         // and the root stage PIXI.Container
         // TODO: Set a sensible static width/height and have the canvas pan it.
         this.quadtreeDetector = new QuadtreeDetector(worldWidth, worldHeight);
-        this.pixiApp = new Application({ width: screenWidth, height: screenHeight });
-        this.viewport = new Viewport({
-            screenHeight,
-            screenWidth,
-            worldWidth: worldWidth,
-            worldHeight: worldHeight,
-            events: this.pixiApp.renderer.events // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
-        })
-        this.pixiApp.ticker.maxFPS = 90;
         this.matterEngine = Engine.create({
             gravity: {
-                x: 0.0,
-                y: 0.2,
+                x: 0,
+                y: 0.5,
             },
             enableSleeping: true,
             timing: {
@@ -62,6 +59,14 @@ export class Game {
             },
             detector: this.quadtreeDetector,
         });
+        this.viewport = new Viewport({
+            screenHeight: this.pixiApp.screen.height,
+            screenWidth: this.pixiApp.screen.width,
+            worldWidth: worldWidth,
+            worldHeight: worldHeight,
+            events: this.pixiApp.renderer.events // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+        });
+        this.pixiApp.ticker.maxFPS = 90;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
             .clamp({
@@ -104,8 +109,8 @@ export class Game {
 
     public addEntity<T extends IGameEntity>(entity: T): T {
         this.entities.push(entity);
-        const tickerFn = (dt: number) => {
-            entity.update?.(dt);
+        const tickerFn = (dt: Ticker) => {
+            entity.update?.(dt.deltaTime);
             if (entity.destroyed) {
                 this.pixiApp.ticker.remove(tickerFn);
                 this.entities.splice(this.entities.indexOf(entity), 1);
@@ -140,7 +145,7 @@ export class Game {
                 return;
             }
 
-            const contact = pairA.activeContacts[0];
+            const contact = pairA.contacts[0];
 
             entA.onCollision?.(entB, contact.vertex);
             entB.onCollision?.(entA, contact.vertex);
@@ -155,9 +160,9 @@ export class Game {
         const fpsSamples: number[] = [];
 
 
-        this.pixiApp.ticker.add(() => {
-            fpsSamples.splice(0, 0, this.pixiApp.ticker.FPS);
-            if (fpsSamples.length > this.pixiApp.ticker.maxFPS) {
+        this.pixiApp.ticker.add((dt) => {
+            fpsSamples.splice(0, 0, dt.FPS);
+            if (fpsSamples.length > dt.maxFPS) {
                 fpsSamples.pop();
             }
             const avgFps = Math.round(fpsSamples.reduce((a,b) => a + b, 0) / fpsSamples.length);
@@ -167,7 +172,10 @@ export class Game {
 
         this.pixiApp.stage.addChild(this.overlay);
 
-        Matter.Runner.run(this.matterEngine);
+        // Matter.Runner.run(this.matterEngine);
+        this.pixiApp.ticker.add(() => {
+            Matter.Engine.update(this.matterEngine);
+        }, undefined, UPDATE_PRIORITY.HIGH);
     }
 
     public get canvas() {

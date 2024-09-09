@@ -7,11 +7,12 @@ export function App() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const game = new Game(window.innerWidth, window.innerHeight);
-    game.loadResources().then(() => {
-      setGame(game)
-    });
-  }, [false]);
+    const game = Game.create(window.innerWidth, window.innerHeight).then((game) => {
+      game.loadResources().then(() => {
+        setGame(game)
+      });
+    })
+  }, []);
  
   useEffect(() => {
     if (!ref.current || !game) {

@@ -1,6 +1,9 @@
-import vert from "./gradient.vert?raw";
-import frag from "./gradient.frag?raw";
-import { Program } from "pixi.js";
+import vertex from "./gradient.vert?raw";
+import fragment from "./gradient.frag?raw";
+import { GlProgram } from "pixi.js";
 
- 
-export default Program.from(vert,frag,'gradient-renderer');
+export default GlProgram.from({
+    vertex,
+    fragment,
+    name: 'rain'
+});

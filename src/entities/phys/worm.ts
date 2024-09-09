@@ -61,7 +61,7 @@ export class Worm extends PhysicsEntity {
         this.parent = composite;
 
         // TODO: Move this to a dedicated controller class.
-        window.onkeydown = (evt) => {
+        window.onkeydown = (evt) => {  
             if(evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
                 this.onMove(evt.key === "ArrowLeft" ? "left" : "right");
             }
@@ -120,6 +120,7 @@ export class Worm extends PhysicsEntity {
     }
 
     onStoppedMoving() {
+        console.log('Stopped moving');
         // We are in a InMotion state but have come to rest.
         this.state = WormState.Idle;
         Body.setStatic(this.body, true);

@@ -1,4 +1,4 @@
-import { Body, Pairs } from "matter-js";
+import { Body, Pairs, Detector, Collision } from "matter-js";
 import { Quadtree, Rectangle } from "@timohausmann/quadtree-ts";
 
 type QuadtreeItem = Rectangle<Body>;
@@ -11,8 +11,9 @@ type QuadtreeItem = Rectangle<Body>;
  * checked. Essentially stores all bodies in the world on behalf of the 
  * Detector class and returns a subset based on activity.
  */
-export class QuadtreeDetector {
+export class QuadtreeDetector implements Detector {
     public pairs: Pairs[] = [];
+    public collisions: Collision[] = [];
     private allBodies: Body[] = [];
 
     private lastCalculatedActiveBodies = 0;

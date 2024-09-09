@@ -6,7 +6,7 @@ import { Graphics, Rectangle } from "pixi.js";
  */
 export class BodyWireframe {
     private gfx = new Graphics();
-    private shouldRender = false;
+    private shouldRender = true;
 
     public set enabled(value: boolean) {
         this.gfx.clear();
@@ -31,9 +31,8 @@ export class BodyWireframe {
         }
 
         this.gfx.clear();
-        this.gfx.lineStyle(1, 0xFFBD01, 1);
         const width = (this.body.bounds.max.x - this.body.bounds.min.x);
         const height = (this.body.bounds.max.y - this.body.bounds.min.y);
-        this.gfx.drawShape(new Rectangle(this.body.position.x - width/2, this.body.position.y - height/2,width,height));
+        this.gfx.rect(this.body.position.x - width/2, this.body.position.y - height/2,width,height).stroke({width: 1, color: 0xFFBD01, alpha: 1});
     }
 }

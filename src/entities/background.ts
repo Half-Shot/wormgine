@@ -1,4 +1,4 @@
-import { ColorSource, Container, DisplayObject, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { ColorSource, Container, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
@@ -22,12 +22,9 @@ export class Background implements IGameEntity {
     rainSpeedVariation = 1/2;
     rainCount = 175;
     rainColor: ColorSource = 'rgba(100,100,100,0.25)';
-
-    geometry: Geometry;
     priority = UPDATE_PRIORITY.LOW;
 
-    gradientShader: Shader;
-    gradientMesh: Mesh<Shader>;
+    gradientMesh: Mesh<Geometry, Shader>;
 
     rainGraphic = new Graphics();
     rainParticles: RainParticle[] = [];
@@ -35,24 +32,33 @@ export class Background implements IGameEntity {
     private constructor(private readonly viewWidth: number, private readonly viewHeight: number, color: [number, number, number, number], private readonly terrain: BitmapTerrain) {
         const halfViewWidth = viewWidth / 2;
         const halfViewHeight = viewHeight / 2;
-        this.geometry = new Geometry()
-        .addAttribute('aVertexPosition', // the attribute name
-            [-halfViewWidth, -halfViewHeight, // x, y
-            halfViewWidth, -halfViewHeight, // x, y
-            halfViewWidth, halfViewHeight,
-                -halfViewWidth, halfViewHeight], // x, y
-            2) // the size of the attribute
-        .addAttribute('aUvs', // the attribute name
-            [0, 0, // u, v
-                1, 0, // u, v
-                1, 1,
-                0, 1], // u, v
-            2) // the size of the attribute
-        .addIndex([0, 1, 2, 0, 2, 3]);
-
-        this.gradientShader = new Shader(GradientShader);
-        this.gradientShader.uniforms['startColor'] = color.map(v => v/255);
-        this.gradientMesh = new Mesh(this.geometry, this.gradientShader);
+        const geometry = new Geometry({
+            attributes: {
+                aVertexPosition:
+                    [-halfViewWidth, -halfViewHeight, // x, y
+                    halfViewWidth, -halfViewHeight, // x, y
+                    halfViewWidth, halfViewHeight,
+                    -halfViewWidth, halfViewHeight], // x, y
+                aUvs: [0, 0, // u, v
+                    1, 0, // u, v
+                    1, 1,
+                    0, 1]
+            },
+            indexBuffer: [0, 1, 2, 0, 2, 3]
+        });
+        this.gradientMesh = new Mesh({
+            geometry,
+            shader: new Shader({
+                glProgram: GradientShader,
+                resources: {
+                    uniforms: {
+                        uStartColor: { value: new Float32Array(color.map(v => v/255)), type: 'vec4<f32>' },
+                    }
+                    //uStartColor: [1, 0, 0, 1],
+                }
+            })
+        });
+        
         this.gradientMesh.position.set(viewWidth/3, viewHeight/4);
 
         this.rainGraphic.position.set(0,0);
@@ -74,7 +80,7 @@ export class Background implements IGameEntity {
         });
     }
 
-    addToWorld(parent: Container<DisplayObject>) {
+    addToWorld(parent: Container) {
         parent.addChild(this.gradientMesh);
         parent.addChild(this.rainGraphic);
     }
@@ -108,7 +114,7 @@ export class Background implements IGameEntity {
             particle.position.y += particle.speed;
             const lengthX = particle.position.x-particle.length;
             const lengthY = particle.position.y-(particle.length*particle.angle);
-            this.rainGraphic.lineStyle(3, this.rainColor).moveTo(
+            this.rainGraphic.setStrokeStyle({ width: 3, color: this.rainColor }).moveTo(
                 lengthX, lengthY
             ).lineTo(particle.position.x, particle.position.y);
         }

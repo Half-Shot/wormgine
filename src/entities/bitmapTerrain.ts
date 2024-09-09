@@ -1,13 +1,11 @@
 import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
-import { UPDATE_PRIORITY, Container, DisplayObject, Graphics, Rectangle, Texture, Sprite, ImageBitmapResource } from "pixi.js";
+import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
 import { IMatterEntity } from "./entity";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
-    private static readonly explosionBorderSize = 10;
-
     public readonly priority = UPDATE_PRIORITY.LOW;
-    public readonly drawDebugBorder = false;
+    public readonly drawDebugBorder = true;
 
     public get destroyed() {
         // Terrain cannot be destroyed...yet
@@ -41,9 +39,10 @@ export class BitmapTerrain implements IMatterEntity {
         }
         
 
-        const bitmap = (texture.baseTexture.resource as ImageBitmapResource).source;
+        const bitmap = texture.source.resource;
         context.drawImage(bitmap as CanvasImageSource,  (viewWidth / 2) - (texture.width / 2), viewHeight - texture.height);
-        this.texture = Texture.from(this.canvas);
+        
+        this.texture = Texture.from(this.canvas, true);
         this.textureBackdrop = Texture.from(this.canvas.toDataURL());
         this.sprite = new Sprite(this.texture);
         this.sprite.anchor.x = 0;
@@ -61,7 +60,7 @@ export class BitmapTerrain implements IMatterEntity {
         this.calculateBoundaryVectors();
     }
 
-    addToWorld(parent: Container<DisplayObject>) {
+    addToWorld(parent: Container) {
         parent.addChild(this.spriteBackdrop, this.sprite, this.gfx);
     }
 
@@ -151,9 +150,7 @@ export class BitmapTerrain implements IMatterEntity {
             }
     
             for (const rect of this.parts) {
-                this.gfx.lineStyle(1, rect.isSleeping ? 0x00AA00 : 0xFFBD01, 1);
-                const gfxR = new Rectangle(rect.position.x, rect.position.y, 1, 1);
-                this.gfx.drawShape(gfxR);
+                this.gfx.setStrokeStyle({ width: 1, color: rect.isSleeping ? 0x00AA00 : 0xFFBD01, alpha: 1 }).rect(rect.position.x, rect.position.y, 1, 1);
             }
         }
         console.log("Calculated bitmap terrain bounds to be", this.bounds);
@@ -207,13 +204,16 @@ export class BitmapTerrain implements IMatterEntity {
             }
         }
 
+
         // Show the new image with our newly created hole.
         context.putImageData(after, snapshotX, snapshotY);
-        console.log('Updated texture', diffPixels);
 
         // Remember to recalculate the collision paths
         this.calculateBoundaryVectors(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
-        this.texture.update();
+        const newTex = Texture.from(this.canvas);
+        this.sprite.texture = newTex;
+        this.texture.destroy();
+        this.texture = newTex;
     }
 
     public entityOwnsBody(bodyId: number) {

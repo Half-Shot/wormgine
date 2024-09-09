@@ -1,4 +1,4 @@
-import { ResolverManifest } from "pixi.js";
+import { AssetsManifest } from "pixi.js";
 import '@pixi/sound';
 import grenadeSrc from "./grenade.png";
 import bazookaShellSrc from "./bazooka.png";
@@ -12,31 +12,31 @@ export const manifest = {
     bundles: [{
         name: "textures",
         assets: [{
-            name: "grenade",
-            srcs: grenadeSrc,
+            alias: "grenade",
+            src: grenadeSrc,
         },
         {
-            name: "island1",
-            srcs: island1png,
+            alias: "island1",
+            src: island1png,
         },
         {
-            name: "bazooka_shell",
-            srcs: bazookaShellSrc,
+            alias: "bazooka_shell",
+            src: bazookaShellSrc,
         }]
     }, {
         name: "sounds",
         assets: [{
-            name: "bounce",
-            srcs: bounce,
+            alias: "bounce",
+            src: bounce,
         },{
-            name: "explosion1",
-            srcs: explosion1,
+            alias: "explosion1",
+            src: explosion1,
         },{
-            name: "explosion2",
-            srcs: explosion2,
+            alias: "explosion2",
+            src: explosion2,
         },{
-            name: "explosion3",
-            srcs: explosion3,
+            alias: "explosion3",
+            src: explosion3,
         }]
     }]
-} as ResolverManifest;
+} satisfies AssetsManifest;

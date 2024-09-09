@@ -39,18 +39,12 @@ export class Explosion implements IGameEntity {
         this.gfx.clear();
         const alphaLarger =  Math.round(ttl * 100) / 150;
         const alphaSmaller = Math.round(ttl * 100) / 100;
-        this.gfx.beginFill(0xFFFFFF, alphaLarger);
-        this.gfx.drawCircle(this.point.x, this.point.y, radius);
-        this.gfx.endFill();
-        this.gfx.beginFill(0xAAEEFF, alphaSmaller);
+        this.gfx.circle(this.point.x, this.point.y, radius).fill({ color: 0xFFFFFF, alpha: alphaLarger });
         const outerWidth = ttlInverse*(radius * 2);
-        this.gfx.drawEllipse(this.point.x, this.point.y, outerWidth, radius/1.5);
+        this.gfx.ellipse(this.point.x, this.point.y, outerWidth, radius/1.5).fill({color: 0xAAEEFF, alpha: alphaSmaller });
         if (outerWidth - 20 > 0) {
-            this.gfx.beginHole();
-            this.gfx.drawEllipse(this.point.x, this.point.y, outerWidth - 20, radius / 2);
-            this.gfx.endHole();
+            this.gfx.ellipse(this.point.x, this.point.y, outerWidth - 20, radius / 2).cut();
         }
-        this.gfx.endFill();
 
         if (this.timer <= 0) {
             this.destroy();

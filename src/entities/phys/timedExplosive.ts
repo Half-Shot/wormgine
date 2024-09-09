@@ -1,8 +1,10 @@
-import Matter, { Composite, Body, Vector } from "matter-js";
+import Matter, { Composite, Body, Vector, Bodies, Query } from "matter-js";
 import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
+import { Game } from "../../game";
+import { Explosion } from "../explosion";
 
 interface Opts {
     explosionRadius: number,
@@ -17,11 +19,10 @@ interface Opts {
 export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
     protected timer: number;
     protected isSinking = false;
-    public explodeHandler ?: ((point: Matter.Vector, radius: number) => void) | undefined;
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
 
-    constructor(sprite: Sprite, body: Body, parent: Composite, public readonly opts: Opts) {
+    constructor(private readonly game: Game, sprite: Sprite, body: Body, parent: Composite, public readonly opts: Opts) {
         super(sprite, body, parent)
         this.timer = Ticker.targetFPMS * opts.timerSecs * 1000;
     }
@@ -30,7 +31,26 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         if (!this.body || !this.parent) {
             throw Error('Timer expired without a body');
         }
-        this.explodeHandler?.(this.body.position, this.opts.explosionRadius);
+        this.onExplode();
+    }
+
+    onExplode() {
+        const point = this.body.position;
+        const radius = this.opts.explosionRadius;
+        // Detect if anything is around us.
+        const circ = Bodies.circle(point.x, point.y, radius);
+        const hit = Query.collides(circ, this.game.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
+        this.game.addEntity(Explosion.create(this.game.viewport, point, radius));
+        console.log("Timed explosive hit", hit);
+        // Find contact point with any terrain
+        for (const hitBody of hit) {
+            const ents = (this.game.findEntityByBodies(hitBody.bodyA, hitBody.bodyB)).filter(e => e !== this);
+            if (ents[0]) {
+                // TODO: Cheating massively
+                this.onCollision(ents[0], hitBody.bodyA.position);
+            }
+        }
+        
     }
 
     update(dt: number): void {
