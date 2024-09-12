@@ -1,6 +1,7 @@
 import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
 import { IMatterEntity } from "./entity";
+import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
@@ -14,6 +15,9 @@ export class BitmapTerrain implements IMatterEntity {
 
     private readonly gfx: Graphics = new Graphics();
     private parts: Body[] = [];
+    private nearestTerrainPositionBodies = new Set();
+    private nearestTerrainPositionPoint = Vector.create();
+    private debugQuads: Rectangle[] = [];
 
     private bounds: Rectangle;
 
@@ -65,6 +69,7 @@ export class BitmapTerrain implements IMatterEntity {
     }
 
     calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.canvas.width, boundaryHeight = this.canvas.height) {
+        console.time('Generating terrain');
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');
@@ -89,71 +94,27 @@ export class BitmapTerrain implements IMatterEntity {
             }
         }
         this.parts = this.parts.filter(b => !removableBodies.some(rB => b.id === rB.id));
-
-
         const imgData = context.getImageData(boundaryX, boundaryY, boundaryWidth, boundaryHeight);
-        const boundaryVectors = new Set<Vector>();
-        const xBoundaryTracker= new Array(imgData.width);
-        const yBoundaryTracker = new Array(imgData.height);
+        const { boundaries, boundingBox } = imageDataToTerrainBoundaries(boundaryX, boundaryY, imgData);
+        this.bounds = boundingBox;
 
-        const lengthOfOneRow = imgData.width*4;
-        for (let i = 0; i < imgData.data.length; i += 4) {
-            const x = (i % lengthOfOneRow) / 4;
-            const y = Math.ceil(i / lengthOfOneRow);
-            const realX = x + boundaryX;
-            const realY = y + boundaryY;
-            const [,,,a] = imgData.data.slice(i, i+4);
+        // Turn it into a quadtree of rects
+        const quadtreeRects = generateQuadTreeFromTerrain(boundaries, boundingBox.width, boundingBox.height, boundingBox.x, boundingBox.y);
+        console.log("Found", quadtreeRects.length, "quads in terrain", quadtreeRects);
+        this.debugQuads = quadtreeRects;
 
-            if (x === 0) {
-                xBoundaryTracker[x] = false;
-                yBoundaryTracker[y] = false;
-            }
-
-            if (a > 5) {
-                if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
-                    // This is to stop us from drawing straight lines down
-                    // when we have a boundary, but I don't know why this works.
-                    if (x > 1 && y > 1) {
-                        boundaryVectors.add(Vector.create(realX,realY));
-                    }
-                    xBoundaryTracker[x] = true;
-                    yBoundaryTracker[y] = true;
-
-                    this.bounds.x = Math.min(this.bounds.x, realX);
-                    this.bounds.y = Math.min(this.bounds.y, realY);
-                    this.bounds.width = Math.max(this.bounds.width, x-this.bounds.x);
-                    this.bounds.height = Math.max(this.bounds.height, y-this.bounds.y);
-                }
-            } else if (a === 0) {
-                if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
-                    boundaryVectors.add(Vector.create(realX,realY));
-                    xBoundaryTracker[x] = false;
-                    yBoundaryTracker[y] = false;
-                }
-            }
-        }
+        console.log(this.sprite.x, this.sprite.y);
 
         // Now create the pieces
         const newParts: Body[] = [];
-        for (const vertex of boundaryVectors) {
-            const body = Bodies.rectangle(vertex.x + this.sprite.x, vertex.y + this.sprite.y, 1, 1, { isStatic: true });
+        for (const quad of quadtreeRects) {
+            const body = Bodies.rectangle(quad.x + this.sprite.x, quad.y + this.sprite.y, quad.width, quad.height, { isStatic: true });
             newParts.push(body);
         }
         this.parts.push(...newParts);
 
         Composite.add(this.composite, newParts);
-
-        if (this.drawDebugBorder) {
-            this.gfx.clear();
-            if (this.lastBoundaryChange) {
-                this.gfx.drawRect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height);
-            }
-    
-            for (const rect of this.parts) {
-                this.gfx.setStrokeStyle({ width: 1, color: rect.isSleeping ? 0x00AA00 : 0xFFBD01, alpha: 1 }).rect(rect.position.x, rect.position.y, 1, 1);
-            }
-        }
-        console.log("Calculated bitmap terrain bounds to be", this.bounds);
+        console.timeEnd("Generating terrain");
     }
 
     onDamage(point: Vector, radius: number) {
@@ -216,54 +177,93 @@ export class BitmapTerrain implements IMatterEntity {
         this.texture = newTex;
     }
 
+    public update(): void {
+        if (this.drawDebugBorder) {
+            this.gfx.clear();
+            // if (this.lastBoundaryChange) {
+            //     this.gfx.rect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height).stroke({width: 5, color: 0xFF0000});
+            // }
+   
+            for (const rect of this.parts) {
+                let color = 0xFFBD01;
+                if (this.nearestTerrainPositionBodies.has(rect)) {
+                    color = 0x00AA00;
+                } else if (rect.isSleeping) {
+                    color = 0x0000FF;
+                }
+                this.gfx.rect(rect.position.x, rect.position.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y).stroke({ width: 1, color });
+            }
+            this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
+        }
+    }
+
     public entityOwnsBody(bodyId: number) {
         // TODO: Use a set
         return this.parts.some(b => b.id === bodyId);
     }
 
-    public collidesWithTerrain(point: Vector, width: number, height: number): Collision|undefined {
-        console.log(point, width, height);
-        return Query.collides(
-            Bodies.rectangle(
-                point.x - width/2,
-                point.y - height/2,
-                width,
-                height,
-            ),
-            this.parts,
-        ).sort((a,b) => b.depth - a.depth)[0];
-    }
+    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0): {point?: Vector, fell: boolean} {
+        // This needs a rethink, we really want to have it so that the character's "platform" is visualised
+        // by this algorithm. We want to figure out if we can move left or right, and if not if we're going to fall.
 
-    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0) {
-        let body: Body|undefined;
-        let distance = Number.MAX_SAFE_INTEGER;
-        for (const part of this.parts) {
-            const distX = Math.abs(part.position.x - point.x);
-            if (distX > width / 2) {
-                continue;
-            }
-            if (xDirection < 0 && part.position.x - point.x > xDirection) {
+        this.nearestTerrainPositionBodies.clear();
+        this.nearestTerrainPositionPoint = point;
+
+        // First filter for all the points within the range of the point.
+        const filteredPoints = this.parts.filter((p) => {
+            return p.position.x < point.x + width + xDirection && 
+                p.position.x > point.x - width - xDirection && 
+                p.position.y > point.y - maxHeightDiff
+        });
+
+        // This needs to answer the following as quickly as possible:
+
+        // Can we go to the next x point without falling?
+        let closestTerrainPoint: Vector|undefined;
+
+        let rejectedPoints: Body[] = [];
+
+        for (const terrain of filteredPoints) {
+            const terrainPoint = terrain.position;
+            const distY = Math.abs(terrainPoint.y - point.y);
+            if (xDirection < 0 && terrainPoint.x - point.x > xDirection) {
                 // If moving left, -3
                 continue;
             }
-            if (xDirection > 0 && part.position.x - point.x < xDirection) {
-                // If moving left, -3
+            if (xDirection > 0 && terrainPoint.x - point.x < xDirection) {
+                // If moving right
                 continue;
             }
-            const distY = Math.abs(part.position.y - point.y);
-            if (point.y - part.position.y > maxHeightDiff) {
-                // This is too high for us to scale
+            if (distY > maxHeightDiff) {
+                rejectedPoints.push(terrain);
                 continue;
-            } else if (part.position.y - point.y > maxHeightDiff) {
-                // This is a fall, allow it.
             }
-            const newDistance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
-            if (newDistance < distance) {
-                body = part;
-                distance = newDistance;
+            const distX = Math.abs(terrainPoint.x - (point.x + xDirection));
+            const prevDistX = closestTerrainPoint ? Math.abs(closestTerrainPoint.x - (point.x + xDirection)) : Number.MAX_SAFE_INTEGER;
+            if (distX < prevDistX) {
+                closestTerrainPoint = terrainPoint;
             }
         }
-        return body?.position;
+
+        if (closestTerrainPoint) {
+            return { point: closestTerrainPoint, fell: false};
+        }
+
+        // We have fallen, look for the closest X position to land on.
+        for (const terrain of rejectedPoints) {
+            const terrainPoint = terrain.position;
+            const distX = Math.abs(terrainPoint.x - (point.x + xDirection));
+            const prevDistX = closestTerrainPoint ? Math.abs(closestTerrainPoint.x - (point.x + xDirection)) : Number.MAX_SAFE_INTEGER;
+            if (distX < prevDistX && distX > 15) {
+                console.log(distX);
+                closestTerrainPoint = terrainPoint;
+            }
+        }
+
+        return {
+            point: closestTerrainPoint,
+            fell: true,
+        };
     }
 
     public pointInTerrain(point: Vector, radius: number): Collision[] {
