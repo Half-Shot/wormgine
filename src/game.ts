@@ -166,8 +166,10 @@ export class Game {
                 fpsSamples.pop();
             }
             const avgFps = Math.round(fpsSamples.reduce((a,b) => a + b, 0) / fpsSamples.length);
+            const region = this.quadtreeDetector.activeRegion;
+            const regionText = !region ? "<none>" : `${region.x},${region.y} ${region.width} ${region.height}`
             this.overlay.text = `FPS: ${avgFps} | Total bodies: ${this.matterEngine.world.bodies.length} | ` +
-            `Active bodies: ${this.quadtreeDetector.activeBodies}`;
+            `Active bodies: ${this.quadtreeDetector.activeBodies} | Quadtree wake region: ${regionText}`;
         }, undefined, UPDATE_PRIORITY.LOW);
 
         this.pixiApp.stage.addChild(this.overlay);
