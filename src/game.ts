@@ -13,6 +13,7 @@ import grenadeIsland from './scenarios/grenadeIsland';
 import { Viewport } from 'pixi-viewport';
 import globalFlags from "./flags";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
+import { getAssets } from "./assets";
 
 Common.setDecomp(polyDecomp);
 
@@ -91,23 +92,20 @@ export class Game {
     }
 
     public async loadResources() {
-        await Assets.init({ manifest });
-
-        // TODO: This is NOT the way I want to handle assets but it will do for now.
-        const b = await Promise.all(manifest.bundles.map(bundle => 
-            Assets.loadBundle(bundle.name)
-        ));
-        Grenade.texture = b[0].grenade;
-        Grenade.bounceSound = b[1].bounce;
-        BazookaShell.texture = b[0].bazooka_shell;
-        Worm.texture = b[0].grenade;
+        // Assets will have already been loaded.
+        // TODO: Do this better.
+        const { textures, sounds } = getAssets();
+        Grenade.texture = textures.grenade;
+        Grenade.bounceSound = sounds.bounce;
+        BazookaShell.texture = textures.bazooka_shell;
+        Worm.texture = textures.grenade;
         Explosion.explosionSounds = 
             [
-                b[1].explosion1,
-                b[1].explosion2,
-                b[1].explosion3
+                sounds.explosion1,
+                sounds.explosion2,
+                sounds.explosion3
             ];
-        PhysicsEntity.splashSound = b[1].splash;
+        PhysicsEntity.splashSound = sounds.splash;
     }
 
     public addEntity<T extends IGameEntity>(entity: T): T {

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
-import './app.css'
-import { Game } from './game';
+import './ingame-view.css'
+import { Game } from '../game';
 
-export function App() {
+// TODO: Feed game parameters into this.
+
+export function IngameView() {
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const game = Game.create(window.innerWidth, window.innerHeight).then((game) => {
+    Game.create(window.innerWidth, window.innerHeight).then((game) => {
       game.loadResources().then(() => {
         setGame(game)
       });
