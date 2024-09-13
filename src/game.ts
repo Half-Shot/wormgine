@@ -11,6 +11,7 @@ import * as polyDecomp from 'poly-decomp-es';
 import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
 import { Viewport } from 'pixi-viewport';
+import globalFlags from "./flags";
 
 Common.setDecomp(polyDecomp);
 
@@ -159,8 +160,7 @@ export class Game {
 
         const fpsSamples: number[] = [];
 
-
-        this.pixiApp.ticker.add((dt) => {
+        const renderOverlay = (dt: Ticker) => {
             fpsSamples.splice(0, 0, dt.FPS);
             if (fpsSamples.length > dt.maxFPS) {
                 fpsSamples.pop();
@@ -170,18 +170,29 @@ export class Game {
             const regionText = !region ? "<none>" : `${region.x},${region.y} ${region.width} ${region.height}`
             this.overlay.text = `FPS: ${avgFps} | Total bodies: ${this.matterEngine.world.bodies.length} | ` +
             `Active bodies: ${this.quadtreeDetector.activeBodies} | Quadtree wake region: ${regionText}`;
-        }, undefined, UPDATE_PRIORITY.LOW);
+        };
+
+
+        globalFlags.on('toggleDebugView', (enabled) => {
+            if (enabled) {
+                this.pixiApp.stage.addChild(this.overlay);
+                this.pixiApp.ticker.add(renderOverlay, undefined, UPDATE_PRIORITY.LOW);
+            } else {
+                this.pixiApp.ticker.remove(renderOverlay);
+                this.pixiApp.stage.removeChild(this.overlay);
+            }
+        })
+        
 
         this.pixiApp.stage.addChild(this.overlay);
 
-        // Matter.Runner.run(this.matterEngine);
         this.pixiApp.ticker.add(() => {
             Matter.Engine.update(this.matterEngine);
         }, undefined, UPDATE_PRIORITY.HIGH);
     }
 
     public get canvas() {
-        return this.pixiApp.view as HTMLCanvasElement
+        return this.pixiApp.canvas;
     }
 
     public destroy() {

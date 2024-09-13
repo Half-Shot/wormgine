@@ -10,7 +10,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "pixi.js": "^8.3.4",
+    "pixi.js": "^8.4.0",
     "@pixi/sound": "^6.0.1",
     "@timohausmann/quadtree-ts": "^2.2.2",
     "matter-js": "^0.20.0",

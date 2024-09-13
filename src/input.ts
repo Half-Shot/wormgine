@@ -4,12 +4,14 @@ export enum InputKind {
     MoveLeft,
     MoveRight,
     Fire,
+    ToggleDebugView,
 }
 
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowLeft": InputKind.MoveLeft,
     "ArrowRight": InputKind.MoveRight,
     "Space": InputKind.Fire,
+    "F9": InputKind.ToggleDebugView,
 });
 
 class Controller extends EventEmitter {

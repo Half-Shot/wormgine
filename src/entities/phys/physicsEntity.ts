@@ -3,6 +3,7 @@ import { UPDATE_PRIORITY, Sprite } from "pixi.js";
 import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
+import globalFlags from "../../flags";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
@@ -24,6 +25,9 @@ export abstract class PhysicsEntity implements IMatterEntity {
 
     constructor(public readonly sprite: Sprite, protected body: Body, protected parent: Composite) {
         this.wireframe = new BodyWireframe(this.body);
+        globalFlags.on('toggleDebugView', (on) => {
+            this.wireframe.enabled = on;
+        })
     }
 
     destroy(): void {
@@ -52,6 +56,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
+        console.log('onCollision');
         if (otherEnt instanceof Water) {
             console.log('hit water');
             // Time to sink

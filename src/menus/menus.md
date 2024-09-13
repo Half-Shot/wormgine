@@ -1,0 +1,23 @@
+### Menu kinds
+
+- Opening Titles
+- Main Menu
+  - New Game Local
+  - New Game Multiplayer
+  - Network Settings
+  - Map Editor
+  - Team Editor
+- New Game Local
+  - Scenario
+  - Worm Teams
+  - Various other twealable things
+- New Game Multiplayer
+  - Game Browser
+  - Create Game
+- Network Settings
+  - Nickname
+  - Login
+- Map Editor
+- Team Editor
+- Pause Menu
+- End of Game menu

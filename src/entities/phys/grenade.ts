@@ -12,9 +12,9 @@ import { Game } from '../../game';
  * Standard grenade projectile.
  */
 export class Grenade extends TimedExplosive {
-    private static readonly FRICTION = 0.5;
-    private static readonly RESITITUTION = 0.1;
-    private static readonly density = 0.005;
+    private static readonly FRICTION = 0.99;
+    private static readonly RESITITUTION = 0;
+    private static readonly DENSITY = 35;
     private static bodyVertices = loadSvg(grenadePaths, 50, 1, 1, Vector.create(0.5, 0.5));
     public static texture: Texture;
     public static bounceSound: Sound;
@@ -38,11 +38,10 @@ export class Grenade extends TimedExplosive {
             sleepThreshold: 60*(5+2),
             friction: Grenade.FRICTION,
             restitution: Grenade.RESITITUTION,
-            density: Grenade.density,
+            density: Grenade.DENSITY,
             isSleeping: false,
             isStatic: false,
         });
-        console.log(body);
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
@@ -51,7 +50,7 @@ export class Grenade extends TimedExplosive {
             explodeOnContact: false,
             timerSecs: 3,
         });
-        Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
+        //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text(this.timerTextValue, {
             fontFamily: 'Arial',
             fontSize: 24,
