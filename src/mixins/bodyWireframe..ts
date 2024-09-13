@@ -6,7 +6,6 @@ import { Graphics, Rectangle } from "pixi.js";
  */
 export class BodyWireframe {
     private gfx = new Graphics();
-    private shouldRender = true;
 
     public set enabled(value: boolean) {
         this.gfx.clear();
@@ -21,7 +20,7 @@ export class BodyWireframe {
         return this.gfx;
     }
 
-    constructor(private body: Body) {
+    constructor(private body: Body, private shouldRender = true) {
         
     }
 
