@@ -10,6 +10,8 @@ export function Menu(props: Props) {
         <ul>
             <li>
                 <button onClick={() => props.onNewGame("grenadeIsland")}>Open Debug Island</button>
+            </li>
+            <li>
                 <button onClick={() => props.onNewGame("borealisTribute")}>Open Borealis Tribute Rock</button>
             </li>
         </ul>
