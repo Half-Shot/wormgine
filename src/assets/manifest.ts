@@ -2,7 +2,7 @@ import { AssetsManifest } from "pixi.js";
 import '@pixi/sound';
 import grenadeSrc from "./grenade.png";
 import bazookaShellSrc from "./bazooka.png";
-import island1png from "./terrain2.png";
+import terrain2 from "./terrain2.png";
 import bounce from "./borrowed/grenade.ogg";
 import explosion1 from "./borrowed/explosion1.ogg";
 import explosion2 from "./borrowed/explosion2.ogg";
@@ -17,7 +17,7 @@ export const manifest = {
         },
         {
             alias: "island1",
-            src: island1png,
+            src: terrain2,
         },
         {
             alias: "bazooka_shell",

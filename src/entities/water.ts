@@ -1,95 +1,82 @@
 import { Composite, Body, Bodies } from "matter-js";
-import { Container, Geometry, GlProgram, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Filter, Geometry, GlProgram, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
-
-const glProgram = GlProgram.from({vertex: `
-precision mediump float;
-
-in vec2 aPosition;
-in vec2 aUV;
-
-out vec2 vUV;
-
-uniform mat3 translationMatrix;
-uniform mat3 projectionMatrix;
-uniform float     iTime;
-
-void main() {
-    gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
-	gl_Position.y += sin(iTime+aPosition.x*0.125)*0.005;
-    vUV = aUV;
-}`,
-
-fragment: `precision mediump float;
-
-    void main() {
-        gl_FragColor = vec4(0.1, 0.1, 0.7, 0.9);
-    }
-
-`, name: 'water'});
+import vertex from '../shaders/water.vert?raw';
+import fragment from '../shaders/water.frag?raw';
 
 export class Water implements IGameEntity {
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.LOW;
     private readonly geometry: Geometry;
+    private readonly waterMesh: Mesh<Geometry, Shader>;
     public get destroyed() {
         return false;
     }
 
     private readonly body: Body;
-    private shader?: Shader;
+    private readonly shader: Shader;
 
     entityOwnsBody(bodyId: number): boolean {
         return this.body?.id === bodyId;
     }
 
     constructor(private readonly width: number, private readonly height: number) {
+        const indexBuffer = ['a','b'].flatMap((_v, i) => {
+            i = i * 3;
+            if (i === 0) {
+                return [
+                    i, i+1, i+2,
+                    i, i+2, i+3,
+                ]
+            } else {
+                return [
+                    i, i-1, i+1,
+                    i, i+1, i+2,
+                ]
+            }
+        });
+        console.log(indexBuffer);
         this.geometry = new Geometry({
             attributes: {
                 aPosition: [
-                    -100,
-                    -100, // x, y
-                    100,
-                    -100, // x, y
-                    100,
-                    100, // x, y,
-                    -100,
-                    100, // x, y,
+                    -100, -50, // top left
+                    -100, 50, // bottom left
+                    0, 50, // bottom middle
+                    0, -50, // top middle
+                    100, 50, // bottom right
+                    100, -50, // top right
                 ],
-                aUV: [0, 0, 1, 0, 1, 1, 0, 1],
             },
+            indexBuffer,
         });
-        this.body = Bodies.rectangle(width/2,height-60,width,100, { isStatic: true });
-    }
-
-    async create(parent: Container, engine: Composite) {
-        this.shader = new Shader({
-            glProgram,
+        this.shader = Filter.from({
+            gl: {vertex, fragment, name: 'water'},
             resources: {
-                uniforms: {
-                    iTime: {value: performance.now() / 1000, type: 'f32' },
+                waveUniforms: {
+                    iTime: { type: 'f32', value: 0 },
                 }
             }
         });
-        const waterMesh = new Mesh({
+        this.body = Bodies.rectangle(width/2,height-60,width,100, { isStatic: true });
+        this.waterMesh = new Mesh({
             geometry: this.geometry,
             shader: this.shader,
+            position: {x: this.width/2, y: 1050}
         });
-        waterMesh.position.set(400, 300);
-        waterMesh.width = this.width;
-        waterMesh.height = this.height;
-        waterMesh.scale.set(2);
-        parent.addChild(waterMesh);
+        this.waterMesh.width = this.width;
+        this.waterMesh.height = this.height;
+        this.waterMesh.scale.set(14, 2);
+    }
+
+    async create(parent: Container, engine: Composite) {
+        parent.addChild(this.waterMesh);
         Composite.add(engine, this.body);
     }
 
     update(): void {
-        if (!this.shader) {
-            return;
-        }
-        // this.shader.resources['iTime'] = performance.now() / 1000;
+        this.shader.resources.waveUniforms.uniforms.iTime = performance.now() / 1000;
     }
 
     destroy(): void {
-        this.shader?.destroy();
+        this.shader.destroy();
     }
 }

@@ -18,9 +18,10 @@ export class Background implements IGameEntity {
     static create(width: number, height: number, color: [number, number, number, number], terrain: BitmapTerrain): Background {
         return new Background(width, height, color, terrain);
     }
-    rainSpeed = 3;
-    rainSpeedVariation = 1/2;
-    rainCount = 175;
+    rainSpeed = 15;
+    rainSpeedVariation = 1;
+    rainCount = 900;
+    windDirection = 0;
     rainColor: ColorSource = 'rgba(100,100,100,0.25)';
     priority = UPDATE_PRIORITY.LOW;
 
@@ -39,10 +40,6 @@ export class Background implements IGameEntity {
                     halfViewWidth, -halfViewHeight, // x, y
                     halfViewWidth, halfViewHeight,
                     -halfViewWidth, halfViewHeight], // x, y
-                aUvs: [0, 0, // u, v
-                    1, 0, // u, v
-                    1, 1,
-                    0, 1]
             },
             indexBuffer: [0, 1, 2, 0, 2, 3]
         });
@@ -54,7 +51,6 @@ export class Background implements IGameEntity {
                     uniforms: {
                         uStartColor: { value: new Float32Array(color.map(v => v/255)), type: 'vec4<f32>' },
                     }
-                    //uStartColor: [1, 0, 0, 1],
                 }
             })
         });
@@ -75,7 +71,7 @@ export class Background implements IGameEntity {
         this.rainParticles.push({
             position: Vector.create(x, y),
             length: MIN_RAIN_LENGTH + Math.round(Math.random()*(MAX_RAIN_LENGTH-MIN_RAIN_LENGTH)),
-            angle: 1 + (Math.random()-0.5)*0.1,
+            angle: (Math.random()-0.5)* 15,
             speed: (this.rainSpeed*(0.5 + (Math.random()*this.rainSpeedVariation)))
         });
     }
@@ -93,7 +89,8 @@ export class Background implements IGameEntity {
         this.rainGraphic.clear();
         for (let rainIndex = 0; rainIndex < this.rainParticles.length; rainIndex += 1) {
             const particle = this.rainParticles[rainIndex];
-            if (particle.position.y > this.viewHeight) {
+            // Hit water
+            if (particle.position.y > 900) {
                 // TODO: Properly detect terrain
                 this.rainParticles.splice(rainIndex, 1);
                 // TODO: And splash
@@ -107,16 +104,15 @@ export class Background implements IGameEntity {
                 // TODO: And splash
                 this.addRainParticle();
                 continue;
-
             }
-            
-            particle.position.x += particle.speed/4;
+            const anglularVelocity = particle.angle*0.1;
+            particle.position.x += this.windDirection + anglularVelocity;
             particle.position.y += particle.speed;
-            const lengthX = particle.position.x-particle.length;
-            const lengthY = particle.position.y-(particle.length*particle.angle);
-            this.rainGraphic.setStrokeStyle({ width: 3, color: this.rainColor }).moveTo(
-                lengthX, lengthY
-            ).lineTo(particle.position.x, particle.position.y);
+            const lengthX = particle.position.x + (anglularVelocity*5);
+            const lengthY = particle.position.y - particle.length + anglularVelocity;
+            this.rainGraphic.stroke({ width: 2, color: this.rainColor }).moveTo(
+                particle.position.x, lengthY
+            ).lineTo(lengthX, particle.position.y)
         }
     }
 

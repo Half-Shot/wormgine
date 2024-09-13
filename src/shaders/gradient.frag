@@ -1,5 +1,8 @@
+#version 300 es
 precision mediump float;
+
 uniform vec4 uStartColor;
+out vec4 fragColor;
 
 void main() {
     vec4 endColor = vec4(0.0, 0.0, 0.0, 1.0);
@@ -14,6 +17,6 @@ void main() {
     float len = length(uv) / 5.0;
     uv = vec2(cos(angle) * len, sin(angle) * len) + origin;
         
-    gl_FragColor = mix(uStartColor, endColor, smoothstep(0.0, 1.0, uv.x));
+    fragColor = mix(uStartColor, endColor, smoothstep(0.2, 2.5, uv.x));
 }
 

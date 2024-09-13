@@ -2,11 +2,11 @@ import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
 import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
+import Flags from "../flags";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
-    public readonly drawDebugBorder = true;
 
     public get destroyed() {
         // Terrain cannot be destroyed...yet
@@ -17,7 +17,6 @@ export class BitmapTerrain implements IMatterEntity {
     private parts: Body[] = [];
     private nearestTerrainPositionBodies = new Set();
     private nearestTerrainPositionPoint = Vector.create();
-    private debugQuads: Rectangle[] = [];
 
     private bounds: Rectangle;
 
@@ -26,7 +25,6 @@ export class BitmapTerrain implements IMatterEntity {
     private textureBackdrop: Texture;
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
-    private lastBoundaryChange?: Rectangle;
     private registeredDamageFunctions = new Map<string,OnDamage>();
     
     static create(viewWidth: number, viewHeight: number, composite: Composite, texture: Texture) {
@@ -60,6 +58,12 @@ export class BitmapTerrain implements IMatterEntity {
 
         this.bounds = new Rectangle(Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,0,0);
 
+        Flags.on('toggleDebugView', (value) => {
+            if (!value) {
+                this.gfx.clear();
+            }
+        });
+
         // Calculate bounding boxes
         this.calculateBoundaryVectors();
     }
@@ -74,8 +78,6 @@ export class BitmapTerrain implements IMatterEntity {
         if (!context) {
             throw Error('Failed to get render context of canvas');
         }
-
-        this.lastBoundaryChange = new Rectangle(boundaryX, boundaryY, boundaryWidth, boundaryHeight);
 
         // Remove everything within the boundaries 
         const removableBodies = this.parts.filter(
@@ -100,8 +102,7 @@ export class BitmapTerrain implements IMatterEntity {
 
         // Turn it into a quadtree of rects
         const quadtreeRects = generateQuadTreeFromTerrain(boundaries, boundingBox.width, boundingBox.height, boundingBox.x, boundingBox.y);
-        console.log("Found", quadtreeRects.length, "quads in terrain", quadtreeRects);
-        this.debugQuads = quadtreeRects;
+        console.log("Found", quadtreeRects.length, "quads in terrain");
 
         console.log(this.sprite.x, this.sprite.y);
 
@@ -139,11 +140,11 @@ export class BitmapTerrain implements IMatterEntity {
         context.beginPath();
 
         // Give the exploded area a border
-        // context.fillStyle = 'gray';
-        // context.arc(imageX, imageY, radius + BitmapTerrain.explosionBorderSize, 0, 2 * Math.PI);
+        // context.fillStyle = 'green';
+        // context.arc(imageX, imageY, radius + 15, 0, 2 * Math.PI);
         // context.fill();
 
-        context.fillStyle = 'gray';
+        context.fillStyle = 'grey';
         context.arc(imageX, imageY, radius, 0, 2 * Math.PI);
         context.fill();
 
@@ -178,23 +179,20 @@ export class BitmapTerrain implements IMatterEntity {
     }
 
     public update(): void {
-        if (this.drawDebugBorder) {
-            this.gfx.clear();
-            // if (this.lastBoundaryChange) {
-            //     this.gfx.rect(this.lastBoundaryChange.x, this.lastBoundaryChange.y, this.lastBoundaryChange.width, this.lastBoundaryChange.height).stroke({width: 5, color: 0xFF0000});
-            // }
-   
-            for (const rect of this.parts) {
-                let color = 0xFFBD01;
-                if (this.nearestTerrainPositionBodies.has(rect)) {
-                    color = 0x00AA00;
-                } else if (rect.isSleeping) {
-                    color = 0x0000FF;
-                }
-                this.gfx.rect(rect.position.x, rect.position.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y).stroke({ width: 1, color });
-            }
-            this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
+        if (!Flags.DebugView) {
+            return;
         }
+        this.gfx.clear();
+        for (const rect of this.parts) {
+            let color = 0xFFBD01;
+            if (this.nearestTerrainPositionBodies.has(rect)) {
+                color = 0x00AA00;
+            } else if (rect.isSleeping) {
+                color = 0x0000FF;
+            }
+            this.gfx.rect(rect.position.x, rect.position.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y).stroke({ width: 1, color });
+        }
+        this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
     }
 
     public entityOwnsBody(bodyId: number) {
