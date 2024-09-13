@@ -12,6 +12,7 @@ import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
 import { Viewport } from 'pixi-viewport';
 import globalFlags from "./flags";
+import { PhysicsEntity } from "./entities/phys/physicsEntity";
 
 Common.setDecomp(polyDecomp);
 
@@ -106,6 +107,7 @@ export class Game {
                 b[1].explosion2,
                 b[1].explosion3
             ];
+        PhysicsEntity.splashSound = b[1].splash;
     }
 
     public addEntity<T extends IGameEntity>(entity: T): T {

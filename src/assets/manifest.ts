@@ -4,6 +4,7 @@ import grenadeSrc from "./grenade.png";
 import bazookaShellSrc from "./bazooka.png";
 import terrain2 from "./terrain2.png";
 import bounce from "./borrowed/grenade.ogg";
+import splash from "./borrowed/splash.ogg";
 import explosion1 from "./borrowed/explosion1.ogg";
 import explosion2 from "./borrowed/explosion2.ogg";
 import explosion3 from "./borrowed/explosion3.ogg";
@@ -37,6 +38,9 @@ export const manifest = {
         },{
             alias: "explosion3",
             src: explosion3,
+        },{
+            alias: "splash",
+            src: splash,
         }]
     }]
 } satisfies AssetsManifest;

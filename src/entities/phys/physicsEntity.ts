@@ -4,6 +4,7 @@ import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
+import { IMediaInstance, Sound } from "@pixi/sound";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
@@ -13,7 +14,10 @@ export abstract class PhysicsEntity implements IMatterEntity {
     protected sinkingY = 0;
     protected wireframe: BodyWireframe;
 
+    public static splashSound: Sound;
+
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
+    private splashSoundPlayback?: IMediaInstance;
 
     public get destroyed() {
         return this.sprite.destroyed;
@@ -59,6 +63,13 @@ export abstract class PhysicsEntity implements IMatterEntity {
         console.log('onCollision');
         if (otherEnt instanceof Water) {
             console.log('hit water');
+
+            if (!this.splashSoundPlayback?.progress || this.splashSoundPlayback.progress === 1) {
+                // TODO: Hacks
+                Promise.resolve(PhysicsEntity.splashSound.play()).then((instance) =>{
+                    this.splashSoundPlayback = instance;
+                })
+            }
             // Time to sink
             this.isSinking = true;
             this.sinkingY = contactPoint.y + 200;
