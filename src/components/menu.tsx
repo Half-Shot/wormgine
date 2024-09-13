@@ -1,7 +1,7 @@
 import "./menu.css";
 
 interface Props {
-    onNewGame: () => void
+    onNewGame: (level: string) => void
 }
 
 export function Menu(props: Props) {
@@ -9,7 +9,8 @@ export function Menu(props: Props) {
         <h1>Wormgine Debug Build</h1>
         <ul>
             <li>
-                <button onClick={() => props.onNewGame()}>Open Debug Island</button>
+                <button onClick={() => props.onNewGame("grenadeIsland")}>Open Debug Island</button>
+                <button onClick={() => props.onNewGame("borealisTribute")}>Open Borealis Tribute Rock</button>
             </li>
         </ul>
     </main>;

@@ -4,12 +4,12 @@ import { Game } from '../game';
 
 // TODO: Feed game parameters into this.
 
-export function IngameView() {
+export function IngameView({level}: {level: string}) {
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Game.create(window.innerWidth, window.innerHeight).then((game) => {
+    Game.create(window.innerWidth, window.innerHeight, level).then((game) => {
       game.loadResources().then(() => {
         setGame(game)
       });

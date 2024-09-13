@@ -9,6 +9,7 @@ import { Worm } from './entities/phys/worm';
 import * as polyDecomp from 'poly-decomp-es';
 import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
+import borealisTribute from './scenarios/borealisTribute';
 import { Viewport } from 'pixi-viewport';
 import globalFlags from "./flags";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
@@ -35,13 +36,13 @@ export class Game {
         return this.viewport;
     }
 
-    public static async create(screenWidth: number, screenHeight: number): Promise<Game> {
+    public static async create(screenWidth: number, screenHeight: number, level: string): Promise<Game> {
         const pixiApp = new Application();
         await pixiApp.init({ width: screenWidth, height: screenHeight, preference: 'webgl', });
-        return new Game(pixiApp);
+        return new Game(pixiApp, level);
     }
 
-    constructor(public readonly pixiApp: Application) {
+    constructor(public readonly pixiApp: Application, public readonly level: string) {
         // The application will create a renderer using WebGL, if possible,
         // with a fallback to a canvas render. It will also setup the ticker
         // and the root stage PIXI.Container
@@ -152,7 +153,13 @@ export class Game {
         });
 
         // Load this scenario
-        grenadeIsland(this);
+        if (this.level === "grenadeIsland") {
+            grenadeIsland(this);
+        } else if (this.level === "borealisTribute") {
+            borealisTribute(this);
+        } else {
+            throw Error('Unknown level');
+        }
 
         this.overlay.position.x = 50;
         this.overlay.position.y = 10;

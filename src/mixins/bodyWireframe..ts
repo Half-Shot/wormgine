@@ -8,7 +8,6 @@ export class BodyWireframe {
     private gfx = new Graphics();
 
     public set enabled(value: boolean) {
-        this.gfx.clear();
         this.shouldRender = value;
     }
 
@@ -25,11 +24,12 @@ export class BodyWireframe {
     }
 
     update() {
+        // TODO: Wasteful?
+        this.gfx.clear();
         if (!this.shouldRender) {
             return;
         }
 
-        this.gfx.clear();
         const width = (this.body.bounds.max.x - this.body.bounds.min.x);
         const height = (this.body.bounds.max.y - this.body.bounds.min.y);
         this.gfx.rect(this.body.position.x - width/2, this.body.position.y - height/2,width,height).stroke({width: 1, color: 0xFFBD01, alpha: 1});

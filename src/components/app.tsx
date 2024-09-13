@@ -3,8 +3,12 @@ import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
 import { loadAssets } from "../assets";
 
+interface LoadGameProps {
+    level: string;
+}
+
 export function App() {
-    const [gameState, setGameState] = useState<Record<string, never>>();
+    const [gameState, setGameState] = useState<LoadGameProps>();
     const [assetProgress, setAssetProgress] = useState(0);
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
@@ -19,8 +23,8 @@ export function App() {
         </main>;
     }
     if (gameState) {
-        return <IngameView />
+        return <IngameView level={gameState.level} />
     }
 
-    return <Menu onNewGame={() => setGameState({})}/>
+    return <Menu onNewGame={(level) => setGameState({level})}/>
 }
