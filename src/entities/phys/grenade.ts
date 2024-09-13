@@ -1,6 +1,6 @@
 import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import grenadePaths from "../../assets/grenade.svg";
-import { Body, Bodies, Composite, Vector } from "matter-js";
+import { Bodies, Composite, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';

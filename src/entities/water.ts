@@ -1,5 +1,5 @@
 import { Composite, Body, Bodies } from "matter-js";
-import { Container, Filter, Geometry, GlProgram, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';

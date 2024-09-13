@@ -1,4 +1,4 @@
-import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import grenadePaths from "../../assets/bazooka.svg";
 import { Body, Bodies, Composite, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";

@@ -1,10 +1,9 @@
 import "pathseg";
-import { Application, Assets, UPDATE_PRIORITY, Text, Ticker } from 'pixi.js';
+import { Application, UPDATE_PRIORITY, Text, Ticker } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
 import { IGameEntity, IMatterEntity } from './entities/entity';
-import { manifest } from './assets/manifest';
 import { QuadtreeDetector } from './quadtreeDetector';
 import { Worm } from './entities/phys/worm';
 import * as polyDecomp from 'poly-decomp-es';

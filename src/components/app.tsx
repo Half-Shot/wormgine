@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
 import { loadAssets } from "../assets";
 
 export function App() {
-    const [gameState, setGameState] = useState<{}>();
+    const [gameState, setGameState] = useState<Record<string, never>>();
     const [assetProgress, setAssetProgress] = useState(0);
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
@@ -20,7 +20,7 @@ export function App() {
     }
     if (gameState) {
         return <IngameView />
-    };
+    }
 
     return <Menu onNewGame={() => setGameState({})}/>
 }

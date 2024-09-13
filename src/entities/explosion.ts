@@ -50,7 +50,7 @@ export class Explosion implements IGameEntity {
                 kind,
             })
             
-        };
+        }
         this.gfx = new Graphics({ position: Vector.clone(point)});
         this.timer = Ticker.targetFPMS * this.explosionMs;
         this.radiusExpandBy = initialRadius * 0.2;

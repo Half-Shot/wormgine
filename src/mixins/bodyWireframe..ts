@@ -1,5 +1,5 @@
 import { Body } from "matter-js";
-import { Graphics, Rectangle } from "pixi.js";
+import { Graphics } from "pixi.js";
 
 /**
  * Render a wireframe in pixi.js around a matter body.

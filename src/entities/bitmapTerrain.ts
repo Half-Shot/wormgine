@@ -152,7 +152,6 @@ export class BitmapTerrain implements IMatterEntity {
         const after = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
 
         // See what has changed, hopefully a red cricle!
-        let diffPixels = 0;
         for (let i = 0; i < before.data.length; i += 4) {
             const oldDataValue = before.data[i]+before.data[i+1]+before.data[i+2]+before.data[i+3];
             const newDataValue = after.data[i]+after.data[i+1]+after.data[i+2]+after.data[i+3];
@@ -162,7 +161,6 @@ export class BitmapTerrain implements IMatterEntity {
                 after.data[i+1] = 0;
                 after.data[i+2] = 0;
                 after.data[i+3] = 0;
-                diffPixels++;
             }
         }
 
@@ -219,7 +217,7 @@ export class BitmapTerrain implements IMatterEntity {
         // Can we go to the next x point without falling?
         let closestTerrainPoint: Vector|undefined;
 
-        let rejectedPoints: Body[] = [];
+        const rejectedPoints: Body[] = [];
 
         for (const terrain of filteredPoints) {
             const terrainPoint = terrain.position;
