@@ -51,10 +51,12 @@ export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: numbe
     };
 }
 
+export const QuadtreeCutoff = 8;
+
 export function generateQuadTreeFromTerrain(boundaries: Vector[], width: number, height: number, x: number, y: number): Rectangle[] {
     function inner(boundaries: Vector[], width: number, height: number, x: number, y: number): Rectangle[]|Rectangle {
         // For performance, we just quad anything that's too small.
-        if (width < 12 || height < 12) {
+        if (width < QuadtreeCutoff || height < QuadtreeCutoff) {
             return new Rectangle(x,y,width,height);
         }
 
