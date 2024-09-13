@@ -58,7 +58,6 @@ export class Grenade extends TimedExplosive {
             align: 'center',
         });
         this.sprite.addChild(this.timerText);
-        this.wireframe.enabled = true;
     }
 
     update(dt: number): void {
