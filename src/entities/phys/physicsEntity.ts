@@ -28,7 +28,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
     }
 
     constructor(public readonly sprite: Sprite, protected body: Body, protected parent: Composite) {
-        this.wireframe = new BodyWireframe(this.body);
+        this.wireframe = new BodyWireframe(this.body, globalFlags.DebugView);
         globalFlags.on('toggleDebugView', (on) => {
             this.wireframe.enabled = on;
         })

@@ -1,4 +1,4 @@
-import Matter, { Composite, Body, Vector, Bodies, Query } from "matter-js";
+import { Composite, Body, Vector, Bodies, Query } from "matter-js";
 import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMatterEntity } from "../entity";
