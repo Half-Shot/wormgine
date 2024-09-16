@@ -92,7 +92,8 @@ export class Game {
         // TODO: Do this better.
         const { textures, sounds } = getAssets();
         Grenade.texture = textures.grenade;
-        Grenade.bounceSound = sounds.bounce;
+        Grenade.bounceSoundsLight = sounds.metalBounceLight;
+        Grenade.boundSoundHeavy = sounds.metalBounceHeavy;
         BazookaShell.texture = textures.bazooka_shell;
         Worm.texture = textures.grenade;
         Explosion.explosionSounds = 

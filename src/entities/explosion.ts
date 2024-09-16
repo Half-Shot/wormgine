@@ -24,13 +24,13 @@ export class Explosion implements IGameEntity {
         kind: "fire"|"pop"
     }[] = []
 
-    static create(parent: Container, point: Vector, initialRadius: number) {
-        const ent = new Explosion(point, initialRadius);
+    static create(parent: Container, point: Vector, initialRadius: number, shrapnelMin = 8, shrapnelMax = 25) {
+        const ent = new Explosion(point, initialRadius, shrapnelMin, shrapnelMax);
         parent.addChild(ent.gfx);
         return ent;
     }
 
-    private constructor(point: Vector, private initialRadius: number, shrapnelMin = 8, shrapnelMax = 25) {
+    private constructor(point: Vector, private initialRadius: number, shrapnelMin: number, shrapnelMax: number) {
         for (let index = 0; index < (shrapnelMin + Math.ceil(Math.random() * (shrapnelMax-shrapnelMin))); index++) {
             const xSpeed = (Math.random()*7)-3.5;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";

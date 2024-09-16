@@ -40,7 +40,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         // Detect if anything is around us.
         const circ = Bodies.circle(point.x, point.y, radius);
         const hit = Query.collides(circ, this.game.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
-        this.game.addEntity(Explosion.create(this.game.viewport, point, radius));
+        this.game.addEntity(Explosion.create(this.game.viewport, point, radius, 15, 35));
         console.log("Timed explosive hit", hit);
         // Find contact point with any terrain
         for (const hitBody of hit) {

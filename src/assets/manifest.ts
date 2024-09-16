@@ -6,9 +6,14 @@ import island1 from "./island1.png";
 import terrain2 from "./terrain2.png";
 import bounce from "./borrowed/grenade.ogg";
 import splash from "./borrowed/splash.ogg";
-import explosion1 from "./borrowed/explosion1.ogg";
-import explosion2 from "./borrowed/explosion2.ogg";
-import explosion3 from "./borrowed/explosion3.ogg";
+
+
+// Sounds
+import metalBounceLight from "./metal_bounce_light.ogg";
+import metalBounceHeavy from "./metal_bounce_heavy.ogg";
+import explosion1 from "./explosion_1.ogg";
+import explosion2 from "./explosion_2.ogg";
+import explosion3 from "./explosion_3.ogg";
 
 export const manifest = {
     bundles: [{
@@ -34,6 +39,12 @@ export const manifest = {
         assets: [{
             alias: "bounce",
             src: bounce,
+        },{
+            alias: "metalBounceLight",
+            src: metalBounceLight,
+        }, {
+            alias: "metalBounceHeavy",
+            src: metalBounceHeavy,
         },{
             alias: "explosion1",
             src: explosion1,

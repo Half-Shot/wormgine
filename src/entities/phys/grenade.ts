@@ -17,7 +17,8 @@ export class Grenade extends TimedExplosive {
     private static readonly DENSITY = 35;
     private static bodyVertices = loadSvg(grenadePaths, 50, 1, 1, Vector.create(0.5, 0.5));
     public static texture: Texture;
-    public static bounceSound: Sound;
+    public static bounceSoundsLight: Sound;
+    public static boundSoundHeavy: Sound;
 
     static async create(game: Game, parent: Container, composite: Composite, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
         const ent = new Grenade(game, position, await Grenade.bodyVertices, initialForce, composite);
@@ -83,10 +84,14 @@ export class Grenade extends TimedExplosive {
             return false;
         }
 
+        const velocity = Vector.magnitude(this.body.velocity);
 
+        // TODO: can these interrupt?
         if (!this.bounceSoundPlayback?.progress || this.bounceSoundPlayback.progress === 1 && this.timer > 0) {
             // TODO: Hacks
-            Promise.resolve(Grenade.bounceSound.play()).then((instance) =>{
+            Promise.resolve(
+                (velocity >= 4 ? Grenade.boundSoundHeavy : Grenade.bounceSoundsLight).play()
+            ).then((instance) =>{
                 this.bounceSoundPlayback = instance;
             })
         }

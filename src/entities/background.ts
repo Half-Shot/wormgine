@@ -70,7 +70,6 @@ export class Background implements IGameEntity {
     }
     
     addRainParticle() {
-        console.log("VP", this.viewport.position, this.viewport.center);
         const x = this.viewport.center.x + Math.round(Math.random()*this.viewport.screenWidth) - this.viewport.screenWidth/2;
         const y = this.viewport.center.y + (0-Math.round(Math.random()*this.viewport.screenHeight) - 200);
         this.rainParticles.push({
