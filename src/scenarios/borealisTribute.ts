@@ -17,10 +17,10 @@ export default async function runScenario(game: Game) {
         game.matterEngine.world,
         Assets.get('island1')
     );
-    // TODO: Eventually pan this width but for now match the screen
-    const bg = await game.addEntity(Background.create(game.viewport.screenWidth*2, game.viewport.screenHeight*1.5, [20, 21, 50, 35], terrain));
+
+    const bg = await game.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await game.addEntity(terrain);
-    bg.addToWorld(parent);
+    bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
 
     const water = await game.addEntity(new Water(worldWidth,worldHeight));
