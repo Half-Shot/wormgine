@@ -1,10 +1,11 @@
 import { Composite, Body, Vector } from "matter-js";
 import { UPDATE_PRIORITY, Sprite } from "pixi.js";
-import { IMatterEntity } from "../entity";
+import { IMatterEntity, IMatterPluginInfo } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
+import { GameWorld } from "../../world";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
@@ -27,20 +28,20 @@ export abstract class PhysicsEntity implements IMatterEntity {
         return this.body.id === bodyId || this.body.parent.id === bodyId;
     }
 
-    constructor(public readonly sprite: Sprite, protected body: Body, protected parent: Composite) {
+    constructor(public readonly sprite: Sprite, protected body: Body, protected gameWorld: GameWorld) {
         this.wireframe = new BodyWireframe(this.body, globalFlags.DebugView);
         globalFlags.on('toggleDebugView', (on) => {
             this.wireframe.enabled = on;
-        })
+        });
+        (body.plugin as IMatterPluginInfo).wormgineEntity = this;
     }
 
     destroy(): void {
         console.log('destroyed');
-        if (this.parent) {
-            Composite.remove(this.parent, this.body);
-        }
         this.sprite.destroy();
         this.wireframe.renderable.destroy();
+        this.gameWorld.removeBody(this.body);
+        this.gameWorld.removeEntity(this);
     }
 
     update(dt: number): void {

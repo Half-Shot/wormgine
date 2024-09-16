@@ -1,9 +1,10 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import grenadePaths from "../../assets/bazooka.svg";
-import { Body, Bodies, Composite, Vector } from "matter-js";
+import { Body, Bodies, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { loadSvg } from '../../loadSvg';
 import { Game } from '../../game';
+import { GameWorld } from '../../world';
 
 // TODO: This is buggy as all hell.
 
@@ -14,9 +15,9 @@ export class BazookaShell extends TimedExplosive {
     private readonly force: Vector = Vector.create(0);
     private readonly gfx = new Graphics();
     
-    static async create(game: Game, parent: Container, composite: Composite, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
-        const ent = new BazookaShell(game, position, await BazookaShell.bodyVertices, initialAngle, composite, initialForce, wind);
-        Composite.add(composite, ent.body);
+    static async create(parent: Container, gameWorld: GameWorld, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
+        const ent = new BazookaShell(position, await BazookaShell.bodyVertices, initialAngle, gameWorld, initialForce, wind);
+        gameWorld.addBody(ent, ent.body);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         console.log("New zooka", ent.body);
@@ -24,12 +25,12 @@ export class BazookaShell extends TimedExplosive {
         return ent;
     }
 
-    private constructor(game: Game, position: { x: number, y: number }, bodyVerticies: Vector[][], initialAngle: number, composite: Composite, initialForce: number, private readonly wind: number) {
+    private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialAngle: number, gameWorld: GameWorld, initialForce: number, private readonly wind: number) {
         const body = Bodies.fromVertices(position.x, position.y, bodyVerticies, {
             position,
         });
         const sprite = new Sprite(BazookaShell.texture);
-        super(game, sprite, body, composite, {
+        super(sprite, body, gameWorld, {
             explosionRadius: 100,
             explodeOnContact: true,
             timerSecs: 30,

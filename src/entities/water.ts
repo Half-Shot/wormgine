@@ -3,6 +3,7 @@ import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
+import { GameWorld } from "../world";
 
 export class Water implements IGameEntity {
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.LOW;
@@ -34,7 +35,6 @@ export class Water implements IGameEntity {
                 ]
             }
         });
-        console.log(indexBuffer);
         this.geometry = new Geometry({
             attributes: {
                 aPosition: [
@@ -67,9 +67,9 @@ export class Water implements IGameEntity {
         this.waterMesh.scale.set(14, 2);
     }
 
-    async create(parent: Container, engine: Composite) {
+    async create(parent: Container, world: GameWorld) {
         parent.addChild(this.waterMesh);
-        Composite.add(engine, this.body);
+        world.addBody(this, this.body);
     }
 
     update(): void {

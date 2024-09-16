@@ -1,11 +1,12 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import { Body, Bodies, Composite, Vector, Sleeping } from "matter-js";
-import { IMatterEntity } from '../entity';
+import { IMatterEntity, IMatterPluginInfo } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
 import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
+import { GameWorld } from '../../world';
 
 enum WormState {
     Idle = 0,
@@ -29,9 +30,9 @@ export class Worm extends PhysicsEntity {
     private terrainPosition: Vector = Vector.create(0,0);
     private facingAngle = 0;
 
-    static async create(parent: Container, composite: Composite, position: { x: number, y: number }, terrain: BitmapTerrain, onFireWeapon: FireWeaponFn) {
-        const ent = new Worm(position, composite, terrain, onFireWeapon);
-        Composite.add(composite, ent.body);
+    static async create(parent: Container, world: GameWorld, position: { x: number, y: number }, terrain: BitmapTerrain, onFireWeapon: FireWeaponFn) {
+        const ent = new Worm(position, world, terrain, onFireWeapon);
+        world.addBody(ent, ent.body);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
@@ -41,7 +42,7 @@ export class Worm extends PhysicsEntity {
         return this.body.position;
     }
 
-    private constructor(position: { x: number, y: number }, composite: Composite,
+    private constructor(position: { x: number, y: number }, world: GameWorld,
         private readonly terrain: BitmapTerrain,
         private readonly onFireWeapon: FireWeaponFn,
     ) {
@@ -62,9 +63,8 @@ export class Worm extends PhysicsEntity {
             // timeScale: 1,
             // density: 50,
         });
-        super(sprite, body, composite);
+        super(sprite, body, world);
         this.state = WormState.InMotion;
-        this.parent = composite;
 
         // TODO: Unbind.
         Controller.on('inputBegin', (inputKind: InputKind) => {

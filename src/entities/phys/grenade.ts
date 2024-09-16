@@ -1,12 +1,12 @@
 import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import grenadePaths from "../../assets/grenade.svg";
-import { Bodies, Composite, Vector } from "matter-js";
+import { Bodies, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { loadSvg } from '../../loadSvg';
-import { Game } from '../../game';
+import { GameWorld } from '../../world';
        
 /**
  * Standard grenade projectile.
@@ -20,9 +20,8 @@ export class Grenade extends TimedExplosive {
     public static bounceSoundsLight: Sound;
     public static boundSoundHeavy: Sound;
 
-    static async create(game: Game, parent: Container, composite: Composite, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
-        const ent = new Grenade(game, position, await Grenade.bodyVertices, initialForce, composite);
-        Composite.add(composite, ent.body);
+    static async create(parent: Container, world: GameWorld, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
+        const ent = new Grenade(position, await Grenade.bodyVertices, initialForce, world);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
@@ -34,7 +33,7 @@ export class Grenade extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(game: Game, position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, parent: Composite) {
+    private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, world: GameWorld) {
         const body = Bodies.fromVertices(position.x, position.y, bodyVerticies, {
             sleepThreshold: 60*(5+2),
             friction: Grenade.FRICTION,
@@ -42,11 +41,13 @@ export class Grenade extends TimedExplosive {
             density: Grenade.DENSITY,
             isSleeping: false,
             isStatic: false,
+            label: "Grenade",
         });
+        console.log("Created grenade body", body.id);
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
-        super(game, sprite, body, parent, {
+        super(sprite, body, world, {
             explosionRadius: 60,
             explodeOnContact: false,
             timerSecs: 3,

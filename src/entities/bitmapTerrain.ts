@@ -1,8 +1,9 @@
-import { Composite, Body, Vector, Bodies, Query, Collision } from "matter-js";
+import { Body, Vector, Bodies, Query, Collision } from "matter-js";
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
 import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
+import { GameWorld } from "../world";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
@@ -27,11 +28,11 @@ export class BitmapTerrain implements IMatterEntity {
     private readonly spriteBackdrop: Sprite;
     private registeredDamageFunctions = new Map<string,OnDamage>();
     
-    static create(viewWidth: number, viewHeight: number, composite: Composite, texture: Texture) {
-        return new BitmapTerrain(viewWidth, viewHeight, composite, texture);
+    static create(viewWidth: number, viewHeight: number, gameWorld: GameWorld, texture: Texture) {
+        return new BitmapTerrain(viewWidth, viewHeight, gameWorld, texture);
     }
 
-    private constructor(viewWidth: number, viewHeight: number, private readonly composite: Composite, texture: Texture) {
+    private constructor(viewWidth: number, viewHeight: number, private readonly gameWorld: GameWorld, texture: Texture) {
         this.canvas = document.createElement('canvas');
         this.canvas.width = viewWidth;
         this.canvas.height = viewHeight;
@@ -87,7 +88,7 @@ export class BitmapTerrain implements IMatterEntity {
 
         console.log("Removing", removableBodies.length, "bodies");
         for (const body of removableBodies) {
-            Composite.remove(this.composite, body);
+            this.gameWorld.removeBody(body);
             const key = body.position.x + "," + body.position.y;
             const damageFn = this.registeredDamageFunctions.get(key);
             if (damageFn) {
@@ -109,12 +110,12 @@ export class BitmapTerrain implements IMatterEntity {
         // Now create the pieces
         const newParts: Body[] = [];
         for (const quad of quadtreeRects) {
-            const body = Bodies.rectangle(quad.x + this.sprite.x, quad.y + this.sprite.y, quad.width, quad.height, { isStatic: true });
+            const body = Bodies.rectangle(quad.x + this.sprite.x, quad.y + this.sprite.y, quad.width, quad.height, { label: 'terrain', isStatic: true });
             newParts.push(body);
         }
         this.parts.push(...newParts);
 
-        Composite.add(this.composite, newParts);
+        this.gameWorld.addBody(this, ...newParts);
         console.timeEnd("Generating terrain");
     }
 
@@ -191,11 +192,6 @@ export class BitmapTerrain implements IMatterEntity {
             this.gfx.rect(rect.position.x, rect.position.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y).stroke({ width: 1, color });
         }
         this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
-    }
-
-    public entityOwnsBody(bodyId: number) {
-        // TODO: Use a set
-        return this.parts.some(b => b.id === bodyId);
     }
 
     public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0): {point?: Vector, fell: boolean} {

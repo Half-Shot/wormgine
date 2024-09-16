@@ -1,10 +1,11 @@
 import { Composite, Body, Vector, Bodies, Query } from "matter-js";
 import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
-import { IMatterEntity } from "../entity";
+import { IMatterEntity, IMatterPluginInfo } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Game } from "../../game";
 import { Explosion } from "../explosion";
+import { GameWorld } from "../../world";
 
 interface Opts {
     explosionRadius: number,
@@ -22,13 +23,14 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
 
-    constructor(private readonly game: Game, sprite: Sprite, body: Body, parent: Composite, public readonly opts: Opts) {
-        super(sprite, body, parent)
+    constructor(sprite: Sprite, body: Body, gameWorld: GameWorld, public readonly opts: Opts) {
+        super(sprite, body, gameWorld);
+        this.gameWorld.addBody(this, body);
         this.timer = Ticker.targetFPMS * opts.timerSecs * 1000;
     }
 
     onTimerFinished() {
-        if (!this.body || !this.parent) {
+        if (!this.body || !this.gameWorld) {
             throw Error('Timer expired without a body');
         }
         this.onExplode();
@@ -38,17 +40,11 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         const point = this.body.position;
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        const circ = Bodies.circle(point.x, point.y, radius);
-        const hit = Query.collides(circ, this.game.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
-        this.game.addEntity(Explosion.create(this.game.viewport, point, radius, 15, 35));
-        console.log("Timed explosive hit", hit);
+        const hitOtherEntity = this.gameWorld.checkCollision(Bodies.circle(point.x, point.y, radius), this);
+        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, point, radius, 15, 35));
         // Find contact point with any terrain
-        for (const hitBody of hit) {
-            const ents = (this.game.findEntityByBodies(hitBody.bodyA, hitBody.bodyB)).filter(e => e !== this);
-            if (ents[0]) {
-                // TODO: Cheating massively
-                this.onCollision(ents[0], hitBody.bodyA.position);
-            }
+        if (hitOtherEntity) {
+            this.onCollision(hitOtherEntity, point);
         }
         
     }

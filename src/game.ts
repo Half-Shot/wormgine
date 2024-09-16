@@ -1,9 +1,9 @@
 import "pathseg";
-import { Application, UPDATE_PRIORITY, Text, Ticker } from 'pixi.js';
+import { Application, UPDATE_PRIORITY, Ticker } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
-import { IGameEntity, IMatterEntity } from './entities/entity';
+import { IGameEntity, IMatterEntity, IMatterPluginInfo } from './entities/entity';
 import { QuadtreeDetector } from './quadtreeDetector';
 import { Worm } from './entities/phys/worm';
 import * as polyDecomp from 'poly-decomp-es';
@@ -11,10 +11,10 @@ import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import { Viewport } from 'pixi-viewport';
-import globalFlags from "./flags";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
+import { GameWorld } from "./world";
 
 Common.setDecomp(polyDecomp);
 
@@ -23,8 +23,8 @@ const worldHeight = 1080;
 
 export class Game {
     public readonly viewport: Viewport;
-    public readonly matterEngine: Engine; 
-    private readonly entities: IGameEntity[] = [];
+    private readonly matterEngine: Engine; 
+    public readonly world: GameWorld;
     private readonly quadtreeDetector: QuadtreeDetector;
 
     public get pixiRoot() {
@@ -65,6 +65,7 @@ export class Game {
             // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
             events: this.pixiApp.renderer.events
         });
+        this.world = new GameWorld(this.matterEngine, this.pixiApp.ticker, this.viewport);
         this.pixiApp.ticker.maxFPS = 90;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
@@ -105,50 +106,7 @@ export class Game {
         PhysicsEntity.splashSound = sounds.splash;
     }
 
-    public addEntity<T extends IGameEntity>(entity: T): T {
-        this.entities.push(entity);
-        const tickerFn = (dt: Ticker) => {
-            entity.update?.(dt.deltaTime);
-            if (entity.destroyed) {
-                this.pixiApp.ticker.remove(tickerFn);
-                this.entities.splice(this.entities.indexOf(entity), 1);
-            }
-        };
-        this.pixiApp.ticker.add(tickerFn, undefined, entity.priority ? entity.priority : UPDATE_PRIORITY.LOW);
-        return entity;
-    }
-
-    public findEntityByBodies(...bodies: Body[]) {
-        const result: IMatterEntity[] = new Array(bodies.length);
-        // TODO: o(n^2) function
-        // TODO: Loose typing
-        for (const entity of this.entities.filter(e => 'entityOwnsBody' in e) as IMatterEntity[]) {
-            for (let bIdx = 0; bIdx < bodies.length; bIdx++) {
-                const body = bodies[bIdx];
-                if (entity?.entityOwnsBody(body.id)) {
-                    result[bIdx] = entity as IMatterEntity;
-                }
-            }
-        }
-        return result;
-    }
-
     public async run() {
-        Events.on(this.matterEngine, 'collisionStart', (event) => {
-            const [pairA] = event.pairs;
-            const [entA, entB] = this.findEntityByBodies(pairA.bodyA, pairA.bodyB.parent);
-
-            if (!entA || !entB) {
-                console.warn(`Untracked collision between ${pairA.bodyA.id} (${entA}) and ${pairA.bodyB.id} (${entB})`);
-                return;
-            }
-
-            const contact = pairA.contacts[0];
-
-            entA.onCollision?.(entB, contact.vertex);
-            entB.onCollision?.(entA, contact.vertex);
-        });
-
         // Load this scenario
         if (this.level === "grenadeIsland") {
             grenadeIsland(this);

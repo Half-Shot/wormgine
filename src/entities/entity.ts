@@ -20,7 +20,6 @@ export interface IGameEntity {
 export interface IMatterEntity extends IGameEntity {
     // TODO: Wrong shape?
     explodeHandler?: (point: Vector, radius: number) => void;
-    entityOwnsBody(bodyId: number): boolean;
     /**
      * 
      * @param other 
@@ -28,4 +27,8 @@ export interface IMatterEntity extends IGameEntity {
      * @returns True if the collision should stop being processed
      */
     onCollision?(other: IMatterEntity, contactPoint: Vector): boolean;
+}
+
+export interface IMatterPluginInfo {
+    wormgineEntity: IMatterEntity,
 }
