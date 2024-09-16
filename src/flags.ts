@@ -6,6 +6,8 @@ class Flags extends EventEmitter {
 
     constructor() {
         super();
+        const qs = new URLSearchParams(window.location.search);
+        this.DebugView = !!qs.get('debug');
         Input.on('inputEnd', (type) => {
             if (type === InputKind.ToggleDebugView) {
                 this.DebugView = !this.DebugView;

@@ -14,6 +14,7 @@ import { Viewport } from 'pixi-viewport';
 import globalFlags from "./flags";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
+import { GameDebugOverlay } from "./overlay";
 
 Common.setDecomp(polyDecomp);
 
@@ -24,12 +25,6 @@ export class Game {
     public readonly viewport: Viewport;
     public readonly matterEngine: Engine; 
     private readonly entities: IGameEntity[] = [];
-    private readonly overlay = new Text('', {
-        fontFamily: 'Arial',
-        fontSize: 20,
-        fill: 0xFFFFFF,
-        align: 'center',
-    });
     private readonly quadtreeDetector: QuadtreeDetector;
 
     public get pixiRoot() {
@@ -67,7 +62,8 @@ export class Game {
             screenWidth: this.pixiApp.screen.width,
             worldWidth: worldWidth,
             worldHeight: worldHeight,
-            events: this.pixiApp.renderer.events // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+            // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+            events: this.pixiApp.renderer.events
         });
         this.pixiApp.ticker.maxFPS = 90;
         this.pixiApp.stage.addChild(this.viewport);
@@ -161,36 +157,7 @@ export class Game {
             throw Error('Unknown level');
         }
 
-        this.overlay.position.x = 50;
-        this.overlay.position.y = 10;
-
-        const fpsSamples: number[] = [];
-
-        const renderOverlay = (dt: Ticker) => {
-            fpsSamples.splice(0, 0, dt.FPS);
-            if (fpsSamples.length > dt.maxFPS) {
-                fpsSamples.pop();
-            }
-            const avgFps = Math.round(fpsSamples.reduce((a,b) => a + b, 0) / fpsSamples.length);
-            const region = this.quadtreeDetector.activeRegion;
-            const regionText = !region ? "<none>" : `${region.x},${region.y} ${region.width} ${region.height}`
-            this.overlay.text = `FPS: ${avgFps} | Total bodies: ${this.matterEngine.world.bodies.length} | ` +
-            `Active bodies: ${this.quadtreeDetector.activeBodies} | Quadtree wake region: ${regionText}`;
-        };
-
-
-        globalFlags.on('toggleDebugView', (enabled) => {
-            if (enabled) {
-                this.pixiApp.stage.addChild(this.overlay);
-                this.pixiApp.ticker.add(renderOverlay, undefined, UPDATE_PRIORITY.LOW);
-            } else {
-                this.pixiApp.ticker.remove(renderOverlay);
-                this.pixiApp.stage.removeChild(this.overlay);
-            }
-        })
-        
-
-        this.pixiApp.stage.addChild(this.overlay);
+        new GameDebugOverlay(this.quadtreeDetector, this.matterEngine, this.pixiApp.ticker, this.pixiApp.stage);
 
         this.pixiApp.ticker.add(() => {
             Matter.Engine.update(this.matterEngine);
