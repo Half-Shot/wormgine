@@ -14,7 +14,7 @@ export function App() {
 
     useEffect(() => {
         // TODO: Progress is broken.
-        void loadAssets((v) => { console.log('bork', v); setAssetProgress(assetProgress)}).then(() => setAssetsLoaded(true));
+        void loadAssets((v) => { setAssetProgress(assetProgress)}).then(() => setAssetsLoaded(true));
     }, [setAssetProgress]);
 
     if (!assetsLoaded) {

@@ -3,6 +3,7 @@ import { IGameEntity } from "./entity";
 import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
+import { Viewport } from "pixi-viewport";
 
 interface RainParticle {
     position: Vector;
@@ -13,16 +14,18 @@ interface RainParticle {
 
 const MAX_RAIN_LENGTH = 15;
 const MIN_RAIN_LENGTH = 6;
+const RAINDROP_COUNT = 350;
 
 export class Background implements IGameEntity {
-    static create(width: number, height: number, color: [number, number, number, number], terrain: BitmapTerrain): Background {
-        return new Background(width, height, color, terrain);
+    static create(viewWidth: number, viewHeight: number, viewport: Viewport, color: [number, number, number, number], terrain: BitmapTerrain): Background {
+        return new Background(viewWidth, viewHeight, viewport, color, terrain);
     }
     rainSpeed = 15;
     rainSpeedVariation = 1;
+    // TODO: Constrain to size of screen.
     rainCount = 900;
     windDirection = 0;
-    rainColor: ColorSource = 'rgba(100,100,100,0.25)';
+    rainColor: ColorSource = 'rgba(100,100,100,0.33)';
     priority = UPDATE_PRIORITY.LOW;
 
     gradientMesh: Mesh<Geometry, Shader>;
@@ -30,7 +33,7 @@ export class Background implements IGameEntity {
     rainGraphic = new Graphics();
     rainParticles: RainParticle[] = [];
 
-    private constructor(private readonly viewWidth: number, private readonly viewHeight: number, color: [number, number, number, number], private readonly terrain: BitmapTerrain) {
+    private constructor(viewWidth: number, viewHeight: number, private viewport: Viewport, color: [number, number, number, number], private readonly terrain: BitmapTerrain) {
         const halfViewWidth = viewWidth / 2;
         const halfViewHeight = viewHeight / 2;
         const geometry = new Geometry({
@@ -43,6 +46,7 @@ export class Background implements IGameEntity {
             },
             indexBuffer: [0, 1, 2, 0, 2, 3]
         });
+
         this.gradientMesh = new Mesh({
             geometry,
             shader: new Shader({
@@ -55,19 +59,20 @@ export class Background implements IGameEntity {
             })
         });
         
-        this.gradientMesh.position.set(viewWidth/3, viewHeight/4);
-
+        this.gradientMesh.position.set(halfViewWidth, halfViewHeight);
         this.rainGraphic.position.set(0,0);
         // Create some rain
-        const rainCount = this.rainCount;
+        const rainCount = Math.ceil(RAINDROP_COUNT * (viewWidth/1920));
         for (let rainIndex = 0; rainIndex < rainCount; rainIndex += 1) {
             this.addRainParticle();
         }
+        console.log('Generating', rainCount, 'particles');
     }
     
     addRainParticle() {
-        const x = Math.round(Math.random()*this.viewWidth);
-        const y = (0-Math.round(Math.random()*this.viewHeight) - 200);
+        console.log("VP", this.viewport.position, this.viewport.center);
+        const x = this.viewport.center.x + Math.round(Math.random()*this.viewport.screenWidth) - this.viewport.screenWidth/2;
+        const y = this.viewport.center.y + (0-Math.round(Math.random()*this.viewport.screenHeight) - 200);
         this.rainParticles.push({
             position: Vector.create(x, y),
             length: MIN_RAIN_LENGTH + Math.round(Math.random()*(MAX_RAIN_LENGTH-MIN_RAIN_LENGTH)),
@@ -76,9 +81,9 @@ export class Background implements IGameEntity {
         });
     }
 
-    addToWorld(parent: Container) {
-        parent.addChild(this.gradientMesh);
-        parent.addChild(this.rainGraphic);
+    addToWorld(worldContainer: Container, viewport: Container) {
+        worldContainer.addChildAt(this.gradientMesh, 0);
+        viewport.addChildAt(this.rainGraphic, 0);
     }
 
     get destroyed() {

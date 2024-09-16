@@ -27,7 +27,9 @@ export function IngameView({level}: {level: string}) {
 
     ref.current.appendChild(game.canvas);
     game.run();
+    (window as any).wormgine = game;
   }, [ref, game]);
+
 
   return <div ref={ref} />;
 }

@@ -8,7 +8,6 @@ import { Game } from '../../game';
 // TODO: This is buggy as all hell.
 
 export class BazookaShell extends TimedExplosive {
-    private static readonly boundingWireframe = true;
     public static texture: Texture;
     private static bodyVertices = loadSvg(grenadePaths, 50, 1.75, 1.75, Vector.create(0.5, 0.5));
 
@@ -19,6 +18,7 @@ export class BazookaShell extends TimedExplosive {
         const ent = new BazookaShell(game, position, await BazookaShell.bodyVertices, initialAngle, composite, initialForce, wind);
         Composite.add(composite, ent.body);
         parent.addChild(ent.sprite);
+        parent.addChild(ent.wireframe.renderable);
         console.log("New zooka", ent.body);
         console.log(ent.sprite.x, ent.sprite.position.x);
         return ent;
@@ -53,14 +53,6 @@ export class BazookaShell extends TimedExplosive {
         this.force.x *= Math.min(1, dt * 3);
         this.force.y *= Math.min(1, dt * 3);
         Body.applyForce(this.body, Vector.create(this.body.position.x, this.body.position.y), this.force);
-        if (BazookaShell.boundingWireframe) {
-            this.gfx.clear();
-            const width = (this.body.bounds.max.x - this.body.bounds.min.x);
-            const height = (this.body.bounds.max.y - this.body.bounds.min.y);
-            this.gfx.rect(this.body.position.x - width/2, this.body.position.y - height/2,width,height).stroke({
-                width: 1, color: 0xFFBD01, alpha: 1
-            });
-        }
     }
 
     destroy(): void {

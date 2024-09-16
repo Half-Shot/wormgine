@@ -5,6 +5,7 @@ import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { Worm } from "../entities/phys/worm";
 import { Grenade } from "../entities/phys/grenade";
+import { BazookaShell } from "../entities/phys/bazookaShell";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -18,9 +19,9 @@ export default async function runScenario(game: Game) {
         Assets.get('terrain2')
     );
     // TODO: Eventually pan this width but for now match the screen
-    const bg = await game.addEntity(Background.create(game.viewport.screenWidth*2, game.viewport.screenHeight*1.5, [20, 21, 50, 35], terrain));
+    const bg = await game.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await game.addEntity(terrain);
-    bg.addToWorld(parent);
+    bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
 
     const water = await game.addEntity(new Water(worldWidth,worldHeight));
@@ -35,7 +36,7 @@ export default async function runScenario(game: Game) {
     game.viewport.on('clicked', async (evt) => {
         const position = { x: evt.world.x, y: evt.world.y };
         const entity = await Grenade.create(game, parent, composite, position, {x: 0.01, y: 0});
-        //const entity = await BazookaShell.create(parent, composite, position, 0, 0, 0 /*{x: 0.005, y: -0.01}*/);
+        //const entity = await BazookaShell.create(game, parent, composite, position, 1, 0.01, 6);
         game.addEntity(entity);
     });
     
