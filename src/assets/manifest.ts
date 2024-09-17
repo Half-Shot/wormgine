@@ -4,11 +4,12 @@ import grenadeSrc from "./grenade.png";
 import bazookaShellSrc from "./bazooka.png";
 import island1 from "./island1.png";
 import terrain2 from "./terrain2.png";
-import bounce from "./borrowed/grenade.ogg";
-import splash from "./borrowed/splash.ogg";
+import testingGround from "./testing_ground.png";
 
 
 // Sounds
+import bounce from "./borrowed/grenade.ogg";
+import splash from "./borrowed/splash.ogg";
 import metalBounceLight from "./metal_bounce_light.ogg";
 import metalBounceHeavy from "./metal_bounce_heavy.ogg";
 import explosion1 from "./explosion_1.ogg";
@@ -29,6 +30,10 @@ export const manifest = {
         {
             alias: "terrain2",
             src: terrain2,
+        },
+        {
+            alias: "testingGround",
+            src: testingGround,
         },
         {
             alias: "bazooka_shell",

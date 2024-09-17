@@ -10,6 +10,7 @@ import * as polyDecomp from 'poly-decomp-es';
 import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
+import testingGround from './scenarios/testingGround';
 import { Viewport } from 'pixi-viewport';
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
@@ -112,6 +113,8 @@ export class Game {
             grenadeIsland(this);
         } else if (this.level === "borealisTribute") {
             borealisTribute(this);
+        } else if (this.level === "testingGround") {
+            testingGround(this);
         } else {
             throw Error('Unknown level');
         }
