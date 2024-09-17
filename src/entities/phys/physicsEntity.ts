@@ -1,6 +1,6 @@
-import { Composite, Body, Vector } from "matter-js";
+import { Body, Vector } from "matter-js";
 import { UPDATE_PRIORITY, Sprite } from "pixi.js";
-import { IMatterEntity, IMatterPluginInfo } from "../entity";
+import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
@@ -23,21 +23,15 @@ export abstract class PhysicsEntity implements IMatterEntity {
     public get destroyed() {
         return this.sprite.destroyed;
     }
-    
-    entityOwnsBody(bodyId: number): boolean {
-        return this.body.id === bodyId || this.body.parent.id === bodyId;
-    }
 
     constructor(public readonly sprite: Sprite, protected body: Body, protected gameWorld: GameWorld) {
         this.wireframe = new BodyWireframe(this.body, globalFlags.DebugView);
         globalFlags.on('toggleDebugView', (on) => {
             this.wireframe.enabled = on;
         });
-        (body.plugin as IMatterPluginInfo).wormgineEntity = this;
     }
 
     destroy(): void {
-        console.log('destroyed');
         this.sprite.destroy();
         this.wireframe.renderable.destroy();
         this.gameWorld.removeBody(this.body);
@@ -61,7 +55,6 @@ export abstract class PhysicsEntity implements IMatterEntity {
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
-        console.log('onCollision');
         if (otherEnt instanceof Water) {
             console.log('hit water');
 

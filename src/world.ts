@@ -82,14 +82,18 @@ export class GameWorld {
 
     public checkCollision(body: Body, ownEntity: IMatterEntity): IMatterEntity|undefined {
         const hits = Query.collides(body, this.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
+        console.log("hits", hits);
         for (const hitBody of hits) {
+            console.log(hits, ownEntity, this.bodyEntityMap);
             const ents = [
                 this.bodyEntityMap.get(hitBody.bodyA),
-                this.bodyEntityMap.get(hitBody.bodyB.plugin)
+                this.bodyEntityMap.get(hitBody.bodyB)
             ].filter(e => e && e !== ownEntity);
-            console.log(ents, hitBody.bodyA.position);
+            console.log("Found hit", ents, this.bodyEntityMap.get(hitBody.bodyB));
             // TODO: Cheating massively
-            return ents[0];
+            if (ents[0]) {
+                return ents[0];
+            }
         }
 
     }

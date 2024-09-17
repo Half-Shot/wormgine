@@ -28,7 +28,3 @@ export interface IMatterEntity extends IGameEntity {
      */
     onCollision?(other: IMatterEntity, contactPoint: Vector): boolean;
 }
-
-export interface IMatterPluginInfo {
-    wormgineEntity: IMatterEntity,
-}

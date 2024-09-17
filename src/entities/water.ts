@@ -1,4 +1,4 @@
-import { Composite, Body, Bodies } from "matter-js";
+import { Body, Bodies } from "matter-js";
 import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
@@ -15,10 +15,6 @@ export class Water implements IGameEntity {
 
     private readonly body: Body;
     private readonly shader: Shader;
-
-    entityOwnsBody(bodyId: number): boolean {
-        return this.body?.id === bodyId;
-    }
 
     constructor(private readonly width: number, private readonly height: number) {
         const indexBuffer = ['a','b'].flatMap((_v, i) => {

@@ -34,7 +34,11 @@ export class Grenade extends TimedExplosive {
     public bounceSoundPlayback?: IMediaInstance;
 
     private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, world: GameWorld) {
-        const body = Bodies.fromVertices(position.x, position.y, bodyVerticies, {
+        const sprite = new Sprite(Grenade.texture);
+        sprite.scale.set(0.5, 0.5);
+        sprite.anchor.set(0.5, 0.5);
+        const body = Bodies.rectangle(sprite.x, sprite.y, sprite.width, sprite.height, {
+            position,
             sleepThreshold: 60*(5+2),
             friction: Grenade.FRICTION,
             restitution: Grenade.RESITITUTION,
@@ -44,13 +48,10 @@ export class Grenade extends TimedExplosive {
             label: "Grenade",
         });
         console.log("Created grenade body", body.id);
-        const sprite = new Sprite(Grenade.texture);
-        sprite.scale.set(0.5, 0.5);
-        sprite.anchor.set(0.5, 0.5);
         super(sprite, body, world, {
             explosionRadius: 60,
             explodeOnContact: false,
-            timerSecs: 3,
+            timerSecs: 1,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text(this.timerTextValue, {

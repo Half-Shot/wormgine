@@ -194,7 +194,7 @@ export class BitmapTerrain implements IMatterEntity {
         this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
     }
 
-    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0): {point?: Vector, fell: boolean} {
+    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector, fell: false}|{fell: true, point: null} {
         // This needs a rethink, we really want to have it so that the character's "platform" is visualised
         // by this algorithm. We want to figure out if we can move left or right, and if not if we're going to fall.
 
@@ -241,19 +241,11 @@ export class BitmapTerrain implements IMatterEntity {
             return { point: closestTerrainPoint, fell: false};
         }
 
-        // We have fallen, look for the closest X position to land on.
-        for (const terrain of rejectedPoints) {
-            const terrainPoint = terrain.position;
-            const distX = Math.abs(terrainPoint.x - (point.x + xDirection));
-            const prevDistX = closestTerrainPoint ? Math.abs(closestTerrainPoint.x - (point.x + xDirection)) : Number.MAX_SAFE_INTEGER;
-            if (distX < prevDistX && distX > 15) {
-                console.log(distX);
-                closestTerrainPoint = terrainPoint;
-            }
-        }
+        console.log("Looking at rejected points", rejectedPoints);
 
+        // We have fallen, look for the closest X position to land on.
         return {
-            point: closestTerrainPoint,
+            point: null,
             fell: true,
         };
     }

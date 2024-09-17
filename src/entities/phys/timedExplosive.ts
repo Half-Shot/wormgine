@@ -1,9 +1,8 @@
-import { Composite, Body, Vector, Bodies, Query } from "matter-js";
+import { Body, Vector, Bodies } from "matter-js";
 import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
-import { IMatterEntity, IMatterPluginInfo } from "../entity";
+import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
-import { Game } from "../../game";
 import { Explosion } from "../explosion";
 import { GameWorld } from "../../world";
 
@@ -41,6 +40,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
         const hitOtherEntity = this.gameWorld.checkCollision(Bodies.circle(point.x, point.y, radius), this);
+        console.log("onExplode", hitOtherEntity);
         this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, point, radius, 15, 35));
         // Find contact point with any terrain
         if (hitOtherEntity) {

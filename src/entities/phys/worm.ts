@@ -1,6 +1,6 @@
 import { Container, Sprite, Texture } from 'pixi.js';
-import { Body, Bodies, Composite, Vector, Sleeping } from "matter-js";
-import { IMatterEntity, IMatterPluginInfo } from '../entity';
+import { Body, Bodies, Vector, Sleeping } from "matter-js";
+import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
 import { IWeaponDefiniton } from '../../weapons/weapon';
@@ -19,8 +19,8 @@ enum WormState {
 type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
 
 export class Worm extends PhysicsEntity {
-    private static readonly FRICTION = 0.95;
-    private static readonly RESITITUTION = 0;
+    private static readonly FRICTION = 0.9;
+    private static readonly RESITITUTION = 0.1;
     public static texture: Texture;
 
     private fireWeaponDuration = 0;
@@ -47,21 +47,18 @@ export class Worm extends PhysicsEntity {
         private readonly onFireWeapon: FireWeaponFn,
     ) {
         const sprite = new Sprite(Worm.texture);
-        sprite.scale.set(1, 1);
         sprite.anchor.set(0.5, 0.5);
         const body = Bodies.rectangle(sprite.x, sprite.y, sprite.width, sprite.height, {
             isStatic: false,
             isSleeping: false,
             position,
             sleepThreshold: 30,
-            restitution: 0,
-            // friction: Worm.FRICTION,
-            // restitution: Worm.RESITITUTION,
+            timeScale: 0.001,
+            friction: Worm.FRICTION,
+            restitution: Worm.RESITITUTION,
             mass: 100,
             inverseMass: 0.01,
             label: "worm",
-            // timeScale: 1,
-            // density: 50,
         });
         super(sprite, body, world);
         this.state = WormState.InMotion;
@@ -84,7 +81,7 @@ export class Worm extends PhysicsEntity {
             } 
         });
 
-        // this.onStoppedMoving();
+        this.onStoppedMoving();
     }
 
     setMoveDirection(direction: InputKind.MoveLeft|InputKind.MoveRight) {
@@ -111,7 +108,6 @@ export class Worm extends PhysicsEntity {
     }
 
     onMove(moveState: WormState.MovingLeft|WormState.MovingRight, dt: number) {
-        console.log("move dt", dt);
         // Attempt to move to the left or right by 3 pixels
         const movementMod = Math.round(dt);
         const move = Vector.create(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
@@ -130,26 +126,20 @@ export class Worm extends PhysicsEntity {
             move.x,
         );
 
-        if (!tp) {
-            // We've hit a wall, or something unmovable.
-            console.log('Nowhere to move in this direction');
+        if (tp) {
+            // TODO: Smooth transition
+            // Normal move along a point
+            Body.setPosition(this.body, Vector.create(tp.x, tp.y - height + 10));
+            Body.setVelocity(this.body, Vector.create(0,0));
+            this.terrainPosition = tp;
         } else {
-            if (fell) {
-                // We're falling!
-                console.log('Fell!', tp, this.terrainPosition);
-                this.body.position.y -= 30;
-                this.body.position.x -= 30;
-                Body.setPosition(this.body, this.body.position);
-                this.state = WormState.InMotion;
-                Sleeping.set(this.body, false);
-                Body.setStatic(this.body, false);
-                Body.setVelocity(this.body, Vector.create(0,0));
-            } else {
-                // Normal move along a point
-                this.body.position.x = tp.x;
-                this.body.position.y = tp.y - height + 10;
-                this.terrainPosition = tp;
-            }
+            // We're falling!
+            console.log('Fell!');
+            Body.setStatic(this.body, false);
+            Sleeping.set(this.body, false);
+            Body.translate(this.body, Vector.create(-300, -30));
+            Body.setVelocity(this.body, Vector.create(0, 1));
+            this.state = WormState.InMotion;
         }
     }
 
@@ -169,9 +159,8 @@ export class Worm extends PhysicsEntity {
             console.warn("Worm has stopped moving, but thinks it's still falling according to getNearestTerrainPosition!");
         }
         if (tp) {
-            this.body.position.x = tp.x;
-            this.body.position.y = tp.y - height;
             this.terrainPosition = tp;
+            Body.setPosition(this.body, Vector.create(tp.x, tp.y - height));
             console.log("Stopped at:", this.terrainPosition);
             this.terrain.registerDamageListener(tp, () => {
                 // TODO: This current launches the worm into the water, not quite sure why.
@@ -208,11 +197,13 @@ export class Worm extends PhysicsEntity {
             return;
         }
 
+        this.wireframe.setDebugText(`Worm\n${this.body.isStatic ? "static" : "dynamic"}\nVelocity: ${this.body.velocity.x.toPrecision(2) } ${this.body.velocity.y.toPrecision(2)}`);
+
         if (this.state === WormState.InMotion) {
             // We're in motion, either we've been blown up, falling, or otherwise not in control.
-            if (this.body.isSleeping) {
-                this.onStoppedMoving();
-            }
+            // if (this.body.isSleeping) {
+            //     this.onStoppedMoving();
+            // }
         } else if (this.state === WormState.Firing) {
             if (this.fireWeaponDuration > this.currentWeapon.maxDuration) {
                 this.onEndFireWeapon();
