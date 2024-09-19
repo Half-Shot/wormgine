@@ -1,5 +1,5 @@
-import { Body, Vector } from "matter-js";
 import { Graphics, Text } from "pixi.js";
+import { RapierPhysicsObject } from "../world";
 
 /**
  * Render a wireframe in pixi.js around a matter body.
@@ -41,10 +41,11 @@ export class BodyWireframe {
     private readonly width: number;
     private readonly height: number;
 
-    constructor(private body: Body, enabled = true) {
+    constructor(private parent: RapierPhysicsObject, enabled = true) {
         this.gfx.addChild(this.debugText);
-        this.width = (this.body.bounds.max.x - this.body.bounds.min.x);
-        this.height = (this.body.bounds.max.y - this.body.bounds.min.y);
+        // TODO
+        this.width = 50;
+        this.height = 50;
         this.debugText.position.x = this.width + 5;
 
         // To make TS happy.
@@ -64,10 +65,11 @@ export class BodyWireframe {
         }
         this.gfx.circle(this.width / 2, this.height / 2, 3).stroke({width: 1, color: 0xFF0000});
         this.gfx.rect(0, 0,this.width,this.height).stroke({width: 1, color: 0xFFBD01, alpha: 1});
+        const t = this.parent.body.translation();
         this.gfx.updateTransform({
-            x: this.body.position.x - this.width/2,
-            y: this.body.position.y - this.height/2,
-            rotation: this.body.angle,
+            x: t.x - this.width/2,
+            y: t.y - this.height/2,
+            // rotation: this.body.angle,
             // pivotX: globalWindow.debugPivotModX,
             // pivotY: globalWindow.debugPivotModY,
         });

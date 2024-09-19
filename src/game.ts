@@ -1,13 +1,9 @@
 import "pathseg";
-import { Application, UPDATE_PRIORITY, Ticker } from 'pixi.js';
+import { Application, Graphics, UPDATE_PRIORITY } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
-import { IGameEntity, IMatterEntity, IMatterPluginInfo } from './entities/entity';
-import { QuadtreeDetector } from './quadtreeDetector';
 import { Worm } from './entities/phys/worm';
-import * as polyDecomp from 'poly-decomp-es';
-import Matter, { Common, Engine, Events, Body } from "matter-js";
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
@@ -16,17 +12,17 @@ import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
 import { GameWorld } from "./world";
-
-Common.setDecomp(polyDecomp);
+import RAPIER from "@dimforge/rapier2d";
+import * as PIXI from "pixi.js";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
 
 export class Game {
     public readonly viewport: Viewport;
-    private readonly matterEngine: Engine; 
+    private readonly rapierWorld: RAPIER.World; 
     public readonly world: GameWorld;
-    private readonly quadtreeDetector: QuadtreeDetector;
+    public readonly rapierGfx: Graphics;
 
     public get pixiRoot() {
         return this.viewport;
@@ -34,30 +30,14 @@ export class Game {
 
     public static async create(screenWidth: number, screenHeight: number, level: string): Promise<Game> {
         const pixiApp = new Application();
-        await pixiApp.init({ width: screenWidth, height: screenHeight, preference: 'webgl', });
+        await pixiApp.init({ width: screenWidth, height: screenHeight, preference: 'webgl' });
         return new Game(pixiApp, level);
     }
 
     constructor(public readonly pixiApp: Application, public readonly level: string) {
-        // The application will create a renderer using WebGL, if possible,
-        // with a fallback to a canvas render. It will also setup the ticker
-        // and the root stage PIXI.Container
         // TODO: Set a sensible static width/height and have the canvas pan it.
-        this.quadtreeDetector = new QuadtreeDetector(worldWidth, worldHeight);
-        this.matterEngine = Engine.create({
-            gravity: {
-                x: 0,
-                y: 0.5,
-            },
-            enableSleeping: true,
-            timing: {
-                timeScale: 1,
-                timestamp: 0,
-                lastElapsed: 0,
-                lastDelta: 0,
-            },
-            detector: this.quadtreeDetector,
-        });
+        this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
+        this.rapierGfx = new Graphics();
         this.viewport = new Viewport({
             screenHeight: this.pixiApp.screen.height,
             screenWidth: this.pixiApp.screen.width,
@@ -66,7 +46,7 @@ export class Game {
             // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
             events: this.pixiApp.renderer.events
         });
-        this.world = new GameWorld(this.matterEngine, this.pixiApp.ticker, this.viewport);
+        this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker, this.viewport);
         this.pixiApp.ticker.maxFPS = 90;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
@@ -119,10 +99,31 @@ export class Game {
             throw Error('Unknown level');
         }
 
-        new GameDebugOverlay(this.quadtreeDetector, this.matterEngine, this.pixiApp.ticker, this.pixiApp.stage);
+        new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage);
+        this.viewport.addChild(this.rapierGfx);
 
         this.pixiApp.ticker.add(() => {
-            Matter.Engine.update(this.matterEngine);
+            // TODO: Timing.
+            this.rapierWorld.step();
+            let buffers = this.rapierWorld.debugRender();
+            let vtx = buffers.vertices;
+            let cls = buffers.colors;
+
+            this.rapierGfx.clear();
+
+            for (let i = 0; i < vtx.length / 4; i += 1) {
+                let color = new Float32Array([
+                    cls[i * 8],
+                    cls[i * 8 + 1],
+                    cls[i * 8 + 2],
+                    cls[i * 8 + 3],
+                ]);
+                this.rapierGfx.setStrokeStyle({ width: 1, color});
+                this.rapierGfx.moveTo(vtx[i * 4], -vtx[i * 4 + 1]);
+                this.rapierGfx.lineTo(vtx[i * 4 + 2], -vtx[i * 4 + 3]);
+            }
+
+
         }, undefined, UPDATE_PRIORITY.HIGH);
     }
 

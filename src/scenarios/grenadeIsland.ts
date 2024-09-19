@@ -24,7 +24,7 @@ export default async function runScenario(game: Game) {
     bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
 
-    const water = await world.addEntity(new Water(worldWidth,worldHeight));
+    const water = await world.addEntity(new Water(worldWidth,worldHeight, world));
     water.create(parent, world);
     const worm = world.addEntity(await Worm.create(parent, world, {x: 900, y: 400} , terrain, async (worm, definition, duration) => {
         const newProjectile = await definition.fireFn(game, parent, world, worm, duration);

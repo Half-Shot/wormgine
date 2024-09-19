@@ -1,5 +1,4 @@
-import { Vector } from "matter-js";
-import { Container, Graphics, Ticker, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Graphics, Point, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { Sound } from "@pixi/sound";
 
@@ -16,32 +15,32 @@ export class Explosion implements IGameEntity {
     private timer: number;
     private radiusExpandBy: number;
     private shrapnel: {
-        point: Vector,
-        speed: Vector,
-        accel: Vector,
+        point: Point,
+        speed: Point,
+        accel: Point,
         radius: number,
         alpha: number,
         kind: "fire"|"pop"
     }[] = []
 
-    static create(parent: Container, point: Vector, initialRadius: number, shrapnelMin = 8, shrapnelMax = 25) {
+    static create(parent: Container, point: Point, initialRadius: number, shrapnelMin = 8, shrapnelMax = 25) {
         const ent = new Explosion(point, initialRadius, shrapnelMin, shrapnelMax);
         parent.addChild(ent.gfx);
         return ent;
     }
 
-    private constructor(point: Vector, private initialRadius: number, shrapnelMin: number, shrapnelMax: number) {
+    private constructor(point: Point, private initialRadius: number, shrapnelMin: number, shrapnelMax: number) {
         for (let index = 0; index < (shrapnelMin + Math.ceil(Math.random() * (shrapnelMax-shrapnelMin))); index++) {
             const xSpeed = (Math.random()*7)-3.5;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";
             this.shrapnel.push({
                 alpha: 1,
-                point: Vector.create(),
-                speed: Vector.create(
+                point: new Point(),
+                speed: new Point(
                     xSpeed,
                     (Math.random()*0.5)-7,
                 ),
-                accel: Vector.create(
+                accel: new Point(
                     // Invert the accel
                     -(xSpeed/120),
                     Math.random(),
@@ -51,7 +50,7 @@ export class Explosion implements IGameEntity {
             })
             
         }
-        this.gfx = new Graphics({ position: Vector.clone(point)});
+        this.gfx = new Graphics({ position: point.clone()});
         this.timer = Ticker.targetFPMS * this.explosionMs;
         this.radiusExpandBy = initialRadius * 0.2;
         const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);

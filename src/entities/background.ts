@@ -1,12 +1,11 @@
-import { ColorSource, Container, Geometry, Graphics, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
+import { ColorSource, Container, Geometry, Graphics, Mesh, Point, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
-import { Vector } from "matter-js";
 import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
 
 interface RainParticle {
-    position: Vector;
+    position: Point;
     length: number;
     angle: number;
     speed: number;
@@ -73,7 +72,7 @@ export class Background implements IGameEntity {
         const x = this.viewport.center.x + Math.round(Math.random()*this.viewport.screenWidth) - this.viewport.screenWidth/2;
         const y = this.viewport.center.y + (0-Math.round(Math.random()*this.viewport.screenHeight) - 200);
         this.rainParticles.push({
-            position: Vector.create(x, y),
+            position: new Point(x,y),
             length: MIN_RAIN_LENGTH + Math.round(Math.random()*(MAX_RAIN_LENGTH-MIN_RAIN_LENGTH)),
             angle: (Math.random()-0.5)* 15,
             speed: (this.rainSpeed*(0.5 + (Math.random()*this.rainSpeedVariation)))

@@ -1,8 +1,6 @@
 import { Container, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { QuadtreeDetector } from "./quadtreeDetector";
-import { Engine } from "matter-js";
-import { Viewport } from "pixi-viewport";
 import globalFlags from "./flags";
+import RAPIER from "@dimforge/rapier2d";
 
 export class GameDebugOverlay {
     private readonly fpsSamples: number[] = [];
@@ -10,8 +8,7 @@ export class GameDebugOverlay {
     private readonly tickerFn: (dt: Ticker) => void;
 
     constructor(
-        private readonly quadtreeDetector: QuadtreeDetector,
-        private readonly matterEngine: Engine,
+        private readonly rapierWorld: RAPIER.World,
         private readonly ticker: Ticker,
         private readonly viewport: Container
     ) {
@@ -53,9 +50,6 @@ export class GameDebugOverlay {
             this.fpsSamples.pop();
         }
         const avgFps = Math.round(this.fpsSamples.reduce((a,b) => a + b, 0) / this.fpsSamples.length);
-        const region = this.quadtreeDetector.activeRegion;
-        const regionText = !region ? "<none>" : `${region.x},${region.y} ${region.width} ${region.height}`
-        this.text.text = `FPS: ${avgFps} | Total bodies: ${this.matterEngine.world.bodies.length} | ` +
-        `Active bodies: ${this.quadtreeDetector.activeBodies} | Quadtree wake region: ${regionText}`;
+        this.text.text = `FPS: ${avgFps} | Total bodies: ${this.rapierWorld.bodies.len()}`;
     }
 }

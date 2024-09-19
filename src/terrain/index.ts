@@ -1,9 +1,9 @@
-import { Vector } from "matter-js";
+import { Vector2 } from "@dimforge/rapier2d";
 import { Rectangle } from "pixi.js";
 
-export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: number, imgData: ImageData): { boundaries: Vector[], boundingBox: Rectangle} {
+export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: number, imgData: ImageData): { boundaries: Vector2[], boundingBox: Rectangle} {
     const boundingBox = new Rectangle(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, 0, 0);
-    const boundaries: Array<Vector> = [];
+    const boundaries: Array<Vector2> = [];
     const xBoundaryTracker= new Array(imgData.width);
     const yBoundaryTracker = new Array(imgData.height);
 
@@ -25,7 +25,7 @@ export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: numbe
                 // This is to stop us from drawing straight lines down
                 // when we have a boundary, but I don't know why this works.
                 if (x > 1 && y > 1) {
-                    boundaries.push(Vector.create(realX,realY));
+                    boundaries.push(new Vector2(realX,realY));
                 }
                 xBoundaryTracker[x] = true;
                 yBoundaryTracker[y] = true;
@@ -37,7 +37,7 @@ export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: numbe
             }
         } else if (a === 0) {
             if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
-                boundaries.push(Vector.create(realX,realY));
+                boundaries.push(new Vector2(realX,realY));
                 xBoundaryTracker[x] = false;
                 yBoundaryTracker[y] = false;
             }
@@ -53,8 +53,8 @@ export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: numbe
 
 export const QuadtreeCutoff = 8;
 
-export function generateQuadTreeFromTerrain(boundaries: Vector[], width: number, height: number, x: number, y: number): Rectangle[] {
-    function inner(boundaries: Vector[], width: number, height: number, x: number, y: number): Rectangle[]|Rectangle {
+export function generateQuadTreeFromTerrain(boundaries: Vector2[], width: number, height: number, x: number, y: number): Rectangle[] {
+    function inner(boundaries: Vector2[], width: number, height: number, x: number, y: number): Rectangle[]|Rectangle {
         // For performance, we just quad anything that's too small.
         if (width < QuadtreeCutoff || height < QuadtreeCutoff) {
             return new Rectangle(x,y,width,height);

@@ -228,6 +228,11 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
+"@dimforge/rapier2d@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@dimforge/rapier2d/-/rapier2d-0.14.0.tgz#20d45a551a7b796950eebe24a95f6a008abb2f9d"
+  integrity sha512-gqFHPytBONq4/fhQGECa9fr7LnWFg+9fX+YTONrK1zt20y+P3P6qarcq2+vpb0L36dR7W0uyCGI2Lyf5dRko+g==
+
 "@esbuild/android-arm64@0.17.13":
   version "0.17.13"
   resolved "https://registry.yarnpkg.com/@esbuild/android-arm64/-/android-arm64-0.17.13.tgz#88e5b6afe65ef3168b0eb6dc93fdb1b15f4653c9"
@@ -527,11 +532,6 @@
   version "7.0.11"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
   integrity sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==
-
-"@types/matter-js@^0.18.2":
-  version "0.18.2"
-  resolved "https://registry.npmjs.org/@types/matter-js/-/matter-js-0.18.2.tgz"
-  integrity sha512-W9UC9DOPNBRTUocqqPZmzX3cbHmlZBI9jLn6SuxZz0n5QrPk382Ig3hbBWHqYU8TRUmTCJJhuanXeyMTavF7Mg==
 
 "@types/semver@^7.3.12":
   version "7.3.13"

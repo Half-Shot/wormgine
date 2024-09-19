@@ -1,9 +1,9 @@
-import { Body, Vector, Bodies, Query, Collision } from "matter-js";
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
 import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
-import { GameWorld } from "../world";
+import { GameWorld, RapierPhysicsObject } from "../world";
+import { Collider, ColliderDesc, Cuboid, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
@@ -15,9 +15,9 @@ export class BitmapTerrain implements IMatterEntity {
     }
 
     private readonly gfx: Graphics = new Graphics();
-    private parts: Body[] = [];
+    private parts: RapierPhysicsObject[] = [];
     private nearestTerrainPositionBodies = new Set();
-    private nearestTerrainPositionPoint = Vector.create();
+    private nearestTerrainPositionPoint = new Vector2(0,0);
 
     private bounds: Rectangle;
 
@@ -26,7 +26,8 @@ export class BitmapTerrain implements IMatterEntity {
     private textureBackdrop: Texture;
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
-    private registeredDamageFunctions = new Map<string,OnDamage>();
+    // collider.handle -> fn
+    private registeredDamageFunctions = new Map<number,OnDamage>();
     
     static create(viewWidth: number, viewHeight: number, gameWorld: GameWorld, texture: Texture) {
         return new BitmapTerrain(viewWidth, viewHeight, gameWorld, texture);
@@ -82,17 +83,18 @@ export class BitmapTerrain implements IMatterEntity {
 
         // Remove everything within the boundaries 
         const removableBodies = this.parts.filter(
-            (b) => (b.position.x >= boundaryX && b.position.x <= boundaryX + boundaryWidth) && 
-            (b.position.y >= boundaryY && b.position.y <= boundaryY + boundaryHeight)
+            (b) => {
+                const tr = b.body.translation();
+                return (tr.x >= boundaryX && tr.x <= boundaryX + boundaryWidth) && 
+            (tr.y >= boundaryY && tr.y <= boundaryY + boundaryHeight)
         )
 
         console.log("Removing", removableBodies.length, "bodies");
         for (const body of removableBodies) {
             this.gameWorld.removeBody(body);
-            const key = body.position.x + "," + body.position.y;
-            const damageFn = this.registeredDamageFunctions.get(key);
+            const damageFn = this.registeredDamageFunctions.get(body.collider.handle);
             if (damageFn) {
-                this.registeredDamageFunctions.delete(key);
+                this.registeredDamageFunctions.delete(body.collider.handle);
                 damageFn?.();
             }
         }
@@ -108,14 +110,17 @@ export class BitmapTerrain implements IMatterEntity {
         console.log(this.sprite.x, this.sprite.y);
 
         // Now create the pieces
-        const newParts: Body[] = [];
+        const newParts: RapierPhysicsObject[] = [];
         for (const quad of quadtreeRects) {
-            const body = Bodies.rectangle(quad.x + this.sprite.x, quad.y + this.sprite.y, quad.width, quad.height, { label: 'terrain', isStatic: true });
+            const body = this.gameWorld.createRigidBodyCollider(
+                ColliderDesc.cuboid(quad.width/2, quad.height/2),
+                RigidBodyDesc.fixed().setTranslation(quad.x + this.sprite.x, quad.y + this.sprite.y)
+            )
             newParts.push(body);
         }
         this.parts.push(...newParts);
 
-        this.gameWorld.addBody(this, ...newParts);
+        this.gameWorld.addBody(this, ...newParts.map(p => p.collider));
         console.timeEnd("Generating terrain");
     }
 
@@ -186,15 +191,17 @@ export class BitmapTerrain implements IMatterEntity {
             let color = 0xFFBD01;
             if (this.nearestTerrainPositionBodies.has(rect)) {
                 color = 0x00AA00;
-            } else if (rect.isSleeping) {
+            } else if (!rect.collider.isEnabled()) {
                 color = 0x0000FF;
             }
-            this.gfx.rect(rect.position.x, rect.position.y, rect.bounds.max.x - rect.bounds.min.x, rect.bounds.max.y - rect.bounds.min.y).stroke({ width: 1, color });
+            const position = rect.body.translation();
+            const shape = rect.collider.shape as Cuboid;
+            this.gfx.rect(position.x, position.y, shape.halfExtents.x * 2, shape.halfExtents.y * 2).stroke({ width: 1, color });
         }
         this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
     }
 
-    public getNearestTerrainPosition(point: Vector, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector, fell: false}|{fell: true, point: null} {
+    public getNearestTerrainPosition(point: Vector2, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector, fell: false}|{fell: true, point: null} {
         // This needs a rethink, we really want to have it so that the character's "platform" is visualised
         // by this algorithm. We want to figure out if we can move left or right, and if not if we're going to fall.
 
@@ -250,16 +257,18 @@ export class BitmapTerrain implements IMatterEntity {
         };
     }
 
-    public pointInTerrain(point: Vector, radius: number): Collision[] {
+    public pointInTerrain(point: Vector2, radius: number): never[] {
         // Avoid costly iteration with this one neat trick.
         if (!this.bounds.contains(point.x, point.y)) {
             return [];
         }
-        return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
+        // TODO: Fix
+        return [];
+        //return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
     }
 
-    public registerDamageListener(point: Vector, fn: OnDamage) {
-        this.registeredDamageFunctions.set(point.x + "," + point.y, fn);
+    public registerDamageListener(collider: Collider, fn: OnDamage) {
+        this.registeredDamageFunctions.set(collider.handle, fn);
     }
 
     destroy(): void {

@@ -1,9 +1,9 @@
-import { Body, Bodies } from "matter-js";
 import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
-import { GameWorld } from "../world";
+import { GameWorld, RapierPhysicsObject } from "../world";
+import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d";
 
 export class Water implements IGameEntity {
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.LOW;
@@ -13,10 +13,10 @@ export class Water implements IGameEntity {
         return false;
     }
 
-    private readonly body: Body;
+    private readonly body: RapierPhysicsObject;
     private readonly shader: Shader;
 
-    constructor(private readonly width: number, private readonly height: number) {
+    constructor(private readonly width: number, private readonly height: number, world: GameWorld) {
         const indexBuffer = ['a','b'].flatMap((_v, i) => {
             i = i * 3;
             if (i === 0) {
@@ -52,7 +52,8 @@ export class Water implements IGameEntity {
                 }
             }
         });
-        this.body = Bodies.rectangle(width/2,height-60,width,100, { isStatic: true });
+        // TODO: Potentially optimise into a polyline?
+        this.body = world.createRigidBodyCollider(ColliderDesc.cuboid(width/2, 100), RigidBodyDesc.fixed().setTranslation(width/2, height-60))
         this.waterMesh = new Mesh({
             geometry: this.geometry,
             shader: this.shader,
@@ -65,7 +66,7 @@ export class Water implements IGameEntity {
 
     async create(parent: Container, world: GameWorld) {
         parent.addChild(this.waterMesh);
-        world.addBody(this, this.body);
+        world.addBody(this, this.body.collider);
     }
 
     update(): void {
