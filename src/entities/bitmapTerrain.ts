@@ -2,8 +2,8 @@ import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from
 import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
-import { GameWorld, RapierPhysicsObject } from "../world";
-import { Collider, ColliderDesc, Cuboid, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
+import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
@@ -76,6 +76,7 @@ export class BitmapTerrain implements IMatterEntity {
 
     calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.canvas.width, boundaryHeight = this.canvas.height) {
         console.time('Generating terrain');
+        console.log({boundaryX, boundaryY, boundaryWidth, boundaryHeight});
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');
@@ -84,9 +85,10 @@ export class BitmapTerrain implements IMatterEntity {
         // Remove everything within the boundaries 
         const removableBodies = this.parts.filter(
             (b) => {
-                const tr = b.body.translation();
+                let tr = b.body.translation();
+                tr = { x: tr.x * PIXELS_PER_METER, y: tr.y * PIXELS_PER_METER };
                 return (tr.x >= boundaryX && tr.x <= boundaryX + boundaryWidth) && 
-            (tr.y >= boundaryY && tr.y <= boundaryY + boundaryHeight)
+            (tr.y >= boundaryY && tr.y <= boundaryY + boundaryHeight)}
         )
 
         console.log("Removing", removableBodies.length, "bodies");
@@ -98,7 +100,8 @@ export class BitmapTerrain implements IMatterEntity {
                 damageFn?.();
             }
         }
-        this.parts = this.parts.filter(b => !removableBodies.some(rB => b.id === rB.id));
+        // TODO: Fix this.
+        this.parts = this.parts.filter(b => !removableBodies.some(rB => b.body.handle === rB.body.handle));
         const imgData = context.getImageData(boundaryX, boundaryY, boundaryWidth, boundaryHeight);
         const { boundaries, boundingBox } = imageDataToTerrainBoundaries(boundaryX, boundaryY, imgData);
         this.bounds = boundingBox;
@@ -113,8 +116,9 @@ export class BitmapTerrain implements IMatterEntity {
         const newParts: RapierPhysicsObject[] = [];
         for (const quad of quadtreeRects) {
             const body = this.gameWorld.createRigidBodyCollider(
-                ColliderDesc.cuboid(quad.width/2, quad.height/2),
-                RigidBodyDesc.fixed().setTranslation(quad.x + this.sprite.x, quad.y + this.sprite.y)
+                ColliderDesc.cuboid(quad.width/(PIXELS_PER_METER*2), quad.height/(PIXELS_PER_METER*2)),
+                RigidBodyDesc.fixed().setTranslation(
+                    (quad.x + this.sprite.x)/PIXELS_PER_METER, (quad.y + this.sprite.y)/PIXELS_PER_METER)
             )
             newParts.push(body);
         }
@@ -124,17 +128,18 @@ export class BitmapTerrain implements IMatterEntity {
         console.timeEnd("Generating terrain");
     }
 
-    onDamage(point: Vector, radius: number) {
+    onDamage(point: Vector2, radius: number) {
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get context');
         }
 
+        radius = radius * PIXELS_PER_METER;
         console.log('onDamage', point, radius);
 
         // Optmise this check!
-        const imageX = point.x - this.sprite.x;
-        const imageY = point.y - this.sprite.y;
+        const imageX = (point.x*PIXELS_PER_METER) - this.sprite.x;
+        const imageY = (point.y*PIXELS_PER_METER) - this.sprite.y;
         const snapshotX = (imageX-radius) - 30;
         const snapshotY = (imageY-radius) - 30;
         const snapshotWidth = (radius*3);
@@ -187,21 +192,10 @@ export class BitmapTerrain implements IMatterEntity {
             return;
         }
         this.gfx.clear();
-        for (const rect of this.parts) {
-            let color = 0xFFBD01;
-            if (this.nearestTerrainPositionBodies.has(rect)) {
-                color = 0x00AA00;
-            } else if (!rect.collider.isEnabled()) {
-                color = 0x0000FF;
-            }
-            const position = rect.body.translation();
-            const shape = rect.collider.shape as Cuboid;
-            this.gfx.rect(position.x, position.y, shape.halfExtents.x * 2, shape.halfExtents.y * 2).stroke({ width: 1, color });
-        }
         this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
     }
 
-    public getNearestTerrainPosition(point: Vector2, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector, fell: false}|{fell: true, point: null} {
+    public getNearestTerrainPosition(point: Vector2, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector2, fell: false}|{fell: true, point: null} {
         // This needs a rethink, we really want to have it so that the character's "platform" is visualised
         // by this algorithm. We want to figure out if we can move left or right, and if not if we're going to fall.
 
@@ -210,20 +204,20 @@ export class BitmapTerrain implements IMatterEntity {
 
         // First filter for all the points within the range of the point.
         const filteredPoints = this.parts.filter((p) => {
-            return p.position.x < point.x + width + xDirection && 
-                p.position.x > point.x - width - xDirection && 
-                p.position.y > point.y - maxHeightDiff
+            return p.body.translation().x < point.x + width + xDirection && 
+                p.body.translation().x > point.x - width - xDirection && 
+                p.body.translation().y > point.y - maxHeightDiff
         });
 
         // This needs to answer the following as quickly as possible:
 
         // Can we go to the next x point without falling?
-        let closestTerrainPoint: Vector|undefined;
+        let closestTerrainPoint: Vector2|undefined;
 
-        const rejectedPoints: Body[] = [];
+        const rejectedPoints: RigidBody[] = [];
 
         for (const terrain of filteredPoints) {
-            const terrainPoint = terrain.position;
+            const terrainPoint = terrain.body.translation();
             const distY = Math.abs(terrainPoint.y - point.y);
             if (xDirection < 0 && terrainPoint.x - point.x > xDirection) {
                 // If moving left, -3
@@ -234,7 +228,7 @@ export class BitmapTerrain implements IMatterEntity {
                 continue;
             }
             if (distY > maxHeightDiff) {
-                rejectedPoints.push(terrain);
+                rejectedPoints.push(terrain.body);
                 continue;
             }
             const distX = Math.abs(terrainPoint.x - (point.x + xDirection));

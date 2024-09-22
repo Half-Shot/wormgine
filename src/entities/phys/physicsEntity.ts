@@ -1,11 +1,11 @@
-import { Body, Vector } from "matter-js";
 import { UPDATE_PRIORITY, Sprite } from "pixi.js";
 import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
-import { GameWorld } from "../../world";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
+import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
@@ -24,7 +24,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
         return this.sprite.destroyed;
     }
 
-    constructor(public readonly sprite: Sprite, protected body: Body, protected gameWorld: GameWorld) {
+    constructor(public readonly sprite: Sprite, protected body: RapierPhysicsObject, protected gameWorld: GameWorld) {
         this.wireframe = new BodyWireframe(this.body, globalFlags.DebugView);
         globalFlags.on('toggleDebugView', (on) => {
             this.wireframe.enabled = on;
@@ -39,22 +39,23 @@ export abstract class PhysicsEntity implements IMatterEntity {
     }
 
     update(dt: number): void {
-        this.sprite.position = this.body.position;
-        this.sprite.rotation = this.body.angle;
-
+        const pos = this.body.body.translation();
+        const rotation = this.body.body.rotation();
+        this.sprite.updateTransform({x: pos.x * PIXELS_PER_METER, y: pos.y * PIXELS_PER_METER, rotation });
+        
         this.wireframe.update();
 
         // Sinking.
         if (this.isSinking) {
-            this.body.position.y += 1 * dt;
-            if (this.body.position.y > this.sinkingY) {
+            this.body.body.setTranslation({x: pos.x, y: pos.y + (0.05 * dt)}, false);
+            if (pos.y > this.sinkingY) {
                 this.destroy();
             }
         }
 
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
+    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
         if (otherEnt instanceof Water) {
             console.log('hit water');
 
@@ -64,10 +65,12 @@ export abstract class PhysicsEntity implements IMatterEntity {
                     this.splashSoundPlayback = instance;
                 })
             }
+            const contactY = contactPoint.y;
             // Time to sink
             this.isSinking = true;
-            this.sinkingY = contactPoint.y + 200;
-            Body.setStatic(this.body, true);
+            this.sinkingY = contactY + 200;
+            // Set static.
+            this.body.body.setEnabled(false);
             return true;
         }
         return false;

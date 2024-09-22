@@ -3,7 +3,7 @@ import { Application, Graphics, UPDATE_PRIORITY } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
-import { Worm } from './entities/phys/worm';
+// import { Worm } from './entities/phys/worm';
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
@@ -11,9 +11,8 @@ import { Viewport } from 'pixi-viewport';
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
-import { GameWorld } from "./world";
+import { GameWorld, PIXELS_PER_METER } from "./world";
 import RAPIER from "@dimforge/rapier2d";
-import * as PIXI from "pixi.js";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -77,7 +76,7 @@ export class Game {
         Grenade.bounceSoundsLight = sounds.metalBounceLight;
         Grenade.boundSoundHeavy = sounds.metalBounceHeavy;
         BazookaShell.texture = textures.bazooka_shell;
-        Worm.texture = textures.grenade;
+        // Worm.texture = textures.grenade;
         Explosion.explosionSounds = 
             [
                 sounds.explosion1,
@@ -99,31 +98,12 @@ export class Game {
             throw Error('Unknown level');
         }
 
-        new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage);
-        this.viewport.addChild(this.rapierGfx);
+        new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage, this.viewport);
+        this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
 
         this.pixiApp.ticker.add(() => {
             // TODO: Timing.
-            this.rapierWorld.step();
-            let buffers = this.rapierWorld.debugRender();
-            let vtx = buffers.vertices;
-            let cls = buffers.colors;
-
-            this.rapierGfx.clear();
-
-            for (let i = 0; i < vtx.length / 4; i += 1) {
-                let color = new Float32Array([
-                    cls[i * 8],
-                    cls[i * 8 + 1],
-                    cls[i * 8 + 2],
-                    cls[i * 8 + 3],
-                ]);
-                this.rapierGfx.setStrokeStyle({ width: 1, color});
-                this.rapierGfx.moveTo(vtx[i * 4], -vtx[i * 4 + 1]);
-                this.rapierGfx.lineTo(vtx[i * 4 + 2], -vtx[i * 4 + 3]);
-            }
-
-
+            this.world.step();
         }, undefined, UPDATE_PRIORITY.HIGH);
     }
 

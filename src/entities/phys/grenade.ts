@@ -1,27 +1,22 @@
 import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
-import grenadePaths from "../../assets/grenade.svg";
-import { Bodies, Vector } from "matter-js";
 import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
-import { loadSvg } from '../../loadSvg';
-import { GameWorld } from '../../world';
-       
+import { GameWorld, PIXELS_PER_METER } from '../../world';
+import { ActiveEvents, ColliderDesc, RigidBodyDesc, ShapeContact, Vector2 } from '@dimforge/rapier2d';
+import { magnitude } from '../../utils';
 /**
  * Standard grenade projectile.
  */
 export class Grenade extends TimedExplosive {
-    private static readonly FRICTION = 0.99;
-    private static readonly RESITITUTION = 0;
-    private static readonly DENSITY = 35;
-    private static bodyVertices = loadSvg(grenadePaths, 50, 1, 1, Vector.create(0.5, 0.5));
+    private static readonly FRICTION = 0.15;
     public static texture: Texture;
     public static bounceSoundsLight: Sound;
     public static boundSoundHeavy: Sound;
 
     static async create(parent: Container, world: GameWorld, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
-        const ent = new Grenade(position, await Grenade.bodyVertices, initialForce, world);
+        const ent = new Grenade(position, initialForce, world);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
@@ -33,25 +28,25 @@ export class Grenade extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: { x: number, y: number }, bodyVerticies: Vector[][], initialForce: { x: number, y: number}, world: GameWorld) {
+    private constructor(position: { x: number, y: number }, initialForce: { x: number, y: number}, world: GameWorld) {
         const sprite = new Sprite(Grenade.texture);
-        sprite.scale.set(0.5, 0.5);
-        sprite.anchor.set(0.5, 0.5);
-        const body = Bodies.rectangle(sprite.x, sprite.y, sprite.width, sprite.height, {
-            position,
-            sleepThreshold: 60*(5+2),
-            friction: Grenade.FRICTION,
-            restitution: Grenade.RESITITUTION,
-            density: Grenade.DENSITY,
-            isSleeping: false,
-            isStatic: false,
-            label: "Grenade",
-        });
-        console.log("Created grenade body", body.id);
+        sprite.scale.set(0.5);
+        sprite.anchor.set(0.5);
+        const body = world.createRigidBodyCollider(
+            ColliderDesc.roundCuboid(
+                0.05,
+                0.05, 0.50).setActiveEvents(ActiveEvents.COLLISION_EVENTS),
+            RigidBodyDesc
+                .dynamic()
+                .setTranslation(position.x/PIXELS_PER_METER, position.y/PIXELS_PER_METER)
+                // .setLinvel(initialForce.x, initialForce.y)
+                // .setLinearDamping(Grenade.FRICTION)
+            );
+        console.log("Created grenade body", body.collider.handle);
         super(sprite, body, world, {
-            explosionRadius: 60,
+            explosionRadius: 3, // in meters
             explodeOnContact: false,
-            timerSecs: 1,
+            timerSecs: 5,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text(this.timerTextValue, {
@@ -69,14 +64,16 @@ export class Grenade extends TimedExplosive {
             return;
         }
         
+        this.wireframe.setDebugText(`velocity: ${Math.round(magnitude(this.body.body.linvel())*1000)/1000}`)
+
         // Body.applyForce(this.body, Vector.create(this.body.position.x - 5, this.body.position.y - 5), Vector.create(this.initialForce.x, this.initialForce.y));
         if (!this.timerText.destroyed) {
-            this.timerText.rotation = -this.body.angle;
+            this.timerText.rotation = -this.body.body.rotation();
             this.timerText.text = this.timerTextValue;
         }
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
+    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             this.timerText.destroy();
             return true;
@@ -86,13 +83,13 @@ export class Grenade extends TimedExplosive {
             return false;
         }
 
-        const velocity = Vector.magnitude(this.body.velocity);
+        const velocity = magnitude(this.body.body.linvel());
 
         // TODO: can these interrupt?
         if (!this.bounceSoundPlayback?.progress || this.bounceSoundPlayback.progress === 1 && this.timer > 0) {
             // TODO: Hacks
             Promise.resolve(
-                (velocity >= 4 ? Grenade.boundSoundHeavy : Grenade.bounceSoundsLight).play()
+                (velocity >= 8 ? Grenade.boundSoundHeavy : Grenade.bounceSoundsLight).play()
             ).then((instance) =>{
                 this.bounceSoundPlayback = instance;
             })

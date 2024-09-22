@@ -2,7 +2,7 @@ import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
-import { GameWorld, RapierPhysicsObject } from "../world";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d";
 
 export class Water implements IGameEntity {
@@ -52,8 +52,14 @@ export class Water implements IGameEntity {
                 }
             }
         });
+        console.log((width/2)/PIXELS_PER_METER, 6);
         // TODO: Potentially optimise into a polyline?
-        this.body = world.createRigidBodyCollider(ColliderDesc.cuboid(width/2, 100), RigidBodyDesc.fixed().setTranslation(width/2, height-60))
+        this.body = world.createRigidBodyCollider(ColliderDesc.cuboid(
+            (width/2)/PIXELS_PER_METER, 6), RigidBodyDesc.fixed().setTranslation(
+                (width/2)/PIXELS_PER_METER,
+                (height/PIXELS_PER_METER)
+            )
+        )
         this.waterMesh = new Mesh({
             geometry: this.geometry,
             shader: this.shader,

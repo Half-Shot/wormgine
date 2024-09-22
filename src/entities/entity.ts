@@ -1,5 +1,5 @@
-import { Vector2 } from "@dimforge/rapier2d";
-import { UPDATE_PRIORITY } from "pixi.js";
+import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
+import { Point, UPDATE_PRIORITY } from "pixi.js";
 
 /**
  * Base entity which all game objects implement
@@ -26,5 +26,5 @@ export interface IMatterEntity extends IGameEntity {
      * @param contactPoint 
      * @returns True if the collision should stop being processed
      */
-    onCollision?(other: IMatterEntity, contactPoint: Vector2): boolean;
+    onCollision?(other: IMatterEntity, contactPoint: Vector2|null): boolean;
 }

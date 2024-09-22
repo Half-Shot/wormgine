@@ -1,10 +1,10 @@
-import { Body, Vector, Bodies } from "matter-js";
-import { UPDATE_PRIORITY, Ticker, Sprite } from "pixi.js";
+import { UPDATE_PRIORITY, Ticker, Sprite, Point } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
-import { GameWorld } from "../../world";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
+import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
 
 interface Opts {
     explosionRadius: number,
@@ -22,9 +22,9 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
 
-    constructor(sprite: Sprite, body: Body, gameWorld: GameWorld, public readonly opts: Opts) {
+    constructor(sprite: Sprite, body: RapierPhysicsObject, gameWorld: GameWorld, public readonly opts: Opts) {
         super(sprite, body, gameWorld);
-        this.gameWorld.addBody(this, body);
+        this.gameWorld.addBody(this, body.collider);
         this.timer = Ticker.targetFPMS * opts.timerSecs * 1000;
     }
 
@@ -36,12 +36,12 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
     }
 
     onExplode() {
-        const point = this.body.position;
+        const point = this.body.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        const hitOtherEntity = this.gameWorld.checkCollision(Bodies.circle(point.x, point.y, radius), this);
+        const hitOtherEntity = this.gameWorld.checkCollision(point, radius, this.body.collider);
         console.log("onExplode", hitOtherEntity);
-        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, point, radius, 15, 35));
+        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
         // Find contact point with any terrain
         if (hitOtherEntity) {
             this.onCollision(hitOtherEntity, point);
@@ -59,11 +59,11 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         }
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
+    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.timer = 0;
-                this.body.angle = 0.15;
+                this.body.body.setRotation(0.15, false);
             }
             return true;
         }

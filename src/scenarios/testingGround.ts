@@ -3,9 +3,7 @@ import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Worm } from "../entities/phys/worm";
 import { Grenade } from "../entities/phys/grenade";
-import { BazookaShell } from "../entities/phys/bazookaShell";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;

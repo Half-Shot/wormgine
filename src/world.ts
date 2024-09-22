@@ -1,7 +1,7 @@
 import { IGameEntity, IMatterEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, World } from "@dimforge/rapier2d";
+import { Ball, Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -11,6 +11,10 @@ export interface RapierPhysicsObject {
     collider: Collider;
     body: RigidBody
 }
+
+
+export const PIXELS_PER_METER = 20;
+
 export class GameWorld {
     public readonly bodyEntityMap = new Map<number, IMatterEntity>();
     public readonly entities = new Set<IGameEntity>();
@@ -26,6 +30,12 @@ export class GameWorld {
     public step() {
         this.rapierWorld.step(this.eventQueue);
         this.eventQueue.drainCollisionEvents((collider1, collider2, started) => {
+            if (started) {
+                this.onCollision(
+                    this.rapierWorld.getCollider(collider1),
+                    this.rapierWorld.getCollider(collider2)
+                );
+            }
             console.log('collisionEvent', collider1, collider2, started);
         });
         this.eventQueue.drainContactForceEvents((event) => {
@@ -37,22 +47,25 @@ export class GameWorld {
     //     console.log('body being removed', event);
     // }
 
-    // private onCollision(event: IEventCollision<Engine>) {
-    //     const [pairA] = event.pairs;
-    //     const [entA, entB] = [ this.bodyEntityMap.get(pairA.bodyA), this.bodyEntityMap.get(pairA.bodyB)];
+    private onCollision(collider1: Collider, collider2: Collider) {
+        const [entA, entB] = [ this.bodyEntityMap.get(collider1.handle), this.bodyEntityMap.get(collider2.handle)];
 
-    //     console.log(pairA.bodyB);
+        if (!entA || !entB) {
+            console.warn(`Untracked collision between ${collider1.handle} (${entA}) and ${collider2.handle}  (${entB})`);
+            return;
+        }
 
-    //     if (!entA || !entB) {
-    //         console.warn(`Untracked collision between ${pairA.bodyA.id} ${pairA.bodyA.label} (${entA}) and ${pairA.bodyB.id} ${pairA.bodyB.label} (${entB})`);
-    //         return;
-    //     }
+        const shapeColA = collider1.contactCollider(collider2, 4);
 
-    //     const contact = pairA.contacts[0];
+        if (!shapeColA) {
+            console.warn(`Collision contactCollider failed after onCollision call for ${entA} and ${entB}`)
+            return;
+        }
 
-    //     entA.onCollision?.(entB, contact.vertex);
-    //     entB.onCollision?.(entA, contact.vertex);
-    // }
+
+        entA.onCollision?.(entB, shapeColA.point1);
+        entB.onCollision?.(entA, shapeColA.point2);
+    }
 
     public addEntity<T extends IGameEntity>(entity: T): T {
         if (this.entities.has(entity)) {
@@ -101,9 +114,23 @@ export class GameWorld {
         this.entities.delete(entity);
     }
 
-    public checkCollision(body: Body, ownEntity: IMatterEntity): IMatterEntity|undefined {
-        // TODO: Fix.
-        return undefined;
+    public checkCollision(position: Vector2, radius: number, ownCollier: Collider): IMatterEntity|null {
+        const result = this.rapierWorld.intersectionWithShape(
+            position,
+            0,
+            new Ball(radius),
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            (collider) => {
+                if (collider.handle === ownCollier.handle) {
+                    return false;
+                }
+                return this.bodyEntityMap.has(collider.handle);
+            }
+        );
+        return result && this.bodyEntityMap.get(result.handle) || null;
         // const hits = Query.collides(body, this.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
         // console.log("hits", hits);
         // for (const hitBody of hits) {

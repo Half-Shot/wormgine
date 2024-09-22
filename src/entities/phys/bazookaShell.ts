@@ -14,7 +14,7 @@ export class BazookaShell extends TimedExplosive {
     
     static async create(parent: Container, gameWorld: GameWorld, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
         const ent = new BazookaShell(position, initialAngle, gameWorld, initialForce, wind);
-        gameWorld.addBody(ent, ent.body);
+        gameWorld.addBody(ent, ent.body.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         console.log("New zooka", ent.body);
