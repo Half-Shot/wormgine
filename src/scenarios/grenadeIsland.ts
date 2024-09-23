@@ -46,7 +46,7 @@ export default async function runScenario(game: Game) {
 
     let selectedWeapon: "grenade"|"mine" = "grenade"; 
     const timerText = new Text({
-        text: `Selected Weapon: ${selectedWeapon}`,
+        text: `Selected Weapon (press S to switch): ${selectedWeapon}`,
         style: {
             fontFamily: 'Arial',
             fontSize: 20,
@@ -61,7 +61,7 @@ export default async function runScenario(game: Game) {
         }
         console.log('Weapon switch');
         selectedWeapon = selectedWeapon === "grenade" ? "mine" : "grenade";
-        timerText.text = `Selected Weapon: ${selectedWeapon}`;
+        timerText.text = `Selected Weapon (press S to switch): ${selectedWeapon}`;
     });
 
 
