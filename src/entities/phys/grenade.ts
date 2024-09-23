@@ -6,7 +6,7 @@ import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
 import { magnitude } from '../../utils';
-import { MetersValue } from '../../utils/coodinate';
+import { Coordinate, MetersValue } from '../../utils/coodinate';
 /**
  * Standard grenade projectile.
  */
@@ -17,7 +17,7 @@ export class Grenade extends TimedExplosive {
     public static bounceSoundsLight: Sound;
     public static boundSoundHeavy: Sound;
 
-    static async create(parent: Container, world: GameWorld, position: {x: number, y: number}, initialForce: { x: number, y: number}) {
+    static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number, y: number}) {
         const ent = new Grenade(position, initialForce, world);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
@@ -26,11 +26,11 @@ export class Grenade extends TimedExplosive {
     private timerText: Text;
 
     private get timerTextValue() {
-        return `${(this.timer / (Ticker.targetFPMS*1000)).toFixed(1)}`
+        return `${((this.timer ?? 0) / (Ticker.targetFPMS*1000)).toFixed(1)}`
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: { x: number, y: number }, initialForce: { x: number, y: number}, world: GameWorld) {
+    private constructor(position: Coordinate, initialForce: { x: number, y: number}, world: GameWorld) {
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5);
         sprite.anchor.set(0.5);
@@ -42,16 +42,16 @@ export class Grenade extends TimedExplosive {
                 .setSolverGroups(Grenade.collisionBitmask),
             RigidBodyDesc
                 .dynamic()
-                .setTranslation(position.x/PIXELS_PER_METER, position.y/PIXELS_PER_METER)
+                .setTranslation(position.worldX, position.worldY)
                 // .setLinvel(initialForce.x, initialForce.y)
                 // .setLinearDamping(Grenade.FRICTION)
             );
         sprite.position = body.body.translation();
-        console.log("Created grenade body", body.collider.handle);
         super(sprite, body, world, {
             explosionRadius: new MetersValue(3),
             explodeOnContact: false,
             timerSecs: 2.5,
+            autostartTimer: true,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text({
@@ -95,7 +95,7 @@ export class Grenade extends TimedExplosive {
         const velocity = magnitude(this.body.body.linvel());
 
         // TODO: can these interrupt?
-        if (!this.bounceSoundPlayback?.progress || this.bounceSoundPlayback.progress === 1 && this.timer > 0) {
+        if (!this.bounceSoundPlayback?.progress || this.bounceSoundPlayback.progress === 1 && this.timer) {
             // TODO: Hacks
             Promise.resolve(
                 (velocity >= 8 ? Grenade.boundSoundHeavy : Grenade.bounceSoundsLight).play()

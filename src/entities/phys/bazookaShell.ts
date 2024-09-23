@@ -41,6 +41,7 @@ export class BazookaShell extends TimedExplosive {
             explosionRadius: new MetersValue(3.5),
             explodeOnContact: true,
             timerSecs: 30,
+            autostartTimer: true,
         });
         this.sprite.x = position.x;
         this.sprite.y = position.y;

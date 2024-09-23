@@ -78,7 +78,7 @@ export class Water implements IGameEntity {
     }
 
     addToWorld(parent: Container, world: GameWorld) {
-        parent.addChild(this.waterMesh);
+        parent.addChildAt(this.waterMesh, parent.children.length-1);
         world.addBody(this, this.body.collider);
     }
 

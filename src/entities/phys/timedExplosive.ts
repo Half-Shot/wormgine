@@ -10,7 +10,8 @@ import { Coordinate, MetersValue } from "../../utils/coodinate";
 interface Opts {
     explosionRadius: MetersValue,
     explodeOnContact: boolean,
-    timerSecs: number,
+    autostartTimer: boolean,
+    timerSecs?: number,
 }
 
 /**
@@ -18,7 +19,7 @@ interface Opts {
  * the rendering of a timer.
  */
 export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
-    protected timer: number;
+    protected timer: number|undefined;
     protected isSinking = false;
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
@@ -26,7 +27,19 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
     constructor(sprite: Sprite, body: RapierPhysicsObject, gameWorld: GameWorld, public readonly opts: Opts) {
         super(sprite, body, gameWorld);
         this.gameWorld.addBody(this, body.collider);
-        this.timer = Ticker.targetFPMS * opts.timerSecs * 1000;
+        if (opts.autostartTimer) {
+            this.timer = opts.timerSecs ? Ticker.targetFPMS * opts.timerSecs * 1000 : 0;
+        }
+    }
+
+    startTimer() {
+        if (this.timer !== undefined) {
+            throw Error('Timer already started');
+        }
+        if (!this.opts.timerSecs) {
+            throw Error('No timer secs defined');
+        }
+        this.timer = Ticker.targetFPMS * this.opts.timerSecs * 1000;
     }
 
     onTimerFinished() {
@@ -44,16 +57,17 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             this.onCollision(element, point);
         }
         this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
-        
     }
 
     update(dt: number): void {
         super.update(dt);
-        if (this.timer > 0) {
-            this.timer -= dt;
-        } else if (this.timer <= 0 && !this.isSinking) {
-            this.onTimerFinished();
-            this.destroy();
+        if (this.timer !== undefined) {
+            if (this.timer > 0) {
+                this.timer -= dt;
+            } else if (this.timer <= 0 && !this.isSinking) {
+                this.onTimerFinished();
+                this.destroy();
+            }
         }
     }
 
@@ -67,8 +81,9 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         }
 
         if ("onDamage" in otherEnt) {
+            console.log("onDamage", otherEnt);
             const damangEnt = otherEnt as IDamageableEntity;
-            if (this.opts.explodeOnContact || this.timer <= 0) {
+            if (this.opts.explodeOnContact || (this.timer !== undefined && this.timer <= 0)) {
                 damangEnt.onDamage(contactPoint, this.opts.explosionRadius);
                 this.timer = 0;
                 return true;

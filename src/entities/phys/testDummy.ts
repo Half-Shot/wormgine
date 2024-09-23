@@ -1,10 +1,10 @@
-import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, sortMixin } from "pixi.js";
+import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, sortMixin, RAD_TO_DEG, DEG_TO_RAD } from "pixi.js";
 import { PhysicsEntity } from "./physicsEntity";
 import { getAssets } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
-import { IDamageableEntity } from "../entity";
+import { IDamageableEntity, IMatterEntity } from "../entity";
 import { Explosion } from "../explosion";
 
 export class TestDummy extends PhysicsEntity implements IDamageableEntity {
@@ -31,7 +31,7 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
     public health = 100;
 
     public declare priority: UPDATE_PRIORITY.LOW;
-    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
+    private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
     public hasTakenDamange: boolean = false;
     public wasMoving: boolean = true;
@@ -99,12 +99,12 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
         if (!this.healthText.destroyed) {
             this.healthText.rotation = 0;
             this.healthText.text = this.health;
+            this.healthText.position.set(this.sprite.x - 30, this.sprite.y - 70);
         }
         const expectedTexture = this.getTexture();
         if (this.sprite.texture !== expectedTexture) {
             this.sprite.texture = expectedTexture;
         }
-        this.healthText.position.set(this.sprite.x - 30, this.sprite.y - 70);
         if (!this.body.body.isMoving() && this.wasMoving) {
             this.wasMoving = false;
             this.body.body.setRotation(0, false);
@@ -126,7 +126,19 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
         }
     }
 
+    public onCollision(otherEnt: IMatterEntity, contactPoint: Vector2): boolean {
+        if (super.onCollision(otherEnt, contactPoint)) {
+            if (this.isSinking) {
+                this.healthText.destroy();
+                this.body.body.setRotation(DEG_TO_RAD*180, false);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public onDamage(point: Vector2, radius: MetersValue): void {
+        console.log("Dummy damaged");
         const bodyTranslation = this.body.body.translation();
         const forceMag = (250*radius.value)/magnitude(sub(point,this.body.body.translation()));
         const damage = Math.round(forceMag/20);
@@ -140,6 +152,7 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
 
     public destroy(): void {
         super.destroy();
+        this.healthText.destroy();
         this.gameWorld.viewport.plugins.remove('follow');
         this.gameWorld.viewport.snap(800,0);
     }

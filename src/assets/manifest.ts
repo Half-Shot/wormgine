@@ -12,6 +12,8 @@ import testDolbyDamageBlush1 from "./test_dolby_damage1_blush.png";
 import testDolbyDamageBlush2 from "./test_dolby_damage2_blush.png";
 import testDolbyDamageBlush3 from "./test_dolby_damage3_blush.png";
 import testDolbyDamage3 from "./test_dolby_damage3.png";
+import mine from "./mine.png";
+import mineActive from "./mine_active.png";
 
 
 // Sounds
@@ -22,6 +24,8 @@ import metalBounceHeavy from "./metal_bounce_heavy.ogg";
 import explosion1 from "./explosion_1.ogg";
 import explosion2 from "./explosion_2.ogg";
 import explosion3 from "./explosion_3.ogg";
+import mineBeep from "./mine_beep.ogg";
+
 
 export const manifest = {
     bundles: [{
@@ -45,6 +49,14 @@ export const manifest = {
         {
             alias: "bazooka_shell",
             src: bazookaShellSrc,
+        },
+        {
+            alias: "mine",
+            src: mine,
+        },
+        {
+            alias: "mineActive",
+            src: mineActive,
         },
         {
             alias: "testdummy",
@@ -103,6 +115,9 @@ export const manifest = {
         },{
             alias: "splash",
             src: splash,
+        },{
+            alias: "mineBeep",
+            src: mineBeep,
         }]
     }]
 } satisfies AssetsManifest;

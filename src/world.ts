@@ -19,6 +19,7 @@ export const PIXELS_PER_METER = 20;
 export enum CollisionGroups {
     Terrain = 1, // 0001
     WorldObjects = 2, //0010
+    Player = 4,
 }
 
 export function collisionGroupBitmask(groups: CollisionGroups|CollisionGroups[], collides: CollisionGroups|CollisionGroups[]) {
@@ -104,8 +105,6 @@ export class GameWorld {
     }
 
     public addBody<T extends IMatterEntity>(entity: T, ...collider: Collider[]) {
-        console.log("Adding body", entity, collider);
-
         collider.forEach(collider => {
             if (this.bodyEntityMap.has(collider.handle)) {
                 console.warn(`Tried to add collider entity twice to game world`, collider.handle, entity);

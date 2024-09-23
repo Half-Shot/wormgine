@@ -4,7 +4,8 @@ import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { Grenade } from "../entities/phys/grenade";
-import { MetersValue } from "../utils";
+import { Coordinate, MetersValue } from "../utils";
+import { Mine } from "../entities/phys/mine";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -38,9 +39,8 @@ export default async function runScenario(game: Game) {
     //game.viewport.follow(worm.sprite);
 
     game.viewport.on('clicked', async (evt) => {
-        const position = { x: evt.world.x, y: evt.world.y };
-        const entity = await Grenade.create(parent, world, position, {x: 0.01, y: 0});
-        //const entity = await BazookaShell.create(parent, composite, position, 0, 0, 0 /*{x: 0.005, y: -0.01}*/);
+        const position = new Coordinate(evt.world.x, evt.world.y);
+        const entity = await Mine.create(parent, world, position);
         world.addEntity(entity);
     });
     

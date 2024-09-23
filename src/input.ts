@@ -5,6 +5,7 @@ export enum InputKind {
     MoveRight,
     Fire,
     ToggleDebugView,
+    DebugSwitchWeapon
 }
 
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
@@ -12,6 +13,7 @@ const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowRight": InputKind.MoveRight,
     "Space": InputKind.Fire,
     "F9": InputKind.ToggleDebugView,
+    "s": InputKind.DebugSwitchWeapon,
 });
 
 class Controller extends EventEmitter {

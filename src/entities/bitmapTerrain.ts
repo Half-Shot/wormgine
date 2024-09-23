@@ -9,7 +9,7 @@ import { MetersValue } from "../utils/coodinate";
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
-    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
+    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects, CollisionGroups.Player]);
 
     public get destroyed() {
         // Terrain cannot be destroyed...yet
@@ -134,8 +134,6 @@ export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
         if (!context) {
             throw Error('Failed to get context');
         }
-
-        console.log('onDamage', point, radius);
 
         // Optmise this check!
         const imageX = (point.x*PIXELS_PER_METER) - this.sprite.x;
