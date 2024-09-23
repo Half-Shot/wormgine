@@ -5,7 +5,8 @@ import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { Worm } from "../entities/phys/worm";
 import { Grenade } from "../entities/phys/grenade";
-import { Coordinate } from "../utils/coodinate";
+import { Coordinate, MetersValue } from "../utils/coodinate";
+import { TestDummy } from "../entities/phys/testDummy";
 // import { BazookaShell } from "../entities/phys/bazookaShell";
 
 export default async function runScenario(game: Game) {
@@ -25,14 +26,20 @@ export default async function runScenario(game: Game) {
     bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
 
-    const water = await world.addEntity(new Water(worldWidth,worldHeight, world));
-    water.addToWorld(parent, world);
-    const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(500,400) , terrain, async (worm, definition, duration) => {
-        const newProjectile = await definition.fireFn(parent, world, worm, duration);
-        world.addEntity(newProjectile);
-    }));
+    const water = world.addEntity(
+        new Water(
+            MetersValue.fromPixels(worldWidth*4),
+            MetersValue.fromPixels(worldHeight), 
+        world)
+    );
+    water.addToWorld(game.viewport, world);
+    // const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(500,400), async (worm, definition, duration) => {
+    //     const newProjectile = await definition.fireFn(parent, world, worm, duration);
+    //     world.addEntity(newProjectile);
+    // }));
 
-    game.viewport.follow(worm.sprite);
+    const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620)));
+    game.viewport.follow(dummy.sprite);
 
     game.viewport.on('clicked', async (evt) => {
         const position = { x: evt.world.x, y: evt.world.y };

@@ -46,18 +46,22 @@ export class Grenade extends TimedExplosive {
                 // .setLinvel(initialForce.x, initialForce.y)
                 // .setLinearDamping(Grenade.FRICTION)
             );
+        sprite.position = body.body.translation();
         console.log("Created grenade body", body.collider.handle);
         super(sprite, body, world, {
             explosionRadius: new MetersValue(3),
             explodeOnContact: false,
-            timerSecs: 5,
+            timerSecs: 2.5,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
-        this.timerText = new Text(this.timerTextValue, {
-            fontFamily: 'Arial',
-            fontSize: 24,
-            fill: 0xFFFFFF,
-            align: 'center',
+        this.timerText = new Text({
+            text: '',
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 24,
+                fill: 0xFFFFFF,
+                align: 'center',
+            }
         });
         this.sprite.addChild(this.timerText);
     }

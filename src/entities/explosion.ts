@@ -60,7 +60,6 @@ export class Explosion implements IGameEntity {
 
 
     update(dt: number): void {
-        console.log(this.timer, dt);
         this.timer -= dt;
         const ttl = this.timer / (Ticker.targetFPMS*this.explosionMs);
         const ttlInverse = 1-ttl;
@@ -69,23 +68,22 @@ export class Explosion implements IGameEntity {
         const radius = this.initialRadius.pixels + expandBy;
         this.gfx.clear();
 
-        let anyShrapnelVisible = true;
-        // for (const shrapnel of this.shrapnel) {
-        //     shrapnel.speed.x += shrapnel.accel.x*dt;
-        //     shrapnel.speed.y += shrapnel.accel.y*dt;
-        //     shrapnel.point.x += shrapnel.speed.x*dt;
-        //     shrapnel.point.y += shrapnel.speed.y*dt;
-        //     shrapnel.alpha = Math.max(0, shrapnel.alpha-(Math.random()*dt*0.03));
-        //     anyShrapnelVisible = anyShrapnelVisible || shrapnel.point.y < 1200 || shrapnel.alpha < 0;
-        //     if (shrapnel.kind === "pop") {
-        //         this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xEEEEEE, alpha: shrapnel.alpha });
-        //     } else {
-        //         this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xfd4301, alpha: shrapnel.alpha });
-        //         this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius-3).fill({ color: 0xfde101, alpha: shrapnel.alpha });
-        //     }
-            
-        // }
-        console.log(this.timer);
+        let anyShrapnelVisible = false;
+        for (const shrapnel of this.shrapnel) {
+            shrapnel.speed.x += shrapnel.accel.x*dt;
+            shrapnel.speed.y += shrapnel.accel.y*dt;
+            shrapnel.point.x += shrapnel.speed.x*dt;
+            shrapnel.point.y += shrapnel.speed.y*dt;
+            shrapnel.alpha = Math.max(0, shrapnel.alpha-(Math.random()*dt*0.03));
+            anyShrapnelVisible = anyShrapnelVisible || shrapnel.point.y < 1200 || shrapnel.alpha < 0;
+            if (shrapnel.kind === "pop") {
+                this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xEEEEEE, alpha: shrapnel.alpha });
+            } else {
+                this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xfd4301, alpha: shrapnel.alpha });
+                this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius-3).fill({ color: 0xfde101, alpha: shrapnel.alpha });
+            }
+        
+        }
         if (this.timer > 0) {
             const alphaLarger =  Math.round(ttl * 100) / 150;
             const alphaSmaller = Math.round(ttl * 100) / 100;
@@ -95,9 +93,6 @@ export class Explosion implements IGameEntity {
             if (outerWidth - 20 > 0) {
                 this.gfx.ellipse(0, 0, outerWidth - 20, radius / 2).cut();
             }
-            console.log(alphaLarger, alphaSmaller, outerWidth);
-        } else {
-            this.destroy();
         }
         // Just wait for the shrapnel to leave the stage.
 

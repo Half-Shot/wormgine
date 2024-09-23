@@ -1,6 +1,9 @@
 import { PIXELS_PER_METER } from "../world";
 
 export class MetersValue {
+    static fromPixels(pixels: number) {
+        return new MetersValue(pixels / PIXELS_PER_METER);
+    }
     constructor (public value: number) {
 
     }
@@ -11,6 +14,14 @@ export class MetersValue {
 
     get pixels() {
         return this.value * PIXELS_PER_METER;
+    }
+
+    public valueOf() {
+        return this.value;
+    }
+
+    public toString() {
+        return `MetersValue {meters: ${this.value}, pixels: ${this.value}}`
     }
 }
 
@@ -24,7 +35,7 @@ export class Coordinate {
 
     get screenX() {
         return this.worldX * PIXELS_PER_METER;
-    }
+}
 
     get screenY() {
         return this.worldY * PIXELS_PER_METER;
@@ -36,5 +47,9 @@ export class Coordinate {
 
     set screenY(value: number) {
         this.worldX = value / PIXELS_PER_METER;
+    }
+
+    public toString() {
+        return `Coodinate {wx: ${this.worldX} wy:${this.worldY}} {sx: ${this.screenX}, sy: ${this.screenY}}`
     }
 }

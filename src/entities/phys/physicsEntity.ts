@@ -1,4 +1,4 @@
-import { UPDATE_PRIORITY, Sprite } from "pixi.js";
+import { UPDATE_PRIORITY, Sprite, Point } from "pixi.js";
 import { IMatterEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
@@ -12,8 +12,11 @@ import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
  */
 export abstract class PhysicsEntity implements IMatterEntity {
     protected isSinking = false;
+    protected isDestroyed = false;
     protected sinkingY = 0;
     protected wireframe: BodyWireframe;
+    
+    protected renderOffset?: Point;
 
     public static splashSound: Sound;
 
@@ -21,7 +24,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
     private splashSoundPlayback?: IMediaInstance;
 
     public get destroyed() {
-        return this.sprite.destroyed;
+        return this.isDestroyed;
     }
 
     constructor(public readonly sprite: Sprite, protected body: RapierPhysicsObject, protected gameWorld: GameWorld) {
@@ -32,6 +35,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
     }
 
     destroy(): void {
+        this.isDestroyed = true;
         this.sprite.destroy();
         this.wireframe.renderable.destroy();
         this.gameWorld.removeBody(this.body);
@@ -41,7 +45,11 @@ export abstract class PhysicsEntity implements IMatterEntity {
     update(dt: number): void {
         const pos = this.body.body.translation();
         const rotation = this.body.body.rotation();
-        this.sprite.updateTransform({x: pos.x * PIXELS_PER_METER, y: pos.y * PIXELS_PER_METER, rotation });
+        this.sprite.updateTransform({
+            x: (pos.x * PIXELS_PER_METER) + (this.renderOffset?.x ?? 0),
+            y: (pos.y * PIXELS_PER_METER) + (this.renderOffset?.y ?? 0),
+            rotation
+        });
         
         this.wireframe.update();
 
@@ -57,7 +65,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
         if (otherEnt instanceof Water) {
-            console.log('hit water');
+            console.log('hit water', this);
 
             if (!this.splashSoundPlayback?.progress || this.splashSoundPlayback.progress === 1) {
                 // TODO: Hacks

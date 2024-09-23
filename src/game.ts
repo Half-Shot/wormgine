@@ -13,6 +13,7 @@ import { GameDebugOverlay } from "./overlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d";
 import { Worm } from "./entities/phys/worm";
+import { readAssetsForEntities } from "./entities";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -62,7 +63,7 @@ export class Game {
             })
             .decelerate()
             .drag()
-        this.viewport.zoom(5);
+        this.viewport.zoom(8);
     
         //this.viewport.fit()
         //this.viewport.moveCenter(worldWidth / 2, worldHeight / 2)   
@@ -72,6 +73,7 @@ export class Game {
         // Assets will have already been loaded.
         // TODO: Do this better.
         const { textures, sounds } = getAssets();
+        readAssetsForEntities({textures, sounds});
         Grenade.texture = textures.grenade;
         Grenade.bounceSoundsLight = sounds.metalBounceLight;
         Grenade.boundSoundHeavy = sounds.metalBounceHeavy;

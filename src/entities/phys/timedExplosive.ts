@@ -1,11 +1,11 @@
 import { UPDATE_PRIORITY, Ticker, Sprite, Point } from "pixi.js";
 import { BitmapTerrain } from "../bitmapTerrain";
-import { IMatterEntity } from "../entity";
+import { IDamageableEntity, IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d";
-import { MetersValue } from "../../utils/coodinate";
+import { Coordinate, MetersValue } from "../../utils/coodinate";
 
 interface Opts {
     explosionRadius: MetersValue,
@@ -40,7 +40,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         const point = this.body.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        for (const element of this.gameWorld.checkCollision(point, radius.value, this.body.collider)) {
+        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider)) {
             this.onCollision(element, point);
         }
         this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
@@ -65,13 +65,16 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             }
             return true;
         }
-        if (!this.opts.explodeOnContact && this.timer <= 0 && otherEnt instanceof BitmapTerrain) {
-            console.log('Collided with terrain at', contactPoint);
-            // Create a circle around the area, see what hits
-            otherEnt.onDamage(contactPoint, this.opts.explosionRadius);
-            this.timer = 0;
-            return true;
+
+        if ("onDamage" in otherEnt) {
+            const damangEnt = otherEnt as IDamageableEntity;
+            if (this.opts.explodeOnContact || this.timer <= 0) {
+                damangEnt.onDamage(contactPoint, this.opts.explosionRadius);
+                this.timer = 0;
+                return true;
+            }
         }
+
         return false;
     }
 }

@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Container, Sprite, Texture, UPDATE_PRIORITY } from 'pixi.js';
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
@@ -6,8 +6,9 @@ import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
 import { GameWorld, PIXELS_PER_METER } from '../../world';
-import { ColliderDesc, RigidBodyDesc, Vector } from '@dimforge/rapier2d';
+import { ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from '@dimforge/rapier2d';
 import { Coordinate } from '../../utils/coodinate';
+import { add } from '../../utils';
 
 enum WormState {
     Idle = 0,
@@ -21,13 +22,15 @@ type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number)
 
 export class Worm extends PhysicsEntity {
     public static texture: Texture;
+    private static offsetFromGroundM = 0.01;
 
     private fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponGrenade;
     private state: WormState;
+    private characterController: KinematicCharacterController;
 
-    static async create(parent: Container, world: GameWorld, position: Coordinate, terrain: BitmapTerrain, onFireWeapon: FireWeaponFn) {
-        const ent = new Worm(position, world, terrain, onFireWeapon);
+    static async create(parent: Container, world: GameWorld, position: Coordinate, onFireWeapon: FireWeaponFn) {
+        const ent = new Worm(position, world, onFireWeapon);
         world.addBody(ent, ent.body.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
@@ -38,15 +41,13 @@ export class Worm extends PhysicsEntity {
         return this.body.body.translation();
     }
 
-    private constructor(position: Coordinate, world: GameWorld,
-        private readonly terrain: BitmapTerrain,
-        private readonly onFireWeapon: FireWeaponFn,
+    private constructor(position: Coordinate, world: GameWorld,private readonly onFireWeapon: FireWeaponFn,
     ) {
         const sprite = new Sprite(Worm.texture);
         sprite.anchor.set(0.5, 0.5);
         const body = world.createRigidBodyCollider(
             ColliderDesc.cuboid(sprite.width / (PIXELS_PER_METER*2), sprite.height / (PIXELS_PER_METER*2)),
-            RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY)
+            RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY).lockRotations()
         );
         super(sprite, body, world);
         this.state = WormState.InMotion;
@@ -68,6 +69,10 @@ export class Worm extends PhysicsEntity {
                 this.resetMoveDirection(inputKind);
             } 
         });
+
+        this.characterController = world.rapierWorld.createCharacterController(Worm.offsetFromGroundM);
+        this.characterController.enableSnapToGround(0.5);
+        this.characterController.enableAutostep(0.5, 0.2, true);
 
         //this.onStoppedMoving();
     }
@@ -97,8 +102,16 @@ export class Worm extends PhysicsEntity {
 
     onMove(moveState: WormState.MovingLeft|WormState.MovingRight, dt: number) {
         // // Attempt to move to the left or right by 3 pixels
-        // const movementMod = Math.round(dt);
-        // const move = Vector.create(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
+        const movementMod = 0.5;
+        const move = add(
+            this.body.body.translation(),
+            new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0),
+        );
+        this.characterController.computeColliderMovement(this.body.collider, move);
+        const correctedMovement = this.characterController.computedMovement();
+        console.log(correctedMovement, move);
+        this.body.body.setTranslation(correctedMovement, false);
+
         // const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
         // const width = (this.body.bounds.max.x - this.body.bounds.min.x) / 1.85;
         // // Try to find the terrain position for where we are moving to, to see
@@ -211,6 +224,7 @@ export class Worm extends PhysicsEntity {
     }
 
     destroy(): void {
+        this.gameWorld.rapierWorld.removeCharacterController(this.characterController);
         super.destroy();
     }
 }

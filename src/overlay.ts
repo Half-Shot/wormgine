@@ -73,7 +73,6 @@ export class GameDebugOverlay {
         let vtx = buffers.vertices;
         let cls = buffers.colors;
         this.rapierGfx.clear();
-        this.rapierGfx.setStrokeStyle({ width: 2, color: 0xFFFFFF });
 
         for (let i = 0; i < vtx.length / 4; i += 1) {
             const vtxA = vtx[i * 4] * PIXELS_PER_METER;

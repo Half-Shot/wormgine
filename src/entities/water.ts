@@ -2,10 +2,12 @@ import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi
 import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
-import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
+import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d";
+import { MetersValue } from "../utils";
 
 export class Water implements IGameEntity {
+    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.Terrain, [CollisionGroups.WorldObjects]);
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.LOW;
     private readonly geometry: Geometry;
     private readonly waterMesh: Mesh<Geometry, Shader>;
@@ -16,7 +18,7 @@ export class Water implements IGameEntity {
     private readonly body: RapierPhysicsObject;
     private readonly shader: Shader;
 
-    constructor(private readonly width: number, private readonly height: number, world: GameWorld) {
+    constructor(private readonly width: MetersValue, private readonly height: MetersValue, world: GameWorld) {
         const indexBuffer = ['a','b'].flatMap((_v, i) => {
             i = i * 3;
             if (i === 0) {
@@ -34,12 +36,12 @@ export class Water implements IGameEntity {
         this.geometry = new Geometry({
             attributes: {
                 aPosition: [
-                    -100, -50, // top left
-                    -100, 50, // bottom left
-                    0, 50, // bottom middle
-                    0, -50, // top middle
-                    100, 50, // bottom right
-                    100, -50, // top right
+                    -100, 0, // top left
+                    -100, 100, // bottom left
+                    0, 100, // bottom middle
+                    0, 0, // top middle
+                    100, 100, // bottom right
+                    100, 0, // top right
                 ],
             },
             indexBuffer,
@@ -52,22 +54,27 @@ export class Water implements IGameEntity {
                 }
             }
         });
-        console.log((width/2)/PIXELS_PER_METER, 6);
         // TODO: Potentially optimise into a polyline?
-        this.body = world.createRigidBodyCollider(ColliderDesc.cuboid(
-            (width/2)/PIXELS_PER_METER, 6), RigidBodyDesc.fixed().setTranslation(
-                (width/2)/PIXELS_PER_METER,
-                (height/PIXELS_PER_METER)
+        this.body = world.createRigidBodyCollider(
+            ColliderDesc.cuboid(width.value, 6)
+                .setSensor(true),
+            RigidBodyDesc.fixed().setTranslation(
+                0,
+                (height.value)
             )
         )
+        const meshPos = this.body.body.translation();
+        const meshHeight = 6.5;
         this.waterMesh = new Mesh({
             geometry: this.geometry,
             shader: this.shader,
-            position: {x: this.width/2, y: 1050}
+            position: {x: width.pixels/6, y: (meshPos.y - meshHeight)*PIXELS_PER_METER},
+            visible: true,
         });
-        this.waterMesh.width = this.width;
-        this.waterMesh.height = this.height;
-        this.waterMesh.scale.set(14, 2);
+        console.log();
+        this.waterMesh.width = this.width.value;
+        this.waterMesh.height = this.height.value;
+        this.waterMesh.scale.set(40, 3.5);
     }
 
     addToWorld(parent: Container, world: GameWorld) {

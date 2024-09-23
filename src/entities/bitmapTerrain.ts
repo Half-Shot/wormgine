@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
-import { IMatterEntity } from "./entity";
+import { IDamageableEntity, IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
@@ -7,7 +7,7 @@ import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc,
 import { MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;
-export class BitmapTerrain implements IMatterEntity {
+export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
@@ -18,8 +18,6 @@ export class BitmapTerrain implements IMatterEntity {
 
     private readonly gfx: Graphics = new Graphics();
     private parts: RapierPhysicsObject[] = [];
-    private nearestTerrainPositionBodies = new Set();
-    private nearestTerrainPositionPoint = new Vector2(0,0);
 
     private bounds: Rectangle;
 
@@ -93,7 +91,7 @@ export class BitmapTerrain implements IMatterEntity {
             (tr.y >= boundaryY && tr.y <= boundaryY + boundaryHeight)}
         )
 
-        console.log("Removing", removableBodies.length, "bodies");
+
         for (const body of removableBodies) {
             this.gameWorld.removeBody(body);
             const damageFn = this.registeredDamageFunctions.get(body.collider.handle);
@@ -111,8 +109,6 @@ export class BitmapTerrain implements IMatterEntity {
         // Turn it into a quadtree of rects
         const quadtreeRects = generateQuadTreeFromTerrain(boundaries, boundingBox.width, boundingBox.height, boundingBox.x, boundingBox.y);
         console.log("Found", quadtreeRects.length, "quads in terrain");
-
-        console.log(this.sprite.x, this.sprite.y);
 
         // Now create the pieces
         const newParts: RapierPhysicsObject[] = [];
@@ -195,16 +191,11 @@ export class BitmapTerrain implements IMatterEntity {
         if (!Flags.DebugView) {
             return;
         }
-        this.gfx.clear();
-        this.gfx.rect(this.nearestTerrainPositionPoint.x, this.nearestTerrainPositionPoint.y, 1, 1).stroke({width: 5, color: 0xFF0000});
     }
 
     public getNearestTerrainPosition(point: Vector2, width: number, maxHeightDiff: number, xDirection = 0): {point: Vector2, fell: false}|{fell: true, point: null} {
         // This needs a rethink, we really want to have it so that the character's "platform" is visualised
         // by this algorithm. We want to figure out if we can move left or right, and if not if we're going to fall.
-
-        this.nearestTerrainPositionBodies.clear();
-        this.nearestTerrainPositionPoint = point;
 
         // First filter for all the points within the range of the point.
         const filteredPoints = this.parts.filter((p) => {

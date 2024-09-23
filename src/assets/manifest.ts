@@ -5,6 +5,13 @@ import bazookaShellSrc from "./bazooka.png";
 import island1 from "./island1.png";
 import terrain2 from "./terrain2.png";
 import testingGround from "./testing_ground.png";
+import testDolby from "./test_dolby.png";
+import testDolbyBlush from "./test_dolby_blush.png";
+import testDolbyDamage1 from "./test_dolby_damage1.png";
+import testDolbyDamageBlush1 from "./test_dolby_damage1_blush.png";
+import testDolbyDamageBlush2 from "./test_dolby_damage2_blush.png";
+import testDolbyDamageBlush3 from "./test_dolby_damage3_blush.png";
+import testDolbyDamage3 from "./test_dolby_damage3.png";
 
 
 // Sounds
@@ -38,6 +45,40 @@ export const manifest = {
         {
             alias: "bazooka_shell",
             src: bazookaShellSrc,
+        },
+        {
+            alias: "testdummy",
+            src: testDolby,
+        },
+        {
+            alias: "testdummy_blush",
+            src: testDolbyBlush,
+        },
+        {
+            alias: "testdummy_damage_1",
+            src: testDolbyDamage1,
+        },
+        {
+            alias: "testdummy_damage_blush_1",
+            src: testDolbyDamageBlush1,
+        },
+        {
+            alias: "testdummy_damage_2",
+            //src: testDolbyDamage2,
+            // Failed to make a file for this one.
+            src: testDolbyDamageBlush2,
+        },
+        {
+            alias: "testdummy_damage_blush_2",
+            src: testDolbyDamageBlush2,
+        },
+        {
+            alias: "testdummy_damage_3",
+            src: testDolbyDamage3,
+        },
+        {
+            alias: "testdummy_damage_blush_3",
+            src: testDolbyDamageBlush3,
         }]
     }, {
         name: "sounds",

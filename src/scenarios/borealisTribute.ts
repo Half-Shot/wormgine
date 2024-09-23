@@ -3,8 +3,8 @@ import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-// import { Worm } from "../entities/phys/worm";
 import { Grenade } from "../entities/phys/grenade";
+import { MetersValue } from "../utils";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -23,7 +23,12 @@ export default async function runScenario(game: Game) {
     bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
 
-    const water = await world.addEntity(new Water(worldWidth,worldHeight, world));
+    const water = world.addEntity(
+        new Water(
+            MetersValue.fromPixels(worldWidth*4),
+            MetersValue.fromPixels(worldHeight), 
+        world)
+    );
     world.addEntity(water);
     // const worm = world.addEntity(await Worm.create(parent, world, {x: 900, y: 400} , terrain, async (worm, definition, duration) => {
     //     const newProjectile = await definition.fireFn(game, parent, world, worm, duration);

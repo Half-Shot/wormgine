@@ -2,6 +2,7 @@ import { IGameEntity, IMatterEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { Ball, Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d";
+import { Coordinate, MetersValue } from "./utils/coodinate";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -38,9 +39,6 @@ export class GameWorld {
     // TODO: Unsure if this is the best location.
     
     constructor(public readonly rapierWorld: World, public readonly ticker: Ticker, public readonly viewport: Viewport) {
-        // TODO: Fix.
-        // Events.on(this.matterEngine, 'collisionStart', this.onCollision.bind(this));
-        // Events.on(this.matterEngine, 'beforeRemove', this.beforeRemove.bind(this));
     }
 
     public step() {
@@ -57,10 +55,6 @@ export class GameWorld {
             console.log('contactForceEvents', event);
         });
     }
-
-    // private beforeRemove(event: IEventComposite<Engine>) {
-    //     console.log('body being removed', event);
-    // }
 
     private onCollision(collider1: Collider, collider2: Collider) {
         const [entA, entB] = [ this.bodyEntityMap.get(collider1.handle), this.bodyEntityMap.get(collider2.handle)];
@@ -89,11 +83,12 @@ export class GameWorld {
         }
         this.entities.add(entity);
         const tickerFn = (dt: Ticker) => {
-            entity.update?.(dt.deltaTime);
             if (entity.destroyed) {
                 this.ticker.remove(tickerFn);
                 this.entities.delete(entity);
+                return;
             }
+            entity.update?.(dt.deltaTime);
         };
         this.ticker.add(tickerFn, undefined, entity.priority ? entity.priority : UPDATE_PRIORITY.LOW);
         return entity;
@@ -129,37 +124,23 @@ export class GameWorld {
         this.entities.delete(entity);
     }
 
-    public checkCollision(position: Vector2, radius: number, ownCollier: Collider): IMatterEntity[] {
-        const results: IMatterEntity[] = [];
+    public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IMatterEntity[] {
+        // Ensure a unique set of results.
+        const results = new Set<IMatterEntity>();
         this.rapierWorld.intersectionsWithShape(
-            position,
+            new Vector2(position.worldX, position.worldY),
             0,
-            new Ball(radius),
+            new Ball(radius.valueOf()),
             (collider) => {
                 if (collider.handle !== ownCollier.handle) {
                     const entity = this.bodyEntityMap.get(collider.handle);
                     if (entity) {
-                        results.push(entity);
+                        results.add(entity);
                     }
                 }
-                return false;
+                return true;
             },
         );
-        return results;
-        // const hits = Query.collides(body, this.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
-        // console.log("hits", hits);
-        // for (const hitBody of hits) {
-        //     console.log(hits, ownEntity, this.bodyEntityMap);
-        //     const ents = [
-        //         this.bodyEntityMap.get(hitBody.bodyA),
-        //         this.bodyEntityMap.get(hitBody.bodyB)
-        //     ].filter(e => e && e !== ownEntity);
-        //     console.log("Found hit", ents, this.bodyEntityMap.get(hitBody.bodyB));
-        //     // TODO: Cheating massively
-        //     if (ents[0]) {
-        //         return ents[0];
-        //     }
-        // }
-
+        return [...results];
     }
 }

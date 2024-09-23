@@ -1,5 +1,6 @@
 import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
 import { Point, UPDATE_PRIORITY } from "pixi.js";
+import { MetersValue } from "../utils";
 
 /**
  * Base entity which all game objects implement
@@ -27,4 +28,8 @@ export interface IMatterEntity extends IGameEntity {
      * @returns True if the collision should stop being processed
      */
     onCollision?(other: IMatterEntity, contactPoint: Vector2|null): boolean;
+}
+
+export interface IDamageableEntity {
+    onDamage(point: Vector2, radius: MetersValue): void;
 }
