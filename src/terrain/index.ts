@@ -1,4 +1,4 @@
-import { Vector2 } from "@dimforge/rapier2d";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { Rectangle } from "pixi.js";
 
 export function imageDataToTerrainBoundaries(boundaryX: number, boundaryY: number, imgData: ImageData): { boundaries: Vector2[], boundingBox: Rectangle} {

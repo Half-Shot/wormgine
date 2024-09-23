@@ -1,7 +1,7 @@
 import { IGameEntity, IMatterEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { Ball, Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d";
+import { Ball, Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
 
 /**

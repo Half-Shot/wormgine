@@ -1,6 +1,6 @@
 import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import globalFlags from "./flags";
-import RAPIER from "@dimforge/rapier2d";
+import RAPIER from "@dimforge/rapier2d-compat";
 import { PIXELS_PER_METER } from "./world";
 import { Viewport } from "pixi-viewport";
 

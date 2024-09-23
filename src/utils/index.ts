@@ -1,4 +1,4 @@
-import { Vector, Vector2 } from "@dimforge/rapier2d";
+import { Vector, Vector2 } from "@dimforge/rapier2d-compat";
 export { Coordinate, MetersValue } from "./coodinate";
 
 

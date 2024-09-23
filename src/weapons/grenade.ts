@@ -4,7 +4,7 @@ import { IWeaponCode, IWeaponDefiniton } from "./weapon";
 import { Worm } from "../entities/phys/worm";
 import { Game } from "../game";
 import { GameWorld } from "../world";
-import { Vector2 } from "@dimforge/rapier2d";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { add } from "../utils";
 
 export const WeaponGrenade: IWeaponDefiniton = {

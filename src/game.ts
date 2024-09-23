@@ -11,12 +11,13 @@ import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
 import { GameWorld } from "./world";
-import RAPIER from "@dimforge/rapier2d";
+import RAPIER from "@dimforge/rapier2d-compat";
 import { Worm } from "./entities/phys/worm";
 import { readAssetsForEntities } from "./entities";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
+
 
 export class Game {
     public readonly viewport: Viewport;
@@ -29,6 +30,7 @@ export class Game {
     }
 
     public static async create(window: Window, level: string): Promise<Game> {
+        await RAPIER.init();
         const pixiApp = new Application();
         await pixiApp.init({ resizeTo: window, preference: 'webgl' });
         return new Game(pixiApp, level);
