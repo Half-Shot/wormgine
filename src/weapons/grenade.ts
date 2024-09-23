@@ -5,7 +5,7 @@ import { Worm } from "../entities/phys/worm";
 import { Game } from "../game";
 import { GameWorld } from "../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
-import { add } from "../utils";
+import { add, Coordinate } from "../utils";
 
 export const WeaponGrenade: IWeaponDefiniton = {
     code: IWeaponCode.Grenade,
@@ -15,6 +15,6 @@ export const WeaponGrenade: IWeaponDefiniton = {
         console.log('Force component', forceComponent)
         const force = new Vector2(1 * forceComponent, 0.001);
         const position = add(worm.position, new Vector2(0, -50))
-        return Grenade.create(parent, world, position, force);
+        return Grenade.create(parent, world, Coordinate.fromScreen(position.x, position.y), force);
     },
 }

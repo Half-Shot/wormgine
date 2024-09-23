@@ -38,7 +38,7 @@ export default async function runScenario(game: Game) {
     game.viewport.follow(worm.sprite);
 
     game.viewport.on('clicked', async (evt) => {
-        const position = { x: evt.world.x, y: evt.world.y };
+        const position = Coordinate.fromScreen(evt.world.x, evt.world.y);
         const entity = await Grenade.create(parent, world, position, {x: 0.01, y: 0});
         //const entity = await BazookaShell.create(game, parent, composite, position, 1, 0.01, 6);
         world.addEntity(entity);

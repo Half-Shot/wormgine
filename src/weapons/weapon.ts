@@ -10,5 +10,5 @@ export enum IWeaponCode {
 export interface IWeaponDefiniton {
     code: IWeaponCode,
     maxDuration: number,
-    fireFn: (parent: Container, world: GameWorld, worm: Worm, duration: number) => PromiseLike<IGameEntity>,
+    fireFn: (parent: Container, world: GameWorld, worm: Worm, duration: number) => IGameEntity,
 }
