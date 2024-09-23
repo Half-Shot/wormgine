@@ -1,4 +1,4 @@
-import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
+import { ShapeContact, Vector2 } from "@dimforge/rapier2d-compat";
 import { Point, UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
 

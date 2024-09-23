@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
 import { GameWorld } from '../../world';
-import { ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from '@dimforge/rapier2d';
+import { ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from "@dimforge/rapier2d-compat";
 import { MetersValue } from '../../utils/coodinate';
 
 // TODO: This is buggy as all hell.

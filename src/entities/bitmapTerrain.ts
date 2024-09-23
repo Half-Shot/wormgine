@@ -3,7 +3,7 @@ import { IDamageableEntity, IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
-import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
+import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;

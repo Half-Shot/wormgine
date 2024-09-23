@@ -4,7 +4,7 @@ import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
-import { ActiveEvents, ColliderDesc, RigidBodyDesc, ShapeContact, Vector2 } from '@dimforge/rapier2d';
+import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
 import { magnitude } from '../../utils';
 import { MetersValue } from '../../utils/coodinate';
 /**
@@ -79,6 +79,7 @@ export class Grenade extends TimedExplosive {
             this.timerText.rotation = -this.body.body.rotation();
             this.timerText.text = this.timerTextValue;
         }
+        
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {

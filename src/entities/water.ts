@@ -3,7 +3,7 @@ import { IGameEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
-import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d";
+import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils";
 
 export class Water implements IGameEntity {

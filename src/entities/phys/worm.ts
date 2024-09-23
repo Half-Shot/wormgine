@@ -6,7 +6,7 @@ import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
 import { GameWorld, PIXELS_PER_METER } from '../../world';
-import { ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from '@dimforge/rapier2d';
+import { ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate } from '../../utils/coodinate';
 import { add } from '../../utils';
 

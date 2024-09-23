@@ -3,7 +3,7 @@ import { PhysicsEntity } from "./physicsEntity";
 import { getAssets } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
-import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
+import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
 import { IDamageableEntity } from "../entity";
 import { Explosion } from "../explosion";
 

@@ -4,7 +4,7 @@ import { IDamageableEntity, IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { Vector2 } from "@dimforge/rapier2d";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 
 interface Opts {

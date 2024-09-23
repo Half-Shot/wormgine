@@ -10,16 +10,13 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@dimforge/rapier2d": "^0.14.0",
+    "@dimforge/rapier2d-compat": "^0.14.0",
     "@pixi/sound": "^6.0.1",
-    "@timohausmann/quadtree-ts": "^2.2.2",
-    "matter-js": "^0.20.0",
     "pathseg": "^1.2.1",
     "pixi-viewport": "^5.0.3",
-    "pixi.js": "^8.4.0",
+    "pixi.js": "^8.4.1",
     "poly-decomp-es": "^0.4.2",
-    "preact": "^10.23.2",
-    "vite-plugin-wasm": "^3.3.0"
+    "preact": "^10.23.2"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
