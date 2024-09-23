@@ -9,7 +9,7 @@ export function IngameView({level}: {level: string}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Game.create(window.innerWidth, window.innerHeight, level).then((game) => {
+    Game.create(window, level).then((game) => {
       game.loadResources().then(() => {
         setGame(game)
       });

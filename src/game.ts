@@ -3,7 +3,6 @@ import { Application, Graphics, UPDATE_PRIORITY } from 'pixi.js';
 import { BazookaShell } from './entities/phys/bazookaShell';
 import { Explosion } from './entities/explosion';
 import { Grenade } from './entities/phys/grenade';
-// import { Worm } from './entities/phys/worm';
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
@@ -11,7 +10,7 @@ import { Viewport } from 'pixi-viewport';
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
-import { GameWorld, PIXELS_PER_METER } from "./world";
+import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d";
 import { Worm } from "./entities/phys/worm";
 
@@ -28,9 +27,9 @@ export class Game {
         return this.viewport;
     }
 
-    public static async create(screenWidth: number, screenHeight: number, level: string): Promise<Game> {
+    public static async create(window: Window, level: string): Promise<Game> {
         const pixiApp = new Application();
-        await pixiApp.init({ width: screenWidth, height: screenHeight, preference: 'webgl' });
+        await pixiApp.init({ resizeTo: window, preference: 'webgl' });
         return new Game(pixiApp, level);
     }
 
