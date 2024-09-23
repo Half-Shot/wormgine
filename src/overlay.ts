@@ -5,6 +5,7 @@ import { PIXELS_PER_METER } from "./world";
 import { Viewport } from "pixi-viewport";
 
 const PHYSICS_SAMPLES = 60;
+const FRAME_SAMPLES = 60;
 
 export class GameDebugOverlay {
     private readonly fpsSamples: number[] = [];
@@ -56,11 +57,10 @@ export class GameDebugOverlay {
 
     private update(dt: Ticker) {
         this.fpsSamples.splice(0, 0, dt.FPS);
-        if (this.fpsSamples.length > dt.maxFPS) {
+        while (this.fpsSamples.length > FRAME_SAMPLES) {
             this.fpsSamples.pop();
         }
         const avgFps = Math.round(this.fpsSamples.reduce((a,b) => a + b, 0) / this.fpsSamples.length);
-
         while (this.physicsSamples.length > PHYSICS_SAMPLES) {
             this.physicsSamples.pop();
         }
