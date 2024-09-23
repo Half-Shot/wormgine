@@ -52,8 +52,9 @@ export default async function runScenario(game: Game) {
             fontSize: 20,
             fill: 0xFFFFFF,
             align: 'left',
-        }
+        },
     });
+    timerText.position.set(20, 50);
     
     staticController.on('inputEnd', (kind: InputKind) => {
         if (kind !== InputKind.DebugSwitchWeapon) {
