@@ -9,8 +9,8 @@ new game on the same foundations but with a different gameplay focus.
 
 ### Structure
 
-The project uses [pixi.js](https://pixijs.com/) for rendering and sound, with [matter.js](https://brm.io/matter-js/) providing the physics engine. There are a few customisations to the latter to make it performant for a game
-that regularly mutates it's terrain.
+The project uses [pixi.js](https://pixijs.com/) for rendering and sound, with [rapier](https://rapier.rs/) providing the physics engine.
+There are a few customisations to the latter to make it performant for a game that regularly mutates it's terrain.
 
 The rest of the game engine is largely bespoke. There is currently a (crude) entity system which defines the world,
 where everything runs an update loop at render intervals. Entites may either be physics based or static.
