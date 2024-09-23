@@ -15,6 +15,22 @@ export interface RapierPhysicsObject {
 
 export const PIXELS_PER_METER = 20;
 
+export enum CollisionGroups {
+    Terrain = 1, // 0001
+    WorldObjects = 2, //0010
+}
+
+export function collisionGroupBitmask(groups: CollisionGroups|CollisionGroups[], collides: CollisionGroups|CollisionGroups[]) {
+    // https://rapier.rs/docs/user_guides/javascript/colliders/#collision-groups-and-solver-groups
+    groups = Array.isArray(groups) ? groups : [groups];
+    collides = Array.isArray(collides) ? groups :[collides];
+
+    const groupsInt = groups.reduce((o, c) => o + c) << 16; 
+    const collidesInt = collides.reduce((o, c) => o + c);
+
+    return groupsInt + collidesInt;
+}
+
 export class GameWorld {
     public readonly bodyEntityMap = new Map<number, IMatterEntity>();
     public readonly entities = new Set<IGameEntity>();
@@ -36,7 +52,6 @@ export class GameWorld {
                     this.rapierWorld.getCollider(collider2)
                 );
             }
-            console.log('collisionEvent', collider1, collider2, started);
         });
         this.eventQueue.drainContactForceEvents((event) => {
             console.log('contactForceEvents', event);
@@ -114,23 +129,23 @@ export class GameWorld {
         this.entities.delete(entity);
     }
 
-    public checkCollision(position: Vector2, radius: number, ownCollier: Collider): IMatterEntity|null {
-        const result = this.rapierWorld.intersectionWithShape(
+    public checkCollision(position: Vector2, radius: number, ownCollier: Collider): IMatterEntity[] {
+        const results: IMatterEntity[] = [];
+        this.rapierWorld.intersectionsWithShape(
             position,
             0,
             new Ball(radius),
-            undefined,
-            undefined,
-            undefined,
-            undefined,
             (collider) => {
-                if (collider.handle === ownCollier.handle) {
-                    return false;
+                if (collider.handle !== ownCollier.handle) {
+                    const entity = this.bodyEntityMap.get(collider.handle);
+                    if (entity) {
+                        results.push(entity);
+                    }
                 }
-                return this.bodyEntityMap.has(collider.handle);
-            }
+                return false;
+            },
         );
-        return result && this.bodyEntityMap.get(result.handle) || null;
+        return results;
         // const hits = Query.collides(body, this.matterEngine.world.bodies).sort((a,b) => b.depth - a.depth);
         // console.log("hits", hits);
         // for (const hitBody of hits) {

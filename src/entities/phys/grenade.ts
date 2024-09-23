@@ -3,14 +3,16 @@ import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
-import { GameWorld, PIXELS_PER_METER } from '../../world';
+import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, ShapeContact, Vector2 } from '@dimforge/rapier2d';
 import { magnitude } from '../../utils';
+import { MetersValue } from '../../utils/coodinate';
 /**
  * Standard grenade projectile.
  */
 export class Grenade extends TimedExplosive {
     private static readonly FRICTION = 0.15;
+    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
     public static texture: Texture;
     public static bounceSoundsLight: Sound;
     public static boundSoundHeavy: Sound;
@@ -35,7 +37,9 @@ export class Grenade extends TimedExplosive {
         const body = world.createRigidBodyCollider(
             ColliderDesc.roundCuboid(
                 0.05,
-                0.05, 0.50).setActiveEvents(ActiveEvents.COLLISION_EVENTS),
+                0.05, 0.50).setActiveEvents(ActiveEvents.COLLISION_EVENTS)
+                .setCollisionGroups(Grenade.collisionBitmask)
+                .setSolverGroups(Grenade.collisionBitmask),
             RigidBodyDesc
                 .dynamic()
                 .setTranslation(position.x/PIXELS_PER_METER, position.y/PIXELS_PER_METER)
@@ -44,7 +48,7 @@ export class Grenade extends TimedExplosive {
             );
         console.log("Created grenade body", body.collider.handle);
         super(sprite, body, world, {
-            explosionRadius: 3, // in meters
+            explosionRadius: new MetersValue(3),
             explodeOnContact: false,
             timerSecs: 5,
         });

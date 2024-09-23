@@ -2,12 +2,14 @@ import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from
 import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
-import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
+import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d";
+import { MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
+    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
     public get destroyed() {
         // Terrain cannot be destroyed...yet
@@ -116,7 +118,10 @@ export class BitmapTerrain implements IMatterEntity {
         const newParts: RapierPhysicsObject[] = [];
         for (const quad of quadtreeRects) {
             const body = this.gameWorld.createRigidBodyCollider(
-                ColliderDesc.cuboid(quad.width/(PIXELS_PER_METER*2), quad.height/(PIXELS_PER_METER*2)),
+                ColliderDesc.cuboid(quad.width/(PIXELS_PER_METER*2), quad.height/(PIXELS_PER_METER*2))
+                .setCollisionGroups(BitmapTerrain.collisionBitmask)
+                .setSolverGroups(BitmapTerrain.collisionBitmask),
+                
                 RigidBodyDesc.fixed().setTranslation(
                     (quad.x + this.sprite.x)/PIXELS_PER_METER, (quad.y + this.sprite.y)/PIXELS_PER_METER)
             )
@@ -128,22 +133,21 @@ export class BitmapTerrain implements IMatterEntity {
         console.timeEnd("Generating terrain");
     }
 
-    onDamage(point: Vector2, radius: number) {
+    onDamage(point: Vector2, radius: MetersValue) {
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get context');
         }
 
-        radius = radius * PIXELS_PER_METER;
         console.log('onDamage', point, radius);
 
         // Optmise this check!
         const imageX = (point.x*PIXELS_PER_METER) - this.sprite.x;
         const imageY = (point.y*PIXELS_PER_METER) - this.sprite.y;
-        const snapshotX = (imageX-radius) - 30;
-        const snapshotY = (imageY-radius) - 30;
-        const snapshotWidth = (radius*3);
-        const snapshotHeight = (radius*3);
+        const snapshotX = (imageX-radius.pixels) - 30;
+        const snapshotY = (imageY-radius.pixels) - 30;
+        const snapshotWidth = (radius.pixels*3);
+        const snapshotHeight = (radius.pixels*3);
 
         // Fetch the current image
         const before = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
@@ -156,7 +160,7 @@ export class BitmapTerrain implements IMatterEntity {
         // context.fill();
 
         context.fillStyle = 'grey';
-        context.arc(imageX, imageY, radius, 0, 2 * Math.PI);
+        context.arc(imageX, imageY, radius.pixels, 0, 2 * Math.PI);
         context.fill();
 
         // Fetch the new image

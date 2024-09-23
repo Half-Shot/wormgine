@@ -4,10 +4,11 @@ import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { ShapeContact, Vector2 } from "@dimforge/rapier2d";
+import { Vector2 } from "@dimforge/rapier2d";
+import { MetersValue } from "../../utils/coodinate";
 
 interface Opts {
-    explosionRadius: number,
+    explosionRadius: MetersValue,
     explodeOnContact: boolean,
     timerSecs: number,
 }
@@ -39,13 +40,10 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         const point = this.body.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        const hitOtherEntity = this.gameWorld.checkCollision(point, radius, this.body.collider);
-        console.log("onExplode", hitOtherEntity);
-        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
-        // Find contact point with any terrain
-        if (hitOtherEntity) {
-            this.onCollision(hitOtherEntity, point);
+        for (const element of this.gameWorld.checkCollision(point, radius.value, this.body.collider)) {
+            this.onCollision(element, point);
         }
+        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
         
     }
 

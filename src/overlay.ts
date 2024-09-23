@@ -4,8 +4,11 @@ import RAPIER from "@dimforge/rapier2d";
 import { PIXELS_PER_METER } from "./world";
 import { Viewport } from "pixi-viewport";
 
+const PHYSICS_SAMPLES = 60;
+
 export class GameDebugOverlay {
     private readonly fpsSamples: number[] = [];
+    public readonly physicsSamples: number[] = [];
     private readonly text: Text;
     private readonly tickerFn: (dt: Ticker) => void;
     private readonly rapierGfx: Graphics;
@@ -57,7 +60,14 @@ export class GameDebugOverlay {
             this.fpsSamples.pop();
         }
         const avgFps = Math.round(this.fpsSamples.reduce((a,b) => a + b, 0) / this.fpsSamples.length);
-        this.text.text = `FPS: ${avgFps} | Total bodies: ${this.rapierWorld.bodies.len()}`;
+
+        while (this.physicsSamples.length > PHYSICS_SAMPLES) {
+            this.physicsSamples.pop();
+        }
+
+        const avgPhysicsCostMs = Math.ceil(this.physicsSamples.reduce((a,b) => a + b, 0) / (this.physicsSamples.length || 1) * 100)/100;
+
+        this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()}`;
 
         let buffers = this.rapierWorld.debugRender();
         let vtx = buffers.vertices;

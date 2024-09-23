@@ -4,6 +4,8 @@ import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { Grenade } from "../entities/phys/grenade";
+import { Worm } from "../entities/phys/worm";
+import { Coordinate } from "../utils/coodinate";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -23,9 +25,9 @@ export default async function runScenario(game: Game) {
     terrain.addToWorld(parent);
 
     const water = await world.addEntity(new Water(worldWidth,worldHeight, world));
-    water.create(parent, world);
-    const worm = world.addEntity(await Worm.create(parent, world, {x: 900, y: 300} , terrain, async (worm, definition, duration) => {
-        const newProjectile = await definition.fireFn(game, parent, world, worm, duration);
+    water.addToWorld(parent, world);
+    const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(900,400) , terrain, async (worm, definition, duration) => {
+        const newProjectile = await definition.fireFn(parent, world, worm, duration);
         world.addEntity(newProjectile);
     }));
 

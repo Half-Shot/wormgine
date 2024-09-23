@@ -13,6 +13,7 @@ import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlay";
 import { GameWorld, PIXELS_PER_METER } from "./world";
 import RAPIER from "@dimforge/rapier2d";
+import { Worm } from "./entities/phys/worm";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -76,7 +77,7 @@ export class Game {
         Grenade.bounceSoundsLight = sounds.metalBounceLight;
         Grenade.boundSoundHeavy = sounds.metalBounceHeavy;
         BazookaShell.texture = textures.bazooka_shell;
-        // Worm.texture = textures.grenade;
+        Worm.texture = textures.grenade;
         Explosion.explosionSounds = 
             [
                 sounds.explosion1,
@@ -98,12 +99,14 @@ export class Game {
             throw Error('Unknown level');
         }
 
-        new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage, this.viewport);
+        const overlay = new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage, this.viewport);
         this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
 
         this.pixiApp.ticker.add(() => {
             // TODO: Timing.
+            const startTime = performance.now();
             this.world.step();
+            overlay.physicsSamples.push(performance.now()-startTime);
         }, undefined, UPDATE_PRIORITY.HIGH);
     }
 

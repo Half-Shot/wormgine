@@ -70,7 +70,7 @@ export class Water implements IGameEntity {
         this.waterMesh.scale.set(14, 2);
     }
 
-    async create(parent: Container, world: GameWorld) {
+    addToWorld(parent: Container, world: GameWorld) {
         parent.addChild(this.waterMesh);
         world.addBody(this, this.body.collider);
     }

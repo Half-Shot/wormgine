@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
 import { GameWorld } from '../../world';
 import { ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from '@dimforge/rapier2d';
+import { MetersValue } from '../../utils/coodinate';
 
 // TODO: This is buggy as all hell.
 
@@ -37,7 +38,7 @@ export class BazookaShell extends TimedExplosive {
             );
 
         super(sprite, body, world, {
-            explosionRadius: 100,
+            explosionRadius: new MetersValue(3.5),
             explodeOnContact: true,
             timerSecs: 30,
         });

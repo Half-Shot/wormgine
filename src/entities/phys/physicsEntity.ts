@@ -68,7 +68,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
             const contactY = contactPoint.y;
             // Time to sink
             this.isSinking = true;
-            this.sinkingY = contactY + 200;
+            this.sinkingY = contactY + 10;
             // Set static.
             this.body.body.setEnabled(false);
             return true;
