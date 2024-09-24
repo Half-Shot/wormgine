@@ -62,16 +62,16 @@ export class GameStateOverlay {
             
             const nameTagStartX = centerX - nameTag.width - 120;
             const nameTagStartY = bottomY - (nameTag.height / 10);
-            applyGenericBoxStyle(this.gfx).rect(nameTagStartX - 3, bottomY-2, nameTag.width + 6, nameTag.height + 4).stroke().fill();
+            applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, bottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
             nameTag.position.set(nameTagStartX, bottomY);
             // TODO: Draw team name.
+            applyGenericBoxStyle(this.gfx).roundRect(centerX - 102, bottomY-2, 204, 24, 4).stroke().fill();
             this.gfx.setStrokeStyle({
                 width: 5,
                 color: fg,
                 cap: 'butt',
                 join: 'round',
-            }).setFillStyle({ color: bg}).rect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20).fill().stroke();
-            applyGenericBoxStyle(this.gfx).rect(centerX - 102, bottomY-2, 204, 24).stroke().fill();
+            }).setFillStyle({ color: bg }).roundRect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20, 4).fill();
             this.gfx.addChild(nameTag);
         }
     }

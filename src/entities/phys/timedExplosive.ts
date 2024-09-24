@@ -22,7 +22,7 @@ interface Opts {
 export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
     protected timer: number|undefined;
     protected isSinking = false;
-    private hasExploded = false;
+    protected hasExploded = false;
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
 
@@ -70,6 +70,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             hue: this.opts.explosionHue ?? 0xffffff,
             shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
         }));
+        this.destroy();
     }
 
     update(dt: number): void {
@@ -79,7 +80,6 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
                 this.timer -= dt;
             } else if (this.timer <= 0 && !this.isSinking) {
                 this.onTimerFinished();
-                this.destroy();
             }
         }
     }
@@ -93,7 +93,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             return true;
         }
 
-        if (this.opts.explodeOnContact && this.hasExploded) {
+        if (this.opts.explodeOnContact && !this.hasExploded) {
             this.onExplode();
             return true;
         }

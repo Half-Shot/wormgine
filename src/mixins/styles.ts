@@ -6,5 +6,5 @@ export function applyGenericBoxStyle(gfx: Graphics) {
         color: 0xAAAAAA,
         cap: 'butt',
         join: 'round',
-    }).setFillStyle({ color: 0xAAAAAA, alpha: 0.25})
+    }).setFillStyle({ color: 0x111111, alpha: 0.95})
 }

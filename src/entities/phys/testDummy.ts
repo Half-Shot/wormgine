@@ -98,8 +98,8 @@ export class TestDummy extends PhysicsEntity {
         });
         this.healthTextBox = new Graphics();
         this.healthText.position.set((this.nameText.width/2) - this.healthText.width/2, 34);
-        applyGenericBoxStyle(this.healthTextBox).rect(-5,0,this.nameText.width+10,30).stroke().fill();
-        applyGenericBoxStyle(this.healthTextBox).rect(((this.nameText.width/2) - this.healthText.width/2) - 5,36,this.healthText.width+10,28).stroke().fill();
+        applyGenericBoxStyle(this.healthTextBox).roundRect(-5,0,this.nameText.width+10,30, 4).stroke().fill();
+        applyGenericBoxStyle(this.healthTextBox).roundRect(((this.nameText.width/2) - this.healthText.width/2) - 5,36,this.healthText.width+10,28, 4).stroke().fill();
         this.healthTextBox.addChild(this.healthText, this.nameText);
     }
 

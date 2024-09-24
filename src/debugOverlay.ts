@@ -78,7 +78,7 @@ export class GameDebugOverlay {
 
         const avgPhysicsCostMs = Math.ceil(this.physicsSamples.reduce((a,b) => a + b, 0) / (this.physicsSamples.length || 1) * 100)/100;
 
-        this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)}`;
+        this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)} | Ticker fns: ${this.ticker.count}`;
 
         this.skippedUpdatesTarget = (180/avgFps);
 

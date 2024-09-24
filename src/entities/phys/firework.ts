@@ -41,7 +41,6 @@ export class Firework extends TimedExplosive {
         kind: "fire"|"pop"
     }[] = [];
     
-    private lastShrapnel = 0;
     public declare priority: UPDATE_PRIORITY.LOW;
 
     static create(parent: Container, world: GameWorld, position: Coordinate) {
@@ -78,7 +77,7 @@ export class Firework extends TimedExplosive {
     
         sprite.position = body.body.translation();
         super(sprite, body, world, {
-            explosionRadius: new MetersValue(1),
+            explosionRadius: new MetersValue(4),
             explodeOnContact: true,
             explosionHue: primaryColor,
             explosionShrapnelHue: secondaryColor,
@@ -95,7 +94,7 @@ export class Firework extends TimedExplosive {
         } 
 
         this.gfx.clear();
-        if (this.timer) {
+        if (!this.hasExploded) {
             const xSpeed = (Math.random()*0.5)-0.25;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";
             const coodinate = new Coordinate(this.body.body.translation().x, this.body.body.translation().y);
@@ -114,9 +113,6 @@ export class Firework extends TimedExplosive {
                 radius: 1 + Math.random()*(kind === "pop" ? 4.5 : 2.5),
                 kind,
             })
-            this.lastShrapnel = 0;
-        } else {
-            this.lastShrapnel += dt;
         }
 
         const shrapnelHue = new Color(0xaaaaaa);
@@ -126,7 +122,7 @@ export class Firework extends TimedExplosive {
             shrapnel.point.x += shrapnel.speed.x*dt;
             shrapnel.point.y += shrapnel.speed.y*dt;
             shrapnel.alpha = Math.max(0, shrapnel.alpha-(Math.random()*dt*0.03));
-            if (shrapnel.alpha < 0) {
+            if (shrapnel.alpha === 0) {
                 this.trail.splice(this.trail.indexOf(shrapnel), 1);
             }
             if (shrapnel.kind === "pop") {
@@ -137,8 +133,7 @@ export class Firework extends TimedExplosive {
             }
         }
 
-        if (this.trail.length === 0 && !this.timer) {
-            this.gfx.clear();
+        if (this.trail.length === 0 && this.hasExploded) {
             this.destroy();
         }
     }
@@ -161,6 +156,7 @@ export class Firework extends TimedExplosive {
 
     destroy(): void {
         if (this.trail.length) {
+            console.log('partial destroy');
             super.destroy();
             this.isDestroyed = false;
             // Skip until the trail has gone

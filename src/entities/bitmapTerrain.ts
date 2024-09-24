@@ -21,7 +21,8 @@ export class BitmapTerrain implements IMatterEntity {
 
     private bounds: Rectangle;
 
-    private readonly canvas: HTMLCanvasElement;
+    private readonly foregroundCanvas: HTMLCanvasElement;
+    private readonly backgroundCanvas: HTMLCanvasElement;
     private texture: Texture;
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
@@ -32,25 +33,28 @@ export class BitmapTerrain implements IMatterEntity {
         return new BitmapTerrain(viewWidth, viewHeight, gameWorld, texture);
     }
 
-    private constructor(viewWidth: number, viewHeight: number, private readonly gameWorld: GameWorld, texture: Texture) {
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = viewWidth;
-        this.canvas.height = viewHeight;
-        const context = this.canvas.getContext('2d');
+    static drawToCanvas(viewWidth: number, viewHeight: number, texture: Texture) {
+        const canvas = document.createElement('canvas')
+        canvas.width = viewWidth;
+        canvas.height = viewHeight;
+        const context = canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');
         }
-        
-
         const bitmap = texture.source.resource;
         context.drawImage(bitmap as CanvasImageSource,  (viewWidth / 2) - (texture.width / 2), viewHeight - texture.height);
-        
-        this.texture = Texture.from(this.canvas, true);
+        return canvas;
+    }
+
+    private constructor(viewWidth: number, viewHeight: number, private readonly gameWorld: GameWorld, texture: Texture) {
+        this.foregroundCanvas = BitmapTerrain.drawToCanvas(viewWidth, viewHeight, texture);        
+        this.texture = Texture.from(this.foregroundCanvas, true);
         this.sprite = new Sprite(this.texture);
         this.sprite.anchor.x = 0;
         this.sprite.anchor.y = 0;
 
         // Somehow make rain fall infront of this.
+        this.backgroundCanvas = BitmapTerrain.drawToCanvas(viewWidth, viewHeight, texture);      
         this.spriteBackdrop = new Sprite(Texture.from(this.texture._source, true));
         this.spriteBackdrop.anchor.x = 0;
         this.spriteBackdrop.anchor.y = 0;
@@ -72,10 +76,10 @@ export class BitmapTerrain implements IMatterEntity {
         parent.addChild(this.spriteBackdrop, this.sprite, this.gfx);
     }
 
-    calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.canvas.width, boundaryHeight = this.canvas.height) {
+    calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.foregroundCanvas.width, boundaryHeight = this.foregroundCanvas.height) {
         console.time('Generating terrain');
         console.log({boundaryX, boundaryY, boundaryWidth, boundaryHeight});
-        const context = this.canvas.getContext('2d');
+        const context = this.foregroundCanvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');
         }
@@ -129,7 +133,7 @@ export class BitmapTerrain implements IMatterEntity {
 
     onDamage(point: Vector2, radius: MetersValue) {
         console.log('Damaged');
-        const context = this.canvas.getContext('2d');
+        const context = this.foregroundCanvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get context');
         }
@@ -178,7 +182,7 @@ export class BitmapTerrain implements IMatterEntity {
 
         // Remember to recalculate the collision paths
         this.calculateBoundaryVectors(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
-        const newTex = Texture.from(this.canvas);
+        const newTex = Texture.from(this.foregroundCanvas);
         this.sprite.texture = newTex;
         this.texture.destroy();
         this.texture = newTex;
