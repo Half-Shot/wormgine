@@ -14,6 +14,7 @@ import testDolbyDamageBlush3 from "./test_dolby_damage3_blush.png";
 import testDolbyDamage3 from "./test_dolby_damage3.png";
 import mine from "./mine.png";
 import mineActive from "./mine_active.png";
+import firework from "./firework.png";
 
 
 // Sounds
@@ -25,6 +26,7 @@ import explosion1 from "./explosion_1.ogg";
 import explosion2 from "./explosion_2.ogg";
 import explosion3 from "./explosion_3.ogg";
 import mineBeep from "./mine_beep.ogg";
+import fireworkSound from "./firework.ogg";
 
 
 export const manifest = {
@@ -53,6 +55,10 @@ export const manifest = {
         {
             alias: "mine",
             src: mine,
+        },
+        {
+            alias: "firework",
+            src: firework,
         },
         {
             alias: "mineActive",
@@ -118,6 +124,9 @@ export const manifest = {
         },{
             alias: "mineBeep",
             src: mineBeep,
+        }, {
+            alias: "firework",
+            src: fireworkSound,
         }]
     }]
 } satisfies AssetsManifest;

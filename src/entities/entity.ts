@@ -19,8 +19,6 @@ export interface IGameEntity {
  * interface.
  */
 export interface IMatterEntity extends IGameEntity {
-    // TODO: Wrong shape?
-    explodeHandler?: (point: Vector2, radius: number) => void;
     /**
      * 
      * @param other 
@@ -28,8 +26,12 @@ export interface IMatterEntity extends IGameEntity {
      * @returns True if the collision should stop being processed
      */
     onCollision?(other: IMatterEntity, contactPoint: Vector2|null): boolean;
-}
 
-export interface IDamageableEntity {
-    onDamage(point: Vector2, radius: MetersValue): void;
+    /**
+     * Called when another entity has damaged this entity.
+     * 
+     * @param point The point from where the damage originates.
+     * @param radius The radius of the explosion. 
+     */
+    onDamage?(point: Vector2, radius: MetersValue): void
 }

@@ -1,13 +1,15 @@
-import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, sortMixin, RAD_TO_DEG, DEG_TO_RAD } from "pixi.js";
+import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD } from "pixi.js";
 import { PhysicsEntity } from "./physicsEntity";
 import { getAssets } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
-import { IDamageableEntity, IMatterEntity } from "../entity";
+import { IMatterEntity } from "../entity";
 import { Explosion } from "../explosion";
+import { WormInstance } from "../../logic/gamestate";
 
-export class TestDummy extends PhysicsEntity implements IDamageableEntity {
+export class TestDummy extends PhysicsEntity {
+    public static DamageMultiplier = 250;
     public static readAssets(assets: ReturnType<typeof getAssets>) {
         TestDummy.texture_normal = assets.textures.testdummy;
         TestDummy.texture_blush = assets.textures.testdummy_blush;
@@ -28,17 +30,14 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
     public static texture_damage_3: Texture;
     public static texture_damage_blush_3: Texture;
 
-    public health = 100;
-
     public declare priority: UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
-    public hasTakenDamange: boolean = false;
     public wasMoving: boolean = true;
     public healthText: Text;
 
-    static create(parent: Container, world: GameWorld, position: Coordinate) {
-        const ent = new TestDummy(position, world);
+    static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
+        const ent = new TestDummy(position, world, wormIdent);
         world.addBody(ent, ent.body.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
@@ -50,7 +49,16 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
         return this.body.body.translation();
     }
 
-    private constructor(position: Coordinate, world: GameWorld) {
+    get health() {
+        return this.wormIdent.health;
+    }
+
+    set health(v: number) {
+        this.wormIdent.health = v;
+        this.healthText.text = `${this.wormIdent.name}\n${this.health}`;
+    }
+
+    private constructor(position: Coordinate, world: GameWorld, private readonly wormIdent: WormInstance) {
         const sprite = new Sprite(TestDummy.texture_normal);
         sprite.scale.set(0.20);
         sprite.anchor.set(0.5);
@@ -59,13 +67,13 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
             .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
             .setCollisionGroups(TestDummy.collisionBitmask)
             .setSolverGroups(TestDummy.collisionBitmask)
-            .setMass(50),
+            .setMass(0.35),
             RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY)
         );
         super(sprite, body, world);
         this.renderOffset = new Point(4, 1);
         this.healthText = new Text({
-            text: this.health,
+            text: `${this.wormIdent.name}\n${this.health}`,
             style: {
                 fontFamily: 'Arial',
                 fontSize: 28,
@@ -98,7 +106,6 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
         }
         if (!this.healthText.destroyed) {
             this.healthText.rotation = 0;
-            this.healthText.text = this.health;
             this.healthText.position.set(this.sprite.x - 30, this.sprite.y - 70);
         }
         const expectedTexture = this.getTexture();
@@ -111,24 +118,31 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
             this.body.body.setTranslation(add(this.body.body.translation(), new Vector2(0, -0.25)), false);
 
             if (this.health === 0) {
-                const point = this.body.body.translation();
-                const radius = new MetersValue(7.5);
-                // Detect if anything is around us.
-                for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider)) {
-                    if ("onDamage" in element) {
-                        const damangEnt = element as IDamageableEntity;
-                        damangEnt.onDamage(point, radius);
-                    }
-                }
-                this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
-                this.destroy();
+                this.explode();
             }
         }
+    }
+
+    public explode() {
+        const point = this.body.body.translation();
+        const radius = new MetersValue(5);
+        // Detect if anything is around us.
+        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider)) {
+            if (element.onDamage) {
+                element.onDamage(point, radius);
+            }
+        }
+        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
+            shrapnelMax: 35,
+            shrapnelMin: 15,
+        }));
+        this.destroy();
     }
 
     public onCollision(otherEnt: IMatterEntity, contactPoint: Vector2): boolean {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
+                this.wormIdent.health = 0;
                 this.healthText.destroy();
                 this.body.body.setRotation(DEG_TO_RAD*180, false);
             }
@@ -138,15 +152,13 @@ export class TestDummy extends PhysicsEntity implements IDamageableEntity {
     }
 
     public onDamage(point: Vector2, radius: MetersValue): void {
-        console.log("Dummy damaged");
         const bodyTranslation = this.body.body.translation();
-        const forceMag = (250*radius.value)/magnitude(sub(point,this.body.body.translation()));
-        const damage = Math.round(forceMag/20);
+        const forceMag = radius.value/magnitude(sub(point,this.body.body.translation()));
+        const damage = Math.round((forceMag/20)*TestDummy.DamageMultiplier);
+        console.log(forceMag, (forceMag/20)*TestDummy.DamageMultiplier);
         this.health = Math.max(0, this.health - damage);
-        console.log("Damage", damage);
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag));
         this.body.body.applyImpulse(force, true)
-        this.hasTakenDamange = true;
         this.wasMoving = true;
     }
 

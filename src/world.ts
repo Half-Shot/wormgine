@@ -40,6 +40,7 @@ export class GameWorld {
     // TODO: Unsure if this is the best location.
     
     constructor(public readonly rapierWorld: World, public readonly ticker: Ticker, public readonly viewport: Viewport) {
+        
     }
 
     public step() {

@@ -1,6 +1,5 @@
-import { UPDATE_PRIORITY, Ticker, Sprite, Point } from "pixi.js";
-import { BitmapTerrain } from "../bitmapTerrain";
-import { IDamageableEntity, IMatterEntity } from "../entity";
+import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource } from "pixi.js";
+import { IMatterEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
@@ -10,6 +9,8 @@ import { Coordinate, MetersValue } from "../../utils/coodinate";
 interface Opts {
     explosionRadius: MetersValue,
     explodeOnContact: boolean,
+    explosionHue?: ColorSource,
+    explosionShrapnelHue?: ColorSource,
     autostartTimer: boolean,
     timerSecs?: number,
 }
@@ -50,13 +51,19 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
     }
 
     onExplode() {
+        this.timer = undefined;
         const point = this.body.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
         for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider)) {
             this.onCollision(element, point);
         }
-        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, 15, 35));
+        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
+            shrapnelMax: 35,
+            shrapnelMin: 15,
+            hue: this.opts.explosionHue ?? 0xffffff,
+            shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+        }));
     }
 
     update(dt: number): void {
@@ -80,11 +87,9 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             return true;
         }
 
-        if ("onDamage" in otherEnt) {
-            console.log("onDamage", otherEnt);
-            const damangEnt = otherEnt as IDamageableEntity;
+        if (otherEnt.onDamage) {
             if (this.opts.explodeOnContact || (this.timer !== undefined && this.timer <= 0)) {
-                damangEnt.onDamage(contactPoint, this.opts.explosionRadius);
+                otherEnt.onDamage(contactPoint, this.opts.explosionRadius);
                 this.timer = 0;
                 return true;
             }

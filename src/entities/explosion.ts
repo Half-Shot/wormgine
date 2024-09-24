@@ -1,7 +1,14 @@
-import { Container, Graphics, Point, Ticker, UPDATE_PRIORITY } from "pixi.js";
+import { Color, ColorSource, Container, Graphics, Point, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { Sound } from "@pixi/sound";
 import { MetersValue } from "../utils/coodinate";
+
+interface ExplosionsOptions {
+    shrapnelMin: number,
+    shrapnelMax: number,
+    hue: ColorSource,
+    shrapnelHue: ColorSource,
+}
 
 export class Explosion implements IGameEntity {
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.HIGH;
@@ -24,14 +31,20 @@ export class Explosion implements IGameEntity {
         kind: "fire"|"pop"
     }[] = []
 
-    static create(parent: Container, point: Point, initialRadius: MetersValue, shrapnelMin = 8, shrapnelMax = 25) {
-        const ent = new Explosion(point, initialRadius, shrapnelMin, shrapnelMax);
+    static create(parent: Container, point: Point, initialRadius: MetersValue, opts: Partial<ExplosionsOptions> = { }) {
+        const ent = new Explosion(point, initialRadius, {
+            shrapnelMax: 25,
+            shrapnelMin: 8,
+            hue: 0xffffff,
+            shrapnelHue: 0xffffff,
+            ...opts
+        });
         parent.addChild(ent.gfx);
         return ent;
     }
 
-    private constructor(point: Point, private initialRadius: MetersValue, shrapnelMin: number, shrapnelMax: number) {
-        for (let index = 0; index < (shrapnelMin + Math.ceil(Math.random() * (shrapnelMax-shrapnelMin))); index++) {
+    private constructor(point: Point, private initialRadius: MetersValue, private readonly opts: ExplosionsOptions) {
+        for (let index = 0; index < (opts.shrapnelMin + Math.ceil(Math.random() * (opts.shrapnelMax-opts.shrapnelMin))); index++) {
             const xSpeed = (Math.random()*7)-3.5;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";
             this.shrapnel.push({
@@ -55,6 +68,7 @@ export class Explosion implements IGameEntity {
         this.timer = Ticker.targetFPMS  * this.explosionMs;
         this.radiusExpandBy = initialRadius.pixels * 0.2;
         const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);
+        console.log('play sound?', soundIndex);
         Explosion.explosionSounds[soundIndex].play();
     }
 
@@ -68,6 +82,7 @@ export class Explosion implements IGameEntity {
         const radius = this.initialRadius.pixels + expandBy;
         this.gfx.clear();
 
+        const shrapnelHue = new Color(0xaaaaaa).multiply(this.opts.shrapnelHue);
         let anyShrapnelVisible = false;
         for (const shrapnel of this.shrapnel) {
             shrapnel.speed.x += shrapnel.accel.x*dt;
@@ -77,19 +92,23 @@ export class Explosion implements IGameEntity {
             shrapnel.alpha = Math.max(0, shrapnel.alpha-(Math.random()*dt*0.03));
             anyShrapnelVisible = anyShrapnelVisible || shrapnel.point.y < 1200 || shrapnel.alpha < 0;
             if (shrapnel.kind === "pop") {
-                this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xEEEEEE, alpha: shrapnel.alpha });
+                this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: shrapnelHue, alpha: shrapnel.alpha });
             } else {
                 this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius).fill({ color: 0xfd4301, alpha: shrapnel.alpha });
                 this.gfx.circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius-3).fill({ color: 0xfde101, alpha: shrapnel.alpha });
             }
         
         }
+
+        const hue = new Color(0xaaaaaa).multiply(this.opts.hue);
+        const outerHue = new Color(0xAAEEFF).multiply(this.opts.hue);
+
         if (this.timer > 0) {
             const alphaLarger =  Math.round(ttl * 100) / 150;
             const alphaSmaller = Math.round(ttl * 100) / 100;
-            this.gfx.circle(0, 0, radius).fill({ color: 0xFFFFFF, alpha: alphaLarger });
+            this.gfx.circle(0, 0, radius).fill({ color: hue, alpha: alphaLarger });
             const outerWidth = ttlInverse*(radius * 2);
-            this.gfx.ellipse(0, 0, outerWidth, radius/1.5).fill({color: 0xAAEEFF, alpha: alphaSmaller });
+            this.gfx.ellipse(0, 0, outerWidth, radius/1.5).fill({color: outerHue, alpha: alphaSmaller });
             if (outerWidth - 20 > 0) {
                 this.gfx.ellipse(0, 0, outerWidth - 20, radius / 2).cut();
             }

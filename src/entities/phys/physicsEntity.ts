@@ -6,6 +6,7 @@ import globalFlags from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { ShapeContact, Vector2 } from "@dimforge/rapier2d-compat";
+import { magnitude, MetersValue, mult, sub } from "../../utils";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
@@ -82,5 +83,12 @@ export abstract class PhysicsEntity implements IMatterEntity {
             return true;
         }
         return false;
+    }
+
+    onDamage(point: Vector2, radius: MetersValue): void {
+        const bodyTranslation = this.body.body.translation();
+        const forceMag = radius.value/magnitude(sub(point,this.body.body.translation()));
+        const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag*1.5));
+        this.body.body.applyImpulse(force, true)
     }
 }

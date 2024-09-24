@@ -18,8 +18,6 @@ export class BazookaShell extends TimedExplosive {
         gameWorld.addBody(ent, ent.body.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
-        console.log("New zooka", ent.body);
-        console.log(ent.sprite.x, ent.sprite.position.x);
         return ent;
     }
 

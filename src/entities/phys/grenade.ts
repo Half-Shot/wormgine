@@ -39,7 +39,7 @@ export class Grenade extends TimedExplosive {
                 0.05,
                 0.05, 0.50).setActiveEvents(ActiveEvents.COLLISION_EVENTS)
                 .setCollisionGroups(Grenade.collisionBitmask)
-                .setSolverGroups(Grenade.collisionBitmask),
+                .setSolverGroups(Grenade.collisionBitmask).setMass(0.2),
             RigidBodyDesc
                 .dynamic()
                 .setTranslation(position.worldX, position.worldY)
@@ -74,12 +74,10 @@ export class Grenade extends TimedExplosive {
         
         this.wireframe.setDebugText(`velocity: ${Math.round(magnitude(this.body.body.linvel())*1000)/1000}`)
 
-        // Body.applyForce(this.body, Vector.create(this.body.position.x - 5, this.body.position.y - 5), Vector.create(this.initialForce.x, this.initialForce.y));
         if (!this.timerText.destroyed) {
             this.timerText.rotation = -this.body.body.rotation();
             this.timerText.text = this.timerTextValue;
         }
-        
     }
 
     onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {

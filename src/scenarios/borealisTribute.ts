@@ -39,7 +39,7 @@ export default async function runScenario(game: Game) {
     //game.viewport.follow(worm.sprite);
 
     game.viewport.on('clicked', async (evt) => {
-        const position = new Coordinate(evt.world.x, evt.world.y);
+        const position = Coordinate.fromScreen(evt.world.x, evt.world.y);
         const entity = await Mine.create(parent, world, position);
         world.addEntity(entity);
     });

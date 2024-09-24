@@ -49,7 +49,7 @@ export class Mine extends TimedExplosive {
                 0.05,
                 0.05, 0.50).setActiveEvents(ActiveEvents.COLLISION_EVENTS)
                 .setCollisionGroups(Mine.collisionBitmask)
-                .setSolverGroups(Mine.collisionBitmask),
+                .setSolverGroups(Mine.collisionBitmask).setMass(0.5),
             RigidBodyDesc
                 .dynamic()
                 .setTranslation(position.worldX, position.worldY)
@@ -113,7 +113,7 @@ export class Mine extends TimedExplosive {
             // Meh.
             return false;
         }
-        console.log('Collision', otherEnt);
+
         if (this.timer === undefined) {
             this.startTimer();
             this.beeping = Promise.resolve(Mine.beep.play({loop: true}));

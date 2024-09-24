@@ -8,7 +8,12 @@ import { Grenade } from "../entities/phys/grenade";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { TestDummy } from "../entities/phys/testDummy";
 import staticController, { InputKind } from "../input";
+import { GameState, TeamGroup } from "../logic/gamestate";
+import { GameStateOverlay } from "../gameStateOverlay";
+import { Firework } from "../entities/phys/firework";
 // import { BazookaShell } from "../entities/phys/bazookaShell";
+
+const weapons = ["grenade", "mine", "firework"];
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -21,6 +26,18 @@ export default async function runScenario(game: Game) {
         game.world,
         Assets.get('terrain2')
     );
+
+    const gameState = new GameState([{
+        name: "The Dummys",
+        group: TeamGroup.Blue,
+        worms: [{
+            name: "Test Dolby",
+            maxHealth: 100,
+            health: 100,
+        }]
+    }]);
+
+    new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, game.viewport.screenWidth, game.viewport.screenHeight);
 
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await world.addEntity(terrain);
@@ -39,14 +56,14 @@ export default async function runScenario(game: Game) {
     //     world.addEntity(newProjectile);
     // }));
 
-    const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620)));
+    const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
     game.viewport.follow(dummy.sprite);
 
     world.addEntity(Mine.create(parent, world, Coordinate.fromScreen(900,200)));
 
-    let selectedWeapon: "grenade"|"mine" = "grenade"; 
+    let selectedWeaponIndex = 2;
     const timerText = new Text({
-        text: `Selected Weapon (press S to switch): ${selectedWeapon}`,
+        text: `Selected Weapon (press S to switch): ${weapons[selectedWeaponIndex]}`,
         style: {
             fontFamily: 'Arial',
             fontSize: 20,
@@ -61,8 +78,11 @@ export default async function runScenario(game: Game) {
             return;
         }
         console.log('Weapon switch');
-        selectedWeapon = selectedWeapon === "grenade" ? "mine" : "grenade";
-        timerText.text = `Selected Weapon (press S to switch): ${selectedWeapon}`;
+        selectedWeaponIndex++;
+        if (selectedWeaponIndex === weapons.length) {
+            selectedWeaponIndex = 0;
+        }
+        timerText.text = `Selected Weapon (press S to switch): ${weapons[selectedWeaponIndex]}`;
     });
 
 
@@ -72,10 +92,15 @@ export default async function runScenario(game: Game) {
     game.viewport.on('clicked', async (evt) => {
         const position = Coordinate.fromScreen(evt.world.x, evt.world.y);
         let entity;
-        if (selectedWeapon === "grenade") {
+        let wep = weapons[selectedWeaponIndex];
+        if (wep === "grenade") {
             entity = Grenade.create(parent, world, position, {x: 0, y:0});
-        } else {
+        } else if (wep === "mine") {
             entity = Mine.create(parent, world, position)
+        } else if (wep === "firework") {
+            entity = Firework.create(parent, world, position);
+        } else {
+            throw new Error('unknown weapon');
         }
         world.addEntity(entity);
     });

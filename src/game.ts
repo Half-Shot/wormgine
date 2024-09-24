@@ -9,7 +9,7 @@ import testingGround from './scenarios/testingGround';
 import { Viewport } from 'pixi-viewport';
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
-import { GameDebugOverlay } from "./overlay";
+import { GameDebugOverlay } from "./debugOverlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { Worm } from "./entities/phys/worm";
