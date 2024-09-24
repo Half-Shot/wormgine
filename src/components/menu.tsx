@@ -17,6 +17,9 @@ export function Menu(props: Props) {
             <li>
                 <button onClick={() => props.onNewGame("testingGround")}>Open Testing Ground</button>
             </li>
+            <li>
+                <button onClick={() => props.onNewGame("boneIsles")}>Bone Isles</button>
+            </li>
         </ul>
     </main>;
 }

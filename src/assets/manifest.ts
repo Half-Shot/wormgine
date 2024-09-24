@@ -15,6 +15,7 @@ import testDolbyDamage3 from "./test_dolby_damage3.png";
 import mine from "./mine.png";
 import mineActive from "./mine_active.png";
 import firework from "./firework.png";
+import boneIsles from "./bone_isles.png";
 
 
 // Sounds
@@ -97,6 +98,10 @@ export const manifest = {
         {
             alias: "testdummy_damage_blush_3",
             src: testDolbyDamageBlush3,
+        },
+        {
+            alias: "boneIsles",
+            src: boneIsles,
         }]
     }, {
         name: "sounds",
