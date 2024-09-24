@@ -56,9 +56,9 @@ export class Firework extends TimedExplosive {
         sprite.anchor.set(0.5);
 
         const upwardVeolcity = 60 + Math.ceil(Math.random()*30);
-        const angularVel = -30 + Math.ceil(Math.random()*60);
+        const xVelocity = -30 + Math.ceil(Math.random()*120);
 
-        const rot = Math.atan2(upwardVeolcity, Math.abs(angularVel)) - 1;
+        const rot = Math.atan2(upwardVeolcity, Math.abs(xVelocity)) - 1;
 
         const primaryColor = COLOUR_SET[Math.floor(Math.random()*COLOUR_SET.length)];
         const secondaryColor = COLOUR_SET[Math.floor(Math.random()*COLOUR_SET.length)]
@@ -73,7 +73,7 @@ export class Firework extends TimedExplosive {
                 .dynamic()
                 .setTranslation(position.worldX, position.worldY)
                 // Fix rot
-                .setLinvel(angularVel, -upwardVeolcity).setLinearDamping(1.5).lockRotations().setRotation(rot)
+                .setLinvel(xVelocity, -upwardVeolcity).setLinearDamping(1.5).lockRotations().setRotation(rot)
             );
     
         sprite.position = body.body.translation();

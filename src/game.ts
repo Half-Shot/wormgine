@@ -6,6 +6,7 @@ import { Grenade } from './entities/phys/grenade';
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
+import boneIsles from './scenarios/boneIsles';
 import { Viewport } from 'pixi-viewport';
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
@@ -98,6 +99,8 @@ export class Game {
             borealisTribute(this);
         } else if (this.level === "testingGround") {
             testingGround(this);
+        } else if (this.level === "boneIsles") {
+            boneIsles(this);
         } else {
             throw Error('Unknown level');
         }

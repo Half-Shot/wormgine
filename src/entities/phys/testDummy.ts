@@ -1,4 +1,4 @@
-import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD } from "pixi.js";
+import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics, BatchableGraphics } from "pixi.js";
 import { PhysicsEntity } from "./physicsEntity";
 import { getAssets } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
@@ -6,7 +6,8 @@ import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils"
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
 import { IMatterEntity } from "../entity";
 import { Explosion } from "../explosion";
-import { WormInstance } from "../../logic/gamestate";
+import { teamGroupToColorSet, WormInstance } from "../../logic/gamestate";
+import { applyGenericBoxStyle } from "../../mixins/styles";
 
 export class TestDummy extends PhysicsEntity {
     public static DamageMultiplier = 250;
@@ -34,14 +35,16 @@ export class TestDummy extends PhysicsEntity {
     private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
     public wasMoving: boolean = true;
+    public nameText: Text;
     public healthText: Text;
+    public healthTextBox: Graphics;
 
     static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
         const ent = new TestDummy(position, world, wormIdent);
         world.addBody(ent, ent.body.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
-        parent.addChild(ent.healthText);
+        parent.addChild(ent.healthTextBox);
         return ent;
     }
 
@@ -55,7 +58,7 @@ export class TestDummy extends PhysicsEntity {
 
     set health(v: number) {
         this.wormIdent.health = v;
-        this.healthText.text = `${this.wormIdent.name}\n${this.health}`;
+        this.healthText.text = this.health;
     }
 
     private constructor(position: Coordinate, world: GameWorld, private readonly wormIdent: WormInstance) {
@@ -72,16 +75,32 @@ export class TestDummy extends PhysicsEntity {
         );
         super(sprite, body, world);
         this.renderOffset = new Point(4, 1);
-        this.healthText = new Text({
-            text: `${this.wormIdent.name}\n${this.health}`,
+        const {fg} = teamGroupToColorSet(wormIdent.team.group);
+        this.nameText = new Text({
+            text: this.wormIdent.name,
             style: {
                 fontFamily: 'Arial',
-                fontSize: 28,
-                fill: 0xFFFFFF,
+                fontSize: 20,
+                lineHeight: 32,
+                fill: fg,
                 align: 'center',
             },
         });
-        sprite.addChild(this.healthText);
+        this.healthText = new Text({
+            text: this.health,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 20,
+                lineHeight: 32,
+                fill: fg,
+                align: 'center',
+            },
+        });
+        this.healthTextBox = new Graphics();
+        this.healthText.position.set((this.nameText.width/2) - this.healthText.width/2, 34);
+        applyGenericBoxStyle(this.healthTextBox).rect(-5,0,this.nameText.width+10,30).stroke().fill();
+        applyGenericBoxStyle(this.healthTextBox).rect(((this.nameText.width/2) - this.healthText.width/2) - 5,36,this.healthText.width+10,28).stroke().fill();
+        this.healthTextBox.addChild(this.healthText, this.nameText);
     }
 
     private getTexture() {
@@ -104,9 +123,9 @@ export class TestDummy extends PhysicsEntity {
             // TODO: Feels totally unnessacery.
             return;
         }
-        if (!this.healthText.destroyed) {
-            this.healthText.rotation = 0;
-            this.healthText.position.set(this.sprite.x - 30, this.sprite.y - 70);
+        if (!this.healthTextBox.destroyed) {
+            this.healthTextBox.rotation = 0;
+            this.healthTextBox.position.set(this.sprite.x - 50, this.sprite.y - 100);
         }
         const expectedTexture = this.getTexture();
         if (this.sprite.texture !== expectedTexture) {
@@ -143,7 +162,7 @@ export class TestDummy extends PhysicsEntity {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.wormIdent.health = 0;
-                this.healthText.destroy();
+                this.healthTextBox.destroy();
                 this.body.body.setRotation(DEG_TO_RAD*180, false);
             }
             return true;
@@ -152,6 +171,7 @@ export class TestDummy extends PhysicsEntity {
     }
 
     public onDamage(point: Vector2, radius: MetersValue): void {
+        console.log('Dummy damage!');
         const bodyTranslation = this.body.body.translation();
         const forceMag = radius.value/magnitude(sub(point,this.body.body.translation()));
         const damage = Math.round((forceMag/20)*TestDummy.DamageMultiplier);
@@ -164,7 +184,9 @@ export class TestDummy extends PhysicsEntity {
 
     public destroy(): void {
         super.destroy();
-        this.healthText.destroy();
+        if (!this.healthTextBox.destroyed) {
+            this.healthTextBox.destroy();
+        }
         this.gameWorld.viewport.plugins.remove('follow');
         this.gameWorld.viewport.snap(800,0);
     }

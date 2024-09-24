@@ -5,12 +5,12 @@ export interface WormIdentity {
 }
 
 export enum TeamGroup {
-    Red = 1,
-    Blue = 2,
-    Green = 3,
-    Yellow = 4,
-    Purple = 5,
-    Orange = 6,
+    Red,
+    Blue,
+    Green,
+    Yellow,
+    Purple,
+    Orange,
 }
 
 export interface Team {
@@ -20,12 +20,24 @@ export interface Team {
     // player
 }
 
+export function teamGroupToColorSet(group: TeamGroup) {
+    switch (group) {
+        case TeamGroup.Red:
+            return { bg: 0xCC3333, fg: 0xBB5555 };
+        case TeamGroup.Blue:
+            return { bg: 0x2244CC, fg: 0x3366CC };
+        default:
+            return { bg: 0xCC00CC, fg: 0x111111 };
+    }
+}
+
+
 interface GameRules {
     winWhenOneGroupRemains: boolean;
 }
 
 export class WormInstance {
-    constructor(private readonly identity: WormIdentity, private readonly onHealthUpdated: () => void) {
+    constructor(private readonly identity: WormIdentity, public readonly team: Team, private readonly onHealthUpdated: () => void) {
 
     }
 
@@ -64,7 +76,7 @@ export class GameState {
         }
         this.teams = teams.map((team) => ({
             ...team,
-            worms: team.worms.map(w => new WormInstance(w, () => this.stateIteration++))
+            worms: team.worms.map(w => new WormInstance(w, team, () => this.stateIteration++))
         }));
         this.nextTeamStack = [...this.teams.slice(1)];
         this.currentTeam = this.teams[0];

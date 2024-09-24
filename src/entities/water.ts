@@ -71,7 +71,6 @@ export class Water implements IGameEntity {
             position: {x: width.pixels/6, y: (meshPos.y - meshHeight)*PIXELS_PER_METER},
             visible: true,
         });
-        console.log();
         this.waterMesh.width = this.width.value;
         this.waterMesh.height = this.height.value;
         this.waterMesh.scale.set(40, 3.5);

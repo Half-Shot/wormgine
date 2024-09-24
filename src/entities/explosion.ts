@@ -68,7 +68,6 @@ export class Explosion implements IGameEntity {
         this.timer = Ticker.targetFPMS  * this.explosionMs;
         this.radiusExpandBy = initialRadius.pixels * 0.2;
         const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);
-        console.log('play sound?', soundIndex);
         Explosion.explosionSounds[soundIndex].play();
     }
 

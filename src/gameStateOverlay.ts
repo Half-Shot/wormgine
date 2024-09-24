@@ -1,18 +1,9 @@
 import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { GameState, TeamGroup } from "./logic/gamestate";
+import { GameState, TeamGroup, teamGroupToColorSet } from "./logic/gamestate";
+import { applyGenericBoxStyle } from "./mixins/styles";
 
 
 export class GameStateOverlay {
-
-    static teamGroupToColorSet(group: TeamGroup) {
-        switch (group) {
-            case TeamGroup.Red:
-                return { bg: 0xCC3333, fg: 0xBB5555 }
-            default:
-                return { bg: 0xCC00CC, fg: 0x111111 }
-        }
-    }
-
     public readonly physicsSamples: number[] = [];
     private readonly text: Text;
     private readonly tickerFn: (dt: Ticker) => void;
@@ -50,27 +41,38 @@ export class GameStateOverlay {
         const centerX = this.screenWidth / 2;
         const bottomY = (this.screenHeight / 10) * 9;
         this.gfx.clear();
+        this.gfx.removeChildren(0, this.gfx.children.length);
 
         // For each team:
         // TODO: Sort by health and group
         // TODO: Evenly space.
         for (const team of this.gameState.getActiveTeams()) {
             const teamHealthPercentage = Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
-
+            const {bg, fg} = teamGroupToColorSet(team.group);
             console.log('Redrawing game UI', teamHealthPercentage, this.gameState.iteration);
+            const nameTag = new Text({
+                text: team.name,
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 18,
+                    fill: 0xFFFFFF,
+                    align: 'center',
+                }
+            });
+            
+            const nameTagStartX = centerX - nameTag.width - 120;
+            const nameTagStartY = bottomY - (nameTag.height / 10);
+            applyGenericBoxStyle(this.gfx).rect(nameTagStartX - 3, bottomY-2, nameTag.width + 6, nameTag.height + 4).stroke().fill();
+            nameTag.position.set(nameTagStartX, bottomY);
             // TODO: Draw team name.
             this.gfx.setStrokeStyle({
                 width: 5,
-                color: 0xBB5555,
+                color: fg,
                 cap: 'butt',
                 join: 'round',
-            }).setFillStyle({ color: 0xCC3333}).rect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20).fill().stroke();
-            this.gfx.setStrokeStyle({
-                width: 2,
-                color: 0xAAAAAA,
-                cap: 'butt',
-                join: 'round',
-            }).setFillStyle({ color: 0xAAAAAA, alpha: 0.1}).rect(centerX - 102, bottomY-2, 204, 24).stroke().fill() 
+            }).setFillStyle({ color: bg}).rect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20).fill().stroke();
+            applyGenericBoxStyle(this.gfx).rect(centerX - 102, bottomY-2, 204, 24).stroke().fill();
+            this.gfx.addChild(nameTag);
         }
     }
 }

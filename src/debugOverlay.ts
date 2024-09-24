@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Graphics, Point, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import globalFlags from "./flags";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { PIXELS_PER_METER } from "./world";
@@ -13,6 +13,11 @@ export class GameDebugOverlay {
     private readonly text: Text;
     private readonly tickerFn: (dt: Ticker) => void;
     private readonly rapierGfx: Graphics;
+
+    private skippedUpdates = 0;
+    private skippedUpdatesTarget = 0;
+    private mouse: Point = new Point();
+    private mouseMoveListener: any;
 
     constructor(
         private readonly rapierWorld: RAPIER.World,
@@ -41,18 +46,24 @@ export class GameDebugOverlay {
         if (globalFlags.DebugView) {
             this.enableOverlay();
         }
+        this.mouseMoveListener = async (evt: MouseEvent) => {
+            const pos = this.viewport.toWorld(new Point(evt.clientX, evt.clientY));
+            this.mouse = pos;
+        };
     }
 
     private enableOverlay() {
         this.stage.addChild(this.text);
         this.viewport.addChild(this.rapierGfx);
         this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
+        window.addEventListener('mousemove', this.mouseMoveListener);
     }
 
     private disableOverlay() {
         this.ticker.remove(this.tickerFn);
         this.stage.removeChild(this.text);
         this.viewport.removeChild(this.rapierGfx);
+        window.removeEventListener('mousemove', this.mouseMoveListener);
     }
 
     private update(dt: Ticker) {
@@ -67,11 +78,21 @@ export class GameDebugOverlay {
 
         const avgPhysicsCostMs = Math.ceil(this.physicsSamples.reduce((a,b) => a + b, 0) / (this.physicsSamples.length || 1) * 100)/100;
 
-        this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()}`;
+        this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)}`;
+
+        this.skippedUpdatesTarget = (180/avgFps);
+
+        if (this.skippedUpdatesTarget >= this.skippedUpdates) {
+            this.skippedUpdates++;
+            return;
+        }
+        this.skippedUpdates = 0;
 
         let buffers = this.rapierWorld.debugRender();
         let vtx = buffers.vertices;
         let cls = buffers.colors;
+
+
         this.rapierGfx.clear();
 
         for (let i = 0; i < vtx.length / 4; i += 1) {

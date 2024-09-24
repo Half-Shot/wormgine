@@ -11,7 +11,6 @@ import staticController, { InputKind } from "../input";
 import { GameState, TeamGroup } from "../logic/gamestate";
 import { GameStateOverlay } from "../gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
-// import { BazookaShell } from "../entities/phys/bazookaShell";
 
 const weapons = ["grenade", "mine", "firework"];
 
@@ -24,7 +23,7 @@ export default async function runScenario(game: Game) {
         worldWidth,
         worldHeight,
         game.world,
-        Assets.get('terrain2')
+        Assets.get('boneIsles')
     );
 
     const gameState = new GameState([{
@@ -32,14 +31,6 @@ export default async function runScenario(game: Game) {
         group: TeamGroup.Blue,
         worms: [{
             name: "Test Dolby",
-            maxHealth: 100,
-            health: 100,
-        },{
-            name: "Yeen #2",
-            maxHealth: 100,
-            health: 100,
-        },{
-            name: "Accident prone",
             maxHealth: 100,
             health: 100,
         }]
@@ -64,14 +55,12 @@ export default async function runScenario(game: Game) {
     //     world.addEntity(newProjectile);
     // }));
 
-    const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
-    world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1500,300), gameState.getTeamByIndex(0).worms[1]));
-    world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1012,678), gameState.getTeamByIndex(0).worms[2]));
-    game.viewport.follow(dummy.sprite);
+    // const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
+    // game.viewport.follow(dummy.sprite);
 
     world.addEntity(Mine.create(parent, world, Coordinate.fromScreen(900,200)));
 
-    let selectedWeaponIndex = 0;
+    let selectedWeaponIndex = 2;
     const weaponText = new Text({
         text: `Selected Weapon (press S to switch): ${weapons[selectedWeaponIndex]}`,
         style: {
@@ -94,6 +83,7 @@ export default async function runScenario(game: Game) {
         }
         weaponText.text = `Selected Weapon (press S to switch): ${weapons[selectedWeaponIndex]}`;
     });
+
 
 
     game.pixiApp.stage.addChild(weaponText);

@@ -5,7 +5,7 @@ import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { ShapeContact, Vector2 } from "@dimforge/rapier2d-compat";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 
 /**

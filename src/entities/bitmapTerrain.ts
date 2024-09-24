@@ -23,7 +23,6 @@ export class BitmapTerrain implements IMatterEntity {
 
     private readonly canvas: HTMLCanvasElement;
     private texture: Texture;
-    private textureBackdrop: Texture;
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
     // collider.handle -> fn
@@ -47,16 +46,15 @@ export class BitmapTerrain implements IMatterEntity {
         context.drawImage(bitmap as CanvasImageSource,  (viewWidth / 2) - (texture.width / 2), viewHeight - texture.height);
         
         this.texture = Texture.from(this.canvas, true);
-        this.textureBackdrop = Texture.from(this.canvas.toDataURL());
         this.sprite = new Sprite(this.texture);
         this.sprite.anchor.x = 0;
         this.sprite.anchor.y = 0;
 
         // Somehow make rain fall infront of this.
-        this.spriteBackdrop = new Sprite(this.textureBackdrop);
+        this.spriteBackdrop = new Sprite(Texture.from(this.texture._source, true));
         this.spriteBackdrop.anchor.x = 0;
         this.spriteBackdrop.anchor.y = 0;
-        this.spriteBackdrop.tint = '0x220000';
+        this.spriteBackdrop.tint = '0xAAAAAA';
 
         this.bounds = new Rectangle(Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,0,0);
 
@@ -130,6 +128,7 @@ export class BitmapTerrain implements IMatterEntity {
     }
 
     onDamage(point: Vector2, radius: MetersValue) {
+        console.log('Damaged');
         const context = this.canvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get context');

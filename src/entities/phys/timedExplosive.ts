@@ -22,6 +22,7 @@ interface Opts {
 export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
     protected timer: number|undefined;
     protected isSinking = false;
+    private hasExploded = false;
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
 
@@ -51,12 +52,17 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
     }
 
     onExplode() {
+        if (this.hasExploded) {
+            throw Error('Tried to explode twice');
+        }
+        this.hasExploded = true;
         this.timer = undefined;
         const point = this.body.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider)) {
-            this.onCollision(element, point);
+        const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider);
+        for (const element of explosionCollidesWith) {
+            element.onDamage?.(point, this.opts.explosionRadius);
         }
         this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
             shrapnelMax: 35,
@@ -87,14 +93,11 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
             return true;
         }
 
-        if (otherEnt.onDamage) {
-            if (this.opts.explodeOnContact || (this.timer !== undefined && this.timer <= 0)) {
-                otherEnt.onDamage(contactPoint, this.opts.explosionRadius);
-                this.timer = 0;
-                return true;
-            }
+        if (this.opts.explodeOnContact && this.hasExploded) {
+            this.onExplode();
+            return true;
         }
-
+        
         return false;
     }
 }
