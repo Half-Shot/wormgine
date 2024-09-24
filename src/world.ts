@@ -1,7 +1,7 @@
 import { IGameEntity, IMatterEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { Ball, Collider, ColliderDesc, EventQueue, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d-compat";
+import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
 
 /**
@@ -121,6 +121,21 @@ export class GameWorld {
 
     removeEntity(entity: IGameEntity) {
         this.entities.delete(entity);
+    }
+
+
+    public pointInAnyObject(position: Coordinate): boolean {
+        // Ensure a unique set of results.
+        let found = false;
+        this.rapierWorld.intersectionsWithPoint(
+            new Vector2(position.worldX, position.worldY),
+            () => {
+                found = true;
+                return false;
+            },
+            QueryFilterFlags.EXCLUDE_SENSORS,
+        );
+        return found;
     }
 
     public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IMatterEntity[] {

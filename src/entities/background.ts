@@ -3,6 +3,7 @@ import { IGameEntity } from "./entity";
 import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
+import { Coordinate } from "../utils";
 
 interface RainParticle {
     position: Point;
@@ -23,7 +24,7 @@ export class Background implements IGameEntity {
     rainSpeedVariation = 1;
     // TODO: Constrain to size of screen.
     rainCount = 900;
-    windDirection = 0;
+    windDirection = 5;
     rainColor: ColorSource = 'rgba(100,100,100,0.33)';
     priority = UPDATE_PRIORITY.LOW;
 
@@ -101,7 +102,7 @@ export class Background implements IGameEntity {
                 continue;
             }
 
-            if (this.terrain.pointInTerrain(particle.position, 2).length) {
+            if (this.terrain.pointInTerrain(Coordinate.fromScreen(particle.position.x, particle.position.y))) {
                 // TODO: Properly detect terrain
                 this.rainParticles.splice(rainIndex, 1);
                 // TODO: And splash

@@ -3,8 +3,8 @@ import { IDamageableEntity, IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
-import { ActiveEvents, Collider, ColliderDesc, Cuboid, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
-import { MetersValue } from "../utils/coodinate";
+import { Collider, ColliderDesc, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
+import { Coordinate, MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;
 export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
@@ -244,14 +244,12 @@ export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
         };
     }
 
-    public pointInTerrain(point: Vector2, radius: number): never[] {
+    public pointInTerrain(point: Coordinate): boolean {
         // Avoid costly iteration with this one neat trick.
-        if (!this.bounds.contains(point.x, point.y)) {
-            return [];
+        if (!this.bounds.contains(point.screenX, point.screenY)) {
+            return false;
         }
-        // TODO: Fix
-        return [];
-        //return Query.collides(Bodies.circle(point.x, point.y, radius), this.parts);
+        return this.gameWorld.pointInAnyObject(point);
     }
 
     public registerDamageListener(collider: Collider, fn: OnDamage) {
