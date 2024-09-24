@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
-import { IDamageableEntity, IMatterEntity } from "./entity";
+import { IMatterEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
@@ -7,7 +7,7 @@ import { Collider, ColliderDesc, RigidBody, RigidBodyDesc, Vector2 } from "@dimf
 import { Coordinate, MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;
-export class BitmapTerrain implements IMatterEntity, IDamageableEntity {
+export class BitmapTerrain implements IMatterEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects, CollisionGroups.Player]);
 
