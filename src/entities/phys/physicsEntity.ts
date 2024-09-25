@@ -75,7 +75,6 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
 
     onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (otherEnt instanceof Water) {
-            console.log('hit water', this);
 
             if (!this.splashSoundPlayback?.progress || this.splashSoundPlayback.progress === 1) {
                 // TODO: Hacks

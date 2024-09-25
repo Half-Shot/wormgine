@@ -156,7 +156,6 @@ export class Firework extends TimedExplosive {
 
     destroy(): void {
         if (this.trail.length) {
-            console.log('partial destroy');
             super.destroy();
             this.isDestroyed = false;
             // Skip until the trail has gone

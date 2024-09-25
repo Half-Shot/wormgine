@@ -88,7 +88,6 @@ export default async function runScenario(game: Game) {
         if (kind !== InputKind.DebugSwitchWeapon) {
             return;
         }
-        console.log('Weapon switch');
         selectedWeaponIndex++;
         if (selectedWeaponIndex === weapons.length) {
             selectedWeaponIndex = 0;

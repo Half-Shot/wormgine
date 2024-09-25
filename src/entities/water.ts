@@ -64,6 +64,8 @@ export class Water implements IGameEntity {
         this.body = world.createRigidBodyCollider(
             ColliderDesc.cuboid(width.value, 6)
                 .setSensor(true),
+                // .setCollisionGroups(Water.collisionBitmask)
+                // .setSolverGroups(Water.collisionBitmask),
             RigidBodyDesc.fixed().setTranslation(
                 0,
                 (height.value)

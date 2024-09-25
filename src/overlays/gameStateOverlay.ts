@@ -50,7 +50,6 @@ export class GameStateOverlay {
         for (const team of this.gameState.getActiveTeams()) {
             const teamHealthPercentage = Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
             const {bg, fg} = teamGroupToColorSet(team.group);
-            console.log('Redrawing game UI', teamHealthPercentage, this.gameState.iteration);
             const nameTag = new Text({
                 text: team.name,
                 style: {

@@ -68,7 +68,6 @@ export class Background implements IGameEntity {
         for (let rainIndex = 0; rainIndex < rainCount; rainIndex += 1) {
             this.addRainParticle();
         }
-        console.log('Generating', rainCount, 'particles');
     }
     
     addRainParticle() {

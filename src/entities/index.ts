@@ -4,6 +4,7 @@ import { BazookaShell } from "./phys/bazookaShell";
 import { Firework } from "./phys/firework";
 import { Grenade } from "./phys/grenade";
 import { Mine } from "./phys/mine";
+import { PhysicsEntity } from "./phys/physicsEntity";
 import { TestDummy } from "./phys/testDummy";
 import { Worm } from "./phys/worm";
 
@@ -20,4 +21,5 @@ export function readAssetsForEntities(assets: AssetPack): void {
     Firework.readAssets(assets);
     Worm.readAssets(assets);
     Explosion.readAssets(assets);
+    PhysicsEntity.readAssets(assets);
 }

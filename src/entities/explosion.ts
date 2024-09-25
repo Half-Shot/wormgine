@@ -25,7 +25,7 @@ export class Explosion implements IGameEntity {
             ];
     }
 
-    priority = UPDATE_PRIORITY.HIGH;
+    priority = UPDATE_PRIORITY.LOW;
     private static explosionSounds: Sound[];
     private explosionMs = 500;
 

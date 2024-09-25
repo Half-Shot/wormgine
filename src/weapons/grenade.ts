@@ -11,7 +11,6 @@ export const WeaponGrenade: IWeaponDefiniton = {
     maxDuration: 50,
     fireFn(parent: Container, world: GameWorld, worm: Worm, duration: number) {
         const forceComponent = duration/800;
-        console.log('Force component', forceComponent)
         const force = new Vector2(1 * forceComponent, 0.001);
         const position = add(worm.position, new Vector2(0, -50))
         return Grenade.create(parent, world, Coordinate.fromScreen(position.x, position.y), force);
