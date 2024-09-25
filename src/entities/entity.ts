@@ -1,5 +1,5 @@
-import { ShapeContact, Vector2 } from "@dimforge/rapier2d-compat";
-import { Point, UPDATE_PRIORITY } from "pixi.js";
+import { Vector2 } from "@dimforge/rapier2d-compat";
+import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
 
 /**
@@ -15,17 +15,20 @@ export interface IGameEntity {
 }
 
 /**
- * Any entity that has an attached Matter body will use this
- * interface.
+ * Any entity that has attached bodies in the game. Unlike `physicsEntity` which
+ * may be attached to one sprite and can be affected by other entites, this interface
+ * merely provides functions for collisions and damage.
+ * 
+ * For instance, this may be used for terrain.
  */
-export interface IMatterEntity extends IGameEntity {
+export interface IPhysicalEntity extends IGameEntity {
     /**
      * 
      * @param other 
      * @param contactPoint 
      * @returns True if the collision should stop being processed
      */
-    onCollision?(other: IMatterEntity, contactPoint: Vector2|null): boolean;
+    onCollision?(other: IPhysicalEntity, contactPoint: Vector2|null): boolean;
 
     /**
      * Called when another entity has damaged this entity.

@@ -6,12 +6,18 @@ import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, Ra
 import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils";
 
+/**
+ * Water for the bottom of the game world. Should collide with any objects that fall off the terrain
+ * and insta-kill them.
+ */
 export class Water implements IGameEntity {
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.Terrain, [CollisionGroups.WorldObjects]);
-    public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.LOW;
+    priority = UPDATE_PRIORITY.LOW;
     private readonly geometry: Geometry;
     private readonly waterMesh: Mesh<Geometry, Shader>;
+
     public get destroyed() {
+        // Water cannot be destroyed
         return false;
     }
 

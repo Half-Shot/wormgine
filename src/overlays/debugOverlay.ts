@@ -1,7 +1,7 @@
 import { Container, Graphics, Point, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
-import globalFlags from "./flags";
+import globalFlags from "../flags";
 import RAPIER from "@dimforge/rapier2d-compat";
-import { PIXELS_PER_METER } from "./world";
+import { PIXELS_PER_METER } from "../world";
 import { Viewport } from "pixi-viewport";
 
 const PHYSICS_SAMPLES = 60;
@@ -17,7 +17,7 @@ export class GameDebugOverlay {
     private skippedUpdates = 0;
     private skippedUpdatesTarget = 0;
     private mouse: Point = new Point();
-    private mouseMoveListener: any;
+    private mouseMoveListener: (e: MouseEvent) => void;
 
     constructor(
         private readonly rapierWorld: RAPIER.World,

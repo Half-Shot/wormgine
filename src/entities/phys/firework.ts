@@ -1,6 +1,6 @@
 import { Color, Container, Graphics, Point, Sprite, Texture, UPDATE_PRIORITY } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
-import { IMatterEntity } from '../entity';
+import { IPhysicalEntity } from '../entity';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
@@ -19,7 +19,7 @@ const COLOUR_SET = [
 ];
 
 /**
- * Proximity mine.
+ * Firework projectile.
  */
 export class Firework extends TimedExplosive {
     public static readAssets(assets: AssetPack) {
@@ -40,8 +40,8 @@ export class Firework extends TimedExplosive {
         alpha: number,
         kind: "fire"|"pop"
     }[] = [];
-    
-    public declare priority: UPDATE_PRIORITY.LOW;
+
+    priority = UPDATE_PRIORITY.LOW;
 
     static create(parent: Container, world: GameWorld, position: Coordinate) {
         const ent = new Firework(position, world);
@@ -138,7 +138,7 @@ export class Firework extends TimedExplosive {
         }
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.scream?.then((b) => {

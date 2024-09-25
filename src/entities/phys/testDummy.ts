@@ -4,11 +4,16 @@ import { AssetPack } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
-import { IMatterEntity } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { Explosion } from "../explosion";
-import { teamGroupToColorSet, WormInstance } from "../../logic/gamestate";
+import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle } from "../../mixins/styles";
 
+/**
+ * Test dummy entity that may be associated with a worm identity. These
+ * dummies cannot move or take turns, but count towards the total
+ * hitpoints for a team.
+ */
 export class TestDummy extends PhysicsEntity {
     public static readAssets(assets: AssetPack) {
         TestDummy.texture_normal = assets.textures.testDolby;
@@ -21,23 +26,23 @@ export class TestDummy extends PhysicsEntity {
         TestDummy.texture_damage_blush_3 = assets.textures.testDolbyDamage3Blush;
     }
 
-    public static texture_normal: Texture;
-    public static texture_blush: Texture;
-    public static texture_damage_1: Texture;
-    public static texture_damage_blush_1: Texture;
-    public static texture_damage_2: Texture;
-    public static texture_damage_blush_2: Texture;
-    public static texture_damage_3: Texture;
-    public static texture_damage_blush_3: Texture;
+    private static texture_normal: Texture;
+    private static texture_blush: Texture;
+    private static texture_damage_1: Texture;
+    private static texture_damage_blush_1: Texture;
+    private static texture_damage_2: Texture;
+    private static texture_damage_blush_2: Texture;
+    private static texture_damage_3: Texture;
+    private static texture_damage_blush_3: Texture;
 
-    public static DamageMultiplier = 250;
-    public declare priority: UPDATE_PRIORITY.LOW;
+    private static DamageMultiplier = 250;
+    priority = UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
-    public wasMoving = true;
-    public nameText: Text;
-    public healthText: Text;
-    public healthTextBox: Graphics;
+    private wasMoving = true;
+    private nameText: Text;
+    private healthText: Text;
+    private healthTextBox: Graphics;
 
     static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
         const ent = new TestDummy(position, world, wormIdent);
@@ -158,7 +163,7 @@ export class TestDummy extends PhysicsEntity {
         this.destroy();
     }
 
-    public onCollision(otherEnt: IMatterEntity, contactPoint: Vector2): boolean {
+    public onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2): boolean {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.wormIdent.health = 0;

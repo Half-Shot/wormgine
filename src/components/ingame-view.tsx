@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import './ingame-view.css'
 import { Game } from '../game';
 
-// TODO: Feed game parameters into this.
 
 export function IngameView({level}: {level: string}) {
   const [game, setGame] = useState<Game>();
@@ -25,9 +24,10 @@ export function IngameView({level}: {level: string}) {
       return;
     }
 
+    // Bind the game to the window such that we can debug it.
+    (window as unknown as {wormgine: Game}).wormgine = game;
     ref.current.appendChild(game.canvas);
     game.run();
-    (window as any).wormgine = game;
   }, [ref, game]);
 
 

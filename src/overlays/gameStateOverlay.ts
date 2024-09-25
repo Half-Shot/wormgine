@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { GameState, TeamGroup, teamGroupToColorSet } from "./logic/gamestate";
-import { applyGenericBoxStyle } from "./mixins/styles";
+import { GameState } from "../logic/gamestate";
+import { applyGenericBoxStyle } from "../mixins/styles";
+import { teamGroupToColorSet } from "../logic/teams";
 
 
 export class GameStateOverlay {
@@ -33,7 +34,7 @@ export class GameStateOverlay {
         this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
     }
 
-    private update(dt: Ticker) {
+    private update() {
         if (this.previousStateIteration === this.gameState.iteration) {
             return;
         }
@@ -61,7 +62,7 @@ export class GameStateOverlay {
             });
             
             const nameTagStartX = centerX - nameTag.width - 120;
-            const nameTagStartY = bottomY - (nameTag.height / 10);
+            // const nameTagStartY = bottomY - (nameTag.height / 10);
             applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, bottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
             nameTag.position.set(nameTagStartX, bottomY);
             // TODO: Draw team name.

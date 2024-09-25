@@ -5,7 +5,7 @@ import testingGround from './scenarios/testingGround';
 import boneIsles from './scenarios/boneIsles';
 import { Viewport } from 'pixi-viewport';
 import { getAssets } from "./assets";
-import { GameDebugOverlay } from "./debugOverlay";
+import { GameDebugOverlay } from "./overlays/debugOverlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { readAssetsForEntities } from "./entities";

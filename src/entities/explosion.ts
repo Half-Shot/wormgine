@@ -11,9 +11,12 @@ interface ExplosionsOptions {
     shrapnelHue: ColorSource,
 }
 
+/**
+ * Standard, reusable explosion effect.
+ */
 export class Explosion implements IGameEntity {
 
-    public static loadAssets({sounds}: AssetPack) {
+    public static readAssets({sounds}: AssetPack) {
         Explosion.explosionSounds = 
             [
                 sounds.explosion1,
@@ -22,7 +25,7 @@ export class Explosion implements IGameEntity {
             ];
     }
 
-    public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.HIGH;
+    priority = UPDATE_PRIORITY.HIGH;
     private static explosionSounds: Sound[];
     private explosionMs = 500;
 

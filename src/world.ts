@@ -1,4 +1,4 @@
-import { IGameEntity, IMatterEntity } from "./entities/entity";
+import { IGameEntity, IPhysicalEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d-compat";
@@ -34,7 +34,7 @@ export function collisionGroupBitmask(groups: CollisionGroups|CollisionGroups[],
 }
 
 export class GameWorld {
-    public readonly bodyEntityMap = new Map<number, IMatterEntity>();
+    public readonly bodyEntityMap = new Map<number, IPhysicalEntity>();
     public readonly entities = new Set<IGameEntity>();
     private readonly eventQueue = new EventQueue(true);
     // TODO: Unsure if this is the best location.
@@ -105,7 +105,7 @@ export class GameWorld {
         return { body, collider };
     }
 
-    public addBody<T extends IMatterEntity>(entity: T, ...collider: Collider[]) {
+    public addBody<T extends IPhysicalEntity>(entity: T, ...collider: Collider[]) {
         collider.forEach(collider => {
             if (this.bodyEntityMap.has(collider.handle)) {
                 console.warn(`Tried to add collider entity twice to game world`, collider.handle, entity);
@@ -139,9 +139,9 @@ export class GameWorld {
         return found;
     }
 
-    public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IMatterEntity[] {
+    public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IPhysicalEntity[] {
         // Ensure a unique set of results.
-        const results = new Set<IMatterEntity>();
+        const results = new Set<IPhysicalEntity>();
         this.rapierWorld.intersectionsWithShape(
             new Vector2(position.worldX, position.worldY),
             0,

@@ -16,22 +16,24 @@ const MAX_RAIN_LENGTH = 15;
 const MIN_RAIN_LENGTH = 6;
 const RAINDROP_COUNT = 350;
 
+/**
+ * Background of the game world. Includes rain particles.
+ */
 export class Background implements IGameEntity {
     static create(viewWidth: number, viewHeight: number, viewport: Viewport, color: [number, number, number, number], terrain: BitmapTerrain): Background {
         return new Background(viewWidth, viewHeight, viewport, color, terrain);
     }
-    rainSpeed = 15;
-    rainSpeedVariation = 1;
+    private rainSpeed = 15;
+    private rainSpeedVariation = 1;
     // TODO: Constrain to size of screen.
-    rainCount = 900;
-    windDirection = 5;
-    rainColor: ColorSource = 'rgba(100,100,100,0.33)';
+    private windDirection = 5;
+    private rainColor: ColorSource = 'rgba(100,100,100,0.33)';
     priority = UPDATE_PRIORITY.LOW;
 
-    gradientMesh: Mesh<Geometry, Shader>;
+    private gradientMesh: Mesh<Geometry, Shader>;
 
-    rainGraphic = new Graphics();
-    rainParticles: RainParticle[] = [];
+    private rainGraphic = new Graphics();
+    private rainParticles: RainParticle[] = [];
 
     private constructor(viewWidth: number, viewHeight: number, private viewport: Viewport, color: [number, number, number, number], private readonly terrain: BitmapTerrain) {
         const halfViewWidth = viewWidth / 2;

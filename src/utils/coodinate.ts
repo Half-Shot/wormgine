@@ -35,14 +35,14 @@ export class Coordinate {
 
     get screenX() {
         return this.worldX * PIXELS_PER_METER;
-}
-
-    get screenY() {
-        return this.worldY * PIXELS_PER_METER;
     }
 
     set screenX(value: number) {
         this.worldX = value / PIXELS_PER_METER;
+    }
+
+    get screenY() {
+        return this.worldY * PIXELS_PER_METER;
     }
 
     set screenY(value: number) {

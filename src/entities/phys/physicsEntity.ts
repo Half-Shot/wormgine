@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Sprite, Point } from "pixi.js";
-import { IMatterEntity } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags from "../../flags";
@@ -10,9 +10,13 @@ import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 
 /**
- * Any object that is physically present in the world i.e. a worm.
+ * Abstract class for any physical object in the world. The
+ * object must have at most one body and one sprite.
+ * 
+ * Collision on water and force from explosions are automatically
+ * calculated.
  */
-export abstract class PhysicsEntity implements IMatterEntity {
+export abstract class PhysicsEntity implements IPhysicalEntity {
     public static readAssets({sounds}: AssetPack) {
         PhysicsEntity.splashSound = sounds.splash;
     }
@@ -26,7 +30,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
 
     private static splashSound: Sound;
 
-    priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
+    priority = UPDATE_PRIORITY.NORMAL;
     private splashSoundPlayback?: IMediaInstance;
 
     public get destroyed() {
@@ -69,7 +73,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
 
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (otherEnt instanceof Water) {
             console.log('hit water', this);
 

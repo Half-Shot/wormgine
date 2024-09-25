@@ -3,7 +3,6 @@ import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Grenade } from "../entities/phys/grenade";
 import { Coordinate, MetersValue } from "../utils";
 import { Mine } from "../entities/phys/mine";
 
@@ -31,12 +30,6 @@ export default async function runScenario(game: Game) {
         world)
     );
     world.addEntity(water);
-    // const worm = world.addEntity(await Worm.create(parent, world, {x: 900, y: 400} , terrain, async (worm, definition, duration) => {
-    //     const newProjectile = await definition.fireFn(game, parent, world, worm, duration);
-    //     world.addEntity(newProjectile);
-    // }));
-
-    //game.viewport.follow(worm.sprite);
 
     game.viewport.on('clicked', async (evt) => {
         const position = Coordinate.fromScreen(evt.world.x, evt.world.y);

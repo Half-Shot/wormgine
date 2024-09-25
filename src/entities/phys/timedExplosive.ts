@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource } from "pixi.js";
-import { IMatterEntity } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
@@ -16,15 +16,14 @@ interface Opts {
 }
 
 /**
- * Any projectile type that can explode after a set timer. Currently does not handle
- * the rendering of a timer.
+ * Any projectile type that can explode after a set timer. Implementing classes
+ * must include their own timer.
  */
-export abstract class TimedExplosive extends PhysicsEntity implements IMatterEntity  {
+export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalEntity  {
     protected timer: number|undefined;
-    protected isSinking = false;
     protected hasExploded = false;
 
-    priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
+    priority = UPDATE_PRIORITY.NORMAL;
 
     constructor(sprite: Sprite, body: RapierPhysicsObject, gameWorld: GameWorld, public readonly opts: Opts) {
         super(sprite, body, gameWorld);
@@ -84,7 +83,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IMatterEnt
         }
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.timer = 0;

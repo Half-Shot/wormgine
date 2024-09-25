@@ -1,5 +1,5 @@
 import { Container, Sprite, Texture } from 'pixi.js';
-import { IMatterEntity } from '../entity';
+import { IPhysicalEntity } from '../entity';
 import { PhysicsEntity } from './physicsEntity';
 import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
@@ -20,13 +20,16 @@ enum WormState {
 
 type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
 
+/**
+ * Physical representation of a worm on the map. May be controlled.
+ */
 export class Worm extends PhysicsEntity {
 
     public static readAssets(assets: AssetPack) {
         Worm.texture = assets.textures.grenade;
     }
 
-    public static texture: Texture;
+    private static texture: Texture;
     private static offsetFromGroundM = 0.01;
 
     private fireWeaponDuration = 0;
@@ -105,7 +108,7 @@ export class Worm extends PhysicsEntity {
         }
     }
 
-    onMove(moveState: WormState.MovingLeft|WormState.MovingRight, dt: number) {
+    onMove(moveState: WormState.MovingLeft|WormState.MovingRight, /*dt: number*/) {
         // // Attempt to move to the left or right by 3 pixels
         const movementMod = 0.5;
         const move = add(
@@ -221,7 +224,7 @@ export class Worm extends PhysicsEntity {
         } // else, we're idle and not currently moving.
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector) {
         if (super.onCollision(otherEnt, contactPoint)) {
             return true;
         }

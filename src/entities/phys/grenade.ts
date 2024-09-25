@@ -1,6 +1,6 @@
 import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
-import { IMatterEntity } from '../entity';
+import { IPhysicalEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
@@ -11,7 +11,7 @@ import { AssetPack } from '../../assets';
 
 
 /**
- * Standard grenade projectile.
+ * Grenade projectile.
  */
 export class Grenade extends TimedExplosive {
     public static readAssets({textures, sounds}: AssetPack) {
@@ -88,7 +88,7 @@ export class Grenade extends TimedExplosive {
         }
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             this.timerText.destroy();
             return true;

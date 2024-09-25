@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Container, Graphics, Rectangle, Texture, Sprite } from "pixi.js";
-import { IMatterEntity } from "./entity";
+import { IPhysicalEntity } from "./entity";
 import { generateQuadTreeFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
 import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
@@ -7,12 +7,16 @@ import { Collider, ColliderDesc, RigidBody, RigidBodyDesc, Vector2 } from "@dimf
 import { Coordinate, MetersValue } from "../utils/coodinate";
 
 export type OnDamage = () => void;
-export class BitmapTerrain implements IMatterEntity {
+
+/**
+ * The terrain that objects sit upon. May be damanged by entities.
+ */
+export class BitmapTerrain implements IPhysicalEntity {
     public readonly priority = UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects, CollisionGroups.Player]);
 
     public get destroyed() {
-        // Terrain cannot be destroyed...yet
+        // Terrain cannot be destroyed.
         return false;
     }
 
@@ -166,7 +170,10 @@ export class BitmapTerrain implements IMatterEntity {
         const smallerRadius = radius.pixels / 3;
         if (smallerRadius) {
             const beforeBg = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
-            const contextBg = this.backgroundCanvas.getContext('2d')!;
+            const contextBg = this.backgroundCanvas.getContext('2d');
+            if (!contextBg) {
+                throw Error('Failed to get context');
+            }
             contextBg.fillStyle = 'grey';
             contextBg.beginPath();
             const offset = (radius.pixels/2) - smallerRadius;

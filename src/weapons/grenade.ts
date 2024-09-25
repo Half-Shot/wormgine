@@ -2,7 +2,6 @@ import { Container } from "pixi.js";
 import { Grenade } from "../entities/phys/grenade";
 import { IWeaponCode, IWeaponDefiniton } from "./weapon";
 import { Worm } from "../entities/phys/worm";
-import { Game } from "../game";
 import { GameWorld } from "../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { add, Coordinate } from "../utils";

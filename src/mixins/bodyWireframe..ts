@@ -1,6 +1,6 @@
 import { Graphics, Text } from "pixi.js";
 import { PIXELS_PER_METER, RapierPhysicsObject } from "../world";
-import { Cuboid, RoundCuboid } from "@dimforge/rapier2d-compat";
+import { Cuboid } from "@dimforge/rapier2d-compat";
 
 /**
  * Render a wireframe in pixi.js around a matter body.

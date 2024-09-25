@@ -8,8 +8,9 @@ import { Grenade } from "../entities/phys/grenade";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { TestDummy } from "../entities/phys/testDummy";
 import staticController, { InputKind } from "../input";
-import { GameState, TeamGroup } from "../logic/gamestate";
-import { GameStateOverlay } from "../gameStateOverlay";
+import { GameState } from "../logic/gamestate";
+import { TeamGroup } from "../logic/teams";
+import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
 // import { BazookaShell } from "../entities/phys/bazookaShell";
 

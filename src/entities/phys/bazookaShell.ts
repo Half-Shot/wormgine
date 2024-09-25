@@ -10,11 +10,10 @@ import { AssetPack } from '../../assets';
  */
 export class BazookaShell extends TimedExplosive {
     public static readAssets(assets: AssetPack) {
-        BazookaShell.texture = assets.textures.bazookaShell;
+        BazookaShell.texture = assets.textures.bazooka;
     }
 
     private static texture: Texture;
-    //private static bodyVertices = loadSvg(grenadePaths, 50, 1.75, 1.75, Vector.create(0.5, 0.5));
 
     private readonly force: Vector2 = VectorOps.zeros();
     private readonly gfx = new Graphics();
@@ -62,8 +61,6 @@ export class BazookaShell extends TimedExplosive {
         // Fix for other angles.
         this.force.x *= Math.min(1, dt * 3);
         this.force.y *= Math.min(1, dt * 3);
-        // TODO: Fix
-        // Body.applyForce(this.body, Vector.create(this.body.position.x, this.body.position.y), this.force);
     }
 
     destroy(): void {

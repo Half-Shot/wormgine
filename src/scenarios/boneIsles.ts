@@ -6,10 +6,10 @@ import { Water } from "../entities/water";
 import { Mine } from "../entities/phys/mine"
 import { Grenade } from "../entities/phys/grenade";
 import { Coordinate, MetersValue } from "../utils/coodinate";
-import { TestDummy } from "../entities/phys/testDummy";
 import staticController, { InputKind } from "../input";
-import { GameState, TeamGroup } from "../logic/gamestate";
-import { GameStateOverlay } from "../gameStateOverlay";
+import { GameState } from "../logic/gamestate";
+import { TeamGroup } from "../logic/teams";
+import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
 
 const weapons = ["grenade", "mine", "firework"];
@@ -50,13 +50,6 @@ export default async function runScenario(game: Game) {
         world)
     );
     water.addToWorld(game.viewport, world);
-    // const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(500,400), async (worm, definition, duration) => {
-    //     const newProjectile = await definition.fireFn(parent, world, worm, duration);
-    //     world.addEntity(newProjectile);
-    // }));
-
-    // const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
-    // game.viewport.follow(dummy.sprite);
 
     world.addEntity(Mine.create(parent, world, Coordinate.fromScreen(900,200)));
 

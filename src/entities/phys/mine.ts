@@ -1,6 +1,6 @@
 import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
-import { IMatterEntity } from '../entity';
+import { IPhysicalEntity } from '../entity';
 import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
 import { ActiveEvents, Collider, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
@@ -27,7 +27,7 @@ export class Mine extends TimedExplosive {
     private static beep: Sound;
     private readonly sensor: Collider;
     private beeping?: Promise<IMediaInstance>;
-    public timerText: Text;
+    private readonly timerText: Text;
 
     static create(parent: Container, world: GameWorld, position: Coordinate) {
         const ent = new Mine(position, world);
@@ -98,7 +98,7 @@ export class Mine extends TimedExplosive {
         this.sensor.setTranslation(this.body.body.translation());
     }
 
-    onCollision(otherEnt: IMatterEntity, contactPoint: Vector2) {
+    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.timerText.destroy();
