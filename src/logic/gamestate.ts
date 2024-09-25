@@ -11,8 +11,13 @@ export class GameState {
     private currentTeam: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
+    private currentRoundTime = 42000;
 
     private stateIteration = 0;
+
+    get roundTimer() {
+        return this.currentRoundTime;
+    }
     
     constructor(teams: Team[], private readonly rules: GameRules = { winWhenOneGroupRemains: false }) {
         if (teams.length < 1) {

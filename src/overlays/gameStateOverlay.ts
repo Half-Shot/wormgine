@@ -6,7 +6,7 @@ import { teamGroupToColorSet } from "../logic/teams";
 
 export class GameStateOverlay {
     public readonly physicsSamples: number[] = [];
-    private readonly text: Text;
+    private readonly roundTimer: Text;
     private readonly tickerFn: (dt: Ticker) => void;
     private readonly gfx: Graphics;
     private previousStateIteration = -1;
@@ -18,19 +18,20 @@ export class GameStateOverlay {
         private readonly screenWidth: number,
         private readonly screenHeight: number,
     ) {
-        this.text = new Text({
-            text: '',
+        this.roundTimer = new Text({
+            text: '60',
             style: {
                 fontFamily: 'Arial',
-                fontSize: 20,
+                fontSize: 48,
                 fill: 0xFFFFFF,
                 align: 'center',
             },
         });
+        this.roundTimer.position.set((this.screenWidth / 30) + 14, ((this.screenHeight / 10) * 9) + 12);
         this.gfx = new Graphics();
         this.tickerFn = this.update.bind(this);
-        this.stage.addChild(this.text);
         this.stage.addChild(this.gfx);
+        this.stage.addChild(this.roundTimer);
         this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
     }
 
@@ -38,11 +39,20 @@ export class GameStateOverlay {
         if (this.previousStateIteration === this.gameState.iteration) {
             return;
         }
+        this.roundTimer.text = Math.floor(this.gameState.roundTimer/1000);
         this.previousStateIteration = this.gameState.iteration;
         const centerX = this.screenWidth / 2;
         const bottomY = (this.screenHeight / 10) * 9;
         this.gfx.clear();
+
+        // Remove any previous text.
         this.gfx.removeChildren(0, this.gfx.children.length);
+
+
+        const leftX = (this.screenWidth / 30);
+
+        // Round timer
+        applyGenericBoxStyle(this.gfx).roundRect(leftX, bottomY-2, 84, 84, 4).stroke().fill();
 
         // For each team:
         // TODO: Sort by health and group
