@@ -1,5 +1,5 @@
 import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
-import { IGameEntity } from "./entity";
+import { IGameEntity, IPhysicalEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
@@ -10,7 +10,7 @@ import { MetersValue } from "../utils";
  * Water for the bottom of the game world. Should collide with any objects that fall off the terrain
  * and insta-kill them.
  */
-export class Water implements IGameEntity {
+export class Water implements IPhysicalEntity {
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.Terrain, [CollisionGroups.WorldObjects]);
     priority = UPDATE_PRIORITY.LOW;
     private readonly geometry: Geometry;
@@ -21,7 +21,7 @@ export class Water implements IGameEntity {
         return false;
     }
 
-    private readonly body: RapierPhysicsObject;
+    private readonly physObject: RapierPhysicsObject;
     private readonly shader: Shader;
 
     constructor(private readonly width: MetersValue, private readonly height: MetersValue, world: GameWorld) {
@@ -61,7 +61,7 @@ export class Water implements IGameEntity {
             }
         });
         // TODO: Potentially optimise into a polyline?
-        this.body = world.createRigidBodyCollider(
+        this.physObject = world.createRigidBodyCollider(
             ColliderDesc.cuboid(width.value, 6)
                 .setSensor(true),
                 // .setCollisionGroups(Water.collisionBitmask)
@@ -71,7 +71,7 @@ export class Water implements IGameEntity {
                 (height.value)
             )
         )
-        const meshPos = this.body.body.translation();
+        const meshPos = this.physObject.body.translation();
         const meshHeight = 6.5;
         this.waterMesh = new Mesh({
             geometry: this.geometry,
@@ -86,7 +86,7 @@ export class Water implements IGameEntity {
 
     addToWorld(parent: Container, world: GameWorld) {
         parent.addChildAt(this.waterMesh, parent.children.length-1);
-        world.addBody(this, this.body.collider);
+        world.addBody(this, this.physObject.collider);
     }
 
     update(): void {
