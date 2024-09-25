@@ -33,6 +33,10 @@ export function collisionGroupBitmask(groups: CollisionGroups|CollisionGroups[],
     return groupsInt + collidesInt;
 }
 
+/**
+ * Global game world class for handling both entity update loops, and
+ * physics operations.
+ */
 export class GameWorld {
     public readonly bodyEntityMap = new Map<number, IPhysicalEntity>();
     public readonly entities = new Set<IGameEntity>();

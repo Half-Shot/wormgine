@@ -220,7 +220,7 @@ export class Worm extends PhysicsEntity {
                 this.fireWeaponDuration += dt;
             }
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
-            this.onMove(this.state, dt)
+            this.onMove(this.state)
         } // else, we're idle and not currently moving.
     }
 
