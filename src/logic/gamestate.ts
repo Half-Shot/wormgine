@@ -1,17 +1,45 @@
-import { Team, WormInstance } from "./teams";
+import { Team, TeamGroup, WormIdentity, WormInstance } from "./teams";
 
 interface GameRules {
     winWhenOneGroupRemains: boolean;
 }
 
-interface InternalTeam extends Team {
-    worms: WormInstance[];
-    teamHealthPercentage: number;
+export class InternalTeam implements Team {
+    public readonly worms: WormInstance[];
+
+    constructor(private readonly team: Team, onHealthChange: () => void) {
+        this.worms = team.worms.map(w => new WormInstance(w, team, onHealthChange));
+    }
+
+    get name() {
+        return this.team.name;
+    }
+
+    get group() {
+        return this.team.group;
+    }
+
+    get health() {
+        return this.worms.map(w => w.health).reduce((a,b) => a + b);
+    }
+
+    get maxHealth() {
+        return this.worms.map(w => w.maxHealth).reduce((a,b) => a + b);
+    }
 }
 export class GameState {
+    static getTeamMaxHealth(team: Team) {
+        return  team.worms.map(w => w.maxHealth).reduce((a,b) => a + b);
+    }
+
     static getTeamHealth(team: Team) {
+        return team.worms.map(w => w.health).reduce((a,b) => a + b);
+    }
+
+    static getTeamHealthPercentage(team: Team) {
         return Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
     }
+
     private currentTeam: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
@@ -27,14 +55,8 @@ export class GameState {
         if (teams.length < 1) {
             throw Error('Must have at least one team');
         }
-        this.teams = teams.map((team, i) => ({
-            ...team,
-            teamHealthPercentage: GameState.getTeamHealth(team),
-            worms: team.worms.map(w => new WormInstance(w, team, () => {
-                this.stateIteration++;
-                const teamInst = this.getTeamByIndex(i);
-                teamInst.teamHealthPercentage = GameState.getTeamHealth(teamInst);
-            }))
+        this.teams = teams.map((team) => new InternalTeam(team, () => {
+            this.stateIteration++;
         }));
         this.nextTeamStack = [...this.teams.slice(1)];
         this.currentTeam = this.teams[0];

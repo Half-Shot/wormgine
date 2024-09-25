@@ -111,7 +111,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
 
         // If the timer has run out, set to null to indiciate it has expired.
         if (this.healthChangeTensionTimer && this.healthChangeTensionTimer <= 0) {
-            if (this.visibleHealth === 0) {
+            if (this.visibleHealth === 0 && !this.isSinking) {
                 this.explode();
                 return;
             }

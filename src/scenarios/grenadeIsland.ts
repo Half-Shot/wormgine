@@ -44,6 +44,18 @@ export default async function runScenario(game: Game) {
             maxHealth: 100,
             health: 100,
         }]
+    },{
+        name: "The Invisible Duo",
+        group: TeamGroup.Red,
+        worms: [{
+            name: "Egg face",
+            maxHealth: 100,
+            health: 100,
+        },{
+            name: "Cream Guy",
+            maxHealth: 100,
+            health: 100,
+        }]
     }]);
 
     new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, world, game.viewport.screenWidth, game.viewport.screenHeight);

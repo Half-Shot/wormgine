@@ -49,7 +49,7 @@ export class GameWorld {
 
     public areEntitiesMoving() {
         for (const e of this.bodyEntityMap.values()) {
-            if (e.body?.isMoving?.()) {
+            if (!e.destroyed && e.body?.isEnabled?.() && e.body?.isDynamic?.() && e.body?.isMoving?.()) {
                 return true;
             }
         }

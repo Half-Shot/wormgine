@@ -13,6 +13,7 @@ export class GameStateOverlay {
     private previousStateIteration = -1;
     private visibleTeamHealth: Record<string, number> = {};
     private healthChangeTensionTimer: number|null = null;
+    private readonly largestHealthPool: number;
 
     constructor(
         private readonly ticker: Ticker,
@@ -37,8 +38,9 @@ export class GameStateOverlay {
         this.stage.addChild(this.gfx);
         this.stage.addChild(this.roundTimer);
         this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
+        this.largestHealthPool = this.gameState.getTeams().reduceRight((value, team) => Math.max(value, team.maxHealth) , 0);
         this.gameState.getActiveTeams().forEach((t) => {
-            this.visibleTeamHealth[t.name] = t.teamHealthPercentage;
+            this.visibleTeamHealth[t.name] = t.health;
         });
     }
 
@@ -62,7 +64,7 @@ export class GameStateOverlay {
                 if (this.visibleTeamHealth[team.name] === undefined) {
                     continue;
                 }
-                if (this.visibleTeamHealth[team.name] !== team.teamHealthPercentage) {
+                if (this.visibleTeamHealth[team.name] !== team.health) {
                     // TODO: Const, same as the one for Playable.
                     this.healthChangeTensionTimer = 75;
                     return;
@@ -89,12 +91,13 @@ export class GameStateOverlay {
         // TODO: Sort by health and group
         // TODO: Evenly space.
         let allHealthAccurate = true;
+        let teamBottomY = bottomY;
         for (const team of this.gameState.getActiveTeams()) {
-            if (this.visibleTeamHealth[team.name] > team.teamHealthPercentage && shouldChangeTeamHealth) {
-                this.visibleTeamHealth[team.name] = Math.max(team.teamHealthPercentage, this.visibleTeamHealth[team.name]-0.01);
+            if (this.visibleTeamHealth[team.name] > team.health && shouldChangeTeamHealth) {
+                this.visibleTeamHealth[team.name] -= 1;
                 allHealthAccurate = false;
             }
-            const teamHealthPercentage = this.visibleTeamHealth[team.name];
+            const teamHealthPercentage = this.visibleTeamHealth[team.name] / this.largestHealthPool;
             const {bg, fg} = teamGroupToColorSet(team.group);
             const nameTag = new Text({
                 text: team.name,
@@ -107,18 +110,18 @@ export class GameStateOverlay {
             });
             
             const nameTagStartX = centerX - nameTag.width - 120;
-            // const nameTagStartY = bottomY - (nameTag.height / 10);
-            applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, bottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
-            nameTag.position.set(nameTagStartX, bottomY);
+            applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, teamBottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
+            nameTag.position.set(nameTagStartX, teamBottomY);
             // TODO: Draw team name.
-            applyGenericBoxStyle(this.gfx).roundRect(centerX - 102, bottomY-2, 204, 24, 4).stroke().fill();
+            applyGenericBoxStyle(this.gfx).roundRect(centerX - 102, teamBottomY-2, 204, 24, 4).stroke().fill();
             this.gfx.setStrokeStyle({
                 width: 5,
                 color: fg,
                 cap: 'butt',
                 join: 'round',
-            }).setFillStyle({ color: bg }).roundRect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20, 4).fill();
+            }).setFillStyle({ color: bg }).roundRect(centerX - 100, teamBottomY, 200 * teamHealthPercentage, 20, 4).fill();
             this.gfx.addChild(nameTag);
+            teamBottomY += 30;
         }
 
         if (allHealthAccurate) {
