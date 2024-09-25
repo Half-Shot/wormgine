@@ -47,6 +47,15 @@ export class GameWorld {
         
     }
 
+    public areEntitiesMoving() {
+        for (const [b,e] of this.bodyEntityMap.entries()) {
+            if (e.body?.isMoving?.()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public step() {
         this.rapierWorld.step(this.eventQueue);
         this.eventQueue.drainCollisionEvents((collider1, collider2, started) => {

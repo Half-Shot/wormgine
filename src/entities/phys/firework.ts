@@ -97,7 +97,7 @@ export class Firework extends TimedExplosive {
         if (!this.hasExploded) {
             const xSpeed = (Math.random()*0.5)-0.25;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";
-            const coodinate = new Coordinate(this.body.body.translation().x, this.body.body.translation().y);
+            const coodinate = new Coordinate(this.physObject.body.translation().x, this.physObject.body.translation().y);
             this.trail.push({
                 alpha: 1,
                 point: new Point(coodinate.screenX, coodinate.screenY),

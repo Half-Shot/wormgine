@@ -20,7 +20,7 @@ export class BazookaShell extends TimedExplosive {
     
     static async create(parent: Container, gameWorld: GameWorld, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
         const ent = new BazookaShell(position, initialAngle, gameWorld, initialForce, wind);
-        gameWorld.addBody(ent, ent.body.collider);
+        gameWorld.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
@@ -55,7 +55,7 @@ export class BazookaShell extends TimedExplosive {
 
     update(dt: number): void {
         super.update(dt);
-        if (!this.body || this.sprite.destroyed) {
+        if (!this.physObject || this.sprite.destroyed) {
             return;
         }
         // Fix for other angles.

@@ -80,10 +80,10 @@ export class Grenade extends TimedExplosive {
             return;
         }
         
-        this.wireframe.setDebugText(`velocity: ${Math.round(magnitude(this.body.body.linvel())*1000)/1000}`)
+        this.wireframe.setDebugText(`velocity: ${Math.round(magnitude(this.physObject.body.linvel())*1000)/1000}`)
 
         if (!this.timerText.destroyed) {
-            this.timerText.rotation = -this.body.body.rotation();
+            this.timerText.rotation = -this.physObject.body.rotation();
             this.timerText.text = this.timerTextValue;
         }
     }
@@ -98,7 +98,7 @@ export class Grenade extends TimedExplosive {
             return false;
         }
 
-        const velocity = magnitude(this.body.body.linvel());
+        const velocity = magnitude(this.physObject.body.linvel());
 
         // TODO: can these interrupt?
         if (!this.bounceSoundPlayback?.progress || this.bounceSoundPlayback.progress === 1 && this.timer) {

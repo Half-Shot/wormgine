@@ -6,8 +6,12 @@ interface GameRules {
 
 interface InternalTeam extends Team {
     worms: WormInstance[];
+    teamHealthPercentage: number;
 }
 export class GameState {
+    static getTeamHealth(team: Team) {
+        return Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
+    }
     private currentTeam: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
@@ -23,9 +27,14 @@ export class GameState {
         if (teams.length < 1) {
             throw Error('Must have at least one team');
         }
-        this.teams = teams.map((team) => ({
+        this.teams = teams.map((team, i) => ({
             ...team,
-            worms: team.worms.map(w => new WormInstance(w, team, () => this.stateIteration++))
+            teamHealthPercentage: GameState.getTeamHealth(team),
+            worms: team.worms.map(w => new WormInstance(w, team, () => {
+                this.stateIteration++;
+                const teamInst = this.getTeamByIndex(i);
+                teamInst.teamHealthPercentage = GameState.getTeamHealth(teamInst);
+            }))
         }));
         this.nextTeamStack = [...this.teams.slice(1)];
         this.currentTeam = this.teams[0];
@@ -33,6 +42,10 @@ export class GameState {
 
     public getTeamByIndex(index: number) {
         return this.teams[index];
+    }
+
+    public getTeams() {
+        return this.teams;
     }
 
     public getActiveTeams() {

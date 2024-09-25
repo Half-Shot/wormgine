@@ -37,8 +37,12 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
         return this.isDestroyed;
     }
 
-    constructor(public readonly sprite: Sprite, protected body: RapierPhysicsObject, protected gameWorld: GameWorld) {
-        this.wireframe = new BodyWireframe(this.body, globalFlags.DebugView);
+    public get body() {
+        return this.physObject.body;
+    }
+
+    constructor(public readonly sprite: Sprite, protected physObject: RapierPhysicsObject, protected gameWorld: GameWorld) {
+        this.wireframe = new BodyWireframe(this.physObject, globalFlags.DebugView);
         globalFlags.on('toggleDebugView', (on) => {
             this.wireframe.enabled = on;
         });
@@ -48,13 +52,13 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
         this.isDestroyed = true;
         this.sprite.destroy();
         this.wireframe.renderable.destroy();
-        this.gameWorld.removeBody(this.body);
+        this.gameWorld.removeBody(this.physObject);
         this.gameWorld.removeEntity(this);
     }
 
     update(dt: number): void {
-        const pos = this.body.body.translation();
-        const rotation = this.body.body.rotation();
+        const pos = this.physObject.body.translation();
+        const rotation = this.physObject.body.rotation();
         this.sprite.updateTransform({
             x: (pos.x * PIXELS_PER_METER) + (this.renderOffset?.x ?? 0),
             y: (pos.y * PIXELS_PER_METER) + (this.renderOffset?.y ?? 0),
@@ -65,7 +69,7 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
 
         // Sinking.
         if (this.isSinking) {
-            this.body.body.setTranslation({x: pos.x, y: pos.y + (0.05 * dt)}, false);
+            this.physObject.body.setTranslation({x: pos.x, y: pos.y + (0.05 * dt)}, false);
             if (pos.y > this.sinkingY) {
                 this.destroy();
             }
@@ -87,16 +91,16 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
             this.isSinking = true;
             this.sinkingY = contactY + 10;
             // Set static.
-            this.body.body.setEnabled(false);
+            this.physObject.body.setEnabled(false);
             return true;
         }
         return false;
     }
 
     onDamage(point: Vector2, radius: MetersValue): void {
-        const bodyTranslation = this.body.body.translation();
-        const forceMag = radius.value/magnitude(sub(point,this.body.body.translation()));
+        const bodyTranslation = this.physObject.body.translation();
+        const forceMag = radius.value/magnitude(sub(point,this.physObject.body.translation()));
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag*1.5));
-        this.body.body.applyImpulse(force, true)
+        this.physObject.body.applyImpulse(force, true)
     }
 }

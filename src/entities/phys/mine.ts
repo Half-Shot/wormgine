@@ -92,10 +92,10 @@ export class Mine extends TimedExplosive {
         }
 
         if (!this.timerText.destroyed && this.timer) {
-            this.timerText.rotation = -this.body.body.rotation();
+            this.timerText.rotation = -this.physObject.body.rotation();
             this.timerText.text = this.timerTextValue;
         }
-        this.sensor.setTranslation(this.body.body.translation());
+        this.sensor.setTranslation(this.physObject.body.translation());
     }
 
     onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {

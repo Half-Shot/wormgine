@@ -39,7 +39,7 @@ export class TestDummy extends PlayableEntity {
 
     static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
         const ent = new TestDummy(position, world, wormIdent);
-        world.addBody(ent, ent.body.collider);
+        world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         parent.addChild(ent.healthTextBox);
@@ -65,7 +65,7 @@ export class TestDummy extends PlayableEntity {
     }
 
     private getTexture() {
-        const isBlush = this.health < 100 && this.body.body.isMoving();
+        const isBlush = this.health < 100 && this.physObject.body.isMoving();
 
         if (this.health >= 80) {
             return isBlush ? TestDummy.texture_blush : TestDummy.texture_normal;

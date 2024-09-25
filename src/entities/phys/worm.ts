@@ -39,14 +39,14 @@ export class Worm extends PhysicsEntity {
 
     static async create(parent: Container, world: GameWorld, position: Coordinate, onFireWeapon: FireWeaponFn) {
         const ent = new Worm(position, world, onFireWeapon);
-        world.addBody(ent, ent.body.collider);
+        world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
     }
 
     get position() {
-        return this.body.body.translation();
+        return this.physObject.body.translation();
     }
 
     private constructor(position: Coordinate, world: GameWorld,private readonly onFireWeapon: FireWeaponFn,
@@ -112,13 +112,13 @@ export class Worm extends PhysicsEntity {
         // // Attempt to move to the left or right by 3 pixels
         const movementMod = 0.5;
         const move = add(
-            this.body.body.translation(),
+            this.physObject.body.translation(),
             new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0),
         );
-        this.characterController.computeColliderMovement(this.body.collider, move);
+        this.characterController.computeColliderMovement(this.physObject.collider, move);
         const correctedMovement = this.characterController.computedMovement();
         console.log(correctedMovement, move);
-        this.body.body.setTranslation(correctedMovement, false);
+        this.physObject.body.setTranslation(correctedMovement, false);
 
         // const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
         // const width = (this.body.bounds.max.x - this.body.bounds.min.x) / 1.85;
@@ -202,11 +202,11 @@ export class Worm extends PhysicsEntity {
 
     update(dt: number): void {
         super.update(dt);
-        if (!this.body || this.sprite.destroyed) {
+        if (!this.physObject || this.sprite.destroyed) {
             return;
         }
 
-        this.wireframe.setDebugText(`Worm\n${this.body.body.isEnabled() ? "static" : "dynamic"}\nVelocity: ${this.body.body.linvel().x.toPrecision(2) } ${this.body.body.linvel().y.toPrecision(2)}`);
+        this.wireframe.setDebugText(`Worm\n${this.physObject.body.isEnabled() ? "static" : "dynamic"}\nVelocity: ${this.physObject.body.linvel().x.toPrecision(2) } ${this.physObject.body.linvel().y.toPrecision(2)}`);
 
         if (this.state === WormState.InMotion) {
             // We're in motion, either we've been blown up, falling, or otherwise not in control.

@@ -1,6 +1,7 @@
-import { Vector2 } from "@dimforge/rapier2d-compat";
+import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
+import { RapierPhysicsObject } from "../world";
 
 /**
  * Base entity which all game objects implement
@@ -22,6 +23,9 @@ export interface IGameEntity {
  * For instance, this may be used for terrain.
  */
 export interface IPhysicalEntity extends IGameEntity {
+
+    body?: RigidBody;
+
     /**
      * 
      * @param other 

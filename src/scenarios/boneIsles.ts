@@ -36,7 +36,7 @@ export default async function runScenario(game: Game) {
         }]
     }]);
 
-    new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, game.viewport.screenWidth, game.viewport.screenHeight);
+    new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, world, game.viewport.screenWidth, game.viewport.screenHeight);
 
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await world.addEntity(terrain);
@@ -69,7 +69,6 @@ export default async function runScenario(game: Game) {
         if (kind !== InputKind.DebugSwitchWeapon) {
             return;
         }
-        console.log('Weapon switch');
         selectedWeaponIndex++;
         if (selectedWeaponIndex === weapons.length) {
             selectedWeaponIndex = 0;

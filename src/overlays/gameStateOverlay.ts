@@ -2,6 +2,7 @@ import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameState } from "../logic/gamestate";
 import { applyGenericBoxStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
+import { GameWorld } from "../world";
 
 
 export class GameStateOverlay {
@@ -10,11 +11,14 @@ export class GameStateOverlay {
     private readonly tickerFn: (dt: Ticker) => void;
     private readonly gfx: Graphics;
     private previousStateIteration = -1;
+    private visibleTeamHealth: Record<string, number> = {};
+    private healthChangeTensionTimer: number|null = null;
 
     constructor(
         private readonly ticker: Ticker,
         private readonly stage: Container,
         private readonly gameState: GameState,
+        private readonly gameWorld: GameWorld,
         private readonly screenWidth: number,
         private readonly screenHeight: number,
     ) {
@@ -33,14 +37,41 @@ export class GameStateOverlay {
         this.stage.addChild(this.gfx);
         this.stage.addChild(this.roundTimer);
         this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
+        this.gameState.getActiveTeams().forEach((t) => {
+            this.visibleTeamHealth[t.name] = t.teamHealthPercentage;
+        });
     }
 
-    private update() {
-        if (this.previousStateIteration === this.gameState.iteration) {
+    private update(dt: Ticker) {
+        if (this.healthChangeTensionTimer && !this.gameWorld.areEntitiesMoving()) {
+            this.healthChangeTensionTimer -= dt.deltaTime;
+        }
+
+        const shouldChangeTeamHealth = this.healthChangeTensionTimer !== null && this.healthChangeTensionTimer <= 0;
+
+        
+        if (this.previousStateIteration === this.gameState.iteration && !shouldChangeTeamHealth) {
             return;
         }
-        this.roundTimer.text = Math.floor(this.gameState.roundTimer/1000);
         this.previousStateIteration = this.gameState.iteration;
+
+        // TODO: Could the gameState flag this explicitly.
+        // Check for health change.
+        if (this.healthChangeTensionTimer === null) {
+            for (const team of this.gameState.getTeams()) {
+                if (this.visibleTeamHealth[team.name] === undefined) {
+                    continue;
+                }
+                if (this.visibleTeamHealth[team.name] !== team.teamHealthPercentage) {
+                    // TODO: Const, same as the one for Playable.
+                    this.healthChangeTensionTimer = 75;
+                    return;
+                }
+            }
+        }
+
+
+        this.roundTimer.text = Math.floor(this.gameState.roundTimer/1000);
         const centerX = this.screenWidth / 2;
         const bottomY = (this.screenHeight / 10) * 9;
         this.gfx.clear();
@@ -57,8 +88,13 @@ export class GameStateOverlay {
         // For each team:
         // TODO: Sort by health and group
         // TODO: Evenly space.
+        let allHealthAccurate = true;
         for (const team of this.gameState.getActiveTeams()) {
-            const teamHealthPercentage = Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
+            if (this.visibleTeamHealth[team.name] > team.teamHealthPercentage && shouldChangeTeamHealth) {
+                this.visibleTeamHealth[team.name] = Math.max(team.teamHealthPercentage, this.visibleTeamHealth[team.name]-0.01);
+                allHealthAccurate = false;
+            }
+            const teamHealthPercentage = this.visibleTeamHealth[team.name];
             const {bg, fg} = teamGroupToColorSet(team.group);
             const nameTag = new Text({
                 text: team.name,
@@ -83,6 +119,10 @@ export class GameStateOverlay {
                 join: 'round',
             }).setFillStyle({ color: bg }).roundRect(centerX - 100, bottomY, 200 * teamHealthPercentage, 20, 4).fill();
             this.gfx.addChild(nameTag);
+        }
+
+        if (allHealthAccurate) {
+            this.healthChangeTensionTimer = null;
         }
     }
 }

@@ -84,7 +84,6 @@ export class BitmapTerrain implements IPhysicalEntity {
 
     calculateBoundaryVectors(boundaryX = 0, boundaryY = 0, boundaryWidth = this.foregroundCanvas.width, boundaryHeight = this.foregroundCanvas.height) {
         console.time('Generating terrain');
-        console.log({boundaryX, boundaryY, boundaryWidth, boundaryHeight});
         const context = this.foregroundCanvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get render context of canvas');

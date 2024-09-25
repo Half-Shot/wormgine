@@ -44,7 +44,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
     }
 
     onTimerFinished() {
-        if (!this.body || !this.gameWorld) {
+        if (!this.physObject || !this.gameWorld) {
             throw Error('Timer expired without a body');
         }
         this.onExplode();
@@ -56,10 +56,10 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
         }
         this.hasExploded = true;
         this.timer = undefined;
-        const point = this.body.body.translation();
+        const point = this.physObject.body.translation();
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
-        const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.body.collider);
+        const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.physObject.collider);
         for (const element of explosionCollidesWith) {
             element.onDamage?.(point, this.opts.explosionRadius);
         }
@@ -87,7 +87,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
         if (super.onCollision(otherEnt, contactPoint)) {
             if (this.isSinking) {
                 this.timer = 0;
-                this.body.body.setRotation(0.15, false);
+                this.physObject.body.setRotation(0.15, false);
             }
             return true;
         }

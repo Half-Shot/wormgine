@@ -14,6 +14,9 @@ interface Opts {
     damageMultiplier: number,
 }
 
+// This is clearly not milliseconds, something is odd about our dt.
+const HEALTH_TENSION_MS = 75;
+
 /**
  * Entity that can be directly controlled by a player.
  */
@@ -29,7 +32,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
     private healthChangeTensionTimer: number|null = null;
 
     get position() {
-        return this.body.body.translation();
+        return this.physObject.body.translation();
     }
 
     get health() {
@@ -39,7 +42,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
     set health(v: number) {
         this.wormIdent.health = v;
         // Potentially further delay until the player has stopped moving.
-        this.healthChangeTensionTimer = 75;
+        this.healthChangeTensionTimer = HEALTH_TENSION_MS;
     }
 
     constructor(sprite: Sprite, body: RapierPhysicsObject, position: Coordinate, world: GameWorld, private readonly wormIdent: WormInstance, private readonly opts: Opts) {
@@ -90,38 +93,50 @@ export abstract class PlayableEntity extends PhysicsEntity {
         }
         
 
-        if (!this.body.body.isMoving() && this.wasMoving) {
+        if (!this.physObject.body.isMoving() && this.wasMoving) {
             this.wasMoving = false;
-            this.body.body.setRotation(0, false);
-            this.body.body.setTranslation(add(this.body.body.translation(), new Vector2(0, -0.25)), false);
+            this.physObject.body.setRotation(0, false);
+            this.physObject.body.setTranslation(add(this.physObject.body.translation(), new Vector2(0, -0.25)), false);
 
         }
+        
+        // Complex logic ahead, welcome to the health box tension timer!
+        // Whenever the entity takes damage, `healthChangeTensionTimer` is set to a unit of time before
+        // we can render the damage to the player.
 
-        if (!this.body.body.isMoving() && !this.wasMoving && this.healthChangeTensionTimer) {
+        // Only decrease the timer when we have come to a standstill.
+        if (!this.gameWorld.areEntitiesMoving() && this.healthChangeTensionTimer) {
             this.healthChangeTensionTimer -= dt;
         }
 
+        // If the timer has run out, set to null to indiciate it has expired.
         if (this.healthChangeTensionTimer && this.healthChangeTensionTimer <= 0) {
+            if (this.visibleHealth === 0) {
+                this.explode();
+                return;
+            }
             this.healthChangeTensionTimer = null;
-        }  
+        } 
 
+        // If the timer is null, decrease the rendered health if nessacery.
         if (this.healthChangeTensionTimer === null) {
             if (this.visibleHealth > this.health) {
                 this.visibleHealth--;
                 this.healthText.text = this.visibleHealth;
             }
-            // Delay before this?
+
+            // If we are dead, set a new timer to decrease to explode after a small delay.
             if (this.visibleHealth === 0) {
-                this.explode();
+                this.healthChangeTensionTimer = HEALTH_TENSION_MS;
             }
         }
 
     }
 
     public explode() {
-        const point = this.body.body.translation();
+        const point = this.physObject.body.translation();
         // Detect if anything is around us.
-        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), this.opts.explosionRadius, this.body.collider)) {
+        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), this.opts.explosionRadius, this.physObject.collider)) {
             if (element.onDamage) {
                 element.onDamage(point, this.opts.explosionRadius);
             }
@@ -138,7 +153,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
             if (this.isSinking) {
                 this.wormIdent.health = 0;
                 this.healthTextBox.destroy();
-                this.body.body.setRotation(DEG_TO_RAD*180, false);
+                this.physObject.body.setRotation(DEG_TO_RAD*180, false);
             }
             return true;
         }
@@ -147,12 +162,12 @@ export abstract class PlayableEntity extends PhysicsEntity {
 
     public onDamage(point: Vector2, radius: MetersValue): void {
         // TODO: Animate damage taken.
-        const bodyTranslation = this.body.body.translation();
-        const forceMag = radius.value/magnitude(sub(point,this.body.body.translation()));
+        const bodyTranslation = this.physObject.body.translation();
+        const forceMag = radius.value/magnitude(sub(point,this.physObject.body.translation()));
         const damage = Math.round((forceMag/20)*this.opts.damageMultiplier);
         this.health = Math.max(0, this.health - damage);
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag));
-        this.body.body.applyImpulse(force, true)
+        this.physObject.body.applyImpulse(force, true)
         this.wasMoving = true;
     }
 
