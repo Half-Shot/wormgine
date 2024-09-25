@@ -7,11 +7,16 @@ import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
+import { AssetPack } from "../../assets";
 
 /**
  * Any object that is physically present in the world i.e. a worm.
  */
 export abstract class PhysicsEntity implements IMatterEntity {
+    public static readAssets({sounds}: AssetPack) {
+        PhysicsEntity.splashSound = sounds.splash;
+    }
+
     protected isSinking = false;
     protected isDestroyed = false;
     protected sinkingY = 0;
@@ -19,7 +24,7 @@ export abstract class PhysicsEntity implements IMatterEntity {
     
     protected renderOffset?: Point;
 
-    public static splashSound: Sound;
+    private static splashSound: Sound;
 
     priority: UPDATE_PRIORITY = UPDATE_PRIORITY.NORMAL;
     private splashSoundPlayback?: IMediaInstance;

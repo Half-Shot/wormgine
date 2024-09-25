@@ -1,6 +1,5 @@
-import { Container, Sprite, Texture, UPDATE_PRIORITY } from 'pixi.js';
+import { Container, Sprite, Texture } from 'pixi.js';
 import { IMatterEntity } from '../entity';
-import { BitmapTerrain } from '../bitmapTerrain';
 import { PhysicsEntity } from './physicsEntity';
 import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
@@ -9,6 +8,7 @@ import { GameWorld, PIXELS_PER_METER } from '../../world';
 import { ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate } from '../../utils/coodinate';
 import { add } from '../../utils';
+import { AssetPack } from '../../assets';
 
 enum WormState {
     Idle = 0,
@@ -21,6 +21,11 @@ enum WormState {
 type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
 
 export class Worm extends PhysicsEntity {
+
+    public static readAssets(assets: AssetPack) {
+        Worm.texture = assets.textures.grenade;
+    }
+
     public static texture: Texture;
     private static offsetFromGroundM = 0.01;
 

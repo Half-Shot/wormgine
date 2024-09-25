@@ -3,19 +3,27 @@ import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { IMediaInstance, Sound } from '@pixi/sound';
-import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
+import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
 import { magnitude } from '../../utils';
 import { Coordinate, MetersValue } from '../../utils/coodinate';
+import { AssetPack } from '../../assets';
+
+
 /**
  * Standard grenade projectile.
  */
 export class Grenade extends TimedExplosive {
-    private static readonly FRICTION = 0.15;
+    public static readAssets({textures, sounds}: AssetPack) {
+        Grenade.texture = textures.grenade;
+        Grenade.bounceSoundsLight = sounds.metalBounceLight;
+        Grenade.boundSoundHeavy = sounds.metalBounceHeavy;
+    }
+
     private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
-    public static texture: Texture;
-    public static bounceSoundsLight: Sound;
-    public static boundSoundHeavy: Sound;
+    private static texture: Texture;
+    private static bounceSoundsLight: Sound;
+    private static boundSoundHeavy: Sound;
 
     static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number, y: number}) {
         const ent = new Grenade(position, initialForce, world);

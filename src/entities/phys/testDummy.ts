@@ -1,6 +1,6 @@
-import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics, BatchableGraphics } from "pixi.js";
+import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
 import { PhysicsEntity } from "./physicsEntity";
-import { getAssets } from "../../assets";
+import { AssetPack } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
@@ -10,16 +10,15 @@ import { teamGroupToColorSet, WormInstance } from "../../logic/gamestate";
 import { applyGenericBoxStyle } from "../../mixins/styles";
 
 export class TestDummy extends PhysicsEntity {
-    public static DamageMultiplier = 250;
-    public static readAssets(assets: ReturnType<typeof getAssets>) {
-        TestDummy.texture_normal = assets.textures.testdummy;
-        TestDummy.texture_blush = assets.textures.testdummy_blush;
-        TestDummy.texture_damage_1 = assets.textures.testdummy_damage_1;
-        TestDummy.texture_damage_blush_1 = assets.textures.testdummy_damage_blush_1;
-        TestDummy.texture_damage_2 = assets.textures.testdummy_damage_2;
-        TestDummy.texture_damage_blush_2 = assets.textures.testdummy_damage_blush_2;
-        TestDummy.texture_damage_3 = assets.textures.testdummy_damage_3;
-        TestDummy.texture_damage_blush_3 = assets.textures.testdummy_damage_blush_3;
+    public static readAssets(assets: AssetPack) {
+        TestDummy.texture_normal = assets.textures.testDolby;
+        TestDummy.texture_blush = assets.textures.testDolbyBlush;
+        TestDummy.texture_damage_1 = assets.textures.testDolbyDamage1;
+        TestDummy.texture_damage_blush_1 = assets.textures.testDolbyDamage1Blush;
+        TestDummy.texture_damage_2 = assets.textures.testDolbyDamage2Blush;
+        TestDummy.texture_damage_blush_2 = assets.textures.testDolbyDamage2Blush;
+        TestDummy.texture_damage_3 = assets.textures.testDolbyDamage3;
+        TestDummy.texture_damage_blush_3 = assets.textures.testDolbyDamage3Blush;
     }
 
     public static texture_normal: Texture;
@@ -31,10 +30,11 @@ export class TestDummy extends PhysicsEntity {
     public static texture_damage_3: Texture;
     public static texture_damage_blush_3: Texture;
 
+    public static DamageMultiplier = 250;
     public declare priority: UPDATE_PRIORITY.LOW;
     private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
-    public wasMoving: boolean = true;
+    public wasMoving = true;
     public nameText: Text;
     public healthText: Text;
     public healthTextBox: Graphics;

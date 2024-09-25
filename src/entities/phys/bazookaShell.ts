@@ -3,11 +3,17 @@ import { TimedExplosive } from "./timedExplosive";
 import { GameWorld } from '../../world';
 import { ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from "@dimforge/rapier2d-compat";
 import { MetersValue } from '../../utils/coodinate';
+import { AssetPack } from '../../assets';
 
-// TODO: This is buggy as all hell.
-
+/**
+ * Standard shell, affected by wind.
+ */
 export class BazookaShell extends TimedExplosive {
-    public static texture: Texture;
+    public static readAssets(assets: AssetPack) {
+        BazookaShell.texture = assets.textures.bazookaShell;
+    }
+
+    private static texture: Texture;
     //private static bodyVertices = loadSvg(grenadePaths, 50, 1.75, 1.75, Vector.create(0.5, 0.5));
 
     private readonly force: Vector2 = VectorOps.zeros();

@@ -1,18 +1,18 @@
-import { Container, Sprite, Text, Texture, Ticker, UPDATE_PRIORITY } from 'pixi.js';
+import { Container, Sprite, Text, Texture, Ticker } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
 import { IMatterEntity } from '../entity';
 import { IMediaInstance, Sound } from '@pixi/sound';
-import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
+import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
 import { ActiveEvents, Collider, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
 import { Coordinate, MetersValue } from '../../utils/coodinate';
-import { getAssets } from '../../assets';
+import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
 
 /**
  * Proximity mine.
  */
 export class Mine extends TimedExplosive {
-    public static readAssets(assets: ReturnType<typeof getAssets>) {
+    public static readAssets(assets: AssetPack) {
         Mine.texture = assets.textures.mine;
         Mine.textureActive = assets.textures.mineActive;
         Mine.beep = assets.sounds.mineBeep;

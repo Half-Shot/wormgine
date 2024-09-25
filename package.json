@@ -8,15 +8,14 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src/",
-    "test": "jest spec"
+    "test": "jest spec",
+    "assets": "node scripts/generateAssetManifest.mjs > src/assets/manifest.ts"
   },
   "dependencies": {
     "@dimforge/rapier2d-compat": "^0.14.0",
     "@pixi/sound": "^6.0.1",
-    "pathseg": "^1.2.1",
     "pixi-viewport": "^5.0.3",
     "pixi.js": "^8.4.1",
-    "poly-decomp-es": "^0.4.2",
     "preact": "^10.23.2"
   },
   "devDependencies": {

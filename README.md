@@ -20,3 +20,9 @@ where everything runs an update loop at render intervals. Entites may either be 
 Right now, the game doesn't make extensive use of shaders and doesn't use any webworkers for the number crunching. Therefore,
 you can expect things to run hot. The hope is as the game develops, more of the physics logic can be farmed out to a web
 worker and several of the CPU bound effects can be put into a shader or two.
+
+### Assets
+
+Assets are stored in src/assets/ and contain all the sounds and textures used for the game. When you add a new asset,
+you must regenerate the file with `yarn assets`. This automatically creates the typings so that Typescript can check
+whether all the assets are accounted for.

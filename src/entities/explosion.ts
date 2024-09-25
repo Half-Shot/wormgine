@@ -2,6 +2,7 @@ import { Color, ColorSource, Container, Graphics, Point, Ticker, UPDATE_PRIORITY
 import { IGameEntity } from "./entity";
 import { Sound } from "@pixi/sound";
 import { MetersValue } from "../utils/coodinate";
+import { AssetPack } from "../assets";
 
 interface ExplosionsOptions {
     shrapnelMin: number,
@@ -11,8 +12,18 @@ interface ExplosionsOptions {
 }
 
 export class Explosion implements IGameEntity {
+
+    public static loadAssets({sounds}: AssetPack) {
+        Explosion.explosionSounds = 
+            [
+                sounds.explosion1,
+                sounds.explosion2,
+                sounds.explosion3
+            ];
+    }
+
     public readonly priority: UPDATE_PRIORITY = UPDATE_PRIORITY.HIGH;
-    public static explosionSounds: Sound[];
+    private static explosionSounds: Sound[];
     private explosionMs = 500;
 
     public get destroyed() {

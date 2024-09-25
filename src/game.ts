@@ -1,19 +1,13 @@
-import "pathseg";
 import { Application, Graphics, UPDATE_PRIORITY } from 'pixi.js';
-import { BazookaShell } from './entities/phys/bazookaShell';
-import { Explosion } from './entities/explosion';
-import { Grenade } from './entities/phys/grenade';
 import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
 import boneIsles from './scenarios/boneIsles';
 import { Viewport } from 'pixi-viewport';
-import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./debugOverlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
-import { Worm } from "./entities/phys/worm";
 import { readAssetsForEntities } from "./entities";
 
 const worldWidth = 1920;
@@ -54,10 +48,6 @@ export class Game {
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
             .clamp({
-                // top: -screenHeight*3,
-                // bottom: screenHeight*2,
-                // left: -screenWidth*2,
-                // right: screenWidth*3,
                 top: -3000,
                 bottom: 2000,
                 left: -2000,
@@ -67,28 +57,11 @@ export class Game {
             .decelerate()
             .drag()
         this.viewport.zoom(8);
-    
-        //this.viewport.fit()
-        //this.viewport.moveCenter(worldWidth / 2, worldHeight / 2)   
     }
 
     public async loadResources() {
-        // Assets will have already been loaded.
-        // TODO: Do this better.
         const { textures, sounds } = getAssets();
         readAssetsForEntities({textures, sounds});
-        Grenade.texture = textures.grenade;
-        Grenade.bounceSoundsLight = sounds.metalBounceLight;
-        Grenade.boundSoundHeavy = sounds.metalBounceHeavy;
-        BazookaShell.texture = textures.bazooka_shell;
-        Worm.texture = textures.grenade;
-        Explosion.explosionSounds = 
-            [
-                sounds.explosion1,
-                sounds.explosion2,
-                sounds.explosion3
-            ];
-        PhysicsEntity.splashSound = sounds.splash;
     }
 
     public async run() {

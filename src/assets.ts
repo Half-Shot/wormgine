@@ -1,5 +1,5 @@
 import { Assets, Texture } from "pixi.js";
-import { manifest } from "./assets/manifest";
+import { AssetSounds, AssetTextures, manifest } from "./assets/manifest";
 import { Sound } from "@pixi/sound";
 
 let textures: Record<string, Texture>;
@@ -29,7 +29,9 @@ export function getAssets() {
         throw Error('Assets not preloaded');
     }
     return {
-        textures,
-        sounds,
+        textures: textures as unknown as AssetTextures,
+        sounds: sounds as unknown as AssetSounds
     }
 }
+
+export type AssetPack = ReturnType<typeof getAssets>;

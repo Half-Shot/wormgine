@@ -24,6 +24,7 @@ export class BitmapTerrain implements IMatterEntity {
     private readonly foregroundCanvas: HTMLCanvasElement;
     private readonly backgroundCanvas: HTMLCanvasElement;
     private texture: Texture;
+    private textureBg: Texture;
     private readonly sprite: Sprite;
     private readonly spriteBackdrop: Sprite;
     // collider.handle -> fn
@@ -54,11 +55,12 @@ export class BitmapTerrain implements IMatterEntity {
         this.sprite.anchor.y = 0;
 
         // Somehow make rain fall infront of this.
-        this.backgroundCanvas = BitmapTerrain.drawToCanvas(viewWidth, viewHeight, texture);      
-        this.spriteBackdrop = new Sprite(Texture.from(this.texture._source, true));
+        this.backgroundCanvas = BitmapTerrain.drawToCanvas(viewWidth, viewHeight, texture);    
+        this.textureBg = Texture.from(this.foregroundCanvas, true);  
+        this.spriteBackdrop = new Sprite(Texture.from(this.textureBg._source, true));
         this.spriteBackdrop.anchor.x = 0;
         this.spriteBackdrop.anchor.y = 0;
-        this.spriteBackdrop.tint = '0xAAAAAA';
+        this.spriteBackdrop.tint = '0x222222';
 
         this.bounds = new Rectangle(Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,0,0);
 
@@ -149,7 +151,6 @@ export class BitmapTerrain implements IMatterEntity {
         // Fetch the current image
         const before = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
         // Draw a circle
-        context.beginPath();
 
         // Give the exploded area a border
         // context.fillStyle = 'green';
@@ -157,8 +158,43 @@ export class BitmapTerrain implements IMatterEntity {
         // context.fill();
 
         context.fillStyle = 'grey';
+        context.beginPath();
         context.arc(imageX, imageY, radius.pixels, 0, 2 * Math.PI);
         context.fill();
+
+
+        const smallerRadius = radius.pixels / 3;
+        if (smallerRadius) {
+            const beforeBg = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
+            const contextBg = this.backgroundCanvas.getContext('2d')!;
+            contextBg.fillStyle = 'grey';
+            contextBg.beginPath();
+            const offset = (radius.pixels/2) - smallerRadius;
+            contextBg.arc(offset + imageX, offset + imageY, smallerRadius, 0, 2 * Math.PI);
+            contextBg.fill();
+
+            const afterBg = contextBg.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);
+
+            // See what has changed, hopefully a red cricle!
+            for (let i = 0; i < before.data.length; i += 4) {
+                const oldDataValue = beforeBg.data[i]+beforeBg.data[i+1]+beforeBg.data[i+2]+beforeBg.data[i+3];
+                const newDataValue = afterBg.data[i]+afterBg.data[i+1]+afterBg.data[i+2]+afterBg.data[i+3];
+                if (oldDataValue !== newDataValue) {
+                    // Zero the alpha channel for anything that has changed...like a red cricle
+                    afterBg.data[i+0] = 0;
+                    afterBg.data[i+1] = 0;
+                    afterBg.data[i+2] = 0;
+                    afterBg.data[i+3] = 0;
+                }
+            }
+            contextBg.putImageData(afterBg, snapshotX, snapshotY);
+            const newTex = Texture.from(this.backgroundCanvas);
+            this.spriteBackdrop.texture = newTex;
+            this.textureBg.destroy();
+            this.textureBg = newTex;
+        }
+
+
 
         // Fetch the new image
         const after = context.getImageData(snapshotX,snapshotY, snapshotWidth, snapshotHeight);

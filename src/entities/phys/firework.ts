@@ -5,7 +5,7 @@ import { IMediaInstance, Sound } from '@pixi/sound';
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/rapier2d-compat';
 import { Coordinate, MetersValue } from '../../utils/coodinate';
-import { getAssets } from '../../assets';
+import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
 
 
@@ -22,7 +22,7 @@ const COLOUR_SET = [
  * Proximity mine.
  */
 export class Firework extends TimedExplosive {
-    public static readAssets(assets: ReturnType<typeof getAssets>) {
+    public static readAssets(assets: AssetPack) {
         Firework.texture = assets.textures.firework;
         Firework.screamSound = assets.sounds.firework;
     }
