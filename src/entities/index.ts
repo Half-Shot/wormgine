@@ -5,7 +5,7 @@ import { Firework } from "./phys/firework";
 import { Grenade } from "./phys/grenade";
 import { Mine } from "./phys/mine";
 import { PhysicsEntity } from "./phys/physicsEntity";
-import { TestDummy } from "./phys/testDummy";
+import { TestDummy } from "./playable/testDummy";
 import { Worm } from "./phys/worm";
 
 /**

@@ -6,7 +6,7 @@ import { Water } from "../entities/water";
 import { Mine } from "../entities/phys/mine"
 import { Grenade } from "../entities/phys/grenade";
 import { Coordinate, MetersValue } from "../utils/coodinate";
-import { TestDummy } from "../entities/phys/testDummy";
+import { TestDummy } from "../entities/playable/testDummy";
 import staticController, { InputKind } from "../input";
 import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
