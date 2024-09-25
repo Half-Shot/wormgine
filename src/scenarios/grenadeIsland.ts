@@ -101,7 +101,7 @@ export default async function runScenario(game: Game) {
     game.viewport.on('clicked', async (evt) => {
         const position = Coordinate.fromScreen(evt.world.x, evt.world.y);
         let entity;
-        let wep = weapons[selectedWeaponIndex];
+        const wep = weapons[selectedWeaponIndex];
         if (wep === "grenade") {
             entity = Grenade.create(parent, world, position, {x: 0, y:0});
         } else if (wep === "mine") {

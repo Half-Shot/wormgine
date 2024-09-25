@@ -88,9 +88,9 @@ export class GameDebugOverlay {
         }
         this.skippedUpdates = 0;
 
-        let buffers = this.rapierWorld.debugRender();
-        let vtx = buffers.vertices;
-        let cls = buffers.colors;
+        const buffers = this.rapierWorld.debugRender();
+        const vtx = buffers.vertices;
+        const cls = buffers.colors;
 
 
         this.rapierGfx.clear();
