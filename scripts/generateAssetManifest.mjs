@@ -47,6 +47,7 @@ main().catch((ex) => {
 const MANIFEST_TEMPLATE = `
 import { AssetsManifest, Texture } from "pixi.js";
 import { Sound } from "@pixi/sound";
+import "@pixi/sound";
 
 // NOTE: Do not edit, use ./scripts/generateAssetManifest.mjs
 
