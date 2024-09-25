@@ -14,12 +14,12 @@ export function App() {
 
     useEffect(() => {
         // TODO: Progress is broken.
-        void loadAssets((v) => { setAssetProgress(assetProgress)}).then(() => setAssetsLoaded(true));
+        void loadAssets((v) => { setAssetProgress(v) }).then(() => setAssetsLoaded(true));
     }, [setAssetProgress]);
 
     if (!assetsLoaded) {
         return <main>
-            Loading <progress value={assetProgress*100} min={0} max={100}></progress> {assetProgress*100}%
+            Loading <progress value={assetProgress*100} min={0} max={100}></progress> {Math.round(assetProgress*100)}%
         </main>;
     }
     if (gameState) {
