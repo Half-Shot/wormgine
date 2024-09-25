@@ -4,6 +4,8 @@ interface Props {
     onNewGame: (level: string) => void
 }
 
+const buildNumber = import.meta.env.VITE_BUILD_NUMBER ?? 'unknown';
+
 export function Menu(props: Props) {
     return <main className="menu">
         <h1>Wormgine Debug Build</h1>
@@ -21,5 +23,6 @@ export function Menu(props: Props) {
                 <button onClick={() => props.onNewGame("boneIsles")}>Bone Isles</button>
             </li>
         </ul>
+        <small>Build number {buildNumber}</small>
     </main>;
 }
