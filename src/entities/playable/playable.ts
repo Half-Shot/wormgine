@@ -1,8 +1,8 @@
-import { Container, Point, Sprite, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
+import { Point, Sprite, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
-import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
-import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity } from "../entity";
 import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
@@ -25,6 +25,9 @@ export abstract class PlayableEntity extends PhysicsEntity {
     private healthText: Text;
     protected healthTextBox: Graphics;
 
+    private visibleHealth: number;
+    private healthChangeTensionTimer: number|null = null;
+
     get position() {
         return this.body.body.translation();
     }
@@ -35,7 +38,8 @@ export abstract class PlayableEntity extends PhysicsEntity {
 
     set health(v: number) {
         this.wormIdent.health = v;
-        this.healthText.text = this.health;
+        // Potentially further delay until the player has stopped moving.
+        this.healthChangeTensionTimer = 75;
     }
 
     constructor(sprite: Sprite, body: RapierPhysicsObject, position: Coordinate, world: GameWorld, private readonly wormIdent: WormInstance, private readonly opts: Opts) {
@@ -62,6 +66,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
                 align: 'center',
             },
         });
+        this.visibleHealth = this.health;
         this.healthTextBox = new Graphics();
         this.healthText.position.set((this.nameText.width/2) - this.healthText.width/2, 34);
         applyGenericBoxStyle(this.healthTextBox).roundRect(-5,0,this.nameText.width+10,30, 4).stroke().fill();
@@ -80,12 +85,33 @@ export abstract class PlayableEntity extends PhysicsEntity {
             this.healthTextBox.position.set(this.sprite.x - 50, this.sprite.y - 100);
         }
 
+        if (this.healthChangeTensionTimer) {
+            this.wireframe.setDebugText(`tension: ${this.healthChangeTensionTimer}`);
+        }
+        
+
         if (!this.body.body.isMoving() && this.wasMoving) {
             this.wasMoving = false;
             this.body.body.setRotation(0, false);
             this.body.body.setTranslation(add(this.body.body.translation(), new Vector2(0, -0.25)), false);
 
-            if (this.health === 0) {
+        }
+
+        if (!this.body.body.isMoving() && !this.wasMoving && this.healthChangeTensionTimer) {
+            this.healthChangeTensionTimer -= dt;
+        }
+
+        if (this.healthChangeTensionTimer && this.healthChangeTensionTimer <= 0) {
+            this.healthChangeTensionTimer = null;
+        }  
+
+        if (this.healthChangeTensionTimer === null) {
+            if (this.visibleHealth > this.health) {
+                this.visibleHealth--;
+                this.healthText.text = this.visibleHealth;
+            }
+            // Delay before this?
+            if (this.visibleHealth === 0) {
                 this.explode();
             }
         }

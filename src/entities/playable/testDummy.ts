@@ -1,13 +1,9 @@
-import { Container, Point, Sprite, Texture, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
-import { PhysicsEntity } from "../phys/physicsEntity";
+import { Container, Sprite, Texture, UPDATE_PRIORITY } from "pixi.js";
 import { AssetPack } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
-import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
-import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
-import { IPhysicalEntity } from "../entity";
-import { Explosion } from "../explosion";
-import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
-import { applyGenericBoxStyle } from "../../mixins/styles";
+import { Coordinate, MetersValue } from "../../utils";
+import { ActiveEvents, ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-compat";
+import { WormInstance } from "../../logic/teams";
 import { PlayableEntity } from "./playable";
 
 /**
