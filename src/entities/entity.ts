@@ -1,7 +1,6 @@
 import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
-import { RapierPhysicsObject } from "../world";
 
 /**
  * Base entity which all game objects implement

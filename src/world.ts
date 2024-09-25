@@ -48,7 +48,7 @@ export class GameWorld {
     }
 
     public areEntitiesMoving() {
-        for (const [b,e] of this.bodyEntityMap.entries()) {
+        for (const e of this.bodyEntityMap.values()) {
             if (e.body?.isMoving?.()) {
                 return true;
             }
