@@ -1,5 +1,5 @@
 import { Container, Filter, Geometry, Mesh, Shader, UPDATE_PRIORITY } from "pixi.js";
-import { IGameEntity, IPhysicalEntity } from "./entity";
+import { IPhysicalEntity } from "./entity";
 import vertex from '../shaders/water.vert?raw';
 import fragment from '../shaders/water.frag?raw';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
