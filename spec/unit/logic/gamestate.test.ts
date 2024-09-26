@@ -1,5 +1,6 @@
 import { test, expect, describe } from "@jest/globals";
-import { GameState, Team, TeamGroup, WormIdentity } from "../../../src/logic/gamestate";
+import { Team, TeamGroup, WormIdentity } from "../../../src/logic/teams";
+import { GameState } from "../../../src/logic/gamestate";
 
 const DEAD_WORM: WormIdentity = {
   name: "fishbait",

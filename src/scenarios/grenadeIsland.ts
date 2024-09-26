@@ -12,6 +12,7 @@ import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
+import { Worm } from "../entities/playable/worm";
 // import { BazookaShell } from "../entities/phys/bazookaShell";
 
 const weapons = ["grenade", "mine", "firework"];
@@ -80,6 +81,7 @@ export default async function runScenario(game: Game) {
     const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
     world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1500,300), gameState.getTeamByIndex(0).worms[1]));
     world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1012,678), gameState.getTeamByIndex(0).worms[2]));
+    world.addEntity(Worm.create(parent, world, Coordinate.fromScreen(600,550), gameState.getTeamByIndex(1).worms[0], () => {}));
     game.viewport.follow(dummy.sprite);
 
     world.addEntity(Mine.create(parent, world, Coordinate.fromScreen(900,200)));

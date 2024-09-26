@@ -93,12 +93,13 @@ export abstract class PlayableEntity extends PhysicsEntity {
         }
         
 
-        if (!this.physObject.body.isMoving() && this.wasMoving) {
-            this.wasMoving = false;
-            this.physObject.body.setRotation(0, false);
-            this.physObject.body.setTranslation(add(this.physObject.body.translation(), new Vector2(0, -0.25)), false);
+        // TODO: Settling code.
+        // if (!this.physObject.body.isMoving() && this.wasMoving) {
+        //     this.wasMoving = false;
+        //     this.physObject.body.setRotation(0, false);
+        //     this.physObject.body.setTranslation(add(this.physObject.body.translation(), new Vector2(0, -0.25)), false);
 
-        }
+        // }
         
         // Complex logic ahead, welcome to the health box tension timer!
         // Whenever the entity takes damage, `healthChangeTensionTimer` is set to a unit of time before

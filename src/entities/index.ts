@@ -6,7 +6,7 @@ import { Grenade } from "./phys/grenade";
 import { Mine } from "./phys/mine";
 import { PhysicsEntity } from "./phys/physicsEntity";
 import { TestDummy } from "./playable/testDummy";
-import { Worm } from "./phys/worm";
+import { Worm } from "./playable/worm";
 
 /**
  * Should be called during game startup to load all assets to

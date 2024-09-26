@@ -4,8 +4,10 @@ import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { Grenade } from "../entities/phys/grenade";
-import { Worm } from "../entities/phys/worm";
+import { Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
+import { GameState } from "../logic/gamestate";
+import { TeamGroup } from "../logic/teams";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -19,6 +21,16 @@ export default async function runScenario(game: Game) {
         Assets.get('testingGround')
     );
 
+    const gameState = new GameState([{
+        name: "The Prawns",
+        group: TeamGroup.Red,
+        worms: [{
+            name: "Shrimp",
+            maxHealth: 100,
+            health: 100,
+        }]
+    }]);
+
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await world.addEntity(terrain);
     bg.addToWorld(game.pixiApp.stage, parent);
@@ -30,8 +42,8 @@ export default async function runScenario(game: Game) {
             MetersValue.fromPixels(worldHeight), 
         world)
     );    water.addToWorld(parent, world);
-    const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(900,400), async (worm, definition, duration) => {
-        const newProjectile = await definition.fireFn(parent, world, worm, duration);
+    const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(900,105), gameState.getTeamByIndex(0).worms[0], (worm, definition, duration) => {
+        const newProjectile = definition.fireFn(parent, world, worm, duration);
         world.addEntity(newProjectile);
     }));
 

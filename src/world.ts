@@ -1,7 +1,6 @@
 import { IGameEntity, IPhysicalEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { Viewport } from "pixi-viewport";
-import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Vector2, World } from "@dimforge/rapier2d-compat";
+import { Ball, Collider, ColliderDesc, Cuboid, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
 
 /**
@@ -43,7 +42,7 @@ export class GameWorld {
     private readonly eventQueue = new EventQueue(true);
     // TODO: Unsure if this is the best location.
     
-    constructor(public readonly rapierWorld: World, public readonly ticker: Ticker, public readonly viewport: Viewport) {
+    constructor(public readonly rapierWorld: World, public readonly ticker: Ticker) {
         
     }
 
@@ -150,6 +149,26 @@ export class GameWorld {
             QueryFilterFlags.EXCLUDE_SENSORS,
         );
         return found;
+    }
+
+    public checkCollisionShape(position: Coordinate, shape: Shape, ownCollier: Collider): {collider: Collider, entity: IPhysicalEntity}[] {
+        // Ensure a unique set of results.
+        const results = new Array<{collider: Collider, entity: IPhysicalEntity}>();
+        this.rapierWorld.intersectionsWithShape(
+            new Vector2(position.worldX, position.worldY),
+            0,
+            shape,
+            (collider) => {
+                if (collider.handle !== ownCollier.handle) {
+                    const entity = this.bodyEntityMap.get(collider.handle);
+                    if (entity) {
+                        results.push({entity, collider});
+                    }
+                }
+                return true;
+            },
+        );
+        return [...results];
     }
 
     public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IPhysicalEntity[] {

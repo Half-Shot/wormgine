@@ -1,6 +1,6 @@
 import { IGameEntity } from "../entities/entity";
 import { Container } from "pixi.js";
-import { Worm } from "../entities/phys/worm";
+import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 
 export enum IWeaponCode {

@@ -1,14 +1,16 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import { IPhysicalEntity } from '../entity';
-import { PhysicsEntity } from './physicsEntity';
 import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
-import { GameWorld, PIXELS_PER_METER } from '../../world';
-import { ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
-import { Coordinate } from '../../utils/coodinate';
-import { add } from '../../utils';
+import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
+import { ActiveEvents, ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
+import { Coordinate, MetersValue } from '../../utils/coodinate';
+import { add, mult } from '../../utils';
 import { AssetPack } from '../../assets';
+import { PlayableEntity } from './playable';
+import { WormIdentity, WormInstance } from '../../logic/teams';
+import { calculateMovement } from '../../movementController';
 
 enum WormState {
     Idle = 0,
@@ -20,28 +22,30 @@ enum WormState {
 
 type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
 
+
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
-export class Worm extends PhysicsEntity {
+export class Worm extends PlayableEntity {
+    private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
     public static readAssets(assets: AssetPack) {
         Worm.texture = assets.textures.grenade;
     }
 
     private static texture: Texture;
-    private static offsetFromGroundM = 0.01;
+    private static offsetFromGroundM =  0.04;
 
     private fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponGrenade;
     private state: WormState;
-    private characterController: KinematicCharacterController;
 
-    static async create(parent: Container, world: GameWorld, position: Coordinate, onFireWeapon: FireWeaponFn) {
-        const ent = new Worm(position, world, onFireWeapon);
+    static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireWeaponFn) {
+        const ent = new Worm(position, world, wormIdent, onFireWeapon);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
+        parent.addChild(ent.healthTextBox);
         return ent;
     }
 
@@ -49,15 +53,20 @@ export class Worm extends PhysicsEntity {
         return this.physObject.body.translation();
     }
 
-    private constructor(position: Coordinate, world: GameWorld,private readonly onFireWeapon: FireWeaponFn,
-    ) {
+    private constructor(position: Coordinate, world: GameWorld, wormIdent: WormInstance, private readonly onFireWeapon: FireWeaponFn) {
         const sprite = new Sprite(Worm.texture);
         sprite.anchor.set(0.5, 0.5);
         const body = world.createRigidBodyCollider(
-            ColliderDesc.cuboid(sprite.width / (PIXELS_PER_METER*2), sprite.height / (PIXELS_PER_METER*2)),
+            ColliderDesc.cuboid(sprite.width / (PIXELS_PER_METER*2), sprite.height / (PIXELS_PER_METER*2))
+            .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
+            .setCollisionGroups(Worm.collisionBitmask)
+            .setSolverGroups(Worm.collisionBitmask),
             RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY).lockRotations()
         );
-        super(sprite, body, world);
+        super(sprite, body, position, world, wormIdent, {
+            explosionRadius: new MetersValue(5),
+            damageMultiplier: 5,
+        });
         this.state = WormState.InMotion;
 
         // TODO: Unbind.
@@ -77,10 +86,6 @@ export class Worm extends PhysicsEntity {
                 this.resetMoveDirection(inputKind);
             } 
         });
-
-        this.characterController = world.rapierWorld.createCharacterController(Worm.offsetFromGroundM);
-        this.characterController.enableSnapToGround(0.5);
-        this.characterController.enableAutostep(0.5, 0.2, true);
 
         //this.onStoppedMoving();
     }
@@ -108,48 +113,12 @@ export class Worm extends PhysicsEntity {
         }
     }
 
-    onMove(moveState: WormState.MovingLeft|WormState.MovingRight, /*dt: number*/) {
-        // // Attempt to move to the left or right by 3 pixels
-        const movementMod = 0.5;
-        const move = add(
-            this.physObject.body.translation(),
-            new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0),
-        );
-        this.characterController.computeColliderMovement(this.physObject.collider, move);
-        const correctedMovement = this.characterController.computedMovement();
-        console.log(correctedMovement, move);
-        this.physObject.body.setTranslation(correctedMovement, false);
-
-        // const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
-        // const width = (this.body.bounds.max.x - this.body.bounds.min.x) / 1.85;
-        // // Try to find the terrain position for where we are moving to, to see
-        // // if we can scale/fall it.
-
-        // const nextPosition = Vector.add(this.terrainPosition, move);
-        // // nextPosition.x += moveState === WormState.MovingLeft ? width : -width;
-        
-        // const { point: tp, fell } = this.terrain.getNearestTerrainPosition(
-        //     nextPosition,
-        //     width,
-        //     height,
-        //     move.x,
-        // );
-
-        // if (tp) {
-        //     // TODO: Smooth transition
-        //     // Normal move along a point
-        //     Body.setPosition(this.body, Vector.create(tp.x, tp.y - height + 10));
-        //     Body.setVelocity(this.body, Vector.create(0,0));
-        //     this.terrainPosition = tp;
-        // } else {
-        //     // We're falling!
-        //     console.log('Fell!');
-        //     Body.setStatic(this.body, false);
-        //     Sleeping.set(this.body, false);
-        //     Body.translate(this.body, Vector.create(-300, -30));
-        //     Body.setVelocity(this.body, Vector.create(0, 1));
-        //     this.state = WormState.InMotion;
-        // }
+    onMove(moveState: WormState.MovingLeft|WormState.MovingRight, dt: number) {
+        // Attempt to move to the left or right by 3 pixels
+        const movementMod = 0.06;
+        const moveMod = new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
+        const move = calculateMovement(this.physObject, moveMod, this.gameWorld);
+        this.physObject.body.setTranslation(move, false);
     }
 
     // onStoppedMoving() {
@@ -202,13 +171,21 @@ export class Worm extends PhysicsEntity {
 
     update(dt: number): void {
         super.update(dt);
-        if (!this.physObject || this.sprite.destroyed) {
+        if (this.sprite.destroyed) {
             return;
         }
 
-        this.wireframe.setDebugText(`Worm\n${this.physObject.body.isEnabled() ? "static" : "dynamic"}\nVelocity: ${this.physObject.body.linvel().x.toPrecision(2) } ${this.physObject.body.linvel().y.toPrecision(2)}`);
+        this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}`);
+        //this.wireframe.setDebugText(`Worm\n${this.physObject.body.isEnabled() ? "static" : "dynamic"}\nVelocity: ${this.physObject.body.linvel().x.toPrecision(2) } ${this.physObject.body.linvel().y.toPrecision(2)}`);
 
         if (this.state === WormState.InMotion) {
+            if (!this.body.isMoving()) {
+                // Stopped moving, must not be in motion anymore.
+                this.state = WormState.Idle;
+                // Gravity does not affect us while we are idle.
+                //this.body.setGravityScale(0, false);
+                console.log(this.physObject.body.translation(), this.physObject.collider.translation());
+            }
             // We're in motion, either we've been blown up, falling, or otherwise not in control.
             // if (this.body.isSleeping) {
             //     this.onStoppedMoving();
@@ -220,19 +197,11 @@ export class Worm extends PhysicsEntity {
                 this.fireWeaponDuration += dt;
             }
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
-            this.onMove(this.state)
+            this.onMove(this.state, dt);
         } // else, we're idle and not currently moving.
     }
 
-    onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector) {
-        if (super.onCollision(otherEnt, contactPoint)) {
-            return true;
-        }
-        return false;
-    }
-
     destroy(): void {
-        this.gameWorld.rapierWorld.removeCharacterController(this.characterController);
         super.destroy();
     }
 }

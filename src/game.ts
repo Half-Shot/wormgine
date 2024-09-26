@@ -43,7 +43,7 @@ export class Game {
             // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
             events: this.pixiApp.renderer.events
         });
-        this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker, this.viewport);
+        this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker);
         this.pixiApp.ticker.maxFPS = 90;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
