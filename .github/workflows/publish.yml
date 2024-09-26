@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: create a custom version using run number offset by 1000 (run_number + 1000)
+      - name: Generate build number
         run: |
           echo "VITE_BUILD_NUMBER=$((GITHUB_RUN_NUMBER))" >> $GITHUB_ENV
       - name: Set up Node
