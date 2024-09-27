@@ -1,14 +1,14 @@
-import { test, describe, beforeAll, expect, beforeEach, afterEach, jest } from "@jest/globals";
-import { GameWorld, RapierPhysicsObject } from "../../src/world";
 import RAPIER, { Collider, ColliderDesc, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
-import { Ticker } from "pixi.js";
-import { MetersValue } from "../../src/utils";
-import { calculateMovement, debugData } from "../../src/movementController";
-import { IPhysicalEntity } from "../../src/entities/entity";
-import { createCanvas } from '@napi-rs/canvas';
-import { exec } from "node:child_process";
 import { writeFile, mkdir } from "node:fs/promises";
+import { Ticker } from "pixi.js";
+import { test, describe, beforeAll, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { resolve } from "node:path";
+import { MetersValue } from "../../src/utils";
+import { IPhysicalEntity } from "../../src/entities/entity";
+import { GameWorld, RapierPhysicsObject } from "../../src/world";
+import { exec } from "node:child_process";
+import { createCanvas } from '@napi-rs/canvas';
+import { calculateMovement, debugData } from "../../src/movementController";
 
 const PlayerWidth = new MetersValue(0.3);
 const PlayerHeight = new MetersValue(0.6);
@@ -106,8 +106,8 @@ describe('calculateMovement', () => {
 
     let env: ReturnType<typeof constructTestEnv>;
     beforeEach(async () => {
-        // env = constructTestEnv();
-        // env.waitUntilStopped();
+        env = constructTestEnv();
+        env.waitUntilStopped();
     });
 
     afterEach(async () => {
@@ -148,8 +148,6 @@ describe('calculateMovement', () => {
     });
 
     test.only('should not be able to move if an obstacle is in the way', () => {
-        env = constructTestEnv();
-        env.waitUntilStopped();
         createBlock(env.world, 0, 1.25, 0.5, 0.5);
         const originalTranslation = env.player.body.translation();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
