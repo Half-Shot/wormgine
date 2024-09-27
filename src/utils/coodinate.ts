@@ -1,3 +1,4 @@
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { PIXELS_PER_METER } from "../world";
 
 export class MetersValue {
@@ -32,6 +33,12 @@ export class Coordinate {
     }
 
     constructor(public worldX: number, public worldY: number) { }
+
+
+    toWorldVector(): Vector2 {
+        return new Vector2(this.worldX, this.worldY);
+    }
+
 
     get screenX() {
         return this.worldX * PIXELS_PER_METER;
