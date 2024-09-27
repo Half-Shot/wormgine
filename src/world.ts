@@ -1,7 +1,8 @@
 import { IGameEntity, IPhysicalEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { Ball, Collider, ColliderDesc, Cuboid, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
+import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
+import { sub } from "./utils";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -117,8 +118,8 @@ export class GameWorld {
         return { body, collider };
     }
 
-    public addBody<T extends IPhysicalEntity>(entity: T, ...collider: Collider[]) {
-        collider.forEach(collider => {
+    public addBody<T extends IPhysicalEntity>(entity: T, collider: Collider, ...additional: Collider[]) {
+        [collider, ...additional].forEach(collider => {
             if (this.bodyEntityMap.has(collider.handle)) {
                 console.warn(`Tried to add collider entity twice to game world`, collider.handle, entity);
                 return;
@@ -151,21 +152,36 @@ export class GameWorld {
         return found;
     }
 
-    public checkCollisionShape(position: Coordinate, shape: Shape, ownCollier: Collider): {collider: Collider, entity: IPhysicalEntity}[] {
+    public checkCollisionShape(start: Coordinate, dir: Vector2, shape: Shape, ownCollier: Collider): {collider: Collider, entity: IPhysicalEntity}[] {
         // Ensure a unique set of results.
         const results = new Array<{collider: Collider, entity: IPhysicalEntity}>();
-        this.rapierWorld.intersectionsWithShape(
-            new Vector2(position.worldX, position.worldY),
+        // console.log(position.worldX, position.worldY, shape, results, this.rapierWorld.colliders.forEach(c => 
+        //     console.log("=>", c.translation(), c.shape)
+        // ));
+        this.rapierWorld.castShape(
+            start.toWorldVector(),
             0,
+            dir,
             shape,
+            1,
+            1,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
             (collider) => {
                 if (collider.handle !== ownCollier.handle) {
+                    console.log('BARK2!');
                     const entity = this.bodyEntityMap.get(collider.handle);
                     if (entity) {
                         results.push({entity, collider});
                     }
+                    console.log('nono', entity);
+                } else {
+                    console.log('collided with self');
                 }
-                return true;
+                return false;
             },
         );
         return [...results];
