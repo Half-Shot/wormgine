@@ -17,52 +17,47 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     const {y: objHalfHeight, x: objHalfWidth } = (physObject.collider.shape as Cuboid).halfExtents;
     // Get the extremity.
     const rayCoodinate = new Coordinate(
-        move.x - 0.5,
-        move.y - 0.25,
+        move.x,
+        // Increase the bounds to the steppy position.
+        move.y  - maxSteppy.value,
     );
 
-    // Always move to whatever y delta is lower ( as in higher )
-    let topYDelta = move.y;
-    
-
-    const initialCollisionShape = new Cuboid(objHalfWidth, objHalfHeight);
+    console.log(rayCoodinate.worldX, rayCoodinate.worldY);
+    // Increase by steppy amount.
+    const initialCollisionShape = new Cuboid(objHalfWidth, objHalfHeight - maxSteppy.value);
     debugData = { rayCoodinate, shape: initialCollisionShape };
 
-    // TODO: Render this shape!
-    const collides = world.checkCollisionShape(new Coordinate(currentTranslation.x, currentTranslation.y), rayCoodinate.toWorldVector(), initialCollisionShape, physObject.collider);
+    const collides = world.checkCollisionShape(rayCoodinate, initialCollisionShape, physObject.collider);
     let canTravel = collides.length === 0;
-    for (const c of collides) {
-        const shape = c.collider.shape;
-        const bodyT = c.collider.translation();
-        if (currentTranslation.y - bodyT.y < maxSteppy.value) {
-            // TODO: Support more types.
-            const halfHeight = shape.type === ShapeType.Cuboid ? (shape as Cuboid).halfExtents.y : (shape as Ball).radius;
+    // Pop the highest collider
+    const highestCollider = collides.sort((a,b) => a.collider.translation().y-b.collider.translation().y)[0];
 
-            // Step
-            const potentialX = bodyT.x;
-            const potentialY = bodyT.y - halfHeight - objHalfHeight;
-            const yDelta = move.y-bodyT.y;
-            if (yDelta < topYDelta) {
-                continue;
-            }
-            
-            // Check step is safe
-            // if (world.checkCollisionShape(new Coordinate(potentialX, potentialY), physObject.collider.shape, physObject.collider).length){
-            //     continue;
-            // }
-            move.y = potentialY;
-            move.x = potentialX;
-            topYDelta = yDelta;
-            canTravel = true;
-            console.log('canTravel');
-        }
+    // No collisions, go go go!
+    if (!highestCollider) {
+        return move;
     }
 
-    if (!canTravel) {
+    const shape = highestCollider.collider.shape;
+    const bodyT = highestCollider.collider.translation();
+    if (currentTranslation.y - bodyT.y > maxSteppy.value) {
+        console.log('too big to steppy');
         return currentTranslation;
     }
+    // TODO: Support more types.
+    const halfHeight = shape.type === ShapeType.Cuboid ? (shape as Cuboid).halfExtents.y : (shape as Ball).radius;
 
-    console.log("numColliders", collides.length);
-
+    // Step
+    const potentialX = bodyT.x;
+    // Crop a bit off the top to avoid colliding with it.
+    const potentialY = bodyT.y - halfHeight - objHalfHeight - 0.01;
+    
+    // Check step is safe
+    debugData = { rayCoodinate: new Coordinate(potentialX, potentialY), shape: physObject.collider.shape }
+    if (world.checkCollisionShape(new Coordinate(potentialX, potentialY), physObject.collider.shape, physObject.collider).length){
+        console.log('step is not safe');
+        return currentTranslation;
+    }
+    move.y = potentialY;
+    move.x = potentialX;
     return move;
 }

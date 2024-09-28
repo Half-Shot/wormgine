@@ -25,6 +25,7 @@ async function visualisePhysics(world: GameWorld, fileOut: string) {
     const cls = buffers.colors;
 
     for (let i = 0; i < vtx.length / 4; i += 1) {
+        // Pad the canvas so we can see it.
         const vtxA = 250 + Math.round(vtx[i * 4] * 50);
         const vtxB = 250 + Math.round(vtx[i * 4 + 1] * 50);
         const vtxC = 250 + Math.round(vtx[i * 4 + 2] * 50);
@@ -63,6 +64,15 @@ function constructTestEnv(): { world: GameWorld, player: RapierPhysicsObject, ti
         ColliderDesc.cuboid(3, 0.25),
         RigidBodyDesc.fixed().setTranslation(1, 2).lockRotations()
     );
+    const playerEnt = {
+        priority: 0,
+        body: player.body,
+        destroyed: false,
+        destroy() {
+            
+        }, 
+    } satisfies IPhysicalEntity;
+    world.addBody(playerEnt, player.collider);
     return { 
         world,
         player,
@@ -72,7 +82,7 @@ function constructTestEnv(): { world: GameWorld, player: RapierPhysicsObject, ti
             do {
                 world.step();
                 step++;
-            } while(player.body.isMoving() && step <= MaxSteps);
+            } while(world.areEntitiesMoving() && step <= MaxSteps);
             expect(step).toBeLessThan(MaxSteps);
             return player.body.translation();
         }
@@ -80,7 +90,7 @@ function constructTestEnv(): { world: GameWorld, player: RapierPhysicsObject, ti
 }
 
 function createBlock(world: GameWorld, x: number,y: number, width = 1, height = 1) {
-    const body = world.createRigidBodyCollider(ColliderDesc.cuboid(width, height), RigidBodyDesc.fixed().setUserData({'test':'block'}).setTranslation(
+    const body = world.createRigidBodyCollider(ColliderDesc.cuboid(width, height), RigidBodyDesc.fixed().setTranslation(
         x, y
     ));
     const ent = {
@@ -93,6 +103,8 @@ function createBlock(world: GameWorld, x: number,y: number, width = 1, height = 
         }, 
     } satisfies IPhysicalEntity&{collider: Collider};
     world.addBody(ent, ent.collider);
+    // REQUIRED: So the collider has time to be registered.
+    world.step();
     return ent;
 }
 
@@ -116,7 +128,9 @@ describe('calculateMovement', () => {
         const testName = currentTestName?.replaceAll(/\s/g, '_') ?? "unknown";
         const filename = `./test-out/${testName}.webp`;
         // Show debug shape.
-        env.world.createRigidBodyCollider(new ColliderDesc(debugData.shape), RigidBodyDesc.fixed().setTranslation(debugData.rayCoodinate.worldX, debugData.rayCoodinate.worldY));
+        if (debugData) {
+            env.world.createRigidBodyCollider(new ColliderDesc(debugData.shape), RigidBodyDesc.fixed().setTranslation(debugData.rayCoodinate.worldX, debugData.rayCoodinate.worldY));
+        }
         await visualisePhysics(env.world, filename);
         const fullPath = resolve(filename);
         if (assertionCalls !== numPassingAsserts) {
@@ -134,7 +148,7 @@ describe('calculateMovement', () => {
     test('should be able to move left when there are no obstacles', () => {
         const move = calculateMovement(env.player, new Vector2(-1, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
-        const {x, y} =env.waitUntilStopped();
+        const {x, y} = env.waitUntilStopped();
         expect(x).toBeCloseTo(0);
         expect(y).toBeCloseTo(1, 0);
     });
@@ -147,7 +161,7 @@ describe('calculateMovement', () => {
         expect(y).toBeCloseTo(1, 0);
     });
 
-    test.only('should not be able to move if an obstacle is in the way', () => {
+    test('should not be able to move if an obstacle is in the way', () => {
         createBlock(env.world, 0, 1.25, 0.5, 0.5);
         const originalTranslation = env.player.body.translation();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
@@ -157,7 +171,7 @@ describe('calculateMovement', () => {
         expect(originalTranslation.y-y).toBeCloseTo(0, 1);
     });
 
-    test('should be able to step over obstacles', () => {
+    test('should be able to step on top of obstacles', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
@@ -183,7 +197,7 @@ describe('calculateMovement', () => {
         expect(y).toBeCloseTo(0, 0.5);
     });
 
-    test('should not be able to enter cave-like entrances', () => {
+    test.only('should not be able to enter cave-like entrances', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         createBlock(env.world, 0.5, 0.5, 0.25, 0.25);
         const { y: originalY } = env.waitUntilStopped();

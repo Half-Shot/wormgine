@@ -2,7 +2,6 @@ import { IGameEntity, IPhysicalEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
-import { sub } from "./utils";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -152,36 +151,22 @@ export class GameWorld {
         return found;
     }
 
-    public checkCollisionShape(start: Coordinate, dir: Vector2, shape: Shape, ownCollier: Collider): {collider: Collider, entity: IPhysicalEntity}[] {
+    public checkCollisionShape(position: Coordinate, shape: Shape, ownCollier: Collider): {collider: Collider, entity: IPhysicalEntity}[] {
         // Ensure a unique set of results.
         const results = new Array<{collider: Collider, entity: IPhysicalEntity}>();
-        // console.log(position.worldX, position.worldY, shape, results, this.rapierWorld.colliders.forEach(c => 
-        //     console.log("=>", c.translation(), c.shape)
-        // ));
-        this.rapierWorld.castShape(
-            start.toWorldVector(),
+        this.rapierWorld.intersectionsWithShape(
+            new Vector2(position.worldX, position.worldY),
             0,
-            dir,
             shape,
-            1,
-            1,
-            false,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
             (collider) => {
+                console.log("Got collier", collider.handle, ownCollier.handle);
                 if (collider.handle !== ownCollier.handle) {
-                    console.log('BARK2!');
                     const entity = this.bodyEntityMap.get(collider.handle);
                     if (entity) {
                         results.push({entity, collider});
                     }
-                    console.log('nono', entity);
-                } else {
-                    console.log('collided with self');
                 }
-                return false;
+                return true;
             },
         );
         return [...results];
