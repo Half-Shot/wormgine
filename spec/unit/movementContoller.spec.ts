@@ -57,7 +57,7 @@ function constructTestEnv(): { world: GameWorld, player: RapierPhysicsObject, ti
     const world = new GameWorld(rapierWorld, ticker);
     const player = world.createRigidBodyCollider(
         ColliderDesc.cuboid(PlayerWidth.value / 2, PlayerHeight.value / 2),
-        RigidBodyDesc.dynamic().setTranslation(1, 1).lockRotations()
+        RigidBodyDesc.dynamic().setTranslation(1, -3).lockRotations()
     );
     // Create floor
     world.createRigidBodyCollider(
@@ -108,7 +108,7 @@ function createBlock(world: GameWorld, x: number,y: number, width = 1, height = 
     return ent;
 }
 
-const maxStep = new MetersValue(0.25);
+const maxStep = new MetersValue(0.2);
 
 describe('calculateMovement', () => {
     beforeAll(async () => {
@@ -119,7 +119,6 @@ describe('calculateMovement', () => {
     let env: ReturnType<typeof constructTestEnv>;
     beforeEach(async () => {
         env = constructTestEnv();
-        env.waitUntilStopped();
     });
 
     afterEach(async () => {
@@ -140,12 +139,14 @@ describe('calculateMovement', () => {
     })
 
     test('test environment is sane', () => {
+        env.waitUntilStopped();
         const {x, y} = env.player.body.translation();
         expect(x).toBeCloseTo(1);
         expect(y).toBeCloseTo(1, 0);
     });
 
     test('should be able to move left when there are no obstacles', () => {
+        env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(-1, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
         const {x, y} = env.waitUntilStopped();
@@ -154,6 +155,7 @@ describe('calculateMovement', () => {
     });
 
     test('should be able to move right when there are no obstacles', () => {
+        env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(1, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
         const {x, y} =env.waitUntilStopped();
@@ -181,7 +183,7 @@ describe('calculateMovement', () => {
         expect(y).toBeCloseTo(1, 1);
     });
 
-    test('should be able to step over stairs', () => {
+    test('should be able to step up stairs', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         createBlock(env.world, 0, 1, 0.25, 0.25);
         createBlock(env.world, -0.5, 0.5, 0.25, 0.25);
@@ -197,7 +199,24 @@ describe('calculateMovement', () => {
         expect(y).toBeCloseTo(0, 0.5);
     });
 
-    test.only('should not be able to enter cave-like entrances', () => {
+    test.only('should be able to step down stairs', () => {
+        createBlock(env.world, 1,    0,    0.25, 0.25);
+        createBlock(env.world, 0.5,  0.25, 0.25, 0.25);
+        createBlock(env.world, 0,    0.5,  0.25, 0.25);
+        createBlock(env.world, -0.5, 0.75, 0.25, 0.25);
+        env.waitUntilStopped();
+        env.player.body.setTranslation(calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world), false);
+        env.waitUntilStopped();
+        env.player.body.setTranslation(calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world), false);
+        env.waitUntilStopped();
+        const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
+        env.player.body.setTranslation(move, false);
+        const {x, y} = env.waitUntilStopped();
+        expect(x).toBeCloseTo(-0.5, 1);
+        expect(y).toBeCloseTo(0.25, 0.5);
+    });
+
+    test('should not be able to enter small cave-like entrances', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         createBlock(env.world, 0.5, 0.5, 0.25, 0.25);
         const { y: originalY } = env.waitUntilStopped();
@@ -206,5 +225,15 @@ describe('calculateMovement', () => {
         const {x, y} = env.waitUntilStopped();
         expect(x).toBeCloseTo(1, 0.5);
         expect(y).toBeCloseTo(originalY, 0.5);
+    });
+
+    test('should be able to enter large cave-like entrances', () => {
+        createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
+        createBlock(env.world, 0.5, 0.25, 0.25, 0.25);
+        const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
+        env.player.body.setTranslation(move, false);
+        const {x, y} = env.waitUntilStopped();
+        expect(x).toBeCloseTo(0.5, 0.5);
+        expect(y).toBeCloseTo(1, 0.5);
     });
 });

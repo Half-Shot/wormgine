@@ -22,13 +22,11 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
         move.y  - maxSteppy.value,
     );
 
-    console.log(rayCoodinate.worldX, rayCoodinate.worldY);
     // Increase by steppy amount.
     const initialCollisionShape = new Cuboid(objHalfWidth, objHalfHeight - maxSteppy.value);
     debugData = { rayCoodinate, shape: initialCollisionShape };
 
     const collides = world.checkCollisionShape(rayCoodinate, initialCollisionShape, physObject.collider);
-    let canTravel = collides.length === 0;
     // Pop the highest collider
     const highestCollider = collides.sort((a,b) => a.collider.translation().y-b.collider.translation().y)[0];
 
@@ -39,8 +37,9 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
 
     const shape = highestCollider.collider.shape;
     const bodyT = highestCollider.collider.translation();
-    if (currentTranslation.y - bodyT.y > maxSteppy.value) {
-        console.log('too big to steppy');
+    const stepSize = currentTranslation.y - bodyT.y;
+    console.log({stepSize, currentTranslation: currentTranslation.y, bodyT: bodyT.y})
+    if (stepSize > maxSteppy.value) {
         return currentTranslation;
     }
     // TODO: Support more types.
@@ -54,7 +53,6 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     // Check step is safe
     debugData = { rayCoodinate: new Coordinate(potentialX, potentialY), shape: physObject.collider.shape }
     if (world.checkCollisionShape(new Coordinate(potentialX, potentialY), physObject.collider.shape, physObject.collider).length){
-        console.log('step is not safe');
         return currentTranslation;
     }
     move.y = potentialY;
