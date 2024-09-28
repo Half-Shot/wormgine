@@ -1,10 +1,11 @@
-import { Container, Sprite, Texture, UPDATE_PRIORITY } from "pixi.js";
+import { Sprite, Texture, UPDATE_PRIORITY } from "pixi.js";
 import { AssetPack } from "../../assets";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from "../../world";
 import { Coordinate, MetersValue } from "../../utils";
 import { ActiveEvents, ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { WormInstance } from "../../logic/teams";
 import { PlayableEntity } from "./playable";
+import { Viewport } from "pixi-viewport";
 
 /**
  * Test dummy entity that may be associated with a worm identity. These
@@ -37,8 +38,8 @@ export class TestDummy extends PlayableEntity {
     private static readonly collisionBitmask = collisionGroupBitmask([CollisionGroups.WorldObjects], [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
 
 
-    static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
-        const ent = new TestDummy(position, world, wormIdent);
+    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance) {
+        const ent = new TestDummy(position, world, parent, wormIdent);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
@@ -46,7 +47,7 @@ export class TestDummy extends PlayableEntity {
         return ent;
     }
 
-    private constructor(position: Coordinate, world: GameWorld, wormIdent: WormInstance) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance) {
         const sprite = new Sprite(TestDummy.texture_normal);
         sprite.scale.set(0.20);
         sprite.anchor.set(0.5);
@@ -58,7 +59,7 @@ export class TestDummy extends PlayableEntity {
             .setMass(0.35),
             RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY)
         );
-        super(sprite, body, position, world,wormIdent, {
+        super(sprite, body, world, parent, wormIdent, {
             explosionRadius: new MetersValue(3),
             damageMultiplier: 250,
         });
@@ -88,7 +89,7 @@ export class TestDummy extends PlayableEntity {
 
     public destroy(): void {
         super.destroy();
-        this.gameWorld.viewport.plugins.remove('follow');
-        this.gameWorld.viewport.snap(800,0);
+        this.parent.plugins.remove('follow');
+        this.parent.snap(800,0);
     }
 }

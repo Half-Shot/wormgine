@@ -30,7 +30,7 @@ export class Mine extends TimedExplosive {
     private readonly timerText: Text;
 
     static create(parent: Container, world: GameWorld, position: Coordinate) {
-        const ent = new Mine(position, world);
+        const ent = new Mine(position, world, parent);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
@@ -40,7 +40,7 @@ export class Mine extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: Coordinate, world: GameWorld) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Container) {
         const sprite = new Sprite(Mine.texture);
         sprite.scale.set(0.15);
         sprite.anchor.set(0.5);
@@ -56,7 +56,7 @@ export class Mine extends TimedExplosive {
             );
     
         sprite.position = body.body.translation();
-        super(sprite, body, world, {
+        super(sprite, body, world, parent, {
             explosionRadius: new MetersValue(4),
             explodeOnContact: false,
             timerSecs: 5,

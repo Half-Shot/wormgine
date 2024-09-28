@@ -1,4 +1,4 @@
-import { Team, TeamGroup, WormIdentity, WormInstance } from "./teams";
+import { Team, WormInstance } from "./teams";
 
 interface GameRules {
     winWhenOneGroupRemains: boolean;

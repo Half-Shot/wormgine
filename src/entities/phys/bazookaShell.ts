@@ -19,14 +19,14 @@ export class BazookaShell extends TimedExplosive {
     private readonly gfx = new Graphics();
     
     static async create(parent: Container, gameWorld: GameWorld, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
-        const ent = new BazookaShell(position, initialAngle, gameWorld, initialForce, wind);
+        const ent = new BazookaShell(position, initialAngle, gameWorld, parent, initialForce, wind);
         gameWorld.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
     }
 
-    private constructor(position: { x: number, y: number }, initialAngle: number, world: GameWorld, initialForce: number, private readonly wind: number) {
+    private constructor(position: { x: number, y: number }, initialAngle: number, world: GameWorld, parent: Container, initialForce: number, private readonly wind: number) {
         const sprite = new Sprite(BazookaShell.texture);
         const body = world.createRigidBodyCollider(
             ColliderDesc.cuboid(sprite.width/2, sprite.height/2),
@@ -40,7 +40,7 @@ export class BazookaShell extends TimedExplosive {
                 .setLinearDamping(0.05)
             );
 
-        super(sprite, body, world, {
+        super(sprite, body, world, parent, {
             explosionRadius: new MetersValue(3.5),
             explodeOnContact: true,
             timerSecs: 30,

@@ -1,4 +1,4 @@
-import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource } from "pixi.js";
+import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource, Container } from "pixi.js";
 import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
@@ -25,7 +25,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
 
     priority = UPDATE_PRIORITY.NORMAL;
 
-    constructor(sprite: Sprite, body: RapierPhysicsObject, gameWorld: GameWorld, public readonly opts: Opts) {
+    constructor(sprite: Sprite, body: RapierPhysicsObject, gameWorld: GameWorld, private readonly parent: Container, protected readonly opts: Opts) {
         super(sprite, body, gameWorld);
         this.gameWorld.addBody(this, body.collider);
         if (opts.autostartTimer) {
@@ -63,7 +63,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
         for (const element of explosionCollidesWith) {
             element.onDamage?.(point, this.opts.explosionRadius);
         }
-        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
+        this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
             shrapnelMax: 35,
             shrapnelMin: 15,
             hue: this.opts.explosionHue ?? 0xffffff,

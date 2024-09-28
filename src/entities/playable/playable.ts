@@ -1,12 +1,13 @@
 import { Point, Sprite, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { add, Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
+import { Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity } from "../entity";
 import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle } from "../../mixins/styles";
+import { Viewport } from "pixi-viewport";
 
 
 interface Opts {
@@ -45,7 +46,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.healthChangeTensionTimer = HEALTH_TENSION_MS;
     }
 
-    constructor(sprite: Sprite, body: RapierPhysicsObject, position: Coordinate, world: GameWorld, private readonly wormIdent: WormInstance, private readonly opts: Opts) {
+    constructor(sprite: Sprite, body: RapierPhysicsObject, world: GameWorld, protected parent: Viewport, private readonly wormIdent: WormInstance, private readonly opts: Opts) {
         super(sprite, body, world);
         this.renderOffset = new Point(4, 1);
         const {fg} = teamGroupToColorSet(wormIdent.team.group);
@@ -142,7 +143,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
                 element.onDamage(point, this.opts.explosionRadius);
             }
         }
-        this.gameWorld.addEntity(Explosion.create(this.gameWorld.viewport, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), this.opts.explosionRadius, {
+        this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), this.opts.explosionRadius, {
             shrapnelMax: 35,
             shrapnelMin: 15,
         }));

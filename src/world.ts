@@ -117,8 +117,11 @@ export class GameWorld {
         return { body, collider };
     }
 
-    public addBody<T extends IPhysicalEntity>(entity: T, collider: Collider, ...additional: Collider[]) {
-        [collider, ...additional].forEach(collider => {
+    public addBody<T extends IPhysicalEntity>(entity: T, ...colliders: Collider[]) {
+        if (colliders.length === 0) {
+            throw Error('Must provide at least one collider');
+        }
+        colliders.forEach(collider => {
             if (this.bodyEntityMap.has(collider.handle)) {
                 console.warn(`Tried to add collider entity twice to game world`, collider.handle, entity);
                 return;

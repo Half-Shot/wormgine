@@ -1,16 +1,15 @@
-import { Container, Sprite, Texture } from 'pixi.js';
-import { IPhysicalEntity } from '../entity';
+import {  Sprite, Texture } from 'pixi.js';
 import { IWeaponDefiniton } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
-import { ActiveEvents, ColliderDesc, KinematicCharacterController, RigidBodyDesc, Vector, Vector2 } from "@dimforge/rapier2d-compat";
+import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from '../../utils/coodinate';
-import { add, mult } from '../../utils';
 import { AssetPack } from '../../assets';
 import { PlayableEntity } from './playable';
-import { WormIdentity, WormInstance } from '../../logic/teams';
+import { WormInstance } from '../../logic/teams';
 import { calculateMovement } from '../../movementController';
+import { Viewport } from 'pixi-viewport';
 
 enum WormState {
     Idle = 0,
@@ -21,6 +20,8 @@ enum WormState {
 }
 
 type FireWeaponFn = (worm: Worm, definition: IWeaponDefiniton, duration: number) => void;
+
+const maxWormStep = new MetersValue(0.2);
 
 
 /**
@@ -40,8 +41,8 @@ export class Worm extends PlayableEntity {
     private currentWeapon: IWeaponDefiniton = WeaponGrenade;
     private state: WormState;
 
-    static create(parent: Container, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireWeaponFn) {
-        const ent = new Worm(position, world, wormIdent, onFireWeapon);
+    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireWeaponFn) {
+        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
@@ -53,7 +54,7 @@ export class Worm extends PlayableEntity {
         return this.physObject.body.translation();
     }
 
-    private constructor(position: Coordinate, world: GameWorld, wormIdent: WormInstance, private readonly onFireWeapon: FireWeaponFn) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireWeaponFn) {
         const sprite = new Sprite(Worm.texture);
         sprite.anchor.set(0.5, 0.5);
         const body = world.createRigidBodyCollider(
@@ -63,7 +64,7 @@ export class Worm extends PlayableEntity {
             .setSolverGroups(Worm.collisionBitmask),
             RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY).lockRotations()
         );
-        super(sprite, body, position, world, wormIdent, {
+        super(sprite, body, world, parent, wormIdent, {
             explosionRadius: new MetersValue(5),
             damageMultiplier: 5,
         });
@@ -117,7 +118,7 @@ export class Worm extends PlayableEntity {
         // Attempt to move to the left or right by 3 pixels
         const movementMod = 0.06;
         const moveMod = new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
-        const move = calculateMovement(this.physObject, moveMod, this.gameWorld);
+        const move = calculateMovement(this.physObject, moveMod, maxWormStep, this.gameWorld);
         this.physObject.body.setTranslation(move, false);
     }
 

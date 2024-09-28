@@ -44,12 +44,12 @@ export class Firework extends TimedExplosive {
     priority = UPDATE_PRIORITY.LOW;
 
     static create(parent: Container, world: GameWorld, position: Coordinate) {
-        const ent = new Firework(position, world);
+        const ent = new Firework(position, world, parent);
         parent.addChild(ent.sprite, ent.wireframe.renderable, ent.gfx);
         return ent;
     }
 
-    private constructor(position: Coordinate, world: GameWorld) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Container) {
         const sprite = new Sprite(Firework.texture);
         sprite.scale.set(0.15);
         sprite.anchor.set(0.5);
@@ -76,7 +76,7 @@ export class Firework extends TimedExplosive {
             );
     
         sprite.position = body.body.translation();
-        super(sprite, body, world, {
+        super(sprite, body, world, parent, {
             explosionRadius: new MetersValue(4),
             explodeOnContact: true,
             explosionHue: primaryColor,
