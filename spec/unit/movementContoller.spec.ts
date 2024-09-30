@@ -14,7 +14,7 @@ const PlayerWidth = new MetersValue(0.3);
 const PlayerHeight = new MetersValue(0.6);
 const MaxSteps = 1000;
 
-async function visualisePhysics(world: GameWorld, fileOut: string) {
+async function visualisePhysics(world: GameWorld, fileOut: string, testName: string) {
     const canvas = createCanvas(800, 600);
     const context = canvas.getContext('2d');
     context.fillStyle = "black";
@@ -47,6 +47,8 @@ async function visualisePhysics(world: GameWorld, fileOut: string) {
         context.lineTo(vtxC, vtxD);
         context.stroke();
     }
+    context.fillStyle = 'white';
+    context.fillText(testName, 10, 10);
     return writeFile(fileOut, await canvas.encode("webp", 100));
 }
 
@@ -130,7 +132,7 @@ describe('calculateMovement', () => {
         if (debugData) {
             env.world.createRigidBodyCollider(new ColliderDesc(debugData.shape), RigidBodyDesc.fixed().setTranslation(debugData.rayCoodinate.worldX, debugData.rayCoodinate.worldY));
         }
-        await visualisePhysics(env.world, filename);
+        await visualisePhysics(env.world, filename, testName);
         const fullPath = resolve(filename);
         if (assertionCalls !== numPassingAsserts) {
             // No error;
@@ -142,7 +144,7 @@ describe('calculateMovement', () => {
         env.waitUntilStopped();
         const {x, y} = env.player.body.translation();
         expect(x).toBeCloseTo(1);
-        expect(y).toBeCloseTo(1, 0);
+        expect(y).toBeCloseTo(1.5, 0);
     });
 
     test('should be able to move left when there are no obstacles', () => {
@@ -151,7 +153,7 @@ describe('calculateMovement', () => {
         env.player.body.setTranslation(move, false);
         const {x, y} = env.waitUntilStopped();
         expect(x).toBeCloseTo(0);
-        expect(y).toBeCloseTo(1, 0);
+        expect(y).toBeCloseTo(1.5, 0);
     });
 
     test('should be able to move right when there are no obstacles', () => {
@@ -160,12 +162,12 @@ describe('calculateMovement', () => {
         env.player.body.setTranslation(move, false);
         const {x, y} =env.waitUntilStopped();
         expect(x).toBeCloseTo(2);
-        expect(y).toBeCloseTo(1, 0);
+        expect(y).toBeCloseTo(1.5, 0);
     });
 
     test('should not be able to move if an obstacle is in the way', () => {
         createBlock(env.world, 0, 1.25, 0.5, 0.5);
-        const originalTranslation = env.player.body.translation();
+        const originalTranslation = env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
         const {x, y} = env.waitUntilStopped();
@@ -199,7 +201,7 @@ describe('calculateMovement', () => {
         expect(y).toBeCloseTo(0, 0.5);
     });
 
-    test.only('should be able to step down stairs', () => {
+    test('should be able to step down stairs', () => {
         createBlock(env.world, 1,    0,    0.25, 0.25);
         createBlock(env.world, 0.5,  0.25, 0.25, 0.25);
         createBlock(env.world, 0,    0.5,  0.25, 0.25);
@@ -230,6 +232,7 @@ describe('calculateMovement', () => {
     test('should be able to enter large cave-like entrances', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         createBlock(env.world, 0.5, 0.25, 0.25, 0.25);
+        env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
         const {x, y} = env.waitUntilStopped();

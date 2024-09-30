@@ -12,6 +12,7 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     const move = mult(add(
         currentTranslation,
         movement,
+        // TODO: Mutiply by a scaling factor?
     ), { x: 1, y: 1 });
 
     const {y: objHalfHeight, x: objHalfWidth } = (physObject.collider.shape as Cuboid).halfExtents;
@@ -19,11 +20,11 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     const rayCoodinate = new Coordinate(
         move.x,
         // Increase the bounds to the steppy position.
-        move.y  - maxSteppy.value,
+        move.y - (maxSteppy.value / 2),
     );
 
     // Increase by steppy amount.
-    const initialCollisionShape = new Cuboid(objHalfWidth, objHalfHeight - maxSteppy.value);
+    const initialCollisionShape = new Cuboid(objHalfWidth, objHalfHeight + maxSteppy.value);
     debugData = { rayCoodinate, shape: initialCollisionShape };
 
     const collides = world.checkCollisionShape(rayCoodinate, initialCollisionShape, physObject.collider);
@@ -32,6 +33,7 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
 
     // No collisions, go go go!
     if (!highestCollider) {
+        console.log('No collision');
         return move;
     }
 
