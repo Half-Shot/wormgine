@@ -6,9 +6,11 @@ interface GameRules {
 
 export class InternalTeam implements Team {
     public readonly worms: WormInstance[];
+    private nextWormStack: WormInstance[];
 
     constructor(private readonly team: Team, onHealthChange: () => void) {
         this.worms = team.worms.map(w => new WormInstance(w, team, onHealthChange));
+        this.nextWormStack = [...this.worms];
     }
 
     get name() {
@@ -26,6 +28,17 @@ export class InternalTeam implements Team {
     get maxHealth() {
         return this.worms.map(w => w.maxHealth).reduce((a,b) => a + b);
     }
+    
+    public popNextWorm(): WormInstance {
+        // Clear any dead worms
+        this.nextWormStack = this.nextWormStack.filter(w => w.health > 0);
+        const [next] = this.nextWormStack.splice(0, 1);
+        if (!next) {
+            throw Error('Exhausted all worms from team');
+        }
+        this.nextWormStack.push(next);
+        return next;
+    }
 }
 export class GameState {
     static getTeamMaxHealth(team: Team) {
@@ -40,10 +53,10 @@ export class GameState {
         return Math.ceil(team.worms.map(w => w.health).reduce((a,b) => a + b) / team.worms.map(w => w.maxHealth).reduce((a,b) => a + b) * 100)/100;
     }
 
-    private currentTeam: InternalTeam;
+    private currentTeam?: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
-    private currentRoundTime = 42000;
+   private currentRoundTime = 42000;
 
     private stateIteration = 0;
 
@@ -58,8 +71,12 @@ export class GameState {
         this.teams = teams.map((team) => new InternalTeam(team, () => {
             this.stateIteration++;
         }));
-        this.nextTeamStack = [...this.teams.slice(1)];
-        this.currentTeam = this.teams[0];
+        for (const team of this.teams) {
+            if (team.health === 0) {
+                throw Error('Team has no health!');
+            }
+        }
+        this.nextTeamStack = [...this.teams];
     }
 
     public getTeamByIndex(index: number) {
@@ -78,7 +95,16 @@ export class GameState {
         return this.stateIteration;
     }
 
-    public advanceRound(): {nextTeam: InternalTeam}|{winningTeams: InternalTeam[]} {
+    public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance}|{winningTeams: InternalTeam[]} {
+        if (!this.currentTeam) {
+            const [firstTeam] = this.nextTeamStack.splice(0, 1);
+            this.currentTeam = firstTeam;
+            return {
+                nextTeam: this.currentTeam,
+                // Team *should* have at least one healthy worm.
+                nextWorm: this.currentTeam.popNextWorm(),
+            }
+        }
         const previousTeam = this.currentTeam;
         this.nextTeamStack.push(previousTeam);
 
@@ -106,6 +132,8 @@ export class GameState {
 
         return {
             nextTeam: this.currentTeam,
+            // We should have already validated that this team has healthy worms.
+            nextWorm: this.currentTeam.popNextWorm(),
         }
     }
 

@@ -1,3 +1,5 @@
+import { ColorSource } from "pixi.js";
+
 export interface WormIdentity {
     name: string;
     health: number;
@@ -20,7 +22,7 @@ export interface Team {
     // player
 }
 
-export function teamGroupToColorSet(group: TeamGroup) {
+export function teamGroupToColorSet(group: TeamGroup): {bg: ColorSource, fg: ColorSource } {
     switch (group) {
         case TeamGroup.Red:
             return { bg: 0xCC3333, fg: 0xBB5555 };
