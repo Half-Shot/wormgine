@@ -24,7 +24,6 @@ const HEALTH_TENSION_MS = 75;
 export abstract class PlayableEntity extends PhysicsEntity {
     priority = UPDATE_PRIORITY.LOW;
 
-    private wasMoving = true;
     private nameText: Text;
     private healthText: Text;
     protected healthTextBox: Graphics;
@@ -46,7 +45,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.healthChangeTensionTimer = HEALTH_TENSION_MS;
     }
 
-    constructor(sprite: Sprite, body: RapierPhysicsObject, world: GameWorld, protected parent: Viewport, private readonly wormIdent: WormInstance, private readonly opts: Opts) {
+    constructor(sprite: Sprite, body: RapierPhysicsObject, world: GameWorld, protected parent: Viewport, public readonly wormIdent: WormInstance, private readonly opts: Opts) {
         super(sprite, body, world);
         this.renderOffset = new Point(4, 1);
         const {fg} = teamGroupToColorSet(wormIdent.team.group);
@@ -85,8 +84,9 @@ export abstract class PlayableEntity extends PhysicsEntity {
             return;
         }
         if (!this.healthTextBox.destroyed) {
+            // Nice and simple parenting :Z
             this.healthTextBox.rotation = 0;
-            this.healthTextBox.position.set(this.sprite.x - 50, this.sprite.y - 100);
+            this.healthTextBox.position.set((this.sprite.x - (this.healthTextBox.width/2)) + (this.sprite.width/2), this.sprite.y - 100);
         }
 
         if (this.healthChangeTensionTimer) {
@@ -125,6 +125,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
             if (this.visibleHealth > this.health) {
                 this.visibleHealth--;
                 this.healthText.text = this.visibleHealth;
+                this.healthText.position.set((this.nameText.width/2) - this.healthText.width/2, 34);
             }
 
             // If we are dead, set a new timer to decrease to explode after a small delay.
@@ -170,7 +171,6 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.health = Math.max(0, this.health - damage);
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag));
         this.physObject.body.applyImpulse(force, true)
-        this.wasMoving = true;
     }
 
     public destroy(): void {
