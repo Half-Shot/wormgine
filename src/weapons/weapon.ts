@@ -7,8 +7,20 @@ export enum IWeaponCode {
     Grenade,
 }
 
+export interface FireOpts {
+    duration?: number,
+    timer?: number,
+}
+
 export interface IWeaponDefiniton {
     code: IWeaponCode,
-    maxDuration: number,
-    fireFn: (parent: Container, world: GameWorld, worm: Worm, duration: number) => IGameEntity,
+    /**
+     * How long can the fire button be held down for?
+     */
+    maxDuration?: number,
+    /**
+     * Can the timer on the weapon be adjusted?
+     */
+    timerAdjustable?: boolean,
+    fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IGameEntity,
 }
