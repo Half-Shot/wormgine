@@ -3,6 +3,7 @@ import globalFlags from "../flags";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { PIXELS_PER_METER } from "../world";
 import { Viewport } from "pixi-viewport";
+import { debugData } from "../movementController";
 
 const PHYSICS_SAMPLES = 60;
 const FRAME_SAMPLES = 60;
@@ -107,6 +108,16 @@ export class GameDebugOverlay {
                 cls[i * 8 + 3],
             ])
             this.rapierGfx.setStrokeStyle({width: 1, color }).moveTo(vtxA, vtxB).lineTo(vtxC, vtxD).stroke();
+        }
+
+        if (debugData) {
+            const castWidth = debugData.shape.halfExtents.x * PIXELS_PER_METER;
+            const castHeight = debugData.shape.halfExtents.y * PIXELS_PER_METER;
+    
+            this.rapierGfx.setStrokeStyle({
+                color: "green",
+                width: 3
+            }).rect(debugData.rayCoodinate.screenX - castWidth, debugData.rayCoodinate.screenY - castHeight, castWidth*2, castHeight*2).stroke();  
         }
     }
 }
