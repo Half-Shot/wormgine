@@ -32,6 +32,11 @@ export class Coordinate {
         return new Coordinate(screenX / PIXELS_PER_METER, screenY / PIXELS_PER_METER);
     }
 
+
+    static fromWorld(vec: Vector2) {
+        return new Coordinate(vec.x, vec.y);
+    }
+
     constructor(public worldX: number, public worldY: number) { }
 
 
