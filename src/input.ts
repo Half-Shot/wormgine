@@ -5,15 +5,26 @@ export enum InputKind {
     MoveRight,
     Fire,
     ToggleDebugView,
-    DebugSwitchWeapon
+    DebugSwitchWeapon,
+    WeaponTimer1,
+    WeaponTimer2,
+    WeaponTimer3,
+    WeaponTimer4,
+    WeaponTimer5,
 }
 
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowLeft": InputKind.MoveLeft,
     "ArrowRight": InputKind.MoveRight,
-    "Space": InputKind.Fire,
+    // I LOVE THE CONSISTENCY HERE BROWSERS
+    " ": InputKind.Fire,
     "F9": InputKind.ToggleDebugView,
     "s": InputKind.DebugSwitchWeapon,
+    "1": InputKind.WeaponTimer1,
+    "2": InputKind.WeaponTimer2,
+    "3": InputKind.WeaponTimer3,
+    "4": InputKind.WeaponTimer4,
+    "5": InputKind.WeaponTimer5,
 });
 
 class Controller extends EventEmitter {
