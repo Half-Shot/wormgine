@@ -1,24 +1,41 @@
-import { Ball, Cuboid, Shape, ShapeType, Vector2 } from "@dimforge/rapier2d-compat";
+import { Collider, Cuboid, Vector2 } from "@dimforge/rapier2d-compat";
 import { GameWorld, RapierPhysicsObject } from "./world";
 import { add, Coordinate, MetersValue, mult } from "./utils";
 
 export let debugData: {
     rayCoodinate: Coordinate,
-    shape: Shape,
+    shape: Cuboid,
 };
 
+export function getGroundDifference(colliderA: Collider, colliderB: Collider) {
+    const [higher,lower] = [colliderA, colliderB].sort((a,b) => b.translation().y - a.translation().y);
+    const higherBottom = higher.translation().y + (higher.shape as Cuboid).halfExtents.y;
+    const lowerTop = lower.translation().y + (lower.shape as Cuboid).halfExtents.y;
+    return lowerTop - higherBottom;
+}
+
 export function calculateMovement(physObject: RapierPhysicsObject, movement: Vector2, maxSteppy: MetersValue, world: GameWorld): Vector2 {
-    const currentTranslation = physObject.collider.translation();
-    const move = mult(add(
-        currentTranslation,
-        movement,
+    const currentTranslation = physObject.body.translation();
+    // Offset from current shape
+    if (physObject.collider.shape instanceof Cuboid === false) {
+        throw Error('calculateMovement only supports cuboid objects');
+    }
+    const currentShape = physObject.collider.shape as Cuboid;
+    const move = add(mult(
+        add(
+            currentTranslation,
+            movement,
+        ),
         // TODO: Mutiply by a scaling factor?
-    ), { x: 1, y: 1 });
+        { x: 1, y: 1 }
+        // Add shape extents.
+    ), { y: 0, x: 0 });
 
     const {y: objHalfHeight, x: objHalfWidth } = (physObject.collider.shape as Cuboid).halfExtents;
     // Get the extremity.
     const rayCoodinate = new Coordinate(
-        move.x,
+        // Coodinate check in advance of the current shape
+        move.x + (movement.x < 0 ? currentShape.halfExtents.x*-1.5 : currentShape.halfExtents.x*1.5),
         // Increase the bounds to the steppy position.
         move.y - (maxSteppy.value / 2),
     );
@@ -28,6 +45,7 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     debugData = { rayCoodinate, shape: initialCollisionShape };
 
     const collides = world.checkCollisionShape(rayCoodinate, initialCollisionShape, physObject.collider);
+    console.log(collides);
     // Pop the highest collider
     const highestCollider = collides.sort((a,b) => a.collider.translation().y-b.collider.translation().y)[0];
 
@@ -37,7 +55,7 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
         return move;
     }
 
-    const shape = highestCollider.collider.shape;
+    // const shape = highestCollider.collider.shape;
     const bodyT = highestCollider.collider.translation();
     const stepSize = currentTranslation.y - bodyT.y;
     console.log({stepSize, currentTranslation: currentTranslation.y, bodyT: bodyT.y})
@@ -45,19 +63,36 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
         return currentTranslation;
     }
     // TODO: Support more types.
-    const halfHeight = shape.type === ShapeType.Cuboid ? (shape as Cuboid).halfExtents.y : (shape as Ball).radius;
+    // const halfHeight = shape.type === ShapeType.Cuboid ? (shape as Cuboid).halfExtents.y : (shape as Ball).radius;
 
     // Step
-    const potentialX = bodyT.x;
-    // Crop a bit off the top to avoid colliding with it.
-    const potentialY = bodyT.y - halfHeight - objHalfHeight - 0.01;
-    
-    // Check step is safe
-    debugData = { rayCoodinate: new Coordinate(potentialX, potentialY), shape: physObject.collider.shape }
-    if (world.checkCollisionShape(new Coordinate(potentialX, potentialY), physObject.collider.shape, physObject.collider).length){
+    const differential = getGroundDifference(physObject.collider, highestCollider.collider);
+    if (differential >= 0.05) {
         return currentTranslation;
     }
-    move.y = potentialY;
-    move.x = potentialX;
+    
     return move;
+
+    // const newMove = new Coordinate(
+    //     bodyT.x,
+    //     // Crop a bit off the top to avoid colliding with it.
+    //     bodyT.y - halfHeight - objHalfHeight - 0.01,
+    // )
+    // const newCollisionShape = new Cuboid(
+    //     objHalfWidth,
+    //     objHalfHeight,
+    // );
+    // console.log('wants to move to', highestCollider.collider.handle, highestCollider.collider.translation());
+    
+    // Check step is safe
+    // console.log(debugData);
+    // debugData = { rayCoodinate: newMove, shape: initialCollisionShape }
+    // console.log(debugData);
+    // const [secondaryCollision] = world.checkCollisionShape(newMove, newCollisionShape, highestCollider.collider);
+    // if (secondaryCollision){
+    //     //console.log('Collision!', secondaryCollision.collider.handle, secondaryCollision.collider.translation());
+    //     return currentTranslation;
+    // }
+    // console.log('Moved');
+    // return newMove.toWorldVector();
 }

@@ -59,7 +59,7 @@ function constructTestEnv(): { world: GameWorld, player: RapierPhysicsObject, ti
     const world = new GameWorld(rapierWorld, ticker);
     const player = world.createRigidBodyCollider(
         ColliderDesc.cuboid(PlayerWidth.value / 2, PlayerHeight.value / 2),
-        RigidBodyDesc.dynamic().setTranslation(1, -3).lockRotations()
+        RigidBodyDesc.dynamic().setTranslation(1, -1).lockRotations()
     );
     // Create floor
     world.createRigidBodyCollider(
@@ -232,6 +232,16 @@ describe('calculateMovement', () => {
     test('should be able to enter large cave-like entrances', () => {
         createBlock(env.world, 0.5, 1.5, 0.25, 0.25);
         createBlock(env.world, 0.5, 0.25, 0.25, 0.25);
+        env.waitUntilStopped();
+        const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
+        env.player.body.setTranslation(move, false);
+        const {x, y} = env.waitUntilStopped();
+        expect(x).toBeCloseTo(0.5, 0.5);
+        expect(y).toBeCloseTo(1, 0.5);
+    });
+    test.only('should fall back to lower blocks if there is clearance', () => {
+        createBlock(env.world, 0.15, 1.25, 0.15, 0.15);
+        createBlock(env.world, 0.5, 1.55, 0.15, 0.15);
         env.waitUntilStopped();
         const move = calculateMovement(env.player, new Vector2(-0.5, 0), maxStep, env.world);
         env.player.body.setTranslation(move, false);
