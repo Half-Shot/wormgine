@@ -25,8 +25,8 @@ export class Grenade extends TimedExplosive {
     private static bounceSoundsLight: Sound;
     private static boundSoundHeavy: Sound;
 
-    static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number, y: number}) {
-        const ent = new Grenade(position, initialForce, world, parent);
+    static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number, y: number}, timerSecs = 3) {
+        const ent = new Grenade(position, initialForce, world, parent, timerSecs);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
@@ -38,7 +38,7 @@ export class Grenade extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: Coordinate, initialForce: { x: number, y: number}, world: GameWorld, parent: Container) {
+    private constructor(position: Coordinate, initialForce: { x: number, y: number}, world: GameWorld, parent: Container, timerSecs: number) {
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5);
         sprite.anchor.set(0.5);
@@ -58,7 +58,7 @@ export class Grenade extends TimedExplosive {
         super(sprite, body, world, parent, {
             explosionRadius: new MetersValue(3),
             explodeOnContact: false,
-            timerSecs: 2.5,
+            timerSecs,
             autostartTimer: true,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
@@ -72,6 +72,7 @@ export class Grenade extends TimedExplosive {
             }
         });
         this.sprite.addChild(this.timerText);
+        this.body.setLinvel(initialForce, true);
     }
 
     update(dt: number): void {
