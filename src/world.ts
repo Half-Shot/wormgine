@@ -162,7 +162,6 @@ export class GameWorld {
             0,
             shape,
             (collider) => {
-                console.log("Got collier", collider.handle, ownCollier.handle);
                 if (collider.handle !== ownCollier.handle) {
                     const entity = this.bodyEntityMap.get(collider.handle);
                     if (entity) {
