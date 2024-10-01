@@ -7,10 +7,12 @@ import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/ra
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { PlayableEntity } from './playable';
-import { WormInstance } from '../../logic/teams';
+import { teamGroupToColorSet, WormInstance } from '../../logic/teams';
 import { calculateMovement } from '../../movementController';
 import { Viewport } from 'pixi-viewport';
 import { magnitude } from '../../utils';
+import { GameStateOverlay } from '../../overlays/gameStateOverlay';
+import { templateRandomText, TurnEndTextFall, TurnEndTextMiss, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
 
 export enum WormState {
     Idle = 0,
@@ -26,7 +28,8 @@ export enum EndTurnReason {
     FallDamage = 1,
     FiredWeaponNoHit = 2,
     FiredWeaponAndHit = 3,
-    FiredWeaponAndKilled = 3,
+    FiredWeaponAndKilled = 4,
+    Sank = 5,
 }
 
 
@@ -45,8 +48,8 @@ export class Worm extends PlayableEntity {
     }
 
     private static texture: Texture;
-    private static impactDamageMultiplier = 50;
-    private static minImpactForDamage = 0.05;
+    private static impactDamageMultiplier = 0.75;
+    private static minImpactForDamage = 8;
     private static offsetFromGroundM =  0.04;
 
     private fireWeaponDuration = 0;
@@ -58,8 +61,8 @@ export class Worm extends PlayableEntity {
     private weaponTimerSecs = 3;
     public fireAngle = 0;
 
-    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn) {
-        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon);
+    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, gameOverlay?: GameStateOverlay) {
+        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, gameOverlay);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
@@ -79,7 +82,7 @@ export class Worm extends PlayableEntity {
         return this.turnEndedReason;
     }
 
-    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: GameStateOverlay) {
         const sprite = new Sprite(Worm.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
@@ -102,6 +105,10 @@ export class Worm extends PlayableEntity {
 
     onWormSelected() {
         this.state = WormState.Idle;
+        this.toaster?.addNewToast(templateRandomText(TurnStartText, {
+            WormName: this.wormIdent.name,
+            TeamName: this.wormIdent.team.name,
+        }), 3000, teamGroupToColorSet(this.wormIdent.team.group).fg);
         Controller.on('inputBegin', this.onInputBegin);
         Controller.on('inputEnd', this.onInputEnd);
     }
@@ -118,6 +125,7 @@ export class Worm extends PlayableEntity {
             this.onBeginFireWeapon();
         }
         if (this.currentWeapon.timerAdjustable) {
+            const oldTime = this.weaponTimerSecs;
             switch(inputKind) {
                 case InputKind.WeaponTimer1:
                     this.weaponTimerSecs = 1;
@@ -134,6 +142,11 @@ export class Worm extends PlayableEntity {
                 case InputKind.WeaponTimer5:
                     this.weaponTimerSecs = 5;
                     break;
+            }
+            if (this.weaponTimerSecs !== oldTime) {
+                this.toaster?.addNewToast(templateRandomText(WeaponTimerText, {
+                    Time: this.weaponTimerSecs.toString(),
+                }), 1250);
             }
         }
     }
@@ -213,7 +226,6 @@ export class Worm extends PlayableEntity {
     // }
 
     onBeginFireWeapon() {
-        console.log('BARK!');
         this.state = WormState.Firing;
     }
 
@@ -230,6 +242,10 @@ export class Worm extends PlayableEntity {
             duration,
             timer: this.weaponTimerSecs,
         });
+        this.toaster?.addNewToast(templateRandomText(TurnEndTextMiss, {
+            WormName: this.wormIdent.name,
+            TeamName: this.wormIdent.team.name,
+        }), 2000);
     }
 
     update(dt: number): void {
@@ -241,12 +257,12 @@ export class Worm extends PlayableEntity {
             // Do nothing.
             return;
         }
-        const falling = this.body.linvel().y > 0.05;
+        const falling = !this.isSinking && this.body.linvel().y > 0.05;
 
-        this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}`);
-        //this.wireframe.setDebugText(`Worm\n${this.physObject.body.isEnabled() ? "static" : "dynamic"}\nVelocity: ${this.physObject.body.linvel().x.toPrecision(2) } ${this.physObject.body.linvel().y.toPrecision(2)}`);
+        this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}, velocity: ${this.body.linvel().y} ${this.impactVelocity}` );
 
         if (this.state === WormState.InMotion) {
+            this.impactVelocity = Math.max(magnitude(this.body.linvel()), this.impactVelocity);
             if (!this.body.isMoving()) {
                 // Stopped moving, must not be in motion anymore.
                 this.state = WormState.Idle;
@@ -256,6 +272,10 @@ export class Worm extends PlayableEntity {
                     const damage = this.impactVelocity*Worm.impactDamageMultiplier;
                     this.health -= damage;
                     this.state = WormState.Inactive;
+                    this.toaster?.addNewToast(templateRandomText(TurnEndTextFall, {
+                        WormName: this.wormIdent.name,
+                        TeamName: this.wormIdent.team.name,
+                    }), 2000);
                     this.turnEndedReason = EndTurnReason.FallDamage;
                 }
                 this.impactVelocity = 0;
@@ -270,7 +290,6 @@ export class Worm extends PlayableEntity {
             }
         } else if (falling) {
             this.state = WormState.InMotion;
-            this.impactVelocity = Math.max(magnitude(this.body.linvel()), this.impactVelocity);
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
             this.onMove(this.state);
         } // else, we're idle and not currently moving.
@@ -278,5 +297,20 @@ export class Worm extends PlayableEntity {
 
     destroy(): void {
         super.destroy();
+        // XXX: This might need to be dead.
+        this.state = WormState.Inactive;
+        if (this.isSinking) {
+            this.toaster?.addNewToast(templateRandomText(WormDeathSinking, {
+                WormName: this.wormIdent.name,
+                TeamName: this.wormIdent.team.name,
+            }), 3000);
+            // Sinking death
+        } else if (this.health === 0) {
+            // Generic death
+            this.toaster?.addNewToast(templateRandomText(WormDeathGeneric, {
+                WormName: this.wormIdent.name,
+                TeamName: this.wormIdent.team.name,
+            }), 3000);
+        }
     }
 }

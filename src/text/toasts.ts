@@ -17,12 +17,43 @@ export const TurnEndTextMiss = [
     "$TeamName may be entering their pacifist arc."
 ];
 
+export const TeamKilledText = [
+    "$TeamName has bitten the dusty dusty dirt",
+    "$TeamName is pushing up the daises",
+    "With $WormName gone, $TeamName is no more",
+    "BREAKING NEWS: $TeamName is history",
+];
+
+export const TeamWinnerText = [
+    "$TeamName has won. This calls for a celebration!",
+];
+
+export const GameDrawText = [
+    "Oh what, a draw? How boring",
+    "You could have at least let the other team win? This sucks"
+];
+
+
 export const TurnEndTextOther = [
     "The developer failed to write a description here. How terrible!",
 ];
 
+export const WeaponTimerText = [
+    "Timer adjusted to $Time seconds.",
+];
 
-export function templateRandomText(options: string[], parameters: Record<string, string>) {
+export const WormDeathSinking = [
+    "$WormName went for a one way scuba dive.",
+    "$WormName is fish bait now.",
+    "$WormName discovered that they do not have gills.",
+    "Sadly, $WormName did not return for air."
+];
+
+export const WormDeathGeneric = [
+    "$WormName is providing to the funeral industry now.",
+]
+
+export function templateRandomText(options: string[], parameters: Record<string, string> = {}) {
     let chooseOption = options[Math.floor(Math.random()*options.length)];
     for (const [key, value] of Object.entries(parameters)) {
         chooseOption = chooseOption.replaceAll("$" + key, value);

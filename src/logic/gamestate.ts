@@ -126,6 +126,11 @@ export class GameState {
                 return { 
                     winningTeams: this.getActiveTeams(),
                 }
+            } else if (this.currentTeam.health === 0) {
+                // This is a draw
+                return {
+                    winningTeams: [],
+                }
             }
         }
         this.stateIteration++;

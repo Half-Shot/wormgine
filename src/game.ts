@@ -9,11 +9,14 @@ import { GameDebugOverlay } from "./overlays/debugOverlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { readAssetsForEntities } from "./entities";
+import { Team } from './logic/teams';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
 
-
+export interface GoToMenuContext {
+    winningTeams?: Team[],
+}
 export class Game {
     public readonly viewport: Viewport;
     private readonly rapierWorld: RAPIER.World; 
@@ -24,14 +27,14 @@ export class Game {
         return this.viewport;
     }
 
-    public static async create(window: Window, level: string): Promise<Game> {
+    public static async create(window: Window, level: string, onGoToMenu: (context: GoToMenuContext) => void): Promise<Game> {
         await RAPIER.init();
         const pixiApp = new Application();
         await pixiApp.init({ resizeTo: window, preference: 'webgl' });
-        return new Game(pixiApp, level);
+        return new Game(pixiApp, level, onGoToMenu);
     }
 
-    constructor(public readonly pixiApp: Application, public readonly level: string) {
+    constructor(public readonly pixiApp: Application, public readonly level: string, public readonly onGoToMenu: (context: GoToMenuContext) => void) {
         // TODO: Set a sensible static width/height and have the canvas pan it.
         this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
         this.rapierGfx = new Graphics();
@@ -57,6 +60,11 @@ export class Game {
             .decelerate()
             .drag()
         this.viewport.zoom(8);
+    }
+
+    public goToMenu(context: GoToMenuContext) {
+        this.pixiApp.destroy();
+        this.onGoToMenu(context);
     }
 
     public async loadResources() {
