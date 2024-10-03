@@ -30,7 +30,17 @@ export default async function runScenario(game: Game) {
             maxHealth: 100,
             health: 100,
         }]
-    }]);
+    },{
+        name: "The Whales",
+        group: TeamGroup.Blue,
+        worms: [{
+            name: "Welsh boy",
+            maxHealth: 100,
+            health: 100,
+        }]
+    }], {
+        winWhenOneGroupRemains: true,
+    });
 
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
     await world.addEntity(terrain);
@@ -45,15 +55,26 @@ export default async function runScenario(game: Game) {
             MetersValue.fromPixels(worldHeight), 
         world)
     );    water.addToWorld(parent, world);
-    const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(200,105), gameState.getTeamByIndex(0).worms[0], (worm, definition, opts) => {
-        const newProjectile = definition.fireFn(parent, world, worm, opts);
-        world.addEntity(newProjectile);
-    }, overlay));
 
+    const wormInstances = new Map<string, Worm>();
 
-    let endOfRoundWaitDuration: number|null = 0;
+    let i = 300;
+    for (const team of gameState.getActiveTeams()) {
+        for (const wormInstance of team.worms) {
+            i += 200;
+            const wormEnt = world.addEntity(
+                await Worm.create(parent, world, Coordinate.fromScreen(400 + i,105), wormInstance, async (worm, definition, opts) => {
+                const newProjectile = definition.fireFn(parent, world, worm, opts);
+                world.addEntity(newProjectile);
+                return await newProjectile.onFireResult;
+            }, overlay));
+            wormInstances.set(wormInstance.uuid, wormEnt);
+        }
+    }
+
+    let endOfRoundWaitDuration: number|null = null;
     let endOfGameFadeOut: number|null = null;
-    
+    let currentWorm: Worm|undefined;
 
     const roundHandlerFn = (dt: Ticker) => {
         if (endOfGameFadeOut !== null) {
@@ -64,11 +85,12 @@ export default async function runScenario(game: Game) {
             }
             return;
         }
-        if (worm.currentState !== WormState.Inactive) {
+        if (currentWorm && currentWorm.currentState !== WormState.Inactive) {
             return;
         }
         if (endOfRoundWaitDuration === null) {
             const nextState = gameState.advanceRound();
+            console.log('advancing', nextState);
             if ('winningTeams' in nextState) {
                 if (nextState.winningTeams.length) {
                     overlay.addNewToast(templateRandomText(TeamWinnerText, {
@@ -80,14 +102,20 @@ export default async function runScenario(game: Game) {
                 }
                 endOfGameFadeOut = 5000;
             } else {
+                currentWorm?.onEndOfTurn();
+                currentWorm = wormInstances.get(nextState.nextWorm.uuid);
                 // Turn just ended.
                 endOfRoundWaitDuration = 5000;
+                console.log(currentWorm);
             }
             return;
         }
         if (endOfRoundWaitDuration <= 0) {
-            worm.onWormSelected();
-            game.viewport.follow(worm.sprite);
+            if (!currentWorm) {
+                throw Error('Expected next worm');
+            }
+            currentWorm.onWormSelected();
+            game.viewport.follow(currentWorm.sprite);
             endOfRoundWaitDuration = null;
             return;
         }
