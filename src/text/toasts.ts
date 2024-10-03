@@ -10,12 +10,6 @@ export const TurnEndTextFall = [
     "Ouch, that's gotta hurt...their self esteem."
 ];
 
-export const TurnEndTextMiss = [
-    "Did $WormName forget their glasses?",
-    "Absolutely no idea what was meant to happen there...",
-    "$TeamName looking to disprove the the old saying about monkeys and typewriters",
-    "$TeamName may be entering their pacifist arc."
-];
 
 export const TeamKilledText = [
     "$TeamName has bitten the dusty dusty dirt",
@@ -53,6 +47,35 @@ export const WormDeathGeneric = [
     "$WormName is providing to the funeral industry now.",
 ]
 
+export const FireResultHitSelf = [
+    "Hmm, you probably didn't want to do that?",
+]
+export const FireResultKilledSelf = [
+    "$WormName has won the darwin award!.",
+]
+
+export const FireResultHitEnemy = [
+    "$WormName takes a chunk out of the enemy.",
+]
+
+export const FireResultKilledEnemy = [
+    "$WormName levels out the playing field.",
+]
+
+export const FireResultKilledOwnTeam = [
+    "$WormName appears to have gone colourblind.. that's *YOUR* team!",
+]
+
+export const FireResultHitOwnTeam = [
+    "$TeamName apparently is more interested in hurting themselves.",
+]
+
+export const FireResultMiss = [
+    "Did $WormName forget their glasses?",
+    "Absolutely no idea what was meant to happen there...",
+    "$TeamName looking to disprove the the old saying about monkeys and typewriters",
+    "$TeamName may be entering their pacifist arc."
+];
 export function templateRandomText(options: string[], parameters: Record<string, string> = {}) {
     let chooseOption = options[Math.floor(Math.random()*options.length)];
     for (const [key, value] of Object.entries(parameters)) {

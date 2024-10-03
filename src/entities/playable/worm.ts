@@ -1,5 +1,5 @@
-import {  Sprite, Texture } from 'pixi.js';
-import { FireOpts, IWeaponDefiniton } from '../../weapons/weapon';
+import { Sprite, Texture } from 'pixi.js';
+import { FireOpts, IWeaponDefiniton, WeaponFireResult } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
@@ -12,7 +12,7 @@ import { calculateMovement } from '../../movementController';
 import { Viewport } from 'pixi-viewport';
 import { magnitude } from '../../utils';
 import { GameStateOverlay } from '../../overlays/gameStateOverlay';
-import { templateRandomText, TurnEndTextFall, TurnEndTextMiss, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
+import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
 
 export enum WormState {
     Idle = 0,
@@ -20,22 +20,21 @@ export enum WormState {
     Firing = 2,
     MovingLeft = 3,
     MovingRight = 4,
-    Inactive = 5,
+    InactiveWaiting = 5,
+    Inactive = 6,
 }
 
 export enum EndTurnReason {
     TimerElapsed = 0,
     FallDamage = 1,
-    FiredWeaponNoHit = 2,
-    FiredWeaponAndHit = 3,
-    FiredWeaponAndKilled = 4,
-    Sank = 5,
+    FiredWeapon= 2,
+    Sank = 3,
 }
 
 
 const maxWormStep = new MetersValue(0.6);
 
-type FireFn = (worm: Worm, selectedWeapon: IWeaponDefiniton, opts: FireOpts) => void;
+type FireFn = (worm: Worm, selectedWeapon: IWeaponDefiniton, opts: FireOpts) => Promise<WeaponFireResult[]>;
 
 /**
  * Physical representation of a worm on the map. May be controlled.
@@ -188,8 +187,9 @@ export class Worm extends PlayableEntity {
     }
 
     onMove(moveState: WormState.MovingLeft|WormState.MovingRight) {
+        // TODO: Bind to tick time!!
         // Attempt to move to the left or right by 3 pixels
-        const movementMod = 0.05;
+        const movementMod = 0.03;
         const moveMod = new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
         const move = calculateMovement(this.physObject, moveMod, maxWormStep, this.gameWorld);
         this.physObject.body.setTranslation(move, false);
@@ -237,18 +237,46 @@ export class Worm extends PlayableEntity {
             return;
         }
         // TODO: Need a middle state for while the world is still active.
-        this.state = WormState.Inactive;
-        this.turnEndedReason = EndTurnReason.FiredWeaponNoHit;
+        this.state = WormState.InactiveWaiting;
+        this.turnEndedReason = EndTurnReason.FiredWeapon;
         const duration = this.fireWeaponDuration;
         this.fireWeaponDuration = 0;
         this.onFireWeapon(this, this.currentWeapon, {
             duration,
             timer: this.weaponTimerSecs,
-        });
-        this.toaster?.addNewToast(templateRandomText(TurnEndTextMiss, {
-            WormName: this.wormIdent.name,
-            TeamName: this.wormIdent.team.name,
-        }), 2000);
+        }).then((fireResult) => {
+            this.state = WormState.Inactive;
+            let randomTextSet: string[];
+            if (fireResult.includes(WeaponFireResult.KilledOwnTeam)) {
+                randomTextSet = FireResultKilledOwnTeam;
+            }
+            else if (fireResult.includes(WeaponFireResult.KilledSelf)) {
+                randomTextSet = FireResultKilledSelf;
+            }
+            else if (fireResult.includes(WeaponFireResult.KilledEnemy)) {
+                randomTextSet = FireResultKilledEnemy;
+            }
+            else if (fireResult.includes(WeaponFireResult.HitEnemy)) {
+                randomTextSet = FireResultHitEnemy;
+            }
+            else if (fireResult.includes(WeaponFireResult.HitOwnTeam)) {
+                randomTextSet = FireResultHitOwnTeam;
+            }
+            else if (fireResult.includes(WeaponFireResult.HitSelf)) {
+                randomTextSet = FireResultHitSelf;
+            }
+            else if (fireResult.includes(WeaponFireResult.NoHit)) {
+                randomTextSet = FireResultMiss;
+            } else {
+                // Unknown.
+                return;
+            }
+
+            this.toaster?.addNewToast(templateRandomText(randomTextSet, {
+                WormName: this.wormIdent.name,
+                TeamName: this.wormIdent.team.name,
+            }), 2000);
+        })
     }
 
     update(dt: number): void {

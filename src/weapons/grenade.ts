@@ -20,9 +20,8 @@ export const WeaponGrenade: IWeaponDefiniton = {
         }
         const forceComponent = opts.duration/2;
         const force = mult(new Vector2(1 * forceComponent, forceComponent), { x: modPos, y: -1});
-        console.log(force);
         // TODO: Refactor ALL OF THIS
         const position = Coordinate.fromWorld(add(worm.position, {x: modPos, y: -0.3})); 
-        return Grenade.create(parent, world, position, force, opts.timer);
+        return Grenade.create(parent, world, position, force, opts.timer, worm.wormIdent);
     },
 }

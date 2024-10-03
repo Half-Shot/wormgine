@@ -9,6 +9,7 @@ import { magnitude } from '../../utils';
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { DefaultTextStyle } from '../../mixins/styles';
+import { WormInstance } from '../../logic/teams';
 
 
 /**
@@ -26,8 +27,8 @@ export class Grenade extends TimedExplosive {
     private static bounceSoundsLight: Sound;
     private static boundSoundHeavy: Sound;
 
-    static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number, y: number}, timerSecs = 3) {
-        const ent = new Grenade(position, initialForce, world, parent, timerSecs);
+    static create(parent: Container, world: GameWorld, position: Coordinate, initialForce: { x: number; y: number; }, timerSecs = 3, worm?: WormInstance) {
+        const ent = new Grenade(position, initialForce, world, parent, timerSecs, worm);
         parent.addChild(ent.sprite, ent.wireframe.renderable);
         return ent;
     }
@@ -39,7 +40,7 @@ export class Grenade extends TimedExplosive {
     }
     public bounceSoundPlayback?: IMediaInstance;
 
-    private constructor(position: Coordinate, initialForce: { x: number, y: number}, world: GameWorld, parent: Container, timerSecs: number) {
+    private constructor(position: Coordinate, initialForce: { x: number, y: number}, world: GameWorld, parent: Container, timerSecs: number, owner?: WormInstance) {
         const sprite = new Sprite(Grenade.texture);
         sprite.scale.set(0.5);
         sprite.anchor.set(0.5);
@@ -61,6 +62,7 @@ export class Grenade extends TimedExplosive {
             explodeOnContact: false,
             timerSecs,
             autostartTimer: true,
+            ownerWorm: owner,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text({

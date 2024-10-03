@@ -1,10 +1,13 @@
 import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource, Container } from "pixi.js";
-import { IPhysicalEntity } from "../entity";
+import { IPhysicalEntity, IWeaponEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { Explosion } from "../explosion";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
+import { WeaponFireResult } from "../../weapons/weapon";
+import { WormInstance } from "../../logic/teams";
+import type { Worm } from "../playable/worm";
 
 interface Opts {
     explosionRadius: MetersValue,
@@ -13,15 +16,19 @@ interface Opts {
     explosionShrapnelHue?: ColorSource,
     autostartTimer: boolean,
     timerSecs?: number,
+    ownerWorm?: WormInstance,
 }
 
 /**
  * Any projectile type that can explode after a set timer. Implementing classes
  * must include their own timer.
  */
-export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalEntity  {
+export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEntity  {
     protected timer: number|undefined;
     protected hasExploded = false;
+
+    private fireResultFn!: (fireResult: WeaponFireResult[]) => void;
+    public onFireResult: Promise<WeaponFireResult[]>;
 
     priority = UPDATE_PRIORITY.NORMAL;
 
@@ -31,6 +38,8 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
         if (opts.autostartTimer) {
             this.timer = opts.timerSecs ? Ticker.targetFPMS * opts.timerSecs * 1000 : 0;
         }
+        // TODO: timeout.
+        this.onFireResult = new Promise((r) => this.fireResultFn = r);
     }
 
     startTimer() {
@@ -60,9 +69,23 @@ export abstract class TimedExplosive extends PhysicsEntity implements IPhysicalE
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
         const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.physObject.collider);
+        let fireResults = new Set<WeaponFireResult>();
         for (const element of explosionCollidesWith) {
             element.onDamage?.(point, this.opts.explosionRadius);
+            // Dependency issue, Worm depends on us.
+            if ('health' in element) {
+                const worm = element as Worm;
+                const killed = element.health === 0;
+                if (worm.wormIdent.uuid === this.opts.ownerWorm?.uuid) {
+                    fireResults.add(killed ? WeaponFireResult.KilledSelf : WeaponFireResult.HitSelf);
+                } else if (worm.wormIdent.team.group === this.opts.ownerWorm?.team.group) {
+                    fireResults.add(killed ? WeaponFireResult.KilledOwnTeam : WeaponFireResult.HitSelf);
+                } else if (worm.wormIdent.team.group !== this.opts.ownerWorm?.team.group) {
+                    fireResults.add(killed ? WeaponFireResult.KilledEnemy : WeaponFireResult.HitEnemy);
+                }
+            }
         }
+        this.fireResultFn(fireResults.size === 0 ? [WeaponFireResult.NoHit] : [...fireResults]);
         this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
             shrapnelMax: 35,
             shrapnelMin: 15,

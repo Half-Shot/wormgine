@@ -1,6 +1,7 @@
 import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
+import { WeaponFireResult } from "../weapons/weapon";
 
 /**
  * Base entity which all game objects implement
@@ -40,4 +41,8 @@ export interface IPhysicalEntity extends IGameEntity {
      * @param radius The radius of the explosion. 
      */
     onDamage?(point: Vector2, radius: MetersValue): void
+}
+
+export interface IWeaponEntity extends IPhysicalEntity {
+    onFireResult: Promise<WeaponFireResult[]>;
 }

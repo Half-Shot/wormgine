@@ -1,4 +1,4 @@
-import { IGameEntity } from "../entities/entity";
+import { IWeaponEntity } from "../entities/entity";
 import { Container } from "pixi.js";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
@@ -12,6 +12,17 @@ export interface FireOpts {
     timer?: number,
 }
 
+export enum WeaponFireResult {
+    // In order of importance for toasts
+    NoHit, // Never appears if the others appear.
+    KilledOwnTeam,
+    KilledSelf,
+    KilledEnemy,
+    HitEnemy,
+    HitOwnTeam,
+    HitSelf,
+}
+
 export interface IWeaponDefiniton {
     code: IWeaponCode,
     /**
@@ -22,5 +33,5 @@ export interface IWeaponDefiniton {
      * Can the timer on the weapon be adjusted?
      */
     timerAdjustable?: boolean,
-    fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IGameEntity,
+    fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IWeaponEntity,
 }
