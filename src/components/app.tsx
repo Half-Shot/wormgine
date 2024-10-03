@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
 import { loadAssets } from "../assets";
-import { GoToMenuContext } from "../game";
 
 interface LoadGameProps {
     level: string;
@@ -13,7 +12,7 @@ export function App() {
     const [assetProgress, setAssetProgress] = useState(0);
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
-    const onGoToMenu = useCallback((context: GoToMenuContext) => {
+    const onGoToMenu = useCallback(() => {
         // TODO: Show a win screen!
         setGameState(undefined);
     }, []);

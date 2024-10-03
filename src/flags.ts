@@ -13,7 +13,7 @@ class Flags extends EventEmitter {
     constructor() {
         super();
         const qs = new URLSearchParams(window.location.search);
-        this.DebugView = !!qs.get('debug') ? DebugLevel.PhysicsOverlay : DebugLevel.None;
+        this.DebugView = qs.get('debug') ? DebugLevel.PhysicsOverlay : DebugLevel.None;
         Input.on('inputEnd', (type) => {
             if (type === InputKind.ToggleDebugView) {
                 if (++this.DebugView > DebugLevel.PhysicsOverlay) {

@@ -3,13 +3,12 @@ import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Grenade } from "../entities/phys/grenade";
 import { Worm, WormState } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
-import { GameDrawText, TeamWinnerText, templateRandomText, TurnEndTextFall, TurnEndTextMiss, TurnEndTextOther, TurnStartText } from "../text/toasts";
+import { GameDrawText, TeamWinnerText, templateRandomText } from "../text/toasts";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;

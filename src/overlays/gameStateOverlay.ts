@@ -133,9 +133,6 @@ export class GameStateOverlay {
         // Remove any previous text.
         this.gfx.removeChildren(0, this.gfx.children.length);
 
-
-        const leftX = (this.screenWidth / 30);
-
         // Round timer
         applyGenericBoxStyle(this.gfx).roundRect(this.roundTimer.x - 8, this.roundTimer.y - 8, this.roundTimer.width + 16, this.roundTimer.height + 16, 4).stroke().fill();
 
