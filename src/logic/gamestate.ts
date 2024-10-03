@@ -56,7 +56,7 @@ export class GameState {
     private currentTeam?: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
-   private currentRoundTime = 42000;
+    private currentRoundTime = 42000;
 
     private stateIteration = 0;
 
