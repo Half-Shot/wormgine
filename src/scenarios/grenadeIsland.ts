@@ -82,8 +82,8 @@ export default async function runScenario(game: Game) {
     const dummy = world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(650,620), gameState.getTeamByIndex(0).worms[0]));
     world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1500,300), gameState.getTeamByIndex(0).worms[1]));
     world.addEntity(TestDummy.create(parent, world, Coordinate.fromScreen(1012,678), gameState.getTeamByIndex(0).worms[2]));
-    world.addEntity(Worm.create(parent, world, Coordinate.fromScreen(600,550), gameState.getTeamByIndex(1).worms[0], () => {
-        console.log('Stubbed weapon function');
+    world.addEntity(Worm.create(parent, world, Coordinate.fromScreen(600,550), gameState.getTeamByIndex(1).worms[0], async () => {
+        return [];
     }));
     game.viewport.follow(dummy.sprite);
 
