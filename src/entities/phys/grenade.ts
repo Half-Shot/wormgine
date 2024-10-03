@@ -8,6 +8,7 @@ import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/ra
 import { magnitude } from '../../utils';
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
+import { DefaultTextStyle } from '../../mixins/styles';
 
 
 /**
@@ -65,9 +66,7 @@ export class Grenade extends TimedExplosive {
         this.timerText = new Text({
             text: '',
             style: {
-                fontFamily: 'Arial',
-                fontSize: 24,
-                fill: 0xFFFFFF,
+                ...DefaultTextStyle,
                 align: 'center',
             }
         });

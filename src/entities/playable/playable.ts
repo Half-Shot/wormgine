@@ -6,7 +6,7 @@ import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity } from "../entity";
 import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
-import { applyGenericBoxStyle } from "../../mixins/styles";
+import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 
 
@@ -52,8 +52,8 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.nameText = new Text({
             text: this.wormIdent.name,
             style: {
-                fontFamily: 'Arial',
-                fontSize: 20,
+                ...DefaultTextStyle,
+                fontSize: 28,
                 lineHeight: 32,
                 fill: fg,
                 align: 'center',
@@ -62,8 +62,8 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.healthText = new Text({
             text: this.health,
             style: {
-                fontFamily: 'Arial',
-                fontSize: 20,
+                ...DefaultTextStyle,
+                fontSize: 28,
                 lineHeight: 32,
                 fill: fg,
                 align: 'center',

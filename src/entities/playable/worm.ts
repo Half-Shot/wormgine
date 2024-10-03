@@ -95,12 +95,9 @@ export class Worm extends PlayableEntity {
         );
         super(sprite, body, world, parent, wormIdent, {
             explosionRadius: new MetersValue(5),
-            damageMultiplier: 5,
+            damageMultiplier: 250,
         });
         this.state = WormState.Inactive;
-
-        // TODO: Unbind.
-        //this.onStoppedMoving();
     }
 
     onWormSelected() {

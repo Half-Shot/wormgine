@@ -1,6 +1,6 @@
 import { ColorSource, Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameState } from "../logic/gamestate";
-import { applyGenericBoxStyle } from "../mixins/styles";
+import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 
@@ -32,18 +32,16 @@ export class GameStateOverlay {
         this.roundTimer = new Text({
             text: '60',
             style: {
-                fontFamily: 'Arial',
-                fontSize: 48,
-                fill: 0xFFFFFF,
+                ...DefaultTextStyle,
+                fontSize: 64,
                 align: 'center',
             },
         });
         this.toastBox = new Text({
             text: '',
             style: {
-                fontFamily: 'Arial',
-                fontSize: 24,
-                fill: 0xFFFFFF,
+                ...DefaultTextStyle,
+                fontSize: 48,
                 align: 'center',
             },
         });
@@ -89,10 +87,10 @@ export class GameStateOverlay {
                 this.toastBox.style.fill = newToast.color;
                 this.toastTime = newToast.timer;
                 this.toastGfx.position.set(
-                    (this.screenWidth / 2) - (this.toastBox.width /2) - 3,
-                    (this.screenHeight / 20) - (this.toastBox.height/2) - 2,
+                    (this.screenWidth / 2) - (this.toastBox.width /2) - 6,
+                    (this.screenHeight / 20) - (this.toastBox.height/2) - 4,
                 )
-                applyGenericBoxStyle(this.toastGfx).roundRect(0, 0, this.toastBox.width + 6, this.toastBox.height + 4, 4).stroke().fill();
+                applyGenericBoxStyle(this.toastGfx).roundRect(0, 0, this.toastBox.width + 12, this.toastBox.height + 8, 4).stroke().fill();
             }
         }
 
@@ -139,7 +137,7 @@ export class GameStateOverlay {
         const leftX = (this.screenWidth / 30);
 
         // Round timer
-        applyGenericBoxStyle(this.gfx).roundRect(leftX, bottomY-2, 84, 84, 4).stroke().fill();
+        applyGenericBoxStyle(this.gfx).roundRect(this.roundTimer.x - 8, this.roundTimer.y - 8, this.roundTimer.width + 16, this.roundTimer.height + 16, 4).stroke().fill();
 
         // For each team:
         // TODO: Sort by health and group
@@ -156,9 +154,8 @@ export class GameStateOverlay {
             const nameTag = new Text({
                 text: team.name,
                 style: {
-                    fontFamily: 'Arial',
-                    fontSize: 18,
-                    fill: 0xFFFFFF,
+                    ...DefaultTextStyle,
+                    fontSize: 24,
                     align: 'center',
                 }
             });
@@ -166,7 +163,6 @@ export class GameStateOverlay {
             const nameTagStartX = centerX - nameTag.width - 120;
             applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, teamBottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
             nameTag.position.set(nameTagStartX, teamBottomY);
-            // TODO: Draw team name.
             applyGenericBoxStyle(this.gfx).roundRect(centerX - 102, teamBottomY-2, 204, 24, 4).stroke().fill();
             this.gfx.setStrokeStyle({
                 width: 5,

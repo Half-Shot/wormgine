@@ -7,6 +7,7 @@ import { ActiveEvents, Collider, ColliderDesc, RigidBodyDesc, Vector2 } from '@d
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
+import { DefaultTextStyle } from '../../mixins/styles';
 
 /**
  * Proximity mine.
@@ -71,9 +72,8 @@ export class Mine extends TimedExplosive {
         this.timerText = new Text({
             text: '',
             style: {
-                fontFamily: 'Arial',
+                ...DefaultTextStyle,
                 fontSize: 100,
-                fill: 0xFFFFFF,
                 align: 'center',
             }
         });

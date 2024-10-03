@@ -2,7 +2,7 @@ import { UPDATE_PRIORITY, Sprite, Point } from "pixi.js";
 import { IPhysicalEntity } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
-import globalFlags from "../../flags";
+import globalFlags, { DebugLevel } from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
@@ -42,9 +42,9 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
     }
 
     constructor(public readonly sprite: Sprite, protected physObject: RapierPhysicsObject, protected gameWorld: GameWorld) {
-        this.wireframe = new BodyWireframe(this.physObject, globalFlags.DebugView);
-        globalFlags.on('toggleDebugView', (on) => {
-            this.wireframe.enabled = on;
+        this.wireframe = new BodyWireframe(this.physObject, globalFlags.DebugView === DebugLevel.PhysicsOverlay);
+        globalFlags.on('toggleDebugView', (level: DebugLevel) => {
+            this.wireframe.enabled = level === DebugLevel.PhysicsOverlay;
         });
     }
 

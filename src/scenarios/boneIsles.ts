@@ -11,6 +11,7 @@ import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
+import { DefaultTextStyle } from "../mixins/styles";
 
 const weapons = ["grenade", "mine", "firework"];
 
@@ -56,12 +57,7 @@ export default async function runScenario(game: Game) {
     let selectedWeaponIndex = 2;
     const weaponText = new Text({
         text: `Selected Weapon (press S to switch): ${weapons[selectedWeaponIndex]}`,
-        style: {
-            fontFamily: 'Arial',
-            fontSize: 20,
-            fill: 0xFFFFFF,
-            align: 'left',
-        },
+        style: DefaultTextStyle,
     });
     weaponText.position.set(20, 50);
     

@@ -1,6 +1,7 @@
 import { Graphics, Text } from "pixi.js";
 import { PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { Cuboid } from "@dimforge/rapier2d-compat";
+import { DefaultTextStyle } from "./styles";
 
 /**
  * Render a wireframe in pixi.js around a matter body.
@@ -17,9 +18,8 @@ export class BodyWireframe {
     private debugText = new Text({ 
         text: '',
         style: {
-            fontFamily: 'Arial',
+            ...DefaultTextStyle,
             fontSize: 16,
-            fill: 0xFFFFFF,
             align: 'center',
         }
     });
