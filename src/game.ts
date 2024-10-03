@@ -47,7 +47,7 @@ export class Game {
             events: this.pixiApp.renderer.events
         });
         this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker);
-        this.pixiApp.ticker.maxFPS = 90;
+        this.pixiApp.ticker.maxFPS = 240;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
             .clamp({
@@ -89,10 +89,19 @@ export class Game {
         const overlay = new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage, this.viewport);
         this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
 
-        this.pixiApp.ticker.add(() => {
+        // Run physics engine at 90fps.
+        const tickEveryMs = 1000/90;
+        let lastPhysicsTick = 0;
+
+        this.pixiApp.ticker.add((dt) => {
             // TODO: Timing.
             const startTime = performance.now();
-            this.world.step();
+            lastPhysicsTick += dt.deltaMS;
+            // Note: If we are lagging behind terribly, this will multiple ticks
+            while (lastPhysicsTick >= tickEveryMs) {
+                this.world.step();
+                lastPhysicsTick -= tickEveryMs;
+            }
             overlay.physicsSamples.push(performance.now()-startTime);
         }, undefined, UPDATE_PRIORITY.HIGH);
     }
