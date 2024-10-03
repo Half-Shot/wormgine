@@ -15,3 +15,7 @@ These are provided under a commercial licence and will need removing prior to th
 
   - `splash.ogg`
   - `firework.ogg`
+
+#### "Monogram" font provided by https://datagoblin.itch.io/monogram uncer [CC0](https://creativecommons.org/publicdomain/zero/1.0/)
+  
+  - `monogram.woff2`

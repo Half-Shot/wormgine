@@ -34,6 +34,9 @@ import mineBeepSnd from "./mine_beep.ogg";
 import placeholderSnd from "./placeholder.ogg";
 import splashSnd from "./splash.ogg";
 
+// Fonts
+import monogramFnt from "./monogram.woff2";
+
 export interface AssetTextures {
     bazooka: Texture;
     boneIsles: Texture;
@@ -98,6 +101,11 @@ export const manifest = {
             {src: mineBeepSnd, alias: "mineBeep"},
             {src: placeholderSnd, alias: "placeholder"},
             {src: splashSnd, alias: "splash"}
+        ]
+    }, {
+        name: "fonts",
+        assets: [
+            {src: monogramFnt, alias: "monogram", data: {"family":"Monogram","weights":["normal"]}}
         ]
     }]
 } satisfies AssetsManifest;

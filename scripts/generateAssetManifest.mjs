@@ -10,11 +10,16 @@ function camelCaseString(str, i) {
     return str[0].toUpperCase() + str.slice(1);
 }
 
+const fontData = {
+    family: 'Monogram',
+    weights: ['normal'],
+};
+
 async function main() {
-    let importTextures = "", importSounds = "", interfaceTextures = "", interfaceSounds = "", assetTextures = [], assetSounds = [];
+    let importTextures = "",importSounds = "", importFonts = "", interfaceTextures = "", interfaceSounds = "", assetTextures = [], assetSounds = [], assetFonts = [];
     for (const element of await readdir(assetLocation)) {
         const extName = path.extname(element);
-        const camelCaseName = element.slice(0, -4).split("_").map(camelCaseString).join('');
+        const camelCaseName = element.slice(0, -extName.length).split("_").map(camelCaseString).join('');
         switch(extName) {
             case ".png":
                 importTextures += `import ${camelCaseName}Tex from "./${element}";\n`
@@ -26,6 +31,10 @@ async function main() {
                 interfaceSounds += `    ${camelCaseName}: Sound;\n`
                 assetSounds.push(`            {src: ${camelCaseName}Snd, alias: "${camelCaseName}"}`)
                 break;
+            case ".woff2":
+                importFonts += `import ${camelCaseName}Fnt from "./${element}";\n`
+                assetFonts.push(`            {src: ${camelCaseName}Fnt, alias: "${camelCaseName}", data: ${JSON.stringify(fontData)}}`)
+                break;
             default:
                 console.error("Ignoring", element, path.extname(element));
         }
@@ -33,10 +42,12 @@ async function main() {
     console.log(MANIFEST_TEMPLATE
         .replace("$IMPORT_TEXTURES", importTextures)
         .replace("$IMPORT_SOUNDS", importSounds)
+        .replace("$IMPORT_FONTS", importFonts)
         .replace("$INTERFACE_TEXTURES", interfaceTextures)
         .replace("$INTERFACE_SOUNDS", interfaceSounds)
         .replace("$ASSET_TEXTURES", assetTextures.join(',\n'))
         .replace("$ASSET_SOUNDS", assetSounds.join(',\n'))
+        .replace("$ASSET_FONTS", assetFonts.join(',\n'))
     );
 }
 
@@ -55,6 +66,8 @@ import "@pixi/sound";
 $IMPORT_TEXTURES
 // Sounds
 $IMPORT_SOUNDS
+// Fonts
+$IMPORT_FONTS
 export interface AssetTextures {
 $INTERFACE_TEXTURES}
 
@@ -71,6 +84,11 @@ $ASSET_TEXTURES
         name: "sounds",
         assets: [
 $ASSET_SOUNDS
+        ]
+    }, {
+        name: "fonts",
+        assets: [
+$ASSET_FONTS
         ]
     }]
 } satisfies AssetsManifest;
