@@ -9,9 +9,9 @@ export let debugData: {
 
 export function getGroundDifference(colliderA: Collider, colliderB: Collider) {
     const [higher,lower] = [colliderA, colliderB].sort((a,b) => b.translation().y - a.translation().y);
-    const higherBottom = higher.translation().y + (higher.shape as Cuboid).halfExtents.y;
+    const higherBottom = higher.translation().y - (higher.shape as Cuboid).halfExtents.y;
     const lowerTop = lower.translation().y + (lower.shape as Cuboid).halfExtents.y;
-    return lowerTop - higherBottom;
+    return Math.round((lowerTop - higherBottom) * 100)/100;
 }
 
 export function calculateMovement(physObject: RapierPhysicsObject, movement: Vector2, maxSteppy: MetersValue, world: GameWorld): Vector2 {
@@ -45,7 +45,6 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     debugData = { rayCoodinate, shape: initialCollisionShape };
 
     const collides = world.checkCollisionShape(rayCoodinate, initialCollisionShape, physObject.collider);
-    console.log(collides);
     // Pop the highest collider
     const highestCollider = collides.sort((a,b) => a.collider.translation().y-b.collider.translation().y)[0];
 
@@ -58,7 +57,6 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
     // const shape = highestCollider.collider.shape;
     const bodyT = highestCollider.collider.translation();
     const stepSize = currentTranslation.y - bodyT.y;
-    console.log({stepSize, currentTranslation: currentTranslation.y, bodyT: bodyT.y})
     if (stepSize > maxSteppy.value) {
         return currentTranslation;
     }
@@ -67,8 +65,10 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
 
     // Step
     const differential = getGroundDifference(physObject.collider, highestCollider.collider);
-    if (differential >= 0.05) {
+    if (differential >= 1.5) {
         return currentTranslation;
+    } else if (differential > 0) {
+        move.y -= (differential + 0.1);
     }
     
     return move;

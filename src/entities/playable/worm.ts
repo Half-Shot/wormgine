@@ -55,6 +55,7 @@ export class Worm extends PlayableEntity {
     private fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponGrenade;
     private state: WormState;
+    private statePriorToMotion: WormState = WormState.Idle;
     private turnEndedReason: EndTurnReason|undefined;
     private impactVelocity = 0;
     // TODO: Best place for this var?
@@ -170,6 +171,11 @@ export class Worm extends PlayableEntity {
     resetMoveDirection(inputDirection: InputKind.MoveLeft|InputKind.MoveRight) {
         // We can only stop moving if we are in control of our movements and the input that
         // completed was the movement key.
+
+        if (this.state === WormState.InMotion) {
+            this.statePriorToMotion = WormState.Idle;
+        } 
+
         if (this.state === WormState.MovingLeft && inputDirection === InputKind.MoveLeft) {
             this.state = WormState.Idle;
             return;
@@ -254,7 +260,10 @@ export class Worm extends PlayableEntity {
             // Do nothing.
             return;
         }
-        const falling = !this.isSinking && this.body.linvel().y > 0.05;
+        const falling = !this.isSinking && this.body.linvel().y > 4;
+        if (falling) {
+            console.log(this.body.linvel());
+        }
 
         this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}, velocity: ${this.body.linvel().y} ${this.impactVelocity}` );
 
@@ -262,7 +271,8 @@ export class Worm extends PlayableEntity {
             this.impactVelocity = Math.max(magnitude(this.body.linvel()), this.impactVelocity);
             if (!this.body.isMoving()) {
                 // Stopped moving, must not be in motion anymore.
-                this.state = WormState.Idle;
+                this.state = this.statePriorToMotion;
+                this.statePriorToMotion = WormState.Idle;
                 // Gravity does not affect us while we are idle.
                 //this.body.setGravityScale(0, false);
                 if (this.impactVelocity > Worm.minImpactForDamage) {
@@ -286,6 +296,7 @@ export class Worm extends PlayableEntity {
                 this.fireWeaponDuration += dt;
             }
         } else if (falling) {
+            this.statePriorToMotion = this.state;
             this.state = WormState.InMotion;
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
             this.onMove(this.state);

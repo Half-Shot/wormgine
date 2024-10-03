@@ -42,9 +42,9 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
     }
 
     constructor(public readonly sprite: Sprite, protected physObject: RapierPhysicsObject, protected gameWorld: GameWorld) {
-        this.wireframe = new BodyWireframe(this.physObject, globalFlags.DebugView === DebugLevel.PhysicsOverlay);
+        this.wireframe = new BodyWireframe(this.physObject, globalFlags.DebugView >= DebugLevel.BasicOverlay);
         globalFlags.on('toggleDebugView', (level: DebugLevel) => {
-            this.wireframe.enabled = level === DebugLevel.PhysicsOverlay;
+            this.wireframe.enabled = level >= DebugLevel.BasicOverlay;
         });
     }
 
