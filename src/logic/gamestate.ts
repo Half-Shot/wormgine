@@ -141,5 +141,4 @@ export class GameState {
             nextWorm: this.currentTeam.popNextWorm(),
         }
     }
-
 }

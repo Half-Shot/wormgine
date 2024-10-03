@@ -37,9 +37,11 @@ export function teamGroupToColorSet(group: TeamGroup): {bg: ColorSource, fg: Col
  * Instance of a worm, keeping track of it's status.
  */
 export class WormInstance {
+    public readonly uuid = window.crypto.randomUUID();
     constructor(private readonly identity: WormIdentity, public readonly team: Team, private readonly onHealthUpdated: () => void) {
 
     }
+
 
     get name() {
         return this.identity.name;
