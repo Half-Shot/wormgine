@@ -47,7 +47,6 @@ export class Game {
             events: this.pixiApp.renderer.events
         });
         this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker);
-        this.pixiApp.ticker.maxFPS = 240;
         this.pixiApp.stage.addChild(this.viewport);
         this.viewport
             .clamp({
