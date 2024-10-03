@@ -4,6 +4,7 @@ import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
 import { Coordinate } from "../utils";
+import globalFlags from "../flags";
 
 interface RainParticle {
     position: Point;
@@ -91,6 +92,11 @@ export class Background implements IGameEntity {
     }
 
     update(): void {
+        if (globalFlags.DebugView) {
+            // Don't render during debug view.
+            this.rainGraphic.clear();
+            return;
+        }
         this.rainGraphic.clear();
         for (let rainIndex = 0; rainIndex < this.rainParticles.length; rainIndex += 1) {
             const particle = this.rainParticles[rainIndex];
