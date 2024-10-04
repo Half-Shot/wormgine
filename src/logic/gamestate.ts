@@ -71,11 +71,6 @@ export class GameState {
         this.teams = teams.map((team) => new InternalTeam(team, () => {
             this.stateIteration++;
         }));
-        for (const team of this.teams) {
-            if (team.health === 0) {
-                throw Error('Team has no health!');
-            }
-        }
         this.nextTeamStack = [...this.teams];
     }
 
