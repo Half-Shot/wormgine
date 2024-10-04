@@ -10,6 +10,7 @@ export enum IWeaponCode {
 export interface FireOpts {
     duration?: number,
     timer?: number,
+    angle?: number,
 }
 
 export enum WeaponFireResult {
@@ -33,5 +34,6 @@ export interface IWeaponDefiniton {
      * Can the timer on the weapon be adjusted?
      */
     timerAdjustable?: boolean,
+    showTargetGuide?: boolean,
     fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IWeaponEntity,
 }

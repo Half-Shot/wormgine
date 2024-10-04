@@ -1,4 +1,4 @@
-import { Sprite, Texture } from 'pixi.js';
+import { Graphics, Sprite, Texture, UPDATE_PRIORITY } from 'pixi.js';
 import { FireOpts, IWeaponDefiniton, WeaponFireResult } from '../../weapons/weapon';
 import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
@@ -20,8 +20,10 @@ export enum WormState {
     Firing = 2,
     MovingLeft = 3,
     MovingRight = 4,
-    InactiveWaiting = 5,
-    Inactive = 6,
+    AimingUp = 5,
+    AimingDown = 6,
+    InactiveWaiting = 98,
+    Inactive = 99,
 }
 
 export enum EndTurnReason {
@@ -31,6 +33,8 @@ export enum EndTurnReason {
     Sank = 3,
 }
 
+const MinAim = -1.5;
+const MaxAim = 1.6;
 
 const maxWormStep = new MetersValue(0.6);
 
@@ -53,13 +57,14 @@ export class Worm extends PlayableEntity {
 
     private fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponGrenade;
-    private state: WormState;
+    private state: WormState = WormState.Inactive;
     private statePriorToMotion: WormState = WormState.Idle;
     private turnEndedReason: EndTurnReason|undefined;
     private impactVelocity = 0;
     // TODO: Best place for this var?
     private weaponTimerSecs = 3;
     public fireAngle = 0;
+    private targettingGfx: Graphics;
 
     static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, gameOverlay?: GameStateOverlay) {
         const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, gameOverlay);
@@ -67,6 +72,7 @@ export class Worm extends PlayableEntity {
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         parent.addChild(ent.healthTextBox);
+        parent.addChild(ent.targettingGfx);
         return ent;
     }
 
@@ -97,7 +103,11 @@ export class Worm extends PlayableEntity {
             explosionRadius: new MetersValue(5),
             damageMultiplier: 250,
         });
-        this.state = WormState.Inactive;
+        this.targettingGfx = new Graphics({ visible: false });
+        this.targettingGfx.circle(0,0,5).stroke({
+            color: "red",
+            width: 2,
+        });
     }
 
     onWormSelected() {
@@ -108,16 +118,25 @@ export class Worm extends PlayableEntity {
         }), 3000, teamGroupToColorSet(this.wormIdent.team.group).fg);
         Controller.on('inputBegin', this.onInputBegin);
         Controller.on('inputEnd', this.onInputEnd);
+        // TODO: Move this to weapon switch func
+        this.targettingGfx.visible = !!this.currentWeapon.showTargetGuide;
     }
 
     onEndOfTurn() {
         Controller.removeListener('inputBegin', this.onInputBegin);
         Controller.removeListener('inputEnd', this.onInputEnd);
+        this.targettingGfx.visible = false;
     }
 
     onInputBegin = (inputKind: InputKind) => {
         if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
             this.setMoveDirection(inputKind);
+        } else if (this.state !== WormState.Idle) {
+            return;
+        } else if (inputKind === InputKind.AimUp) {
+            this.state = WormState.AimingUp;
+        } else if (inputKind === InputKind.AimDown) {
+            this.state = WormState.AimingDown;
         } else if (inputKind === InputKind.Fire) {
             this.onBeginFireWeapon();
         }
@@ -155,6 +174,9 @@ export class Worm extends PlayableEntity {
         if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
             this.resetMoveDirection(inputKind);
         } 
+        if (inputKind === InputKind.AimUp || inputKind === InputKind.AimDown) {
+            this.state = WormState.Idle;
+        } 
     }
 
     setMoveDirection(direction: InputKind.MoveLeft|InputKind.MoveRight) {
@@ -163,7 +185,14 @@ export class Worm extends PlayableEntity {
             // Falling, can't move
             return;
         }
-        this.fireAngle = direction === InputKind.MoveLeft ? -1 : 1;
+        
+        if (direction === InputKind.MoveLeft && (this.fireAngle > MinAim && this.fireAngle < MaxAim)) {
+            this.fireAngle -= Math.PI;
+        } else if (direction === InputKind.MoveRight) {
+            this.fireAngle += Math.PI;
+        }
+
+
         this.state = direction === InputKind.MoveLeft ? WormState.MovingLeft : WormState.MovingRight;
     }
 
@@ -244,6 +273,7 @@ export class Worm extends PlayableEntity {
         this.onFireWeapon(this, this.currentWeapon, {
             duration,
             timer: this.weaponTimerSecs,
+            angle: this.fireAngle,
         }).then((fireResult) => {
             this.state = WormState.Inactive;
             let randomTextSet: string[];
@@ -289,11 +319,14 @@ export class Worm extends PlayableEntity {
             return;
         }
         const falling = !this.isSinking && this.body.linvel().y > 4;
-        if (falling) {
-            console.log(this.body.linvel());
+
+        if (this.targettingGfx.visible) {
+            const x = Math.cos(this.fireAngle)*30;
+            const y = Math.sin(this.fireAngle)*30;
+            this.targettingGfx.position.set(this.sprite.x + x, this.sprite.y + y);
         }
 
-        this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}, velocity: ${this.body.linvel().y} ${this.impactVelocity}` );
+        this.wireframe.setDebugText(`worm_state: ${WormState[this.state]}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}` );
 
         if (this.state === WormState.InMotion) {
             this.impactVelocity = Math.max(magnitude(this.body.linvel()), this.impactVelocity);
@@ -328,7 +361,11 @@ export class Worm extends PlayableEntity {
             this.state = WormState.InMotion;
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
             this.onMove(this.state);
-        } // else, we're idle and not currently moving.
+        } else if (this.state === WormState.AimingUp) {
+            this.fireAngle = Math.max(this.fireAngle - 0.01, MinAim);
+        } else if (this.state === WormState.AimingDown) {
+            this.fireAngle = Math.min(this.fireAngle + 0.01, MaxAim);
+        }  // else, we're idle and not currently moving.
     }
 
     destroy(): void {

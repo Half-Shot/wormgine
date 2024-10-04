@@ -10,18 +10,23 @@ export const WeaponGrenade: IWeaponDefiniton = {
     code: IWeaponCode.Grenade,
     maxDuration: 50,
     timerAdjustable: true,
+    showTargetGuide: true,
     fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
-        const modPos = worm.fireAngle > 0 ? 1 : -1; 
         if (!opts.duration) {
             throw Error('Duration expected but not given');
         }
         if (!opts.timer) {
-            throw Error('Timer selected but not given');
+            throw Error('Timer expected but not given');
         }
-        const forceComponent = opts.duration/2;
-        const force = mult(new Vector2(1 * forceComponent, forceComponent), { x: modPos, y: -1});
+        if (opts.angle === undefined) {
+            throw Error('Angle expected but not given');
+        }
+        const forceComponent = opts.duration/8;
+        const x = forceComponent*Math.cos(opts.angle);
+        const y = forceComponent*Math.sin(opts.angle);
+        const force = mult(new Vector2(1 * forceComponent, forceComponent), { x, y });
         // TODO: Refactor ALL OF THIS
-        const position = Coordinate.fromWorld(add(worm.position, {x: modPos, y: -0.3})); 
+        const position = Coordinate.fromWorld(add(worm.position, {x, y: -0.3})); 
         return Grenade.create(parent, world, position, force, opts.timer, worm.wormIdent);
     },
 }

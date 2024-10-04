@@ -3,6 +3,8 @@ import { EventEmitter } from "pixi.js";
 export enum InputKind {
     MoveLeft,
     MoveRight,
+    AimUp,
+    AimDown,
     Fire,
     ToggleDebugView,
     DebugSwitchWeapon,
@@ -16,6 +18,8 @@ export enum InputKind {
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowLeft": InputKind.MoveLeft,
     "ArrowRight": InputKind.MoveRight,
+    "ArrowUp": InputKind.AimUp,
+    "ArrowDown": InputKind.AimDown,
     // I LOVE THE CONSISTENCY HERE BROWSERS
     " ": InputKind.Fire,
     "F9": InputKind.ToggleDebugView,

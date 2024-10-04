@@ -95,12 +95,12 @@ export default async function runScenario(game: Game) {
                 if (nextState.winningTeams.length) {
                     overlay.addNewToast(templateRandomText(TeamWinnerText, {
                         TeamName: nextState.winningTeams.map(t => t.name).join(', '),
-                    }), 5000);
+                    }), 8000);
                 } else {
                     // Draw
-                    overlay.addNewToast(templateRandomText(GameDrawText), 5000);
+                    overlay.addNewToast(templateRandomText(GameDrawText), 8000);
                 }
-                endOfGameFadeOut = 5000;
+                endOfGameFadeOut = 8000;
             } else {
                 currentWorm?.onEndOfTurn();
                 currentWorm = wormInstances.get(nextState.nextWorm.uuid);

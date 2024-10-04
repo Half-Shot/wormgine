@@ -69,7 +69,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
         const radius = this.opts.explosionRadius;
         // Detect if anything is around us.
         const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.physObject.collider);
-        let fireResults = new Set<WeaponFireResult>();
+        const fireResults = new Set<WeaponFireResult>();
         for (const element of explosionCollidesWith) {
             element.onDamage?.(point, this.opts.explosionRadius);
             // Dependency issue, Worm depends on us.
