@@ -15,6 +15,10 @@ const RED_TEAM: Team = {
     name: "Diabolical Steve",
     health: 25,
     maxHealth: 100,
+  },{
+    name: "Generous Greggory",
+    health: 25,
+    maxHealth: 100,
   }]
 }
 
@@ -50,28 +54,32 @@ describe('GameState', () => {
   });
   test('should advance round to the next team', () => {
     const gameState = new GameState([RED_TEAM, BLUE_TEAM]);
-    const blueTeam = gameState.getTeamByIndex(1);
-    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam });
+    const [redTeam, blueTeam] = gameState.getActiveTeams();
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
   });
   test('should advance round to the next team, skipping over the same group', () => {
     const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM]);
-    const blueTeam = gameState.getTeamByIndex(2);
-    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam });
+    const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam2, nextWorm: redTeam2.worms[0] });
   });
   test('should advance round to the next team, should ensure that all teams within the same group get to play', () => {
     const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM]);
-    const blueTeam = gameState.getTeamByIndex(2);
-    const redTeam2 = gameState.getTeamByIndex(1);
-    const redTeam = gameState.getTeamByIndex(0);
-    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam });
-    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam2 });
-    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam });
-    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam });
+    const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam2, nextWorm: redTeam2.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
+    expect(gameState.advanceRound()).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[1] });
   });
   test('should detect a win when only one group has active worms', () => {
-    const gameState = new GameState([RED_TEAM, RED_TEAM_2, {...BLUE_TEAM, worms: [DEAD_WORM]}], { winWhenOneGroupRemains: true });
-    const redTeam = gameState.getTeamByIndex(0);
-    const redTeam2 = gameState.getTeamByIndex(1);
+    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], { winWhenOneGroupRemains: true });
+    const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
+    gameState.advanceRound();
+    // Kill the blues.
+    blueTeam.worms[0].health = 0;
     expect(gameState.advanceRound()).toEqual({ winningTeams: [redTeam, redTeam2] });
   });
 });
