@@ -18,3 +18,9 @@ export function sub(a: Vector, b: Vector) {
 export function mult(a: Vector, b: Vector) {
     return new Vector2(a.x * b.x, a.y * b.y);
 }
+
+export function pointOnRadius(originX: number, originY: number, radians: number, radius: number): Vector2 {
+    const x = Math.cos(radians)*radius;
+    const y = Math.sin(radians)*radius;
+    return new Vector2(originX + x, originY + y);
+}
