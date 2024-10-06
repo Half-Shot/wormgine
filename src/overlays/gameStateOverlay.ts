@@ -4,6 +4,13 @@ import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 
+interface Toast {
+    text: string;
+    timer: number;
+    color: ColorSource;
+    interruptable: boolean;
+}
+
 
 export class GameStateOverlay {
     public readonly physicsSamples: number[] = [];
@@ -17,7 +24,8 @@ export class GameStateOverlay {
     private readonly largestHealthPool: number;
 
     private toastTime = 0;
-    private toaster: {text: string, timer: number, color: ColorSource}[] = [];
+    private currentToastIsInterruptable = true;
+    private toaster: Toast[] = [];
     private readonly toastBox: Text;
 
     constructor(
@@ -64,11 +72,13 @@ export class GameStateOverlay {
 
     /**
      * Adds some text to be displayed at the top of the screen.
-     * @param text 
-     * @param timer 
+     * @param text The text notice.
+     * @param timer How long should the notice be displayed.
+     * @param color The colour of the text.
+     * @param interruptable Should the toast be interrupted by the next notice?
      */
-    public addNewToast(text: string, timer = 5000, color: ColorSource = '#FFFFFF') {
-        this.toaster.splice(0,0, { text, timer, color });
+    public addNewToast(text: string, timer = 5000, color: ColorSource = '#FFFFFF', interruptable = false) {
+        this.toaster.splice(0,0, { text, timer, color, interruptable });
     }
 
     private update(dt: Ticker) {
@@ -79,13 +89,15 @@ export class GameStateOverlay {
 
         const shouldChangeTeamHealth = this.healthChangeTensionTimer !== null && this.healthChangeTensionTimer <= 0;
 
-        if (!this.toastBox.text) {
+        const shouldInterrupt = this.currentToastIsInterruptable && this.toaster.length;
+        if (!this.toastBox.text || shouldInterrupt) {
             const newToast = this.toaster.pop();
             if (newToast) {
                 this.toastGfx.clear();
                 this.toastBox.text = newToast.text;
                 this.toastBox.style.fill = newToast.color;
                 this.toastTime = newToast.timer;
+                this.currentToastIsInterruptable = newToast.interruptable;
                 this.toastGfx.position.set(
                     (this.screenWidth / 2) - (this.toastBox.width /2) - 6,
                     (this.screenHeight / 20) - (this.toastBox.height/2) - 4,

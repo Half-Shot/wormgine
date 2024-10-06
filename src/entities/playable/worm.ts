@@ -164,7 +164,7 @@ export class Worm extends PlayableEntity {
             if (this.weaponTimerSecs !== oldTime) {
                 this.toaster?.addNewToast(templateRandomText(WeaponTimerText, {
                     Time: this.weaponTimerSecs.toString(),
-                }), 1250);
+                }), 1250, undefined, true);
             }
         }
     }
