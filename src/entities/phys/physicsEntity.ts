@@ -27,6 +27,7 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
     protected wireframe: BodyWireframe;
     
     protected renderOffset?: Point;
+    protected rotationOffset = 0;
 
     private static splashSound: Sound;
 
@@ -58,7 +59,7 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
 
     update(dt: number): void {
         const pos = this.physObject.body.translation();
-        const rotation = this.physObject.body.rotation();
+        const rotation = this.physObject.body.rotation() + this.rotationOffset;
         this.sprite.updateTransform({
             x: (pos.x * PIXELS_PER_METER) + (this.renderOffset?.x ?? 0),
             y: (pos.y * PIXELS_PER_METER) + (this.renderOffset?.y ?? 0),

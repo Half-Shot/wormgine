@@ -1,9 +1,10 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { TimedExplosive } from "./timedExplosive";
-import { GameWorld } from '../../world';
-import { ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from "@dimforge/rapier2d-compat";
-import { MetersValue } from '../../utils/coodinate';
+import { collisionGroupBitmask, CollisionGroups, GameWorld } from '../../world';
+import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from "@dimforge/rapier2d-compat";
+import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
+import { WormInstance } from '../../logic/teams';
 
 /**
  * Standard shell, affected by wind.
@@ -13,30 +14,35 @@ export class BazookaShell extends TimedExplosive {
         BazookaShell.texture = assets.textures.bazooka;
     }
 
+    private static readonly collisionBitmask = collisionGroupBitmask(CollisionGroups.WorldObjects, [CollisionGroups.Terrain, CollisionGroups.WorldObjects]);
     private static texture: Texture;
 
     private readonly force: Vector2 = VectorOps.zeros();
     private readonly gfx = new Graphics();
     
-    static async create(parent: Container, gameWorld: GameWorld, position: {x: number, y: number}, initialAngle: number, initialForce: number, wind: number) {
-        const ent = new BazookaShell(position, initialAngle, gameWorld, parent, initialForce, wind);
+    static create(parent: Container, gameWorld: GameWorld, position: Coordinate, force: Vector2, owner?: WormInstance) {
+        const ent = new BazookaShell(position, gameWorld, parent, force, owner);
         gameWorld.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         return ent;
     }
 
-    private constructor(position: { x: number, y: number }, initialAngle: number, world: GameWorld, parent: Container, initialForce: number, private readonly wind: number) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Container, initialForce: Vector2, owner?: WormInstance) {
         const sprite = new Sprite(BazookaShell.texture);
         const body = world.createRigidBodyCollider(
-            ColliderDesc.cuboid(sprite.width/2, sprite.height/2),
+            ColliderDesc.cuboid(
+                0.50,
+                0.20).setActiveEvents(ActiveEvents.COLLISION_EVENTS)
+                .setCollisionGroups(BazookaShell.collisionBitmask)
+                .setSolverGroups(BazookaShell.collisionBitmask).setMass(1),
+                // TODO: Angle rotation the right way.
             RigidBodyDesc
                 .dynamic()
-                .setTranslation(position.x, position.y)
-                .setLinvel(initialForce / 10, initialForce / 100)
+                .setTranslation(position.worldX, position.worldY)
+                .setLinvel(initialForce.x, initialForce.y)
                 // TODO: Check
                 // TODO: Friction
-                .setAngvel(initialAngle)
                 .setLinearDamping(0.05)
             );
 
@@ -45,11 +51,13 @@ export class BazookaShell extends TimedExplosive {
             explodeOnContact: true,
             timerSecs: 30,
             autostartTimer: true,
+            ownerWorm: owner,
         });
-        this.sprite.x = position.x;
-        this.sprite.y = position.y;
+        this.sprite.x = position.screenX;
+        this.sprite.y = position.screenY;
         this.sprite.scale.set(0.5, 0.5);
         this.sprite.anchor.set(0.5, 0.5);
+        this.rotationOffset = Math.PI/2;
     }
     
 

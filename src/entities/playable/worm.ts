@@ -1,6 +1,5 @@
-import { Graphics, Sprite, Texture, UPDATE_PRIORITY } from 'pixi.js';
+import { Graphics, Sprite, Texture } from 'pixi.js';
 import { FireOpts, IWeaponDefiniton, WeaponFireResult } from '../../weapons/weapon';
-import { WeaponGrenade } from '../../weapons/grenade';
 import Controller, { InputKind } from '../../input';
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER } from '../../world';
 import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
@@ -13,6 +12,7 @@ import { Viewport } from 'pixi-viewport';
 import { magnitude, pointOnRadius } from '../../utils';
 import { GameStateOverlay } from '../../overlays/gameStateOverlay';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
+import { WeaponBazooka } from '../../weapons';
 
 export enum WormState {
     Idle = 0,
@@ -57,7 +57,7 @@ export class Worm extends PlayableEntity {
     private static offsetFromGroundM =  0.04;
 
     private fireWeaponDuration = 0;
-    private currentWeapon: IWeaponDefiniton = WeaponGrenade;
+    private currentWeapon: IWeaponDefiniton = WeaponBazooka;
     private state: WormState = WormState.Inactive;
     private statePriorToMotion: WormState = WormState.Idle;
     private turnEndedReason: EndTurnReason|undefined;
