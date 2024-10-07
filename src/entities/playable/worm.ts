@@ -54,7 +54,7 @@ export class Worm extends PlayableEntity {
 
     private static texture: Texture;
     private static impactDamageMultiplier = 0.75;
-    private static minImpactForDamage = 8;
+    private static minImpactForDamage = 12;
     private static offsetFromGroundM =  0.04;
 
     private fireWeaponDuration = 0;
@@ -140,8 +140,14 @@ export class Worm extends PlayableEntity {
 
     onJump() {
         this.state = WormState.InMotion;
-        this.body.applyImpulse({x: this.facingRight ? 5 : -5, y: -10}, true);
+        this.body.applyImpulse({x: this.facingRight ? 5 : -5, y: -8}, true);
     }
+
+    onBackflip() {
+        this.state = WormState.InMotion;
+        this.body.applyImpulse({x: this.facingRight ? -3 : -3, y: -13}, true);
+    }
+
 
     onInputBegin = (inputKind: InputKind) => {
         if (this.state === WormState.Firing) {
@@ -160,6 +166,8 @@ export class Worm extends PlayableEntity {
             this.onBeginFireWeapon();
         } else if (inputKind === InputKind.Jump) {
             this.onJump();
+        } else if (inputKind === InputKind.Backflip) {
+            this.onBackflip();
         }
         if (this.currentWeapon.timerAdjustable) {
             const oldTime = this.weaponTimerSecs;
