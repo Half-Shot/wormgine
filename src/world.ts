@@ -1,7 +1,8 @@
 import { IGameEntity, IPhysicalEntity } from "./entities/entity";
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
-import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
+import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, Ray, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
+import { add, mult } from "./utils";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -14,6 +15,7 @@ export interface RapierPhysicsObject {
 
 
 export const PIXELS_PER_METER = 20;
+export const MAX_WIND = 10;
 
 export enum CollisionGroups {
     Terrain = 1, // 0001
@@ -40,10 +42,18 @@ export class GameWorld {
     public readonly bodyEntityMap = new Map<number, IPhysicalEntity>();
     public readonly entities = new Set<IGameEntity>();
     private readonly eventQueue = new EventQueue(true);
-    // TODO: Unsure if this is the best location.
+    private _wind = 0;
+
+    get wind() {
+        return this._wind;
+    }
     
     constructor(public readonly rapierWorld: World, public readonly ticker: Ticker) {
         
+    }
+
+    public setWind(windSpeed: number) {
+        this._wind = windSpeed;
     }
 
     public areEntitiesMoving() {
@@ -129,6 +139,7 @@ export class GameWorld {
             this.bodyEntityMap.set(collider.handle, entity);
         });
     }
+
     removeBody(obj: RapierPhysicsObject) {
         this.rapierWorld.removeCollider(obj.collider, false);
         this.rapierWorld.removeRigidBody(obj.body);
@@ -174,7 +185,7 @@ export class GameWorld {
         return [...results];
     }
 
-    public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier: Collider): IPhysicalEntity[] {
+    public checkCollision(position: Coordinate, radius: number|MetersValue, ownCollier?: Collider): IPhysicalEntity[] {
         // Ensure a unique set of results.
         const results = new Set<IPhysicalEntity>();
         this.rapierWorld.intersectionsWithShape(
@@ -182,7 +193,7 @@ export class GameWorld {
             0,
             new Ball(radius.valueOf()),
             (collider) => {
-                if (collider.handle !== ownCollier.handle) {
+                if (!ownCollier || collider.handle !== ownCollier.handle) {
                     const entity = this.bodyEntityMap.get(collider.handle);
                     if (entity) {
                         results.add(entity);
@@ -192,5 +203,20 @@ export class GameWorld {
             },
         );
         return [...results];
+    }
+
+    public rayTrace(position: Coordinate, direction: Vector2, ignore: Collider): {entity: IPhysicalEntity, hitLoc: Coordinate}|null {
+        const hit = this.rapierWorld.castRay(new Ray(position.toWorldVector(), direction), 1000, true, undefined, undefined, ignore);
+        if (hit?.collider) {
+            const entity = this.bodyEntityMap.get(hit.collider.handle);
+            if (!entity) {
+                throw new Error('Hit collider but no mapped entity');
+            } 
+            return {
+                entity,
+                hitLoc: Coordinate.fromWorld(add(position.toWorldVector(), mult(direction, hit.timeOfImpact))),
+            };
+        }
+        return null;
     }
 }
