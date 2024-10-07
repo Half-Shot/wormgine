@@ -9,7 +9,7 @@ import { PlayableEntity } from './playable';
 import { teamGroupToColorSet, WormInstance } from '../../logic/teams';
 import { calculateMovement } from '../../movementController';
 import { Viewport } from 'pixi-viewport';
-import { magnitude, mult, pointOnRadius, sub } from '../../utils';
+import { magnitude, pointOnRadius, sub } from '../../utils';
 import { GameStateOverlay } from '../../overlays/gameStateOverlay';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
 import { WeaponBazooka } from '../../weapons';
