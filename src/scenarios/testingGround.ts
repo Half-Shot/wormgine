@@ -126,7 +126,7 @@ export default async function runScenario(game: Game) {
         }
         if (endOfRoundWaitDuration === null) {
             const nextState = gameState.advanceRound();
-            console.log('advancing', nextState);
+            console.log('advancing round', nextState);
             if ('winningTeams' in nextState) {
                 if (nextState.winningTeams.length) {
                     overlay.addNewToast(templateRandomText(TeamWinnerText, {
@@ -149,6 +149,7 @@ export default async function runScenario(game: Game) {
             if (!currentWorm) {
                 throw Error('Expected next worm');
             }
+            world.setWind(gameState.currentWind);
             currentWorm.onWormSelected();
             weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
             game.viewport.follow(currentWorm.sprite);

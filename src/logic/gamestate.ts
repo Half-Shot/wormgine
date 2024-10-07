@@ -62,10 +62,19 @@ export class GameState {
     private nextTeamStack: InternalTeam[];
     private remainingRoundTimeMs = 0;
 
+    /**
+     * Wind strength. Integer between -10 and 10.
+     */
+    private wind = 0;
+
     private roundOverAtTs = 0;
     private preRoundOverAtTs = 0;
 
     private stateIteration = 0;
+
+    get currentWind() {
+        return this.wind;
+    }
 
     get remainingRoundTime() {
         return this.remainingRoundTimeMs;
@@ -117,7 +126,8 @@ export class GameState {
         }
     }
 
-    public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance}|{winningTeams: InternalTeam[]} {
+    public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance, wind: number}|{winningTeams: InternalTeam[]} {
+        this.wind = Math.ceil((Math.random()*20)-11);
         if (!this.currentTeam) {
             const [firstTeam] = this.nextTeamStack.splice(0, 1);
             this.currentTeam = firstTeam;
@@ -125,6 +135,7 @@ export class GameState {
                 nextTeam: this.currentTeam,
                 // Team *should* have at least one healthy worm.
                 nextWorm: this.currentTeam.popNextWorm(),
+                wind: this.wind,
             }
         }
         const previousTeam = this.currentTeam;
@@ -162,6 +173,7 @@ export class GameState {
             nextTeam: this.currentTeam,
             // We should have already validated that this team has healthy worms.
             nextWorm: this.currentTeam.popNextWorm(),
+            wind: this.wind,
         }
     }
 }
