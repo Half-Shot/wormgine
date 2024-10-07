@@ -6,6 +6,7 @@ import { GameWorld } from "../world";
 export enum IWeaponCode {
     Grenade,
     Bazooka,
+    Shotgun,
 }
 
 export interface FireOpts {

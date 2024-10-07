@@ -21,9 +21,9 @@ export const WeaponBazooka: IWeaponDefiniton = {
         const forceComponent = opts.duration/8;
         const x = forceComponent*Math.cos(opts.angle);
         const y = forceComponent*Math.sin(opts.angle);
-        const force = mult(new Vector2(1 * forceComponent, forceComponent), { x, y });
+        const force = mult(new Vector2(1.5 * forceComponent, forceComponent), { x, y });
         // TODO: Refactor ALL OF THIS
-        const position = Coordinate.fromWorld(add(worm.position, {x, y: -0.3})); 
+        const position = Coordinate.fromWorld(add(worm.position, {x, y: -0.5})); 
         return BazookaShell.create(parent, world, position, force, worm.wormIdent);
     },
 }
