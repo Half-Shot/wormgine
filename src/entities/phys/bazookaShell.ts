@@ -59,6 +59,7 @@ export class BazookaShell extends TimedExplosive {
         this.sprite.scale.set(0.5, 0.5);
         this.sprite.anchor.set(0.5, 0.5);
         this.rotationOffset = Math.PI/2;
+        this.body.addForce({x: this.gameWorld.wind, y: 0}, false);
     }
     
 

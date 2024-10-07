@@ -29,7 +29,7 @@ export default async function runScenario(game: Game) {
         Assets.get('testingGround')
     );
 
-    world.setWind(-3);
+    world.setWind(-10);
 
     const gameState = new GameState([{
         name: "The Prawns",

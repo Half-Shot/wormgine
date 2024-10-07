@@ -250,39 +250,6 @@ export class Worm extends PlayableEntity {
         this.physObject.body.setTranslation(move, false);
     }
 
-    // onStoppedMoving() {
-    //     console.log('Stopped moving');
-    //     // We are in a InMotion state but have come to rest.
-    //     this.state = WormState.Idle;
-    //     Body.setStatic(this.body, true);
-    //     this.body.angle = 0;
-    //     const height = (this.body.bounds.max.y - this.body.bounds.min.y) - 20;
-    //     const {point: tp, fell} = this.terrain.getNearestTerrainPosition(
-    //         Vector.create(this.body.position.x, this.body.position.y + height),
-    //         30,
-    //         50,
-    //     );
-    //     if (fell) {
-    //         console.warn("Worm has stopped moving, but thinks it's still falling according to getNearestTerrainPosition!");
-    //     }
-    //     if (tp) {
-    //         this.terrainPosition = tp;
-    //         Body.setPosition(this.body, Vector.create(tp.x, tp.y - height));
-    //         console.log("Stopped at:", this.terrainPosition);
-    //         this.terrain.registerDamageListener(tp, () => {
-    //             // TODO: This current launches the worm into the water, not quite sure why.
-    //             console.log('Worm position damaged');
-    //             Body.setStatic(this.body, false);
-    //             // Body.setPosition(this.body, Vector.sub(this.body.position, Vector.create(0,50)));
-    //             // Body.setVelocity(this.body, Vector.create(0,0));
-    //             Sleeping.set(this.body, false);
-    //             this.state = WormState.InMotion;
-    //         });
-    //     } else {
-    //         console.warn("Stopped moving but could not find a terrain position");
-    //     }
-    // }
-
     onBeginFireWeapon() {
         this.state = WormState.Firing;
     }
