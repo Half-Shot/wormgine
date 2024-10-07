@@ -12,7 +12,7 @@ import { Viewport } from 'pixi-viewport';
 import { magnitude, mult, pointOnRadius, sub } from '../../utils';
 import { GameStateOverlay } from '../../overlays/gameStateOverlay';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
-import { WeaponBazooka, WeaponShotgun } from '../../weapons';
+import { WeaponBazooka } from '../../weapons';
 
 export enum WormState {
     Idle = 0,
@@ -206,7 +206,7 @@ export class Worm extends PlayableEntity {
             // Falling, can't move
             return;
         }
-        let changedDirection = (direction === InputKind.MoveLeft && this.facingRight) || (direction === InputKind.MoveRight && !this.facingRight);
+        const changedDirection = (direction === InputKind.MoveLeft && this.facingRight) || (direction === InputKind.MoveRight && !this.facingRight);
 
         if (changedDirection) {
             this.fireAngle = MaxAim + (MaxAim - this.fireAngle);
@@ -355,11 +355,6 @@ export class Worm extends PlayableEntity {
         if (this.state === WormState.Firing && this.currentWeapon.maxDuration) {
             const mag = this.fireWeaponDuration / this.currentWeapon.maxDuration;
             const relativeSpritePos = sub(this.sprite.position, this.targettingGfx.position);
-            const relativeSprite = mult(relativeSpritePos, {x: 1-mag, y: 1-mag});
-            // this.targettingGfx.moveTo(relativeSpritePos.x, relativeSpritePos.y).lineTo(relativeSprite.x,relativeSprite.y).stroke({
-            //     width: 3,
-            //     color: teamFgColour
-            // });
             this.targettingGfx.moveTo(relativeSpritePos.x, relativeSpritePos.y)
                 .arc(relativeSpritePos.x, relativeSpritePos.y, mag * targettingRadius.pixels, this.fireAngle-FireAngleArcPadding, this.fireAngle+FireAngleArcPadding)
                 .moveTo(relativeSpritePos.x, relativeSpritePos.y).fill({

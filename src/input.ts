@@ -5,6 +5,7 @@ export enum InputKind {
     MoveRight,
     AimUp,
     AimDown,
+    Jump,
     Fire,
     ToggleDebugView,
     DebugSwitchWeapon,
@@ -15,11 +16,13 @@ export enum InputKind {
     WeaponTimer5,
 }
 
+
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowLeft": InputKind.MoveLeft,
     "ArrowRight": InputKind.MoveRight,
     "ArrowUp": InputKind.AimUp,
     "ArrowDown": InputKind.AimDown,
+    "Enter": InputKind.Jump,
     // I LOVE THE CONSISTENCY HERE BROWSERS
     " ": InputKind.Fire,
     "F9": InputKind.ToggleDebugView,
