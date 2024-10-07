@@ -2,7 +2,7 @@ import { ColorSource, Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from 
 import { GameState } from "../logic/gamestate";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
-import { GameWorld } from "../world";
+import { GameWorld, MAX_WIND } from "../world";
 
 interface Toast {
     text: string;
@@ -138,15 +138,36 @@ export class GameStateOverlay {
         }
 
 
-        this.roundTimer.text = Math.floor(this.gameState.roundTimer/1000);
+        this.roundTimer.text = Math.floor(this.gameState.remainingRoundTime/1000);
         const bottomY = (this.screenHeight / 10) * 9;
         this.gfx.clear();
 
         // Remove any previous text.
         this.gfx.removeChildren(0, this.gfx.children.length);
+        const currentTeamColors = this.gameState.activeTeam ? teamGroupToColorSet(this.gameState.activeTeam?.group) : { fg: 0xAAAAAA };
 
         // Round timer
-        applyGenericBoxStyle(this.gfx).roundRect(this.roundTimer.x - 8, this.roundTimer.y - 8, this.roundTimer.width + 16, this.roundTimer.height + 16, 4).stroke().fill();
+        applyGenericBoxStyle(this.gfx, currentTeamColors.fg).roundRect(this.roundTimer.x - 8, this.roundTimer.y - 8, this.roundTimer.width + 16, this.roundTimer.height + 16, 4).stroke().fill();
+
+        // Wind
+        const windX = ((this.screenWidth / 20) * 16) + 14;
+        const windY = ((this.screenHeight / 10) * 9) + 12;
+        applyGenericBoxStyle(this.gfx).roundRect(
+            windX, 
+            windY,
+            200,
+            25,
+            4
+        ).stroke().fill();
+
+        const windScale = this.gameWorld.wind / MAX_WIND;
+        applyGenericBoxStyle(this.gfx).roundRect(
+            (windScale >= 0 ? (windX + 100) : ((windX + 100) + (100*windScale))) + 2, 
+            windY + 2,
+            96 * Math.abs(windScale),
+            21,
+            4
+        ).fill({ color: windScale > 0 ? 0xEE3333 : 0x3333EE });
 
         // For each team:
         // TODO: Sort by health and group
@@ -164,15 +185,15 @@ export class GameStateOverlay {
                 text: team.name,
                 style: {
                     ...DefaultTextStyle,
-                    fontSize: 24,
+                    fontSize: 28,
                     align: 'center',
                 }
             });
-            
+            const border = team === this.gameState.activeTeam ? 0xFFFFFF : undefined;
             const nameTagStartX = centerX - nameTag.width - 120;
-            applyGenericBoxStyle(this.gfx).roundRect(nameTagStartX - 3, teamBottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
+            applyGenericBoxStyle(this.gfx, border).roundRect(nameTagStartX - 3, teamBottomY-2, nameTag.width + 6, nameTag.height + 4, 4).stroke().fill();
             nameTag.position.set(nameTagStartX, teamBottomY);
-            applyGenericBoxStyle(this.gfx).roundRect(centerX - 102, teamBottomY-2, 204, 24, 4).stroke().fill();
+            applyGenericBoxStyle(this.gfx, border).roundRect(centerX - 102, teamBottomY-2, 204, 24, 4).stroke().fill();
             this.gfx.setStrokeStyle({
                 width: 5,
                 color: fg,

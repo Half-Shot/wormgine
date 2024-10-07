@@ -1,9 +1,9 @@
-import { Graphics, TextOptions } from "pixi.js";
+import { ColorSource, Graphics, TextOptions } from "pixi.js";
 
-export function applyGenericBoxStyle(gfx: Graphics) {
+export function applyGenericBoxStyle(gfx: Graphics, borderColor: ColorSource = 0xAAAAAA) {
     return gfx.setStrokeStyle({
         width: 2,
-        color: 0xAAAAAA,
+        color: borderColor,
         cap: 'butt',
         join: 'round',
     }).setFillStyle({ color: 0x111111, alpha: 0.95})
