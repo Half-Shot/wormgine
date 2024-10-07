@@ -14,7 +14,6 @@ import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { Firework } from "../entities/phys/firework";
 import { Worm } from "../entities/playable/worm";
 import { DefaultTextStyle } from "../mixins/styles";
-// import { BazookaShell } from "../entities/phys/bazookaShell";
 
 const weapons = ["grenade", "mine", "firework"];
 

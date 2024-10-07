@@ -1,4 +1,4 @@
-import { Assets, Ticker } from "pixi.js";
+import { Assets, Ticker, Text } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
@@ -9,6 +9,13 @@ import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { GameDrawText, TeamWinnerText, templateRandomText } from "../text/toasts";
+import { PhysicsEntity } from "../entities/phys/physicsEntity";
+import { DefaultTextStyle } from "../mixins/styles";
+import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../weapons";
+import staticController, { InputKind } from "../input";
+import { IWeaponCode } from "../weapons/weapon";
+
+const weapons = [WeaponBazooka, WeaponGrenade, WeaponShotgun];
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -21,6 +28,8 @@ export default async function runScenario(game: Game) {
         game.world,
         Assets.get('testingGround')
     );
+
+    world.setWind(-3);
 
     const gameState = new GameState([{
         name: "The Prawns",
@@ -65,7 +74,9 @@ export default async function runScenario(game: Game) {
             const wormEnt = world.addEntity(
                 await Worm.create(parent, world, Coordinate.fromScreen(400 + i,105), wormInstance, async (worm, definition, opts) => {
                 const newProjectile = definition.fireFn(parent, world, worm, opts);
-                world.addEntity(newProjectile);
+                if (newProjectile instanceof PhysicsEntity) {
+                    world.addEntity(newProjectile);
+                }
                 return await newProjectile.onFireResult;
             }, overlay));
             wormInstances.set(wormInstance.uuid, wormEnt);
@@ -75,6 +86,31 @@ export default async function runScenario(game: Game) {
     let endOfRoundWaitDuration: number|null = null;
     let endOfGameFadeOut: number|null = null;
     let currentWorm: Worm|undefined;
+
+    let selectedWeaponIndex = 0;
+    const weaponText = new Text({
+        text: `Selected Weapon (press S to switch): no-worm-selected`,
+        style: DefaultTextStyle,
+    });
+    weaponText.position.set(20, 50);
+    
+    
+    staticController.on('inputEnd', (kind: InputKind) => {
+        if (kind !== InputKind.DebugSwitchWeapon) {
+            return;
+        }
+        selectedWeaponIndex++;
+        if (selectedWeaponIndex === weapons.length) {
+            selectedWeaponIndex = 0;
+        }
+
+        if (!currentWorm) {
+            return;
+        }
+        currentWorm.selectWeapon(weapons[selectedWeaponIndex]);
+        weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
+    });
+
 
     const roundHandlerFn = (dt: Ticker) => {
         if (endOfGameFadeOut !== null) {
@@ -106,7 +142,6 @@ export default async function runScenario(game: Game) {
                 currentWorm = wormInstances.get(nextState.nextWorm.uuid);
                 // Turn just ended.
                 endOfRoundWaitDuration = 5000;
-                console.log(currentWorm);
             }
             return;
         }
@@ -115,6 +150,7 @@ export default async function runScenario(game: Game) {
                 throw Error('Expected next worm');
             }
             currentWorm.onWormSelected();
+            weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
             game.viewport.follow(currentWorm.sprite);
             endOfRoundWaitDuration = null;
             return;
@@ -123,4 +159,5 @@ export default async function runScenario(game: Game) {
     };
 
     game.pixiApp.ticker.add(roundHandlerFn);
+    game.pixiApp.stage.addChild(weaponText);
 }
