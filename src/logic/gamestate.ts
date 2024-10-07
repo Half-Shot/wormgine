@@ -1,8 +1,12 @@
+import { Ticker } from "pixi.js";
 import { Team, WormInstance } from "./teams";
 
 interface GameRules {
     winWhenOneGroupRemains: boolean;
 }
+
+const PreRoundMs = 5000;
+const RoundTimerMs = 60000;
 
 export class InternalTeam implements Team {
     public readonly worms: WormInstance[];
@@ -56,12 +60,23 @@ export class GameState {
     private currentTeam?: InternalTeam;
     private readonly teams: InternalTeam[];
     private nextTeamStack: InternalTeam[];
-    private currentRoundTime = 42000;
+    private remainingRoundTimeMs = 0;
+
+    private roundOverAtTs = 0;
+    private preRoundOverAtTs = 0;
 
     private stateIteration = 0;
 
-    get roundTimer() {
-        return this.currentRoundTime;
+    get remainingRoundTime() {
+        return this.remainingRoundTimeMs;
+    }
+
+    get isPreRound() {
+        return this.preRoundOverAtTs !== 0;
+    }
+    
+    get activeTeam() {
+        return this.currentTeam;
     }
     
     constructor(teams: Team[], private readonly rules: GameRules = { winWhenOneGroupRemains: false }) {
@@ -88,6 +103,18 @@ export class GameState {
 
     public get iteration(): number {
         return this.stateIteration;
+    }
+
+    public update(ticker: Ticker) {
+        if (this.remainingRoundTimeMs) {
+            this.remainingRoundTimeMs = Math.min(0, this.remainingRoundTimeMs - ticker.deltaMS);
+        }
+        if (this.remainingRoundTimeMs === 0 && this.preRoundOverAtTs) {
+            // Timer expired.
+            this.preRoundOverAtTs = 0;
+            this.roundOverAtTs = Date.now() + RoundTimerMs;
+            this.remainingRoundTimeMs = RoundTimerMs;
+        }
     }
 
     public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance}|{winningTeams: InternalTeam[]} {
@@ -129,6 +156,7 @@ export class GameState {
             }
         }
         this.stateIteration++;
+        this.preRoundOverAtTs = Date.now() + PreRoundMs;
 
         return {
             nextTeam: this.currentTeam,
