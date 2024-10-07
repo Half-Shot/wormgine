@@ -75,9 +75,14 @@ export default async function runScenario(game: Game) {
                 await Worm.create(parent, world, Coordinate.fromScreen(400 + i,105), wormInstance, async (worm, definition, opts) => {
                 const newProjectile = definition.fireFn(parent, world, worm, opts);
                 if (newProjectile instanceof PhysicsEntity) {
+                    parent.follow(newProjectile.sprite);
                     world.addEntity(newProjectile);
                 }
-                return await newProjectile.onFireResult;
+                const res = await newProjectile.onFireResult;
+                if (newProjectile instanceof PhysicsEntity) { 
+                    parent.follow(worm.sprite);
+                }
+                return res;
             }, overlay));
             wormInstances.set(wormInstance.uuid, wormEnt);
         }
