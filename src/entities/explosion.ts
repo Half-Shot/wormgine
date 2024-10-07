@@ -3,8 +3,9 @@ import { IGameEntity } from "./entity";
 import { Sound } from "@pixi/sound";
 import { MetersValue } from "../utils/coodinate";
 import { AssetPack } from "../assets";
+import { Vector } from "@dimforge/rapier2d-compat";
 
-interface ExplosionsOptions {
+export interface ExplosionsOptions {
     shrapnelMin: number,
     shrapnelMax: number,
     hue: ColorSource,
@@ -45,7 +46,7 @@ export class Explosion implements IGameEntity {
         kind: "fire"|"pop"
     }[] = []
 
-    static create(parent: Container, point: Point, initialRadius: MetersValue, opts: Partial<ExplosionsOptions> = { }) {
+    static create(parent: Container, point: Vector, initialRadius: MetersValue, opts: Partial<ExplosionsOptions> = { }) {
         const ent = new Explosion(point, initialRadius, {
             shrapnelMax: 25,
             shrapnelMin: 8,
@@ -57,7 +58,7 @@ export class Explosion implements IGameEntity {
         return ent;
     }
 
-    private constructor(point: Point, private initialRadius: MetersValue, private readonly opts: ExplosionsOptions) {
+    private constructor(point: Vector, private initialRadius: MetersValue, private readonly opts: ExplosionsOptions) {
         for (let index = 0; index < (opts.shrapnelMin + Math.ceil(Math.random() * (opts.shrapnelMax-opts.shrapnelMin))); index++) {
             const xSpeed = (Math.random()*7)-3.5;
             const kind = Math.random() >= 0.75 ? "fire" : "pop";
@@ -78,7 +79,7 @@ export class Explosion implements IGameEntity {
             })
             
         }
-        this.gfx = new Graphics({ position: point.clone()});
+        this.gfx = new Graphics({ position: {x: point.x, y: point.y}});
         this.timer = Ticker.targetFPMS  * this.explosionMs;
         this.radiusExpandBy = initialRadius.pixels * 0.2;
         const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);

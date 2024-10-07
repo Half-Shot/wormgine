@@ -83,6 +83,7 @@ export class Firework extends TimedExplosive {
             explosionShrapnelHue: secondaryColor,
             timerSecs: 1.33,
             autostartTimer: true,
+            maxDamage: 35,
         });
         this.scream = Promise.resolve(Firework.screamSound.play());
         this.gfx = new Graphics();

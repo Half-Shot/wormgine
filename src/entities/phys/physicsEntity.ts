@@ -1,5 +1,5 @@
 import { UPDATE_PRIORITY, Sprite, Point } from "pixi.js";
-import { IPhysicalEntity } from "../entity";
+import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe.";
 import globalFlags, { DebugLevel } from "../../flags";
@@ -98,7 +98,7 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
         return false;
     }
 
-    onDamage(point: Vector2, radius: MetersValue): void {
+    onDamage(point: Vector2, radius: MetersValue, _opts: OnDamageOpts): void {
         const bodyTranslation = this.physObject.body.translation();
         const forceMag = radius.value/magnitude(sub(point,this.physObject.body.translation()));
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag*1.5));

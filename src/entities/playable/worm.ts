@@ -9,10 +9,10 @@ import { PlayableEntity } from './playable';
 import { teamGroupToColorSet, WormInstance } from '../../logic/teams';
 import { calculateMovement } from '../../movementController';
 import { Viewport } from 'pixi-viewport';
-import { magnitude, pointOnRadius } from '../../utils';
+import { magnitude, mult, pointOnRadius, sub } from '../../utils';
 import { GameStateOverlay } from '../../overlays/gameStateOverlay';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
-import { WeaponBazooka } from '../../weapons';
+import { WeaponBazooka, WeaponShotgun } from '../../weapons';
 
 export enum WormState {
     Idle = 0,
@@ -35,7 +35,8 @@ export enum EndTurnReason {
 
 const MaxAim = Math.PI * 1.5; // Up
 const MinAim = Math.PI * 0.5; // Down
-const targettingRadius = new MetersValue(3);
+const targettingRadius = new MetersValue(5);
+const FireAngleArcPadding = 0.15;
 const maxWormStep = new MetersValue(0.6);
 const aimMoveSpeed = 0.02;
 
@@ -71,10 +72,10 @@ export class Worm extends PlayableEntity {
     static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, gameOverlay?: GameStateOverlay) {
         const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, gameOverlay);
         world.addBody(ent, ent.physObject.collider);
+        parent.addChild(ent.targettingGfx);
         parent.addChild(ent.sprite);
         parent.addChild(ent.wireframe.renderable);
         parent.addChild(ent.healthTextBox);
-        parent.addChild(ent.targettingGfx);
         return ent;
     }
 
@@ -88,6 +89,18 @@ export class Worm extends PlayableEntity {
 
     get endTurnReason() {
         return this.turnEndedReason;
+    }
+
+    get collider() {
+        return this.physObject.collider;
+    }
+
+    get weapon() {
+        return this.currentWeapon;
+    }
+
+    public selectWeapon(weapon: IWeaponDefiniton) {
+        this.currentWeapon = weapon;
     }
 
     private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: GameStateOverlay) {
@@ -106,10 +119,7 @@ export class Worm extends PlayableEntity {
             damageMultiplier: 250,
         });
         this.targettingGfx = new Graphics({ visible: false });
-        this.targettingGfx.circle(0,0,5).stroke({
-            color: "red",
-            width: 2,
-        });
+        this.updateTargettingGfx();
     }
 
     onWormSelected() {
@@ -120,8 +130,6 @@ export class Worm extends PlayableEntity {
         }), 3000, teamGroupToColorSet(this.wormIdent.team.group).fg);
         Controller.on('inputBegin', this.onInputBegin);
         Controller.on('inputEnd', this.onInputEnd);
-        // TODO: Move this to weapon switch func
-        this.targettingGfx.visible = !!this.currentWeapon.showTargetGuide;
     }
 
     onEndOfTurn() {
@@ -130,7 +138,16 @@ export class Worm extends PlayableEntity {
         this.targettingGfx.visible = false;
     }
 
+    onJump() {
+        this.state = WormState.InMotion;
+        this.body.applyImpulse({x: this.facingRight ? 5 : -5, y: -10}, true);
+    }
+
     onInputBegin = (inputKind: InputKind) => {
+        if (this.state === WormState.Firing) {
+            // Ignore all input when the worm is firing.
+            return;
+        }
         if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
             this.setMoveDirection(inputKind);
         } else if (this.state !== WormState.Idle) {
@@ -141,6 +158,8 @@ export class Worm extends PlayableEntity {
             this.state = WormState.AimingDown;
         } else if (inputKind === InputKind.Fire) {
             this.onBeginFireWeapon();
+        } else if (inputKind === InputKind.Jump) {
+            this.onJump();
         }
         if (this.currentWeapon.timerAdjustable) {
             const oldTime = this.weaponTimerSecs;
@@ -272,6 +291,7 @@ export class Worm extends PlayableEntity {
         if (this.state !== WormState.Firing) {
             return;
         }
+        this.targettingGfx.visible = false;
         // TODO: Need a middle state for while the world is still active.
         this.state = WormState.InactiveWaiting;
         this.turnEndedReason = EndTurnReason.FiredWeapon;
@@ -314,6 +334,38 @@ export class Worm extends PlayableEntity {
                 TeamName: this.wormIdent.team.name,
             }), 2000);
         })
+        this.updateTargettingGfx();
+    }
+
+    updateTargettingGfx() {
+        this.targettingGfx.clear();
+        const teamFgColour = teamGroupToColorSet(this.wormIdent.team.group).fg;
+        this.targettingGfx.circle(0,0,12).stroke({
+            color: teamFgColour,
+            width: 2,
+        })
+            .moveTo(-12,0).lineTo(12,0)
+            .moveTo(0,-12).lineTo(0,12)
+            .stroke({
+            color: teamFgColour,
+            width: 4,
+        }).circle(0,0,3).fill({
+            color: 'white',
+        });
+        if (this.state === WormState.Firing && this.currentWeapon.maxDuration) {
+            const mag = this.fireWeaponDuration / this.currentWeapon.maxDuration;
+            const relativeSpritePos = sub(this.sprite.position, this.targettingGfx.position);
+            const relativeSprite = mult(relativeSpritePos, {x: 1-mag, y: 1-mag});
+            // this.targettingGfx.moveTo(relativeSpritePos.x, relativeSpritePos.y).lineTo(relativeSprite.x,relativeSprite.y).stroke({
+            //     width: 3,
+            //     color: teamFgColour
+            // });
+            this.targettingGfx.moveTo(relativeSpritePos.x, relativeSpritePos.y)
+                .arc(relativeSpritePos.x, relativeSpritePos.y, mag * targettingRadius.pixels, this.fireAngle-FireAngleArcPadding, this.fireAngle+FireAngleArcPadding)
+                .moveTo(relativeSpritePos.x, relativeSpritePos.y).fill({
+                color: teamFgColour,
+            });
+        }
     }
 
     updateAiming() {
@@ -372,10 +424,15 @@ export class Worm extends PlayableEntity {
             return;
         }
         const falling = !this.isSinking && this.body.linvel().y > 4;
+        this.targettingGfx.visible = !!this.currentWeapon.showTargetGuide && [WormState.Firing, WormState.Idle, WormState.AimingDown, WormState.AimingUp].includes(this.state);
 
         if (this.targettingGfx.visible) {
             const {x, y} = pointOnRadius(this.sprite.x, this.sprite.y, this.fireAngle, targettingRadius.pixels);
-            this.targettingGfx.position.set(x, y);
+            this.targettingGfx.position.set(x, y);    
+        }
+
+        if (this.state === WormState.Firing) {
+            this.updateTargettingGfx();
         }
 
 

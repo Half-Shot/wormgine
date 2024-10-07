@@ -47,11 +47,12 @@ export class BazookaShell extends TimedExplosive {
             );
 
         super(sprite, body, world, parent, {
-            explosionRadius: new MetersValue(3.5),
+            explosionRadius: new MetersValue(2.25),
             explodeOnContact: true,
             timerSecs: 30,
             autostartTimer: true,
             ownerWorm: owner,
+            maxDamage: 45,
         });
         this.sprite.x = position.screenX;
         this.sprite.y = position.screenY;

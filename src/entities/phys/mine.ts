@@ -62,6 +62,7 @@ export class Mine extends TimedExplosive {
             explodeOnContact: false,
             timerSecs: 5,
             autostartTimer: false,
+            maxDamage: 40,
         });
         this.sensor = world.rapierWorld.createCollider(ColliderDesc.ball(
             Mine.MineTriggerRadius.value).setActiveEvents(ActiveEvents.COLLISION_EVENTS)

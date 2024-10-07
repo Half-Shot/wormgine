@@ -3,7 +3,7 @@ import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
-import { IPhysicalEntity } from "../entity";
+import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
@@ -17,6 +17,7 @@ interface Opts {
 
 // This is clearly not milliseconds, something is odd about our dt.
 const HEALTH_TENSION_MS = 75;
+const SELF_EXPLODE_MAX_DAMAGE = 25;
 
 /**
  * Entity that can be directly controlled by a player.
@@ -141,7 +142,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
         // Detect if anything is around us.
         for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), this.opts.explosionRadius, this.physObject.collider)) {
             if (element.onDamage) {
-                element.onDamage(point, this.opts.explosionRadius);
+                element.onDamage(point, this.opts.explosionRadius , { maxDamage: SELF_EXPLODE_MAX_DAMAGE });
             }
         }
         this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), this.opts.explosionRadius, {
@@ -163,11 +164,11 @@ export abstract class PlayableEntity extends PhysicsEntity {
         return false;
     }
 
-    public onDamage(point: Vector2, radius: MetersValue): void {
+    public onDamage(point: Vector2, radius: MetersValue, opts: OnDamageOpts): void {
         // TODO: Animate damage taken.
         const bodyTranslation = this.physObject.body.translation();
         const forceMag = radius.value/magnitude(sub(point,this.physObject.body.translation()));
-        const damage = Math.round((forceMag/20)*this.opts.damageMultiplier);
+        const damage = Math.min(opts.maxDamage ?? 100, Math.round((forceMag/20)*this.opts.damageMultiplier));
         this.health = Math.max(0, this.health - damage);
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag));
         this.physObject.body.applyImpulse(force, true)

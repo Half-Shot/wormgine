@@ -15,6 +15,10 @@ export interface IGameEntity {
     destroy(): void;
 }
 
+export interface OnDamageOpts {
+    maxDamage?: number;
+}
+
 /**
  * Any entity that has attached bodies in the game. Unlike `physicsEntity` which
  * may be attached to one sprite and can be affected by other entites, this interface
@@ -40,9 +44,9 @@ export interface IPhysicalEntity extends IGameEntity {
      * @param point The point from where the damage originates.
      * @param radius The radius of the explosion. 
      */
-    onDamage?(point: Vector2, radius: MetersValue): void
+    onDamage?(point: Vector2, radius: MetersValue, opts: OnDamageOpts): void
 }
 
-export interface IWeaponEntity extends IPhysicalEntity {
+export interface IWeaponEntity {
     onFireResult: Promise<WeaponFireResult[]>;
 }

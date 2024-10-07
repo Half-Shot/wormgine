@@ -63,6 +63,7 @@ export class Grenade extends TimedExplosive {
             timerSecs,
             autostartTimer: true,
             ownerWorm: owner,
+            maxDamage: 40,
         });
         //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text({

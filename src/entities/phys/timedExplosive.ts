@@ -1,13 +1,12 @@
-import { UPDATE_PRIORITY, Ticker, Sprite, Point, ColorSource, Container } from "pixi.js";
+import { UPDATE_PRIORITY, Ticker, Sprite, ColorSource, Container } from "pixi.js";
 import { IPhysicalEntity, IWeaponEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
-import { Explosion } from "../explosion";
-import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
+import { GameWorld, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
-import { Coordinate, MetersValue } from "../../utils/coodinate";
+import { MetersValue } from "../../utils/coodinate";
 import { WeaponFireResult } from "../../weapons/weapon";
 import { WormInstance } from "../../logic/teams";
-import type { Worm } from "../playable/worm";
+import { handleDamageInRadius } from "../../utils/damage";
 
 interface Opts {
     explosionRadius: MetersValue,
@@ -17,6 +16,7 @@ interface Opts {
     autostartTimer: boolean,
     timerSecs?: number,
     ownerWorm?: WormInstance,
+    maxDamage: number,
 }
 
 /**
@@ -65,33 +65,14 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
         }
         this.hasExploded = true;
         this.timer = undefined;
-        const point = this.physObject.body.translation();
-        const radius = this.opts.explosionRadius;
-        // Detect if anything is around us.
-        const explosionCollidesWith = this.gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, this.physObject.collider);
-        const fireResults = new Set<WeaponFireResult>();
-        for (const element of explosionCollidesWith) {
-            element.onDamage?.(point, this.opts.explosionRadius);
-            // Dependency issue, Worm depends on us.
-            if ('health' in element) {
-                const worm = element as Worm;
-                const killed = element.health === 0;
-                if (worm.wormIdent.uuid === this.opts.ownerWorm?.uuid) {
-                    fireResults.add(killed ? WeaponFireResult.KilledSelf : WeaponFireResult.HitSelf);
-                } else if (worm.wormIdent.team.group === this.opts.ownerWorm?.team.group) {
-                    fireResults.add(killed ? WeaponFireResult.KilledOwnTeam : WeaponFireResult.HitSelf);
-                } else if (worm.wormIdent.team.group !== this.opts.ownerWorm?.team.group) {
-                    fireResults.add(killed ? WeaponFireResult.KilledEnemy : WeaponFireResult.HitEnemy);
-                }
-            }
-        }
-        this.fireResultFn(fireResults.size === 0 ? [WeaponFireResult.NoHit] : [...fireResults]);
-        this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), radius, {
-            shrapnelMax: 35,
-            shrapnelMin: 15,
-            hue: this.opts.explosionHue ?? 0xffffff,
-            shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
-        }));
+        handleDamageInRadius(
+            this.gameWorld, this.parent, this.body.translation(), this.opts.explosionRadius,
+            {
+                shrapnelMax: 35,
+                shrapnelMin: 15,
+                hue: this.opts.explosionHue ?? 0xffffff,
+                shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+            }, this.physObject.collider, this.opts.ownerWorm);
         this.destroy();
     }
 
@@ -111,6 +92,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
             if (this.isSinking) {
                 this.timer = 0;
                 this.physObject.body.setRotation(0.15, false);
+                this.fireResultFn([WeaponFireResult.NoHit]);
             }
             return true;
         }
