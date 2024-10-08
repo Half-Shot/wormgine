@@ -145,7 +145,7 @@ export class Worm extends PlayableEntity {
 
     onBackflip() {
         this.state = WormState.InMotion;
-        this.body.applyImpulse({x: this.facingRight ? -3 : -3, y: -13}, true);
+        this.body.applyImpulse({x: this.facingRight ? -3 : 3, y: -13}, true);
     }
 
 
