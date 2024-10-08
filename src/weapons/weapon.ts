@@ -2,6 +2,7 @@ import { IWeaponEntity } from "../entities/entity";
 import { Container } from "pixi.js";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
+import { AssetPack } from "../assets";
 
 export enum IWeaponCode {
     Grenade,
@@ -38,4 +39,5 @@ export interface IWeaponDefiniton {
     timerAdjustable?: boolean,
     showTargetGuide?: boolean,
     fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IWeaponEntity,
+    loadAssets?: (assetPack: AssetPack) => void,
 }

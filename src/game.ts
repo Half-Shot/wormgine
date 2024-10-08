@@ -10,6 +10,7 @@ import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { readAssetsForEntities } from "./entities";
 import { Team } from './logic/teams';
+import { readAssetsForWeapons } from './weapons';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -67,8 +68,9 @@ export class Game {
     }
 
     public async loadResources() {
-        const { textures, sounds } = getAssets();
-        readAssetsForEntities({textures, sounds});
+        const assetPack = getAssets();
+        readAssetsForEntities(assetPack);
+        readAssetsForWeapons(assetPack)
     }
 
     public async run() {

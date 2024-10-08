@@ -24,6 +24,7 @@ import testDolbyDamage3BlushTex from "./test_dolby_damage3_blush.png";
 import testingGroundTex from "./testing_ground.png";
 
 // Sounds
+import bazookafireSnd from "./bazookafire.ogg";
 import explosion1Snd from "./explosion_1.ogg";
 import explosion2Snd from "./explosion_2.ogg";
 import explosion3Snd from "./explosion_3.ogg";
@@ -32,6 +33,7 @@ import metalBounceHeavySnd from "./metal_bounce_heavy.ogg";
 import metalBounceLightSnd from "./metal_bounce_light.ogg";
 import mineBeepSnd from "./mine_beep.ogg";
 import placeholderSnd from "./placeholder.ogg";
+import shotgunSnd from "./shotgun.ogg";
 import splashSnd from "./splash.ogg";
 
 // Fonts
@@ -57,6 +59,7 @@ export interface AssetTextures {
 }
 
 export interface AssetSounds {
+    bazookafire: Sound;
     explosion1: Sound;
     explosion2: Sound;
     explosion3: Sound;
@@ -65,6 +68,7 @@ export interface AssetSounds {
     metalBounceLight: Sound;
     mineBeep: Sound;
     placeholder: Sound;
+    shotgun: Sound;
     splash: Sound;
 }
 
@@ -92,6 +96,7 @@ export const manifest = {
     }, {
         name: "sounds",
         assets: [
+            {src: bazookafireSnd, alias: "bazookafire"},
             {src: explosion1Snd, alias: "explosion1"},
             {src: explosion2Snd, alias: "explosion2"},
             {src: explosion3Snd, alias: "explosion3"},
@@ -100,6 +105,7 @@ export const manifest = {
             {src: metalBounceLightSnd, alias: "metalBounceLight"},
             {src: mineBeepSnd, alias: "mineBeep"},
             {src: placeholderSnd, alias: "placeholder"},
+            {src: shotgunSnd, alias: "shotgun"},
             {src: splashSnd, alias: "splash"}
         ]
     }, {

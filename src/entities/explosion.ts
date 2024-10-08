@@ -10,6 +10,7 @@ export interface ExplosionsOptions {
     shrapnelMax: number,
     hue: ColorSource,
     shrapnelHue: ColorSource,
+    playSound?: boolean,
 }
 
 /**
@@ -82,8 +83,10 @@ export class Explosion implements IGameEntity {
         this.gfx = new Graphics({ position: {x: point.x, y: point.y}});
         this.timer = Ticker.targetFPMS  * this.explosionMs;
         this.radiusExpandBy = initialRadius.pixels * 0.2;
-        const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);
-        Explosion.explosionSounds[soundIndex].play();
+        if (opts.playSound !== false) {
+            const soundIndex = Math.floor(Math.random()*Explosion.explosionSounds.length);
+            Explosion.explosionSounds[soundIndex].play();
+        }
     }
 
 

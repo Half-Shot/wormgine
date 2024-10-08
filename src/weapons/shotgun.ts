@@ -4,18 +4,25 @@ import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { Coordinate, MetersValue } from "../utils";
 import { handleDamageInRadius } from "../utils/damage";
+import { Sound } from "@pixi/sound";
+import { AssetPack } from "../assets";
 
 // TODO: Needs delay, two shots.
 const radius = new MetersValue(1.5);
+let fireSound: Sound;
 
-export const WeaponShotgun: IWeaponDefiniton = {
+const WeaponShotgun: IWeaponDefiniton = {
     code: IWeaponCode.Shotgun,
     timerAdjustable: false,
     showTargetGuide: true,
+    loadAssets(assets: AssetPack) {
+        fireSound = assets.sounds.shotgun;
+    },
     fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
         if (opts.angle === undefined) {
             throw Error('Angle expected but not given');
         }
+        fireSound.play();
         const x = Math.cos(opts.angle);
         const y = Math.sin(opts.angle);
         const hit = world.rayTrace(
@@ -30,6 +37,7 @@ export const WeaponShotgun: IWeaponDefiniton = {
                     shrapnelMax: 15,
                     shrapnelMin: 10,
                     maxDamage: 25,
+                    playSound: false,
                 }, undefined, worm.wormIdent);
             return {
                 onFireResult: Promise.resolve(result)
@@ -40,3 +48,5 @@ export const WeaponShotgun: IWeaponDefiniton = {
         }
     },
 }
+
+export default WeaponShotgun;
