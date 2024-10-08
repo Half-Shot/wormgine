@@ -1,10 +1,13 @@
+import { ChangelogModal } from "./changelog";
 import "./menu.css";
 
 interface Props {
     onNewGame: (level: string) => void
 }
 
-const buildNumber = import.meta.env.VITE_BUILD_NUMBER ?? 'unknown';
+const buildNumber = import.meta.env.VITE_BUILD_NUMBER;
+const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
+const lastCommit = localStorage.getItem('wormgine_last_commit');
 
 export function Menu(props: Props) {
     return <main className="menu">
@@ -23,6 +26,6 @@ export function Menu(props: Props) {
                 <button onClick={() => props.onNewGame("boneIsles")}>Bone Isles</button>
             </li>
         </ul>
-        <small>Build number {buildNumber}</small>
+        <ChangelogModal buildNumber={buildNumber} buildCommit={buildCommit} lastCommit={lastCommit}/>
     </main>;
 }
