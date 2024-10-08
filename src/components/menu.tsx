@@ -1,3 +1,4 @@
+import { useCallback } from "preact/hooks";
 import { ChangelogModal } from "./changelog";
 import "./menu.css";
 
@@ -9,21 +10,27 @@ const buildNumber = import.meta.env.VITE_BUILD_NUMBER;
 const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
 const lastCommit = localStorage.getItem('wormgine_last_commit');
 
-export function Menu(props: Props) {
+export function Menu({onNewGame}: Props) {
+
+    const onStartNewGame = useCallback((level: string) => {
+        localStorage.setItem("wormgine_last_commit", buildCommit);
+        onNewGame(level);
+    }, [onNewGame]);
+
     return <main className="menu">
         <h1>Wormgine Debug Build</h1>
         <ul>
             <li>
-                <button onClick={() => props.onNewGame("grenadeIsland")}>Open Debug Island</button>
+                <button onClick={() => onStartNewGame("grenadeIsland")}>Open Debug Island</button>
             </li>
             <li>
-                <button onClick={() => props.onNewGame("borealisTribute")}>Open Borealis Tribute Rock</button>
+                <button onClick={() => onStartNewGame("borealisTribute")}>Open Borealis Tribute Rock</button>
             </li>
             <li>
-                <button onClick={() => props.onNewGame("testingGround")}>Open Testing Ground</button>
+                <button onClick={() => onStartNewGame("testingGround")}>Open Testing Ground</button>
             </li>
             <li>
-                <button onClick={() => props.onNewGame("boneIsles")}>Bone Isles</button>
+                <button onClick={() => onStartNewGame("boneIsles")}>Bone Isles</button>
             </li>
         </ul>
         <ChangelogModal buildNumber={buildNumber} buildCommit={buildCommit} lastCommit={lastCommit}/>

@@ -18,7 +18,7 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
             }
             const result = await req.json();
             console.log(result);
-            setLatestChanges(result.commits.map((c: any) => `${c.commit.message}`));
+            setLatestChanges(result.commits.map((c: any) => `${c.commit.message}`).reverse());
         })();
     }, [buildCommit, lastCommit, setLatestChanges]);
 
@@ -28,16 +28,17 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
     }, [modalRef]);
 
     const newChangesModal = useMemo(() => {
-        let title = buildNumber ? `Build ${buildNumber}` : `Developer Build ${buildCommit}`;
+        console.log(latestChanges);
+        let title = buildNumber ? `Build #${buildNumber}` : `Developer Build ${buildCommit}`;
         return <dialog ref={modalRef}>
             <h1>{title}</h1>
             <p>
                 Changes since {lastCommit?.slice(0,8)}
             </p>
             <ol>
-                {latestChanges?.map((v,i) => {
+                {latestChanges?.map((v,i) => 
                     <li key={i}>{v}</li>
-                })}
+                )}
             </ol>
         </dialog>;
     }, [buildNumber, buildCommit, lastCommit, latestChanges, modalRef]);

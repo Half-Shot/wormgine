@@ -41,7 +41,6 @@ const sequenceTimeoutMs = 250;
 type Sequence = {sequence: string[], inputKind: InputKind};
 
 class Controller extends EventEmitter {
-
     private readonly activeInputs = new Set();
     private activeSequences = new Array<Sequence>();
     private readonly sequences = new Array<Sequence>();
@@ -56,7 +55,7 @@ class Controller extends EventEmitter {
             }
             this.sequences.push({sequence: parts, inputKind});
         }
-        console.log(this.sequences);
+        // TODO: Only bind when the game has started.
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
     }
@@ -71,14 +70,12 @@ class Controller extends EventEmitter {
 
         // TODO: Optimise.
         if (this.activeSequences.length > 0) {
-            console.log('checking active seq');
             this.activeSequences = this.activeSequences.filter(s => s.sequence[0] === ev.key).map(s => {
                 s.sequence.splice(0,1);
                 return s;
             });
             const sequencesToFire = this.activeSequences.filter(s => s.sequence.length === 0);
             if (sequencesToFire.length) {
-                console.log("Firing AS", sequencesToFire);
                 for (const element of this.activeSequences.filter(s => s.sequence.length === 0)) {
                     this.emit('inputBegin', element.inputKind);
                     // TODO: Wait for actual input end?
@@ -94,9 +91,7 @@ class Controller extends EventEmitter {
                     inputKind: s.inputKind,
                 };
             }));
-            console.log('adding new seq');
         }
-        console.log("AS", this.activeSequences);
 
         clearTimeout(this.activeTimeout);
         this.activeTimeout = setTimeout(() => {
