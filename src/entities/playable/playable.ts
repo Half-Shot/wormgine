@@ -1,10 +1,9 @@
 import { Point, Sprite, UPDATE_PRIORITY, Text, DEG_TO_RAD, Graphics } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
-import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { Coordinate, magnitude, MetersValue, mult, sub } from "../../utils";
+import { GameWorld, RapierPhysicsObject } from "../../world";
+import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
-import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";

@@ -10,7 +10,7 @@ import { teamGroupToColorSet, WormInstance } from '../../logic/teams';
 import { calculateMovement } from '../../movementController';
 import { Viewport } from 'pixi-viewport';
 import { magnitude, pointOnRadius, sub } from '../../utils';
-import { GameStateOverlay } from '../../overlays/gameStateOverlay';
+import { Toaster } from '../../overlays/toaster';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
 import { WeaponBazooka } from '../../weapons';
 
@@ -69,8 +69,8 @@ export class Worm extends PlayableEntity {
     private targettingGfx: Graphics;
     private facingRight = true;
 
-    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, gameOverlay?: GameStateOverlay) {
-        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, gameOverlay);
+    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, toaster?: Toaster) {
+        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, toaster);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.targettingGfx);
         parent.addChild(ent.sprite);
@@ -103,7 +103,7 @@ export class Worm extends PlayableEntity {
         this.currentWeapon = weapon;
     }
 
-    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: GameStateOverlay) {
+    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: Toaster) {
         const sprite = new Sprite(Worm.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
@@ -124,7 +124,7 @@ export class Worm extends PlayableEntity {
 
     onWormSelected() {
         this.state = WormState.Idle;
-        this.toaster?.addNewToast(templateRandomText(TurnStartText, {
+        this.toaster?.pushToast(templateRandomText(TurnStartText, {
             WormName: this.wormIdent.name,
             TeamName: this.wormIdent.team.name,
         }), 3000, teamGroupToColorSet(this.wormIdent.team.group).fg);
@@ -189,7 +189,7 @@ export class Worm extends PlayableEntity {
                     break;
             }
             if (this.weaponTimerSecs !== oldTime) {
-                this.toaster?.addNewToast(templateRandomText(WeaponTimerText, {
+                this.toaster?.pushToast(templateRandomText(WeaponTimerText, {
                     Time: this.weaponTimerSecs.toString(),
                 }), 1250, undefined, true);
             }
@@ -308,7 +308,7 @@ export class Worm extends PlayableEntity {
                 return;
             }
 
-            this.toaster?.addNewToast(templateRandomText(randomTextSet, {
+            this.toaster?.pushToast(templateRandomText(randomTextSet, {
                 WormName: this.wormIdent.name,
                 TeamName: this.wormIdent.team.name,
             }), 2000);
@@ -422,7 +422,7 @@ export class Worm extends PlayableEntity {
                     const damage = this.impactVelocity*Worm.impactDamageMultiplier;
                     this.health -= damage;
                     this.state = WormState.Inactive;
-                    this.toaster?.addNewToast(templateRandomText(TurnEndTextFall, {
+                    this.toaster?.pushToast(templateRandomText(TurnEndTextFall, {
                         WormName: this.wormIdent.name,
                         TeamName: this.wormIdent.team.name,
                     }), 2000);
@@ -454,14 +454,14 @@ export class Worm extends PlayableEntity {
         // XXX: This might need to be dead.
         this.state = WormState.Inactive;
         if (this.isSinking) {
-            this.toaster?.addNewToast(templateRandomText(WormDeathSinking, {
+            this.toaster?.pushToast(templateRandomText(WormDeathSinking, {
                 WormName: this.wormIdent.name,
                 TeamName: this.wormIdent.team.name,
             }), 3000);
             // Sinking death
         } else if (this.health === 0) {
             // Generic death
-            this.toaster?.addNewToast(templateRandomText(WormDeathGeneric, {
+            this.toaster?.pushToast(templateRandomText(WormDeathGeneric, {
                 WormName: this.wormIdent.name,
                 TeamName: this.wormIdent.team.name,
             }), 3000);

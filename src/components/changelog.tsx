@@ -29,7 +29,7 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
 
     const newChangesModal = useMemo(() => {
         console.log(latestChanges);
-        let title = buildNumber ? `Build #${buildNumber}` : `Developer Build ${buildCommit}`;
+        const title = buildNumber ? `Build #${buildNumber}` : `Developer Build ${buildCommit}`;
         return <dialog ref={modalRef}>
             <h1>{title}</h1>
             <p>

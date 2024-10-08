@@ -32,6 +32,9 @@ export function Menu({onNewGame}: Props) {
             <li>
                 <button onClick={() => onStartNewGame("boneIsles")}>Bone Isles</button>
             </li>
+            <li>
+                <button onClick={() => onStartNewGame("uiTest")}>UI Test</button>
+            </li>
         </ul>
         <ChangelogModal buildNumber={buildNumber} buildCommit={buildCommit} lastCommit={lastCommit}/>
     </main>;

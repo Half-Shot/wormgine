@@ -29,8 +29,6 @@ export default async function runScenario(game: Game) {
         Assets.get('testingGround')
     );
 
-    world.setWind(-10);
-
     const gameState = new GameState([{
         name: "The Prawns",
         group: TeamGroup.Red,
@@ -52,6 +50,7 @@ export default async function runScenario(game: Game) {
     });
 
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
+    bg.addToWorld(game.pixiApp.stage, parent);
     await world.addEntity(terrain);
     bg.addToWorld(game.pixiApp.stage, parent);
     terrain.addToWorld(parent);
@@ -83,7 +82,7 @@ export default async function runScenario(game: Game) {
                     parent.follow(worm.sprite);
                 }
                 return res;
-            }, overlay));
+            }, overlay.toaster));
             wormInstances.set(wormInstance.uuid, wormEnt);
         }
     }
@@ -134,12 +133,12 @@ export default async function runScenario(game: Game) {
             console.log('advancing round', nextState);
             if ('winningTeams' in nextState) {
                 if (nextState.winningTeams.length) {
-                    overlay.addNewToast(templateRandomText(TeamWinnerText, {
+                    overlay.toaster.pushToast(templateRandomText(TeamWinnerText, {
                         TeamName: nextState.winningTeams.map(t => t.name).join(', '),
                     }), 8000);
                 } else {
                     // Draw
-                    overlay.addNewToast(templateRandomText(GameDrawText), 8000);
+                    overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
                 }
                 endOfGameFadeOut = 8000;
             } else {

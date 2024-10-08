@@ -3,6 +3,7 @@ import grenadeIsland from './scenarios/grenadeIsland';
 import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
 import boneIsles from './scenarios/boneIsles';
+import uiTest from './scenarios/uiTest';
 import { Viewport } from 'pixi-viewport';
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlays/debugOverlay";
@@ -83,6 +84,8 @@ export class Game {
             testingGround(this);
         } else if (this.level === "boneIsles") {
             boneIsles(this);
+        } else if (this.level === "uiTest") {
+            uiTest(this);
         } else {
             throw Error('Unknown level');
         }

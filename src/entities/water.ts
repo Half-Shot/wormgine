@@ -85,7 +85,7 @@ export class Water implements IPhysicalEntity {
     }
 
     addToWorld(parent: Container, world: GameWorld) {
-        parent.addChildAt(this.waterMesh, parent.children.length-1);
+        parent.addChildAt(this.waterMesh, Math.max(0, parent.children.length-1));
         world.addBody(this, this.physObject.collider);
     }
 
