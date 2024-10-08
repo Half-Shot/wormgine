@@ -18,7 +18,6 @@ export function handleDamageInRadius(
     // Detect if anything is around us.
     const explosionCollidesWith = gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, ignoreCollider);
     const fireResults = new Set<WeaponFireResult>();
-    console.log(explosionCollidesWith);
     for (const element of explosionCollidesWith) {
         element.onDamage?.(point, radius, opts);
         // Dependency issue, Worm depends on us.

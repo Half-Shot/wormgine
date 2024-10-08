@@ -8,6 +8,7 @@ import { Explosion } from "../explosion";
 import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
+import { handleDamageInRadius } from "../../utils/damage";
 
 
 interface Opts {
@@ -139,16 +140,7 @@ export abstract class PlayableEntity extends PhysicsEntity {
 
     public explode() {
         const point = this.physObject.body.translation();
-        // Detect if anything is around us.
-        for (const element of this.gameWorld.checkCollision(new Coordinate(point.x, point.y), this.opts.explosionRadius, this.physObject.collider)) {
-            if (element.onDamage) {
-                element.onDamage(point, this.opts.explosionRadius , { maxDamage: SELF_EXPLODE_MAX_DAMAGE });
-            }
-        }
-        this.gameWorld.addEntity(Explosion.create(this.parent, new Point(point.x*PIXELS_PER_METER, point.y*PIXELS_PER_METER), this.opts.explosionRadius, {
-            shrapnelMax: 35,
-            shrapnelMin: 15,
-        }));
+        handleDamageInRadius(this.gameWorld, this.parent, point, this.opts.explosionRadius, { maxDamage: SELF_EXPLODE_MAX_DAMAGE });
         this.destroy();
     }
 

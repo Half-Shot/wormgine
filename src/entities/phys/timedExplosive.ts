@@ -65,7 +65,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
         }
         this.hasExploded = true;
         this.timer = undefined;
-        handleDamageInRadius(
+        const result = handleDamageInRadius(
             this.gameWorld, this.parent, this.body.translation(), this.opts.explosionRadius,
             {
                 shrapnelMax: 35,
@@ -73,6 +73,7 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
                 hue: this.opts.explosionHue ?? 0xffffff,
                 shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
             }, this.physObject.collider, this.opts.ownerWorm);
+        this.fireResultFn(result);
         this.destroy();
     }
 
