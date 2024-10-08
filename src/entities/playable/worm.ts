@@ -200,6 +200,10 @@ export class Worm extends PlayableEntity {
         if (inputKind === InputKind.Fire) {
             this.onEndFireWeapon();
         }
+        if (this.state === WormState.Firing) {
+            // Ignore all input when the worm is firing.
+            return;
+        }
         if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
             this.resetMoveDirection(inputKind);
         } 
@@ -439,6 +443,7 @@ export class Worm extends PlayableEntity {
             this.state = WormState.InMotion;
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
             this.onMove(this.state);
+            // TODO: Allow moving aim while firing.
         } else if (this.state === WormState.AimingUp || this.state === WormState.AimingDown) {
             this.updateAiming();
         }
