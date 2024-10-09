@@ -5,6 +5,7 @@ import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2, VectorOps } from "@
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { WormInstance } from '../../logic/teams';
+import { angleForVector } from '../../utils';
 
 /**
  * Standard shell, affected by wind.
@@ -58,12 +59,17 @@ export class BazookaShell extends TimedExplosive {
         this.sprite.y = position.screenY;
         this.sprite.scale.set(0.5, 0.5);
         this.sprite.anchor.set(0.5, 0.5);
+        
+        // Align sprite with body.
         this.rotationOffset = Math.PI/2;
-        this.body.addForce({x: this.gameWorld.wind, y: 0}, false);
+        this.body.addForce({x: this.gameWorld.wind*1.25, y: 0}, false);
     }
     
 
     update(dt: number): void {
+        this.wireframe.setDebugText(`${this.body.rotation()} ${Math.round(this.body.linvel().x)} ${Math.round(this.body.linvel().y)}`);
+        this.body.setRotation(angleForVector(this.body.linvel()), false);
+
         super.update(dt);
         if (!this.physObject || this.sprite.destroyed) {
             return;

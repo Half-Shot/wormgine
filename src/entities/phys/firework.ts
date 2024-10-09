@@ -7,6 +7,7 @@ import { ActiveEvents, ColliderDesc, RigidBodyDesc, Vector2 } from '@dimforge/ra
 import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
+import { angleForVector } from '../../utils';
 
 
 const COLOUR_SET = [
@@ -57,8 +58,6 @@ export class Firework extends TimedExplosive {
         const upwardVeolcity = 60 + Math.ceil(Math.random()*30);
         const xVelocity = -30 + Math.ceil(Math.random()*120);
 
-        const rot = Math.atan2(upwardVeolcity, Math.abs(xVelocity)) - 1;
-
         const primaryColor = COLOUR_SET[Math.floor(Math.random()*COLOUR_SET.length)];
         const secondaryColor = COLOUR_SET[Math.floor(Math.random()*COLOUR_SET.length)]
 
@@ -72,7 +71,7 @@ export class Firework extends TimedExplosive {
                 .dynamic()
                 .setTranslation(position.worldX, position.worldY)
                 // Fix rot
-                .setLinvel(xVelocity, -upwardVeolcity).setLinearDamping(1.5).lockRotations().setRotation(rot)
+                .setLinvel(xVelocity, -upwardVeolcity).setLinearDamping(1.5)
             );
     
         sprite.position = body.body.translation();
@@ -85,12 +84,14 @@ export class Firework extends TimedExplosive {
             autostartTimer: true,
             maxDamage: 35,
         });
+        this.rotationOffset = Math.PI/2;
         this.scream = Promise.resolve(Firework.screamSound.play());
         this.gfx = new Graphics();
     }
 
     update(dt: number): void {
         if (!this.sprite.destroyed) {
+            this.body.setRotation(angleForVector(this.body.linvel()), false);
             super.update(dt);
         } 
 

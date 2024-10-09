@@ -25,3 +25,8 @@ export function pointOnRadius(originX: number, originY: number, radians: number,
     const y = Math.sin(radians)*radius;
     return new Vector2(originX + x, originY + y);
 }
+
+export function angleForVector({x,y}: Vector) {
+    // https://www.omnicalculator.com/math/vector-direction
+    return Math.atan2(y, x);
+}

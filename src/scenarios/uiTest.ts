@@ -32,13 +32,13 @@ export default async function runScenario(game: Game) {
 
     const overlay = new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, world, game.viewport.screenWidth, game.viewport.screenHeight);
 
-    const water = world.addEntity(
-        new Water(
-            MetersValue.fromPixels(worldWidth*4),
-            MetersValue.fromPixels(worldHeight), 
-        world)
-    );
-    water.addToWorld(parent, world);
+    // const water = world.addEntity(
+    //     new Water(
+    //         MetersValue.fromPixels(worldWidth*4),
+    //         MetersValue.fromPixels(worldHeight), 
+    //     world)
+    // );
+    // water.addToWorld(parent, world);
     
 
     let toastCounter = 0;
