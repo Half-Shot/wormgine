@@ -26,7 +26,7 @@ export const WeaponBazooka: IWeaponDefiniton = {
             throw Error('Angle expected but not given');
         }
         fireSound.play();
-        const forceComponent = opts.duration/8;
+        const forceComponent = Math.log(opts.duration/10)*3;
         const x = forceComponent*Math.cos(opts.angle);
         const y = forceComponent*Math.sin(opts.angle);
         const force = mult(new Vector2(1.5 * forceComponent, forceComponent), { x, y });
