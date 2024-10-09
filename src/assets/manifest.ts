@@ -22,6 +22,7 @@ import testDolbyDamage2BlushTex from "./test_dolby_damage2_blush.png";
 import testDolbyDamage3Tex from "./test_dolby_damage3.png";
 import testDolbyDamage3BlushTex from "./test_dolby_damage3_blush.png";
 import testingGroundTex from "./testing_ground.png";
+import windScrollTex from "./windScroll.png";
 
 // Sounds
 import bazookafireSnd from "./bazookafire.ogg";
@@ -56,6 +57,7 @@ export interface AssetTextures {
     testDolbyDamage3: Texture;
     testDolbyDamage3Blush: Texture;
     testingGround: Texture;
+    windScroll: Texture;
 }
 
 export interface AssetSounds {
@@ -91,7 +93,8 @@ export const manifest = {
             {src: testDolbyDamage2BlushTex, alias: "testDolbyDamage2Blush"},
             {src: testDolbyDamage3Tex, alias: "testDolbyDamage3"},
             {src: testDolbyDamage3BlushTex, alias: "testDolbyDamage3Blush"},
-            {src: testingGroundTex, alias: "testingGround"}
+            {src: testingGroundTex, alias: "testingGround"},
+            {src: windScrollTex, alias: "windScroll"}
         ]
     }, {
         name: "sounds",

@@ -18,6 +18,7 @@ export class GameStateOverlay {
 
     public readonly toaster: Toaster;
     private readonly winddial: WindDial;
+    private readonly bottomOfScreenY;
 
     constructor(
         private readonly ticker: Ticker,
@@ -35,11 +36,12 @@ export class GameStateOverlay {
                 align: 'center',
             },
         });
+        this.bottomOfScreenY = (this.screenHeight / 10) * 8.75;
 
         this.toaster = new Toaster(screenWidth, screenHeight);
-        this.winddial = new WindDial(screenWidth, screenHeight, this.gameState);
+        this.winddial = new WindDial((this.screenWidth / 30) * 26, this.bottomOfScreenY, this.gameState);
         
-        this.roundTimer.position.set((this.screenWidth / 30) + 14, ((this.screenHeight / 10) * 9) + 12);
+        this.roundTimer.position.set((this.screenWidth / 30) + 14, this.bottomOfScreenY + 12);
         this.gfx = new Graphics();
         this.stage.addChild(this.toaster.container);
         this.stage.addChild(this.gfx);
@@ -87,7 +89,6 @@ export class GameStateOverlay {
 
 
         this.roundTimer.text = Math.floor(this.gameState.remainingRoundTime/1000);
-        const bottomY = (this.screenHeight / 10) * 9;
         this.gfx.clear();
 
         // Remove any previous text.
@@ -101,7 +102,7 @@ export class GameStateOverlay {
         // TODO: Sort by health and group
         // TODO: Evenly space.
         let allHealthAccurate = true;
-        let teamBottomY = bottomY;
+        let teamBottomY = this.bottomOfScreenY;
         for (const team of this.gameState.getActiveTeams()) {
             if (this.visibleTeamHealth[team.name] > team.health && shouldChangeTeamHealth) {
                 this.visibleTeamHealth[team.name] -= 1;
