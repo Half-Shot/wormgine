@@ -28,7 +28,7 @@ export function Menu({onNewGame}: Props) {
             Each of these levels are used to test certain engine features. Gameplay Demo is the most complete,
             as it demonstrates a match between two human players.
         </p>
-        <ul>
+        <ul className="levelPicker">
             <li>
                 <button onClick={() => onStartNewGame("testingGround")}>Gameplay Demo</button>
             </li>
