@@ -3,3 +3,21 @@
     margin-right: auto;
     width: fit-content;
 }
+
+p {
+    font-size: 1.25em;
+}
+
+h1 {
+    font-size: 2.5em;
+}
+
+button {
+    font-size: 1.5em;
+    padding: 0.5em 1em;
+}
+
+li {
+    margin-bottom: 2em;
+    list-style: none;
+}

@@ -40,6 +40,7 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
                     <li key={i}>{v}</li>
                 )}
             </ol>
+            <button onClick={() => modalRef.current?.close()}>Close</button>
         </dialog>;
     }, [buildNumber, buildCommit, lastCommit, latestChanges, modalRef]);
 
@@ -56,7 +57,7 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
     }
 
     return <>
-        <p>Build number {buildNumber ?? buildCommit} {newChangesButton}</p>
+        <p>Build number {buildNumber ?? <code>{buildCommit}</code>} {newChangesButton}</p>
         {newChangesModal}
     </>;
 }
