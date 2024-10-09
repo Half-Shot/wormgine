@@ -7,6 +7,7 @@ import { MetersValue } from "../../utils/coodinate";
 import { WeaponFireResult } from "../../weapons/weapon";
 import { WormInstance } from "../../logic/teams";
 import { handleDamageInRadius } from "../../utils/damage";
+import { RecordedEntityState } from "../../state/model";
 
 interface Opts {
     explosionRadius: MetersValue,
@@ -19,11 +20,17 @@ interface Opts {
     maxDamage: number,
 }
 
+interface RecordedState extends RecordedEntityState {
+    owner?: string,
+    timerSecs?: number,
+    timer?: number,
+}
+
 /**
  * Any projectile type that can explode after a set timer. Implementing classes
  * must include their own timer.
  */
-export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEntity  {
+export abstract class TimedExplosive extends PhysicsEntity<RecordedState> implements IWeaponEntity  {
     protected timer: number|undefined;
     protected hasExploded = false;
 
@@ -104,5 +111,14 @@ export abstract class TimedExplosive extends PhysicsEntity implements IWeaponEnt
         }
         
         return false;
+    }
+
+    recordState() {
+        return {
+            timer: this.timer,
+            owner: this.opts.ownerWorm?.uuid,
+            timerSecs: this.opts.timerSecs,
+            ...super.recordState(),
+        }
     }
 }

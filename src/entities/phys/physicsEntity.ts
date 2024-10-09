@@ -8,6 +8,7 @@ import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
+import type { RecordedEntityState } from "../../state/model";
 
 /**
  * Abstract class for any physical object in the world. The
@@ -16,7 +17,7 @@ import { AssetPack } from "../../assets";
  * Collision on water and force from explosions are automatically
  * calculated.
  */
-export abstract class PhysicsEntity implements IPhysicalEntity {
+export abstract class PhysicsEntity<T extends RecordedEntityState = RecordedEntityState> implements IPhysicalEntity {
     public static readAssets({sounds}: AssetPack) {
         PhysicsEntity.splashSound = sounds.splash;
     }
@@ -108,5 +109,27 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
         const forceMag = radius.value/magnitude(sub(point,this.physObject.body.translation()));
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag*1.5));
         this.physObject.body.applyImpulse(force, true)
+    }
+
+    recordState(): T {
+        const translation = this.body.translation();
+        const rotation = this.body.rotation();
+        const linvel = this.body.linvel();
+        return {
+            type: -1,
+            tra: {
+                x: translation.x.toString(),
+                y: translation.y.toString(),
+            },
+            rot: rotation.toString(),
+            vel: {
+                x: linvel.x.toString(),
+                y: linvel.y.toString(),
+            }
+        } as T;
+    }
+
+    loadState(d: T) {
+
     }
 }

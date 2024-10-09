@@ -17,7 +17,6 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
                 setLatestChanges(['Could not load changes']);
             }
             const result = await req.json();
-            console.log(result);
             setLatestChanges(result.commits.map((c: any) => `${c.commit.message}`).reverse());
         })();
     }, [buildCommit, lastCommit, setLatestChanges]);
@@ -28,7 +27,6 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
     }, [modalRef]);
 
     const newChangesModal = useMemo(() => {
-        console.log(latestChanges);
         const title = buildNumber ? `Build #${buildNumber}` : `Developer Build ${buildCommit}`;
         return <dialog ref={modalRef}>
             <h1>{title}</h1>

@@ -14,6 +14,7 @@ import { DefaultTextStyle } from "../mixins/styles";
 import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../weapons";
 import staticController, { InputKind } from "../input";
 import { IWeaponCode } from "../weapons/weapon";
+import { StateRecorder } from "../state/recorder";
 
 const weapons = [WeaponBazooka, WeaponGrenade, WeaponShotgun];
 
@@ -21,6 +22,7 @@ export default async function runScenario(game: Game) {
     const parent = game.viewport;
     const world = game.world;
     const { worldWidth, worldHeight } = game.viewport;
+
 
     const terrain = BitmapTerrain.create(
         worldWidth,
@@ -47,6 +49,18 @@ export default async function runScenario(game: Game) {
         }]
     }], {
         winWhenOneGroupRemains: true,
+    });
+
+
+    const recordedGameplayKey = `wormgine_recorded_${new Date().toISOString()}`;
+    let recordedState = '';
+    
+    const stateRecorder = new StateRecorder(world, gameState, {
+        async writeLine(data) {
+            recordedState += `${JSON.stringify(data)}|`;
+            localStorage.setItem(recordedGameplayKey, recordedState);
+            console.debug("New state recorded", data);
+        },
     });
 
     const bg = await world.addEntity(Background.create(game.viewport.screenWidth, game.viewport.screenHeight, game.viewport, [20, 21, 50, 35], terrain));
@@ -77,12 +91,13 @@ export default async function runScenario(game: Game) {
                     parent.follow(newProjectile.sprite);
                     world.addEntity(newProjectile);
                 }
+                stateRecorder.syncEntityState();
                 const res = await newProjectile.onFireResult;
                 if (newProjectile instanceof PhysicsEntity) { 
                     parent.follow(worm.sprite);
                 }
                 return res;
-            }, overlay.toaster));
+            }, overlay.toaster, stateRecorder));
             wormInstances.set(wormInstance.uuid, wormEnt);
         }
     }
@@ -129,7 +144,9 @@ export default async function runScenario(game: Game) {
             return;
         }
         if (endOfRoundWaitDuration === null) {
+            stateRecorder.syncEntityState();
             const nextState = gameState.advanceRound();
+            stateRecorder.recordGameStare();
             console.log('advancing round', nextState);
             if ('winningTeams' in nextState) {
                 if (nextState.winningTeams.length) {
@@ -165,4 +182,6 @@ export default async function runScenario(game: Game) {
 
     game.pixiApp.ticker.add(roundHandlerFn);
     game.pixiApp.stage.addChild(weaponText);
+    stateRecorder.recordGameStare();
+    stateRecorder.syncEntityState();
 }

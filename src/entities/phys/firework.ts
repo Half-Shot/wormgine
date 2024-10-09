@@ -8,6 +8,7 @@ import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { angleForVector } from '../../utils';
+import { EntityType } from '../type';
 
 
 const COLOUR_SET = [
@@ -154,6 +155,13 @@ export class Firework extends TimedExplosive {
             return false;
         }
         return false;
+    }
+
+    recordState() {
+        return {
+            ...super.recordState(),
+            type: EntityType.Firework,
+        }
     }
 
     destroy(): void {

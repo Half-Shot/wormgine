@@ -6,6 +6,9 @@ import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { WormInstance } from '../../logic/teams';
 import { angleForVector } from '../../utils';
+import { RecordedEntityState } from '../../state/model';
+import { EntityType } from '../type';
+
 
 /**
  * Standard shell, affected by wind.
@@ -82,5 +85,12 @@ export class BazookaShell extends TimedExplosive {
     destroy(): void {
         super.destroy();
         this.gfx.destroy();
+    }
+
+    recordState() {
+        return {
+            ...super.recordState(),
+            type: EntityType.BazookaShell,
+        }
     }
 }

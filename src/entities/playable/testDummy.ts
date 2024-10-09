@@ -6,6 +6,7 @@ import { ActiveEvents, ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-co
 import { WormInstance } from "../../logic/teams";
 import { PlayableEntity } from "./playable";
 import { Viewport } from "pixi-viewport";
+import { EntityType } from "../type";
 
 /**
  * Test dummy entity that may be associated with a worm identity. These
@@ -91,5 +92,12 @@ export class TestDummy extends PlayableEntity {
         super.destroy();
         this.parent.plugins.remove('follow');
         this.parent.snap(800,0);
+    }
+
+    public recordState() {
+        return {
+            ...super.recordState(),
+            type: EntityType.TestDummy,
+        }
     }
 }

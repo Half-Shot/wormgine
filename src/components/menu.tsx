@@ -39,6 +39,9 @@ export function Menu({onNewGame}: Props) {
                 <button onClick={() => onStartNewGame("uiTest")}>UI Test</button>
             </li>
             <li>
+                <button onClick={() => onStartNewGame("replayTesting")}>Test gameplay replay</button>
+            </li>
+            <li>
                 <button onClick={() => onStartNewGame("boneIsles")}>Bone Isles</button>
             </li>
             <li>

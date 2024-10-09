@@ -1,5 +1,6 @@
 import { Ticker } from "pixi.js";
 import { Team, WormInstance } from "./teams";
+import type { StateRecordWormGameState } from "../state/model";
 
 interface GameRules {
     winWhenOneGroupRemains: boolean;
@@ -126,7 +127,25 @@ export class GameState {
         }
     }
 
-    public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance, wind: number}|{winningTeams: InternalTeam[]} {
+    public applyGameStateUpdate(stateUpdate: StateRecordWormGameState["data"]) {
+        // TODO: Is this order garunteed?
+        let index = -1;
+        for (const teamData of stateUpdate.teams) {
+            index++;
+            const teamWormSet = this.teams[index].worms;
+            for (const wormData of teamData.worms) {
+                const foundWorm = teamWormSet.find(w => w.uuid === wormData.uuid);
+                if (foundWorm) {
+                    foundWorm.health = wormData.health;
+                }
+            }
+        }
+        const data = this.advanceRound();
+        this.wind = stateUpdate.wind;
+        return data;
+    }
+
+    public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance}|{winningTeams: InternalTeam[]} {
         this.wind = Math.ceil((Math.random()*20)-11);
         if (!this.currentTeam) {
             const [firstTeam] = this.nextTeamStack.splice(0, 1);
@@ -135,7 +154,6 @@ export class GameState {
                 nextTeam: this.currentTeam,
                 // Team *should* have at least one healthy worm.
                 nextWorm: this.currentTeam.popNextWorm(),
-                wind: this.wind,
             }
         }
         const previousTeam = this.currentTeam;
@@ -173,7 +191,6 @@ export class GameState {
             nextTeam: this.currentTeam,
             // We should have already validated that this team has healthy worms.
             nextWorm: this.currentTeam.popNextWorm(),
-            wind: this.wind,
         }
     }
 }

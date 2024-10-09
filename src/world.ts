@@ -3,6 +3,8 @@ import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Ball, Collider, ColliderDesc, EventQueue, QueryFilterFlags, Ray, RigidBody, RigidBodyDesc, Shape, Vector2, World } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
 import { add, mult } from "./utils";
+import type { PhysicsEntity } from "./entities/phys/physicsEntity";
+import { RecordedEntityState } from "./state/model";
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -40,7 +42,7 @@ export function collisionGroupBitmask(groups: CollisionGroups|CollisionGroups[],
  */
 export class GameWorld {
     public readonly bodyEntityMap = new Map<number, IPhysicalEntity>();
-    public readonly entities = new Set<IGameEntity>();
+    public readonly entities = new Map<string, IGameEntity>();
     private readonly eventQueue = new EventQueue(true);
     private _wind = 0;
 
@@ -100,16 +102,17 @@ export class GameWorld {
         entB.onCollision?.(entA, shapeColA.point2);
     }
 
-    public addEntity<T extends IGameEntity>(entity: T): T {
-        if (this.entities.has(entity)) {
+    public addEntity<T extends IGameEntity>(entity: T, uuid?: string): T {
+        if ([...this.entities.values()].includes(entity)) {
             console.warn(`Tried to add entity twice to game world`, entity);
             return entity;
         }
-        this.entities.add(entity);
+        uuid = uuid ?? globalThis.crypto.randomUUID();
+        this.entities.set(uuid, entity);
         const tickerFn = (dt: Ticker) => {
             if (entity.destroyed) {
                 this.ticker.remove(tickerFn);
-                this.entities.delete(entity);
+                this.entities.delete(uuid);
                 return;
             }
             entity.update?.(dt.deltaTime);
@@ -147,7 +150,11 @@ export class GameWorld {
     }
 
     removeEntity(entity: IGameEntity) {
-        this.entities.delete(entity);
+        const key = [...this.entities.entries()].find(([k,v]) => v === entity)?.[0];
+        if (!key) {
+            throw Error('Entity not found in world');
+        }
+        this.entities.delete(key);
     }
 
 
@@ -218,5 +225,18 @@ export class GameWorld {
             };
         }
         return null;
+    }
+
+    public collectEntityState() {
+        const state: (RecordedEntityState&{uuid:string})[] = [];
+        for (const [uuid, ent] of this.entities.entries()) {
+            if ('recordState' in ent) {
+                state.push({
+                    uuid,
+                    ...(ent as PhysicsEntity).recordState()
+                });
+            }
+        }
+        return state;
     }
 }

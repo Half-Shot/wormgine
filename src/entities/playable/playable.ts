@@ -8,6 +8,7 @@ import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";
+import { RecordedEntityState } from "../../state/model";
 
 
 interface Opts {
@@ -19,10 +20,14 @@ interface Opts {
 const HEALTH_TENSION_MS = 75;
 const SELF_EXPLODE_MAX_DAMAGE = 25;
 
+interface RecordedState extends RecordedEntityState {
+    wormIdent: string
+} 
+
 /**
  * Entity that can be directly controlled by a player.
  */
-export abstract class PlayableEntity extends PhysicsEntity {
+export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
     priority = UPDATE_PRIORITY.LOW;
 
     private nameText: Text;
@@ -163,6 +168,13 @@ export abstract class PlayableEntity extends PhysicsEntity {
         this.health = Math.max(0, this.health - damage);
         const force = mult(sub(point, bodyTranslation), new Vector2(-forceMag, -forceMag));
         this.physObject.body.applyImpulse(force, true)
+    }
+
+    public recordState() {
+        return {
+            ...super.recordState(),
+            wormIdent: this.wormIdent.uuid,
+        }
     }
 
     public destroy(): void {

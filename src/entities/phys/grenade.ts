@@ -10,6 +10,7 @@ import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { DefaultTextStyle } from '../../mixins/styles';
 import { WormInstance } from '../../logic/teams';
+import { EntityType } from '../type';
 
 
 /**
@@ -53,8 +54,6 @@ export class Grenade extends TimedExplosive {
             RigidBodyDesc
                 .dynamic()
                 .setTranslation(position.worldX, position.worldY)
-                // .setLinvel(initialForce.x, initialForce.y)
-                // .setLinearDamping(Grenade.FRICTION)
             );
         sprite.position = body.body.translation();
         super(sprite, body, world, parent, {
@@ -65,7 +64,6 @@ export class Grenade extends TimedExplosive {
             ownerWorm: owner,
             maxDamage: 40,
         });
-        //Body.applyForce(body, Vector.create(body.position.x - 20, body.position.y), initialForce);
         this.timerText = new Text({
             text: '',
             style: {
@@ -113,6 +111,13 @@ export class Grenade extends TimedExplosive {
             })
         }
         return false;
+    }
+
+    recordState() {
+        return {
+            ...super.recordState(),
+            type: EntityType.Grenade,
+        }
     }
 
     destroy(): void {

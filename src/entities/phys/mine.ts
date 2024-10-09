@@ -8,6 +8,7 @@ import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { BitmapTerrain } from '../bitmapTerrain';
 import { DefaultTextStyle } from '../../mixins/styles';
+import { EntityType } from '../type';
 
 /**
  * Proximity mine.
@@ -120,6 +121,13 @@ export class Mine extends TimedExplosive {
             this.beeping = Promise.resolve(Mine.beep.play({loop: true}));
         }
         return false;
+    }
+
+    recordState() {
+        return {
+            ...super.recordState(),
+            type: EntityType.Mine,
+        }
     }
 
     destroy(): void {

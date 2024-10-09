@@ -13,6 +13,7 @@ import { readAssetsForEntities } from "./entities";
 import { Team } from './logic/teams';
 import { readAssetsForWeapons } from './weapons';
 import { WindDial } from './overlays/windDial';
+import replayTesting from './scenarios/replayTesting';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -88,6 +89,8 @@ export class Game {
             boneIsles(this);
         } else if (this.level === "uiTest") {
             uiTest(this);
+        } else if (this.level === "replayTesting") {
+            replayTesting(this);
         } else {
             throw Error('Unknown level');
         }

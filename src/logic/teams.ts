@@ -1,6 +1,7 @@
 import { ColorSource } from "pixi.js";
 
 export interface WormIdentity {
+    uuid?: string;
     name: string;
     health: number;
     maxHealth: number;
@@ -37,9 +38,9 @@ export function teamGroupToColorSet(group: TeamGroup): {bg: ColorSource, fg: Col
  * Instance of a worm, keeping track of it's status.
  */
 export class WormInstance {
-    public readonly uuid = globalThis.crypto.randomUUID();
+    public readonly uuid;
     constructor(private readonly identity: WormIdentity, public readonly team: Team, private readonly onHealthUpdated: () => void) {
-
+        this.uuid = identity.uuid ?? globalThis.crypto.randomUUID();
     }
 
 

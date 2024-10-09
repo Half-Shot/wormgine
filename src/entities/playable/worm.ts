@@ -13,6 +13,9 @@ import { magnitude, pointOnRadius, sub } from '../../utils';
 import { Toaster } from '../../overlays/toaster';
 import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultHitSelf, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText, TurnEndTextFall, TurnStartText, WeaponTimerText, WormDeathGeneric, WormDeathSinking } from '../../text/toasts';
 import { WeaponBazooka } from '../../weapons';
+import { EntityType } from '../type';
+import { StateRecorder } from '../../state/recorder';
+import { StateWormAction } from '../../state/model';
 
 export enum WormState {
     Idle = 0,
@@ -40,7 +43,7 @@ const FireAngleArcPadding = 0.15;
 const maxWormStep = new MetersValue(0.6);
 const aimMoveSpeed = 0.02;
 
-type FireFn = (worm: Worm, selectedWeapon: IWeaponDefiniton, opts: FireOpts) => Promise<WeaponFireResult[]>;
+export type FireFn = (worm: Worm, selectedWeapon: IWeaponDefiniton, opts: FireOpts) => Promise<WeaponFireResult[]>;
 
 /**
  * Physical representation of a worm on the map. May be controlled.
@@ -59,18 +62,18 @@ export class Worm extends PlayableEntity {
 
     private fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponBazooka;
-    private state: WormState = WormState.Inactive;
+    protected state: WormState = WormState.Inactive;
     private statePriorToMotion: WormState = WormState.Idle;
     private turnEndedReason: EndTurnReason|undefined;
     private impactVelocity = 0;
     // TODO: Best place for this var?
     private weaponTimerSecs = 3;
     public fireAngle = 0;
-    private targettingGfx: Graphics;
+    protected targettingGfx: Graphics;
     private facingRight = true;
 
-    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, toaster?: Toaster) {
-        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, toaster);
+    static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, toaster?: Toaster, recorder?: StateRecorder) {
+        const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, toaster, recorder);
         world.addBody(ent, ent.physObject.collider);
         parent.addChild(ent.targettingGfx);
         parent.addChild(ent.sprite);
@@ -101,9 +104,10 @@ export class Worm extends PlayableEntity {
 
     public selectWeapon(weapon: IWeaponDefiniton) {
         this.currentWeapon = weapon;
+        this.recorder?.recordWormSelectWeapon(this.wormIdent.uuid, weapon.code);
     }
 
-    private constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: Toaster) {
+    protected constructor(position: Coordinate, world: GameWorld, parent: Viewport, wormIdent: WormInstance, private readonly onFireWeapon: FireFn, private readonly toaster?: Toaster, private readonly recorder?: StateRecorder) {
         const sprite = new Sprite(Worm.texture);
         sprite.scale.set(0.5, 0.5);
         sprite.anchor.set(0.5, 0.5);
@@ -139,12 +143,14 @@ export class Worm extends PlayableEntity {
     }
 
     onJump() {
+        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Jump);
         this.state = WormState.InMotion;
         this.body.applyImpulse({x: this.facingRight ? 5 : -5, y: -8}, true);
     }
 
     onBackflip() {
         this.state = WormState.InMotion;
+        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Backflip);
         this.body.applyImpulse({x: this.facingRight ? -3 : 3, y: -13}, true);
     }
 
@@ -159,8 +165,10 @@ export class Worm extends PlayableEntity {
         } else if (this.state !== WormState.Idle) {
             return;
         } else if (inputKind === InputKind.AimUp) {
+            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.AimUp);
             this.state = WormState.AimingUp;
         } else if (inputKind === InputKind.AimDown) {
+            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.AimDown);
             this.state = WormState.AimingDown;
         } else if (inputKind === InputKind.Fire) {
             this.onBeginFireWeapon();
@@ -208,6 +216,7 @@ export class Worm extends PlayableEntity {
             this.resetMoveDirection(inputKind);
         } 
         if (inputKind === InputKind.AimUp || inputKind === InputKind.AimDown) {
+            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
             this.state = WormState.Idle;
         } 
     }
@@ -232,6 +241,7 @@ export class Worm extends PlayableEntity {
         }
 
         this.state = direction === InputKind.MoveLeft ? WormState.MovingLeft : WormState.MovingRight;
+        this.recorder?.recordWormAction(this.wormIdent.uuid, this.state === WormState.MovingLeft ? StateWormAction.MoveLeft : StateWormAction.MoveRight);
     }
 
     resetMoveDirection(inputDirection: InputKind.MoveLeft|InputKind.MoveRight) {
@@ -243,11 +253,13 @@ export class Worm extends PlayableEntity {
         } 
 
         if (this.state === WormState.MovingLeft && inputDirection === InputKind.MoveLeft) {
+            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
             this.state = WormState.Idle;
             return;
         }
 
         if (this.state === WormState.MovingRight || inputDirection === InputKind.MoveRight) {
+            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
             this.state = WormState.Idle;
             return;
         }
@@ -264,12 +276,14 @@ export class Worm extends PlayableEntity {
 
     onBeginFireWeapon() {
         this.state = WormState.Firing;
+        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Fire);
     }
 
     onEndFireWeapon() {
         if (this.state !== WormState.Firing) {
             return;
         }
+        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.EndFire);
         this.targettingGfx.visible = false;
         // TODO: Need a middle state for while the world is still active.
         this.state = WormState.InactiveWaiting;
@@ -446,6 +460,14 @@ export class Worm extends PlayableEntity {
             // TODO: Allow moving aim while firing.
         } else if (this.state === WormState.AimingUp || this.state === WormState.AimingDown) {
             this.updateAiming();
+        }
+    }
+
+    public recordState() {
+        return {
+            ...super.recordState(),
+            wormIdent: this.wormIdent.uuid,
+            type: EntityType.Worm,
         }
     }
 
