@@ -68,6 +68,11 @@ export abstract class PhysicsEntity implements IPhysicalEntity {
         
         this.wireframe.update();
 
+        // TODO: We do need a better system for this.
+        if (this.body.translation().y > (1080/PIXELS_PER_METER)) {
+            this.isSinking = true;
+        }
+
         // Sinking.
         if (this.isSinking) {
             this.physObject.body.setTranslation({x: pos.x, y: pos.y + (0.05 * dt)}, false);
