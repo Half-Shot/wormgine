@@ -102,17 +102,23 @@ export class GameWorld {
         entB.onCollision?.(entA, shapeColA.point2);
     }
 
+    /**
+     * Add an entity to the world. If the entity is coming from a remote source, provide the uuid.
+     * @param entity 
+     * @param uuid 
+     * @returns 
+     */
     public addEntity<T extends IGameEntity>(entity: T, uuid?: string): T {
         if ([...this.entities.values()].includes(entity)) {
             console.warn(`Tried to add entity twice to game world`, entity);
             return entity;
         }
-        uuid = uuid ?? globalThis.crypto.randomUUID();
-        this.entities.set(uuid, entity);
+        const entUuid = uuid ?? globalThis.crypto.randomUUID();
+        this.entities.set(entUuid, entity);
         const tickerFn = (dt: Ticker) => {
             if (entity.destroyed) {
                 this.ticker.remove(tickerFn);
-                this.entities.delete(uuid);
+                this.entities.delete(entUuid);
                 return;
             }
             entity.update?.(dt.deltaTime);
