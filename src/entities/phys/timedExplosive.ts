@@ -115,7 +115,8 @@ export abstract class TimedExplosive extends PhysicsEntity<RecordedState> implem
 
     recordState() {
         return {
-            timer: this.timer,
+            // No floats.
+            timer: this.timer && Math.round(this.timer),
             owner: this.opts.ownerWorm?.uuid,
             timerSecs: this.opts.timerSecs,
             ...super.recordState(),
