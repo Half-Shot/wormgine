@@ -1,7 +1,7 @@
 import { GameState } from "../logic/gamestate";
 import { IWeaponCode } from "../weapons/weapon";
 import { GameWorld } from "../world";
-import { StateRecordEntitySync, StateRecordHeader, StateRecordKind, StateRecordWormAction, StateRecordWormGameState, StateRecordWormSelectWeapon, StateWormAction } from "./model";
+import { StateRecordEntitySync, StateRecordHeader, StateRecordKind, StateRecordWormAction, StateRecordWormActionAim, StateRecordWormActionFire, StateRecordWormActionMove, StateRecordWormGameState, StateRecordWormSelectWeapon, StateWormAction } from "./model";
 
 interface StateRecorderStore {
     writeLine(data: Record<string, unknown>): Promise<void>;
@@ -18,14 +18,15 @@ function hashCode(str: string) {
 }
 
 export class StateRecorder {
+    public static RecorderVersion = 2;
     private recordIndex = 0;
     private entHashes = new Map<string, number>(); // uuid -> hash
     constructor(private readonly gameWorld: GameWorld, private readonly gameState: GameState, private readonly store: StateRecorderStore) {
         this.store.writeLine({
             index: this.recordIndex++,
-            data: null,
+            data: {version: StateRecorder.RecorderVersion},
             kind: StateRecordKind.Header,
-            ts: performance.now(),
+            ts: performance.now().toString(),
         } satisfies StateRecordHeader);
     }
 
@@ -44,7 +45,7 @@ export class StateRecorder {
                 entities: stateToSend,
             },
             kind: StateRecordKind.EntitySync,
-            ts: performance.now(),
+            ts: performance.now().toString(),
         } satisfies StateRecordEntitySync);
     }
 
@@ -56,8 +57,48 @@ export class StateRecorder {
                 action,
             },
             kind: StateRecordKind.WormAction,
-            ts: performance.now(),
+            ts: performance.now().toString(),
         } satisfies StateRecordWormAction);
+    }
+
+    public recordWormMove(worm: string, direction: "left"|"right", cycles: number) {
+        this.store.writeLine({
+            index: this.recordIndex++,
+            data: {
+                id: worm,
+                cycles,
+                action: direction === "left" ? StateWormAction.MoveLeft : StateWormAction.MoveRight
+            },
+            kind: StateRecordKind.WormActionMove,
+            ts: performance.now().toString(),
+        } satisfies StateRecordWormActionMove);
+    }
+
+    public recordWormAim(worm: string, direction: "up"|"down", angle: number) {
+        this.store.writeLine({
+            index: this.recordIndex++,
+            data: {
+                id: worm,
+                angle: angle.toString(),
+                dir: direction,
+                action: StateWormAction.Aim,
+            },
+            kind: StateRecordKind.WormActionAim,
+            ts: performance.now().toString(),
+        } satisfies StateRecordWormActionAim);
+    }
+
+    public recordWormFire(worm: string, duration: number) {
+        this.store.writeLine({
+            index: this.recordIndex++,
+            data: {
+                id: worm,
+                duration,
+                action: StateWormAction.Fire,
+            },
+            kind: StateRecordKind.WormActionFire,
+            ts: performance.now().toString(),
+        } satisfies StateRecordWormActionFire);
     }
 
     public recordWormSelectWeapon(worm: string, weapon: IWeaponCode) {
@@ -68,10 +109,9 @@ export class StateRecorder {
                 weapon: weapon,
             },
             kind: StateRecordKind.WormSelectWeapon,
-            ts: performance.now(),
+            ts: performance.now().toString(),
         } satisfies StateRecordWormSelectWeapon);
     }
-
 
     public recordGameStare() {
         const iteration = this.gameState.iteration;
@@ -84,6 +124,7 @@ export class StateRecorder {
                 teams: teams.map(t => ({
                     name: t.name,
                     group: t.group,
+                    playerUserId: t.playerUserId,
                     worms: t.worms.map(w => ({
                         uuid: w.uuid,
                         name: w.name,
@@ -93,7 +134,7 @@ export class StateRecorder {
                 })),
             },
             kind: StateRecordKind.GameState,
-            ts: performance.now(),
+            ts: performance.now().toString(),
         } satisfies StateRecordWormGameState);
     }
 }

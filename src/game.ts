@@ -4,6 +4,8 @@ import borealisTribute from './scenarios/borealisTribute';
 import testingGround from './scenarios/testingGround';
 import boneIsles from './scenarios/boneIsles';
 import uiTest from './scenarios/uiTest';
+import replayTesting from './scenarios/replayTesting';
+import netGame from './scenarios/netGame';
 import { Viewport } from 'pixi-viewport';
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlays/debugOverlay";
@@ -13,7 +15,7 @@ import { readAssetsForEntities } from "./entities";
 import { Team } from './logic/teams';
 import { readAssetsForWeapons } from './weapons';
 import { WindDial } from './overlays/windDial';
-import replayTesting from './scenarios/replayTesting';
+import { NetGameClient, NetGameInstance } from './net/client';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -31,14 +33,14 @@ export class Game {
         return this.viewport;
     }
 
-    public static async create(window: Window, level: string, onGoToMenu: (context: GoToMenuContext) => void): Promise<Game> {
+    public static async create(window: Window, level: string, onGoToMenu: (context: GoToMenuContext) => void, netGameInstance?: NetGameInstance): Promise<Game> {
         await RAPIER.init();
         const pixiApp = new Application();
         await pixiApp.init({ resizeTo: window, preference: 'webgl' });
-        return new Game(pixiApp, level, onGoToMenu);
+        return new Game(pixiApp, level, onGoToMenu, netGameInstance);
     }
 
-    constructor(public readonly pixiApp: Application, public readonly level: string, public readonly onGoToMenu: (context: GoToMenuContext) => void) {
+    constructor(public readonly pixiApp: Application, private readonly level: string, public readonly onGoToMenu: (context: GoToMenuContext) => void, public readonly netGameInstance?: NetGameInstance) {
         // TODO: Set a sensible static width/height and have the canvas pan it.
         this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
         this.rapierGfx = new Graphics();
@@ -91,6 +93,8 @@ export class Game {
             uiTest(this);
         } else if (this.level === "replayTesting") {
             replayTesting(this);
+        } else if (this.level === "netGame") {
+            netGame(this);
         } else {
             throw Error('Unknown level');
         }

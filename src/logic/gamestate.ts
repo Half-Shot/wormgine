@@ -2,7 +2,7 @@ import { Ticker } from "pixi.js";
 import { Team, WormInstance } from "./teams";
 import type { StateRecordWormGameState } from "../state/model";
 
-interface GameRules {
+export interface GameRules {
     winWhenOneGroupRemains: boolean;
 }
 
@@ -20,6 +20,10 @@ export class InternalTeam implements Team {
 
     get name() {
         return this.team.name;
+    }
+
+    get playerUserId() {
+        return this.team.playerUserId;
     }
 
     get group() {

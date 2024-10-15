@@ -23,7 +23,6 @@ export default async function runScenario(game: Game) {
     const world = game.world;
     const { worldWidth, worldHeight } = game.viewport;
 
-
     const terrain = BitmapTerrain.create(
         worldWidth,
         worldHeight,
@@ -53,14 +52,11 @@ export default async function runScenario(game: Game) {
         winWhenOneGroupRemains: true,
     });
 
-
-    const recordedGameplayKey = `wormgine_recorded_${new Date().toISOString()}`;
-    let recordedState = '';
-    
     const stateRecorder = new StateRecorder(world, gameState, {
         async writeLine(data) {
-            recordedState += `${JSON.stringify(data)}|`;
-            localStorage.setItem(recordedGameplayKey, recordedState);
+            if (game.netGameInstance) {
+                game.netGameInstance.sendGameState(data);
+            }
         },
     });
 

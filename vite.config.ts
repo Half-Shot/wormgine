@@ -9,4 +9,7 @@ export default defineConfig({
   build: {
     minify: false,
   },
+  define: {
+    global: {},
+  },
 })

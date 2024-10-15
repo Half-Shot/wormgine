@@ -44,7 +44,8 @@ export default async function runScenario(game: Game) {
             name: "Accident prone",
             maxHealth: 100,
             health: 100,
-        }]
+        }],
+        playerUserId: null,
     },{
         name: "The Invisible Duo",
         group: TeamGroup.Red,
@@ -56,7 +57,8 @@ export default async function runScenario(game: Game) {
             name: "Cream Guy",
             maxHealth: 100,
             health: 100,
-        }]
+        }],
+        playerUserId: null,
     }]);
 
     new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, world, game.viewport.screenWidth, game.viewport.screenHeight);

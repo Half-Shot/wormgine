@@ -1,4 +1,5 @@
 import { InputKind } from "../input";
+import { GameRules } from "../logic/gamestate";
 import { Team } from "../logic/teams";
 
 
@@ -12,6 +13,20 @@ export interface EntityDescriptor {
     pos: {x: EncodedFloatingPointNumber, y: EncodedFloatingPointNumber};
     rot: number;
 
+}
+
+export enum GameStage {
+    Lobby = "lobby",
+    InProgress = "in_progress",
+    Finished = "completed",
+}
+
+export interface FullGameStageEvent {
+    type: "uk.half-shot.uk.wormgine.game_stage",
+    state_key: "",
+    content: {
+        stage: GameStage,
+    }
 }
 
 export interface FullGameStateEvent {
@@ -59,6 +74,8 @@ export interface PlayerAckEvent {
 export interface GameConfigEvent {
     type: "uk.half-shot.uk.wormgine.game_config",
     content: {
+        rules: GameRules
+        teams: Team,
         // Need to decide on some config.
     }
 }

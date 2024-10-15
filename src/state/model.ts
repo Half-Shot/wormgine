@@ -16,6 +16,9 @@ export enum StateRecordKind {
     Header,
     EntitySync,
     WormAction,
+    WormActionMove,
+    WormActionAim,
+    WormActionFire,
     WormSelectWeapon,
     GameState,
 }
@@ -24,10 +27,10 @@ export interface StateRecordLine<T> {
     index: number,
     kind: StateRecordKind,
     data: T,
-    ts: number,
+    ts: string,
 }
 
-export type StateRecordHeader = StateRecordLine<null>
+export type StateRecordHeader = StateRecordLine<{version: number}>
 
 export type StateRecordEntitySync = StateRecordLine<{
     entities: (RecordedEntityState&{uuid: string})[]
@@ -36,14 +39,30 @@ export type StateRecordEntitySync = StateRecordLine<{
 export enum StateWormAction {
     MoveLeft,
     MoveRight,
-    AimUp,
-    AimDown,
-    Stop,
+    Aim,
     Fire,
-    EndFire,
     Jump,
     Backflip,
 }
+
+export type StateRecordWormActionMove = StateRecordLine<{
+    id: string,
+    action: StateWormAction,
+    cycles: number,
+}>
+
+export type StateRecordWormActionAim = StateRecordLine<{
+    id: string,
+    action: StateWormAction,
+    dir: "up"|"down"
+    angle: string,
+}>
+
+export type StateRecordWormActionFire = StateRecordLine<{
+    id: string,
+    action: StateWormAction,
+    duration?: number,
+}>
 
 export type StateRecordWormAction = StateRecordLine<{
     id: string,
@@ -64,7 +83,8 @@ export type StateRecordWormGameState = StateRecordLine<{
             name: string,
             health: number,
             maxHealth: number,
-        }[]
+        }[],
+        playerUserId: string|null,
     }[],
     iteration: number,
     wind: number,

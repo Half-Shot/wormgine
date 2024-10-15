@@ -20,7 +20,8 @@ export interface Team {
     name: string;
     group: TeamGroup;
     worms: WormIdentity[]
-    // player
+    // For net games only
+    playerUserId: string|null,
 }
 
 export function teamGroupToColorSet(group: TeamGroup): {bg: ColorSource, fg: ColorSource } {
