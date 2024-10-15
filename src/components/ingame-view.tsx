@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import './ingame-view.css'
 import { Game, GoToMenuContext } from '../game';
+import { NetGameInstance } from '../net/client';
 
 
-export function IngameView({level, onGoToMenu}: {level: string, onGoToMenu: (context: GoToMenuContext) => void}) {
+export function IngameView({level, onGoToMenu, gameInstance}: {level: string, onGoToMenu: (context: GoToMenuContext) => void, gameInstance?: NetGameInstance}) {
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Game.create(window, level, onGoToMenu).then((game) => {
+    Game.create(window, level, onGoToMenu, gameInstance).then((game) => {
       game.loadResources().then(() => {
         setGame(game)
       });
