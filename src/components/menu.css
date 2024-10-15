@@ -12,8 +12,22 @@ button {
     margin-left: 0.25em;
     font-size: 1em;
     padding: 0.5em 1em;
+    border-radius: 0.25em;
 }
 
+.borealis {
+    background: repeating-linear-gradient(
+        45deg,
+        #289AD6,
+        #289AD6 10px,
+        #E27A00 10px,
+        #E27A00 20px,
+        #31358E 20px,
+        #31358E 30px
+    );
+    font-weight: 600;
+    color: white;
+}
 
 h1 {
     font-size: 2.5em;
@@ -27,4 +41,11 @@ h1 {
 li {
     margin-bottom: 2em;
     list-style: none;
+}
+
+.error {
+    padding: 1em;
+    border: 1px solid black;
+    background: grey;
+    color: rgb(255, 77, 77);
 }

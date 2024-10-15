@@ -54,7 +54,7 @@ function mainMenu(onStartNewGame: (level: string) => void, setCurrentMenu: (menu
                 <button onClick={() => onStartNewGame("boneIsles")}>Bone Isles</button>
             </li>
             <li>
-                <button onClick={() => onStartNewGame("borealisTribute")}>Borealis Tribute Rock</button>
+                <button className="borealis" onClick={() => onStartNewGame("borealisTribute")}>Borealis Tribute Rock</button>
             </li>
         </ul>
         <ChangelogModal buildNumber={buildNumber} buildCommit={buildCommit} lastCommit={lastCommit}/>
