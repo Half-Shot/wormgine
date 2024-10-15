@@ -34,7 +34,8 @@ export default async function runScenario(game: Game) {
             name: "Test Dolby",
             maxHealth: 100,
             health: 100,
-        }]
+        }],
+        playerUserId: null,
     }]);
 
     new GameStateOverlay(game.pixiApp.ticker, game.pixiApp.stage, gameState, world, game.viewport.screenWidth, game.viewport.screenHeight);

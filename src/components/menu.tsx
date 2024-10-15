@@ -84,7 +84,7 @@ function accountMenu(client: NetGameClient|undefined, setCurrentMenu: (menu: Cur
             } as NetClientConfig));
             reloadClient();
         } catch (ex) {
-            setError(ex.toString());
+            setError((ex as Error).toString());
         } finally {
             setLoginInProgress(false);
         }

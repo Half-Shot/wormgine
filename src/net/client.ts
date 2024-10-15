@@ -1,14 +1,9 @@
-global = {
-    window: window,
-    fetch: fetch.bind(window),
-    Olm: window.Olm,
-    localStorage: window.localStorage
-};
 
-import { createClient, MatrixClient, MemoryStore, Preset, Room, RoomEvent, Visibility } from "matrix-js-sdk";
+
 import { FullGameStageEvent, GameStage, PlayerAckEvent } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
+import { ClientEvent, createClient, MatrixClient, MemoryStore, Preset, Room, RoomEvent, Visibility } from "matrix-js-sdk";
 
 export interface NetClientConfig {
     baseUrl: string,
@@ -81,12 +76,15 @@ export class NetGameClient extends EventEmitter {
     public static async register(homeserverUrl: string, name: string, password: string) {
         const client = createClient({
             baseUrl: homeserverUrl,
+            fetchFn: (input, init) => globalThis.fetch(input, init),
         });
         return await client.register(name, password, null, { type: "m.login.password"});
     }
     public static async login(homeserverUrl: string, username: string, password: string): Promise<{ accessToken: string; }> {
         const client = createClient({
             baseUrl: homeserverUrl,
+            fetchFn: (input, init) => globalThis.fetch(input, init),
+            store: new MemoryStore({ localStorage: window.localStorage }),
         });
         const response = await client.loginWithPassword(username, password);
         return { accessToken: response.access_token };
@@ -97,9 +95,8 @@ export class NetGameClient extends EventEmitter {
         this.client = createClient({
             baseUrl: config.baseUrl,
             accessToken: config.accessToken,
-            store: new MemoryStore({
-                localStorage: window.localStorage,
-            })
+            fetchFn: (input, init) => globalThis.fetch(input, init),
+            store: new MemoryStore({ localStorage: window.localStorage }),
         });
     }
 
@@ -111,7 +108,7 @@ export class NetGameClient extends EventEmitter {
         const whoami = await this.client.whoami();
         this.client.credentials.userId = whoami.user_id;
         this.client.deviceId = whoami.device_id ?? null;
-        this.client.once('sync', () => {
+        this.client.addListener(ClientEvent.Sync, () => {
             this.emit('sync');
         })
         await this.client.startClient();
