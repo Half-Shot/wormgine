@@ -34,6 +34,7 @@ jobs:
         run: |
           echo "VITE_BUILD_NUMBER=$((GITHUB_RUN_NUMBER))" >> $GITHUB_ENV
           echo "VITE_BUILD_COMMIT=$GITHUB_SHA" >> $GITHUB_ENV
+          echo "VITE_DEFAULT_HOMESERVER=https://chaotic.half-shot.uk" >> $GITHUB_ENV
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
