@@ -156,7 +156,7 @@ export class GameWorld {
     }
 
     removeEntity(entity: IGameEntity) {
-        const key = [...this.entities.entries()].find(([k,v]) => v === entity)?.[0];
+        const key = [...this.entities.entries()].find(([_k,v]) => v === entity)?.[0];
         if (!key) {
             throw Error('Entity not found in world');
         }

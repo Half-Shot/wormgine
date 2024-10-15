@@ -64,10 +64,11 @@ export class StateReplay extends EventEmitter<EventTypes> {
             case StateRecordKind.EntitySync:
                 this.emit('entitySync', (data as StateRecordEntitySync).data.entities);
                 break;
-            case StateRecordKind.WormAction:
+            case StateRecordKind.WormAction: {
                 const actionData = data as StateRecordWormAction;
                 this.emit('wormAction', actionData.data);
                 break;
+            }
             case StateRecordKind.WormActionAim:
                 this.emit('wormActionAim', (data as StateRecordWormActionAim).data);
                 break;
@@ -116,10 +117,9 @@ export class MatrixStateReplay extends StateReplay {
             throw Error('Already playing');
         }
         let prevPromise = Promise.resolve();
-        // TODO: 
         this.gameInst.subscribeToGameState((data) => {
             prevPromise = prevPromise.finally(() => this.parseData(data).catch((ex) => {
-                console.error('Failed to process line');
+                console.error('Failed to process line', ex);
             }));
         });
     }

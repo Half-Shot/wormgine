@@ -1,13 +1,11 @@
 import { Viewport } from "pixi-viewport";
 import { WormInstance } from "../../logic/teams";
 import { Toaster } from "../../overlays/toaster";
-import { StateRecorder } from "../../state/recorder";
 import { Coordinate } from "../../utils";
 import { GameWorld } from "../../world";
 import { FireFn, Worm, WormState } from "./worm";
 import { StateWormAction } from "../../state/model";
 import { InputKind } from "../../input";
-import { UPDATE_PRIORITY } from "pixi.js";
 
 /**
  * An instance of the worm class controlled by a remote (or AI) player.
@@ -70,7 +68,7 @@ export class RemoteWorm extends Worm {
         }
     }
 
-    replayAim(dir: "up"|"down", aim: number) {
+    replayAim(_dir: "up"|"down", aim: number) {
         // TODO: Needs animation.
         this.fireAngle = aim;
     }

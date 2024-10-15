@@ -6,7 +6,7 @@ global = {
 };
 
 import { createClient, MatrixClient, MemoryStore, Preset, Room, RoomEvent, Visibility } from "matrix-js-sdk";
-import { FullGameStageEvent, FullGameStateEvent, GameStage, PlayerAckEvent } from "./models";
+import { FullGameStageEvent, GameStage, PlayerAckEvent } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
 
@@ -65,8 +65,9 @@ export class NetGameInstance {
         await this.client.client.sendEvent(this.roomId, 'uk.half-shot.wormgine.game_state' as any, data);
     }
 
-    public subscribeToGameState(fn: (data: StateRecordLine<unknown>) => void) {
-        this.room.on(RoomEvent.TimelineRefresh, (room, timelineSet) => {
+    public subscribeToGameState(_fn: (data: StateRecordLine<unknown>) => void) {
+        throw Error('Not implemented');
+        this.room.on(RoomEvent.TimelineRefresh, (_room, timelineSet) => {
             console.log(timelineSet.getLiveTimeline().getEvents());
         });
     }
@@ -156,21 +157,5 @@ export class NetGameClient extends EventEmitter {
             members: Object.fromEntries(stateEvents.filter(m => m.type === "m.room.member" && m.content.membership === "join").map(m => [m.state_key, m.content.displayname ?? m.state_key])),
             stage: gameStage,
         })
-    }
-
-    public async sendLoaded(roomId: string): Promise<void> {
-
-    }
-
-    public async sendAck(roomId: string): Promise<void> {
-
-    }
-
-    public async sendFullGameState(roomId: string, state: FullGameStateEvent["content"]): Promise<void> {
-
-    }
-
-    public async sendBitmap(roomId: string, bitmap: Buffer): Promise<void> {
-
     }
 }

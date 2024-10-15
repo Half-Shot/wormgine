@@ -9,7 +9,7 @@ import { GameState } from "../logic/gamestate";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import { GameDrawText, TeamWinnerText, templateRandomText } from "../text/toasts";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
-import { StateReplay, TextStateReplay } from "../state/player";
+import { TextStateReplay } from "../state/player";
 import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { EntityType } from "../entities/type";
 import { getDefinitionForCode } from "../weapons";
@@ -107,7 +107,7 @@ export default async function runScenario(game: Game) {
     });
 
     const worms = initialData.entitySync.filter(v => v.type === EntityType.Worm).reverse();
-    let i = 300;
+
     for (const team of gameState.getActiveTeams()) {
         for (const wormInstance of team.worms) {
             const existingEntData = worms.pop()!;

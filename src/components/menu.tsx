@@ -77,7 +77,7 @@ function accountMenu(client: NetGameClient|undefined, setCurrentMenu: (menu: Cur
             const target = e.target as HTMLFormElement;
             const username = (target.elements.namedItem('username') as HTMLInputElement).value;
             const password = (target.elements.namedItem('password') as HTMLInputElement).value;
-            const { accessToken } = await NetGameClient.login(DEFAULT_HOMESERVER!, username, password);
+            const { accessToken } = await NetGameClient.login(DEFAULT_HOMESERVER as string, username, password);
             localStorage.setItem('wormgine_client_config', JSON.stringify({
                 accessToken,
                 baseUrl: DEFAULT_HOMESERVER,

@@ -122,4 +122,11 @@ export abstract class TimedExplosive extends PhysicsEntity<RecordedState> implem
             ...super.recordState(),
         }
     }
+
+
+    loadState(d: RecordedState) {
+        super.loadState(d);
+        this.timer = d.timer;
+        this.opts.timerSecs = d.timerSecs;
+    }
 }

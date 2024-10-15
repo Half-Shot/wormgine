@@ -23,7 +23,3 @@ export function readAssetsForEntities(assets: AssetPack): void {
     Explosion.readAssets(assets);
     PhysicsEntity.readAssets(assets);
 }
-
-function entityToType() {
-
-}

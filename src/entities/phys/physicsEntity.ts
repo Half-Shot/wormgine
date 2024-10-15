@@ -129,7 +129,7 @@ export abstract class PhysicsEntity<T extends RecordedEntityState = RecordedEnti
         } as T;
     }
 
-    loadState(d: T) {
-
+    loadState(_d: T): void {
+        // TODO: Load the state from above.
     }
 }

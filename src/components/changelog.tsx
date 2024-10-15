@@ -17,7 +17,7 @@ export function ChangelogModal({buildNumber, buildCommit, lastCommit}: {buildNum
                 setLatestChanges(['Could not load changes']);
             }
             const result = await req.json();
-            setLatestChanges(result.commits.map((c: any) => `${c.commit.message}`).reverse());
+            setLatestChanges(result.commits.map((c: {commit: {message: string}}) => `${c.commit.message}`).reverse());
         })();
     }, [buildCommit, lastCommit, setLatestChanges]);
 

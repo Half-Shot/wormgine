@@ -15,7 +15,7 @@ import { readAssetsForEntities } from "./entities";
 import { Team } from './logic/teams';
 import { readAssetsForWeapons } from './weapons';
 import { WindDial } from './overlays/windDial';
-import { NetGameClient, NetGameInstance } from './net/client';
+import { NetGameInstance } from './net/client';
 
 const worldWidth = 1920;
 const worldHeight = 1080;

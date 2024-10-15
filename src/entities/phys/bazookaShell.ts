@@ -6,7 +6,6 @@ import { Coordinate, MetersValue } from '../../utils/coodinate';
 import { AssetPack } from '../../assets';
 import { WormInstance } from '../../logic/teams';
 import { angleForVector } from '../../utils';
-import { RecordedEntityState } from '../../state/model';
 import { EntityType } from '../type';
 
 
