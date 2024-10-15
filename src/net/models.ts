@@ -82,9 +82,8 @@ export interface GameConfigEvent {
 
 export interface ClientReadyEvent {
     type: "uk.half-shot.uk.wormgine.ready",
-    content: {
-        // Need to decide on some config.
-    }
+    // Need to decide on some config.
+    content: Record<string, never>
 }
 
 export interface GameStartEvent {

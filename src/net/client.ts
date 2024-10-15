@@ -45,18 +45,21 @@ export class NetGameInstance {
     }
 
     public async startGame() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await this.client.client.sendStateEvent(this.roomId, 'uk.half-shot.uk.wormgine.game_stage' as any, {
             stage: GameStage.InProgress,
         } satisfies FullGameStageEvent["content"]);
     }
 
     public async sendAck() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await this.client.client.sendEvent(this.roomId, 'uk.half-shot.uk.wormgine.ack' as any, {
             ack: true,
         } satisfies PlayerAckEvent["content"]);
     }
 
     public async sendGameState(data: Record<string, unknown>) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await this.client.client.sendEvent(this.roomId, 'uk.half-shot.wormgine.game_state' as any, data);
     }
 
