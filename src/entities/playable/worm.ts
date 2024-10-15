@@ -58,9 +58,8 @@ export class Worm extends PlayableEntity {
     private static texture: Texture;
     private static impactDamageMultiplier = 0.75;
     private static minImpactForDamage = 12;
-    private static offsetFromGroundM =  0.04;
 
-    private fireWeaponDuration = 0;
+    protected fireWeaponDuration = 0;
     private currentWeapon: IWeaponDefiniton = WeaponBazooka;
     protected state: WormState = WormState.Inactive;
     private statePriorToMotion: WormState = WormState.Idle;
@@ -71,6 +70,7 @@ export class Worm extends PlayableEntity {
     public fireAngle = 0;
     protected targettingGfx: Graphics;
     private facingRight = true;
+    private movingCycles = 0;
 
     static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, toaster?: Toaster, recorder?: StateRecorder) {
         const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, toaster, recorder);
@@ -165,10 +165,8 @@ export class Worm extends PlayableEntity {
         } else if (this.state !== WormState.Idle) {
             return;
         } else if (inputKind === InputKind.AimUp) {
-            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.AimUp);
             this.state = WormState.AimingUp;
         } else if (inputKind === InputKind.AimDown) {
-            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.AimDown);
             this.state = WormState.AimingDown;
         } else if (inputKind === InputKind.Fire) {
             this.onBeginFireWeapon();
@@ -216,7 +214,7 @@ export class Worm extends PlayableEntity {
             this.resetMoveDirection(inputKind);
         } 
         if (inputKind === InputKind.AimUp || inputKind === InputKind.AimDown) {
-            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
+            this.recorder?.recordWormAim(this.wormIdent.uuid, this.state === WormState.AimingUp ? "up" : "down", this.fireAngle);
             this.state = WormState.Idle;
         } 
     }
@@ -241,10 +239,9 @@ export class Worm extends PlayableEntity {
         }
 
         this.state = direction === InputKind.MoveLeft ? WormState.MovingLeft : WormState.MovingRight;
-        this.recorder?.recordWormAction(this.wormIdent.uuid, this.state === WormState.MovingLeft ? StateWormAction.MoveLeft : StateWormAction.MoveRight);
     }
 
-    resetMoveDirection(inputDirection: InputKind.MoveLeft|InputKind.MoveRight) {
+    resetMoveDirection(inputDirection?: InputKind.MoveLeft|InputKind.MoveRight) {
         // We can only stop moving if we are in control of our movements and the input that
         // completed was the movement key.
 
@@ -252,43 +249,39 @@ export class Worm extends PlayableEntity {
             this.statePriorToMotion = WormState.Idle;
         } 
 
-        if (this.state === WormState.MovingLeft && inputDirection === InputKind.MoveLeft) {
-            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
-            this.state = WormState.Idle;
-            return;
-        }
-
-        if (this.state === WormState.MovingRight || inputDirection === InputKind.MoveRight) {
-            this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Stop);
+        if ((this.state === WormState.MovingLeft && inputDirection === InputKind.MoveLeft) ||
+            (this.state === WormState.MovingRight && inputDirection === InputKind.MoveRight) ||
+            !inputDirection
+        ) {
+            this.recorder?.recordWormMove(this.wormIdent.uuid, this.state === WormState.MovingLeft ? "left" : "right", this.movingCycles);
+            this.movingCycles = 0;
             this.state = WormState.Idle;
             return;
         }
     }
 
-    onMove(moveState: WormState.MovingLeft|WormState.MovingRight) {
-        // TODO: Bind to tick time!!
-        // Attempt to move to the left or right by 3 pixels
-        const movementMod = 0.03;
+    onMove(moveState: WormState.MovingLeft|WormState.MovingRight, dt: number) {
+        const movementMod = 0.1*dt;
         const moveMod = new Vector2(moveState === WormState.MovingLeft ? -movementMod : movementMod, 0);
         const move = calculateMovement(this.physObject, moveMod, maxWormStep, this.gameWorld);
+        this.movingCycles += 1;
         this.physObject.body.setTranslation(move, false);
     }
 
     onBeginFireWeapon() {
         this.state = WormState.Firing;
-        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Fire);
     }
 
     onEndFireWeapon() {
         if (this.state !== WormState.Firing) {
             return;
         }
-        this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.EndFire);
+        const duration = this.fireWeaponDuration;
+        this.recorder?.recordWormFire(this.wormIdent.uuid, duration);
         this.targettingGfx.visible = false;
         // TODO: Need a middle state for while the world is still active.
         this.state = WormState.InactiveWaiting;
         this.turnEndedReason = EndTurnReason.FiredWeapon;
-        const duration = this.fireWeaponDuration;
         this.fireWeaponDuration = 0;
         this.onFireWeapon(this, this.currentWeapon, {
             duration,
@@ -423,7 +416,6 @@ export class Worm extends PlayableEntity {
             this.updateTargettingGfx();
         }
 
-
         if (this.state === WormState.InMotion) {
             this.impactVelocity = Math.max(magnitude(this.body.linvel()), this.impactVelocity);
             if (!this.body.isMoving()) {
@@ -454,9 +446,10 @@ export class Worm extends PlayableEntity {
             }
         } else if (falling) {
             this.statePriorToMotion = this.state;
+            this.resetMoveDirection();
             this.state = WormState.InMotion;
         } else if (this.state === WormState.MovingLeft || this.state === WormState.MovingRight) {
-            this.onMove(this.state);
+            this.onMove(this.state, dt);
             // TODO: Allow moving aim while firing.
         } else if (this.state === WormState.AimingUp || this.state === WormState.AimingDown) {
             this.updateAiming();
