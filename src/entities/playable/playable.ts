@@ -129,9 +129,13 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
         // If the timer is null, decrease the rendered health if nessacery.
         if (this.healthChangeTensionTimer === null) {
             if (this.visibleHealth > this.health) {
+                this.onHealthTensionTimerExpired(true);
                 this.visibleHealth--;
                 this.healthText.text = this.visibleHealth;
                 this.healthText.position.set((this.nameText.width/2) - this.healthText.width/2, 34);
+                if (this.visibleHealth <= this.health) {
+                    this.onHealthTensionTimerExpired(false);
+                }
             }
 
             // If we are dead, set a new timer to decrease to explode after a small delay.
@@ -140,6 +144,10 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
             }
         }
 
+    }
+
+    protected onHealthTensionTimerExpired(decreasing: boolean) {
+        return;
     }
 
     public explode() {

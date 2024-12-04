@@ -15,6 +15,8 @@ import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../weapons";
 import staticController, { InputKind } from "../input";
 import { IWeaponCode } from "../weapons/weapon";
 import { StateRecorder } from "../state/recorder";
+import { CameraLockPriority } from "../camera";
+import { MovedEvent } from "pixi-viewport/dist/types";
 
 const weapons = [WeaponBazooka, WeaponGrenade, WeaponShotgun];
 
@@ -89,14 +91,11 @@ export default async function runScenario(game: Game) {
                 await Worm.create(parent, world, Coordinate.fromScreen(400 + i,105), wormInstance, async (worm, definition, opts) => {
                 const newProjectile = definition.fireFn(parent, world, worm, opts);
                 if (newProjectile instanceof PhysicsEntity) {
-                    parent.follow(newProjectile.sprite);
+                    newProjectile.cameraLockPriority = CameraLockPriority.LockIfNotLocalPlayer;
                     world.addEntity(newProjectile);
                 }
                 stateRecorder.syncEntityState();
                 const res = await newProjectile.onFireResult;
-                if (newProjectile instanceof PhysicsEntity) { 
-                    parent.follow(worm.sprite);
-                }
                 return res;
             }, overlay.toaster, stateRecorder));
             wormInstances.set(wormInstance.uuid, wormEnt);
@@ -113,8 +112,6 @@ export default async function runScenario(game: Game) {
         style: DefaultTextStyle,
     });
     weaponText.position.set(20, 50);
-    
-    
     staticController.on('inputEnd', (kind: InputKind) => {
         if (kind !== InputKind.DebugSwitchWeapon) {
             return;
@@ -130,6 +127,8 @@ export default async function runScenario(game: Game) {
         currentWorm.selectWeapon(weapons[selectedWeaponIndex]);
         weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
     });
+
+    
 
 
     const roundHandlerFn = (dt: Ticker) => {
@@ -174,12 +173,89 @@ export default async function runScenario(game: Game) {
             world.setWind(gameState.currentWind);
             currentWorm.onWormSelected();
             weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
-            game.viewport.follow(currentWorm.sprite);
             endOfRoundWaitDuration = null;
             return;
         }
         endOfRoundWaitDuration -= dt.deltaMS;
     };
+
+    // Camera Director.
+    let currentLockTarget: PhysicsEntity|null = null;
+    let lastMoveHash = 0;
+    let userWantsControl = false;
+    game.viewport.on('moved', (event: MovedEvent) => {
+        if (event.type === "clamp-y" || event.type === "clamp-x") {
+            // Ignore, the director moved us.
+            return;
+        }
+        userWantsControl = true;
+    })
+    game.pixiApp.ticker.add(() => {
+        let newTarget: PhysicsEntity|null = null;
+        let priority: CameraLockPriority = CameraLockPriority.NoLock;
+        if (currentLockTarget?.destroyed) {
+            currentLockTarget = null;
+        }
+        for (const e of world.entities.values()) {
+            if (e instanceof PhysicsEntity === false) {
+                continue;
+            }
+            if (e.cameraLockPriority > priority) {
+                newTarget = e;
+                priority = e.cameraLockPriority;
+            }
+        }
+        if (!newTarget) {
+            return;
+        }
+
+
+        const isLocal = !currentWorm?.wormIdent.team.playerUserId;
+        if (newTarget !== currentLockTarget) {
+            // Reset user control.
+            userWantsControl = false;
+            console.log("NEW LOCK", newTarget);
+        }
+        currentLockTarget = newTarget;
+
+        const targetXY: [number, number] = [currentLockTarget.sprite.position.x, currentLockTarget.sprite.position.y];
+        // Short circuit skip move if it's cheaper not to.
+        let newMoveHash = (currentLockTarget.sprite.position.x + currentLockTarget.sprite.position.y);
+        if (lastMoveHash === newMoveHash) {
+            return;
+        }
+        lastMoveHash = newMoveHash;
+
+        switch (currentLockTarget.cameraLockPriority) {
+            case CameraLockPriority.SuggestedLockNonLocal:
+                if (userWantsControl) {
+                    return;
+                }
+                // Need a better way to determine this.
+                if (!isLocal) {
+                    game.viewport.moveCenter(...targetXY);
+                }
+                break;
+            case CameraLockPriority.SuggestedLockLocal:
+                if (userWantsControl) {
+                    return;
+                }
+                console.log('Local snap', targetXY)
+                game.viewport.moveCenter(...targetXY);
+                break;
+            case CameraLockPriority.LockIfNotLocalPlayer:
+                if (!isLocal) {
+                    game.viewport.moveCenter(...targetXY);
+                } else if (!userWantsControl) {
+                    game.viewport.moveCenter(...targetXY);
+                }
+                break;
+
+            case CameraLockPriority.AlwaysLock:
+                game.viewport.moveCenter(...targetXY);
+                break;
+        }
+    });
 
     game.pixiApp.ticker.add(roundHandlerFn);
     game.pixiApp.stage.addChild(weaponText);

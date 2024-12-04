@@ -16,6 +16,7 @@ import { WeaponBazooka } from '../../weapons';
 import { EntityType } from '../type';
 import { StateRecorder } from '../../state/recorder';
 import { StateWormAction } from '../../state/model';
+import { CameraLockPriority } from '../../camera';
 
 export enum WormState {
     Idle = 0,
@@ -128,6 +129,7 @@ export class Worm extends PlayableEntity {
 
     onWormSelected() {
         this.state = WormState.Idle;
+        this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
         this.toaster?.pushToast(templateRandomText(TurnStartText, {
             WormName: this.wormIdent.name,
             TeamName: this.wormIdent.team.name,
@@ -139,6 +141,7 @@ export class Worm extends PlayableEntity {
     onEndOfTurn() {
         Controller.removeListener('inputBegin', this.onInputBegin);
         Controller.removeListener('inputEnd', this.onInputEnd);
+        this.cameraLockPriority = CameraLockPriority.NoLock;
         this.targettingGfx.visible = false;
     }
 
@@ -241,6 +244,10 @@ export class Worm extends PlayableEntity {
         this.state = direction === InputKind.MoveLeft ? WormState.MovingLeft : WormState.MovingRight;
     }
 
+    protected onHealthTensionTimerExpired(decreasing: boolean): void {
+        this.cameraLockPriority = decreasing ? CameraLockPriority.LockIfNotLocalPlayer : CameraLockPriority.NoLock;
+    }
+
     resetMoveDirection(inputDirection?: InputKind.MoveLeft|InputKind.MoveRight) {
         // We can only stop moving if we are in control of our movements and the input that
         // completed was the movement key.
@@ -280,6 +287,7 @@ export class Worm extends PlayableEntity {
         this.recorder?.recordWormFire(this.wormIdent.uuid, duration);
         this.targettingGfx.visible = false;
         // TODO: Need a middle state for while the world is still active.
+        this.cameraLockPriority = CameraLockPriority.NoLock;
         this.state = WormState.InactiveWaiting;
         this.turnEndedReason = EndTurnReason.FiredWeapon;
         this.fireWeaponDuration = 0;

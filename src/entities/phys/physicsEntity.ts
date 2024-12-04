@@ -9,6 +9,7 @@ import { Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
+import { CameraLockPriority } from "../../camera";
 
 /**
  * Abstract class for any physical object in the world. The
@@ -35,6 +36,8 @@ export abstract class PhysicsEntity<T extends RecordedEntityState = RecordedEnti
     priority = UPDATE_PRIORITY.NORMAL;
     private splashSoundPlayback?: IMediaInstance;
 
+    public cameraLockPriority: CameraLockPriority = CameraLockPriority.NoLock;
+
     public get destroyed() {
         return this.isDestroyed;
     }
@@ -51,6 +54,7 @@ export abstract class PhysicsEntity<T extends RecordedEntityState = RecordedEnti
     }
 
     destroy(): void {
+        this.cameraLockPriority = CameraLockPriority.NoLock;
         this.isDestroyed = true;
         this.sprite.destroy();
         this.wireframe.renderable.destroy();
@@ -86,6 +90,7 @@ export abstract class PhysicsEntity<T extends RecordedEntityState = RecordedEnti
 
     onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
         if (otherEnt instanceof Water) {
+            this.cameraLockPriority = CameraLockPriority.NoLock;
 
             if (!this.splashSoundPlayback?.progress || this.splashSoundPlayback.progress === 1) {
                 // TODO: Hacks
