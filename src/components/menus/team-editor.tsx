@@ -1,4 +1,4 @@
-export default function AccountMenu({client, setCurrentMenu, reloadClient}: Props) {
+export default function AccountMenu() {
 
     return <main className="menu">
         <h1>Team Editor</h1>
