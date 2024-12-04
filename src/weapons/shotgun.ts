@@ -15,6 +15,7 @@ const WeaponShotgun: IWeaponDefiniton = {
     code: IWeaponCode.Shotgun,
     timerAdjustable: false,
     showTargetGuide: true,
+    shots: 2,
     loadAssets(assets: AssetPack) {
         fireSound = assets.sounds.shotgun;
     },

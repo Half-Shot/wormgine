@@ -38,6 +38,11 @@ export interface IWeaponDefiniton {
      */
     timerAdjustable?: boolean,
     showTargetGuide?: boolean,
+
+    /**
+     * How many shots can the player take. Defaults to 1.
+     */
+    shots?: number;
     fireFn: (parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) => IWeaponEntity,
     loadAssets?: (assetPack: AssetPack) => void,
 }

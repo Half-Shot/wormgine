@@ -14,7 +14,7 @@ interface Opts extends Partial<ExplosionsOptions>, OnDamageOpts {
 
 export function handleDamageInRadius(
     gameWorld: GameWorld, parent: Container, point: Vector2,
-    radius: MetersValue, opts: Opts, ignoreCollider?: Collider, ownerWorm?: WormInstance) {
+    radius: MetersValue, opts: Opts, ignoreCollider?: Collider, ownerWorm?: WormInstance): WeaponFireResult[] {
     // Detect if anything is around us.
     const explosionCollidesWith = gameWorld.checkCollision(new Coordinate(point.x, point.y), radius, ignoreCollider);
     const fireResults = new Set<WeaponFireResult>();

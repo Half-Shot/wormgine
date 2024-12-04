@@ -17,6 +17,7 @@ import { EntityType } from '../type';
 import { StateRecorder } from '../../state/recorder';
 import { StateWormAction } from '../../state/model';
 import { CameraLockPriority } from '../../camera';
+import { OnDamageOpts } from '../entity';
 
 export enum WormState {
     Idle = 0,
@@ -35,6 +36,7 @@ export enum EndTurnReason {
     FallDamage = 1,
     FiredWeapon= 2,
     Sank = 3,
+    TookDamage = 4,
 }
 
 const MaxAim = Math.PI * 1.5; // Up
@@ -45,6 +47,14 @@ const maxWormStep = new MetersValue(0.6);
 const aimMoveSpeed = 0.02;
 
 export type FireFn = (worm: Worm, selectedWeapon: IWeaponDefiniton, opts: FireOpts) => Promise<WeaponFireResult[]>;
+
+interface PerRoundState {
+    shotsTaken: number;
+};
+
+const DEFAULT_PER_ROUND_STATE = {
+    shotsTaken: 0,
+}
 
 /**
  * Physical representation of a worm on the map. May be controlled.
@@ -72,6 +82,7 @@ export class Worm extends PlayableEntity {
     protected targettingGfx: Graphics;
     private facingRight = true;
     private movingCycles = 0;
+    private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
 
     static create(parent: Viewport, world: GameWorld, position: Coordinate, wormIdent: WormInstance, onFireWeapon: FireFn, toaster?: Toaster, recorder?: StateRecorder) {
         const ent = new Worm(position, world, parent, wormIdent, onFireWeapon, toaster, recorder);
@@ -104,6 +115,10 @@ export class Worm extends PlayableEntity {
     }
 
     public selectWeapon(weapon: IWeaponDefiniton) {
+        if (this.perRoundState.shotsTaken > 0) {
+            // Worm is already in progress of shooting things.
+            return;
+        }
         this.currentWeapon = weapon;
         this.recorder?.recordWormSelectWeapon(this.wormIdent.uuid, weapon.code);
     }
@@ -130,6 +145,7 @@ export class Worm extends PlayableEntity {
     onWormSelected() {
         this.state = WormState.Idle;
         this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
+        this.perRoundState = {...DEFAULT_PER_ROUND_STATE};
         this.toaster?.pushToast(templateRandomText(TurnStartText, {
             WormName: this.wormIdent.name,
             TeamName: this.wormIdent.team.name,
@@ -156,7 +172,6 @@ export class Worm extends PlayableEntity {
         this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Backflip);
         this.body.applyImpulse({x: this.facingRight ? -3 : 3, y: -13}, true);
     }
-
 
     onInputBegin = (inputKind: InputKind) => {
         if (this.state === WormState.Firing) {
@@ -279,24 +294,38 @@ export class Worm extends PlayableEntity {
         this.state = WormState.Firing;
     }
 
+    public onDamage(point: Vector2, radius: MetersValue, opts: OnDamageOpts): void {
+        super.onDamage(point, radius, opts);
+        if (this.state === WormState.InactiveWaiting || this.state === WormState.Idle) {
+            this.state = WormState.Inactive;
+            this.turnEndedReason = EndTurnReason.TookDamage;
+        }
+    }
+
     onEndFireWeapon() {
         if (this.state !== WormState.Firing) {
             return;
         }
+        const maxShots = this.weapon.shots ?? 1;
         const duration = this.fireWeaponDuration;
         this.recorder?.recordWormFire(this.wormIdent.uuid, duration);
         this.targettingGfx.visible = false;
+        this.perRoundState.shotsTaken++;
         // TODO: Need a middle state for while the world is still active.
         this.cameraLockPriority = CameraLockPriority.NoLock;
         this.state = WormState.InactiveWaiting;
-        this.turnEndedReason = EndTurnReason.FiredWeapon;
         this.fireWeaponDuration = 0;
         this.onFireWeapon(this, this.currentWeapon, {
             duration,
             timer: this.weaponTimerSecs,
             angle: this.fireAngle,
         }).then((fireResult) => {
-            this.state = WormState.Inactive;
+            if (maxShots === this.perRoundState.shotsTaken) {
+                this.turnEndedReason = EndTurnReason.FiredWeapon;
+                this.state = WormState.Inactive;
+            } else {
+                this.state = WormState.Idle;
+            }
             let randomTextSet: string[];
             if (fireResult.includes(WeaponFireResult.KilledOwnTeam)) {
                 randomTextSet = FireResultKilledOwnTeam;
