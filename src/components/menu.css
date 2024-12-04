@@ -2,6 +2,7 @@
     margin-left: auto;
     margin-right: auto;
     width: fit-content;
+    min-width: 33vw;
 }
 
 p {

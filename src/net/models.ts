@@ -21,13 +21,15 @@ export enum GameStage {
     Finished = "completed",
 }
 
-export interface FullGameStageEvent {
+
+export interface GameStageEvent {
     type: "uk.half-shot.uk.wormgine.game_stage",
     state_key: "",
     content: {
         stage: GameStage,
     }
 }
+
 
 export interface FullGameStateEvent {
     type: "uk.half-shot.uk.wormgine.game_state",
@@ -72,10 +74,11 @@ export interface PlayerAckEvent {
 }
 
 export interface GameConfigEvent {
+    state_key: "",
     type: "uk.half-shot.uk.wormgine.game_config",
     content: {
         rules: GameRules
-        teams: Team,
+        teams: Team[],
         // Need to decide on some config.
     }
 }

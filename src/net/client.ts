@@ -1,9 +1,12 @@
 
 
-import { FullGameStageEvent, GameStage, PlayerAckEvent } from "./models";
+import { GameStageEvent, GameConfigEvent, GameStage, PlayerAckEvent } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
 import { ClientEvent, createClient, MatrixClient, MemoryStore, Preset, Room, RoomEvent, Visibility } from "matrix-js-sdk";
+import { Team } from "../logic/teams";
+import { GameRules } from "../logic/gamestate";
+
 
 export interface NetClientConfig {
     baseUrl: string,
@@ -14,7 +17,9 @@ interface NetGameConfiguration {
     myUserId: string,
     hostUserId: string,
     members: Record<string, string>,
+    teams: Team[],
     stage: GameStage,
+    rules: GameRules,
 }
 
 export class NetGameInstance {
@@ -23,6 +28,8 @@ export class NetGameInstance {
     public readonly isHost: boolean;
     private _stage: GameStage;
     private room: Room;
+    private rules: GameRules;
+    private teams: Team[];
 
     public get members() {
         return {...this._members};
@@ -39,16 +46,25 @@ export class NetGameInstance {
         this._members = initialConfiguration.members;
         this._stage = initialConfiguration.stage;
         this.room = this.client.client.getRoom(roomId)!;
+        this.rules = initialConfiguration.rules;
+        this.teams = initialConfiguration.teams;
         if (!this.room) {
             throw Error('Room not found');
         }
+    }
+
+    public async updateGameConfig() {
+        await this.client.client.sendStateEvent(this.roomId, 'uk.half-shot.uk.wormgine.game_config' as any, {
+            teams: this.teams,
+            rules: this.rules,
+        } satisfies GameConfigEvent["content"]);
     }
 
     public async startGame() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await this.client.client.sendStateEvent(this.roomId, 'uk.half-shot.uk.wormgine.game_stage' as any, {
             stage: GameStage.InProgress,
-        } satisfies FullGameStageEvent["content"]);
+        } satisfies GameStageEvent["content"]);
     }
 
     public async sendAck() {
@@ -121,7 +137,7 @@ export class NetGameClient extends EventEmitter {
         await this.client.setDisplayName(name);
     }
 
-    public async createGameRoom(): Promise<string> {
+    public async createGameRoom(initialConfig: GameConfigEvent["content"]): Promise<string> {
         return (await this.client.createRoom({
             name: `Wormtrix ${new Date().toUTCString()}`,
             preset: Preset.PublicChat,
@@ -131,7 +147,9 @@ export class NetGameClient extends EventEmitter {
             },
             initial_state: [{
                 state_key: "", type: "uk.half-shot.uk.wormgine.game_stage", content: { stage: GameStage.Lobby }
-            } satisfies FullGameStageEvent]
+            } satisfies GameStageEvent, {
+                state_key: "", type: "uk.half-shot.uk.wormgine.game_config", content: initialConfig
+            } satisfies GameConfigEvent]
         })).room_id;
     }
 
@@ -141,6 +159,7 @@ export class NetGameClient extends EventEmitter {
         const stateEvents = await this.client.roomState(roomId);
         const createEvent = stateEvents.find(s => s.type === "m.room.create");
         const stageEvent = stateEvents.find(s => s.type === "uk.half-shot.uk.wormgine.game_stage");
+        const configEvent = stateEvents.find(s => s.type === "uk.half-shot.uk.wormgine.game_config") as unknown as GameConfigEvent;
         if (createEvent?.content.type !== WormgineRoomType) {
             throw Error('Room is not a wormgine room');
         }
@@ -156,6 +175,8 @@ export class NetGameClient extends EventEmitter {
             // TODO: How to figure this out?
             members: Object.fromEntries(stateEvents.filter(m => m.type === "m.room.member" && m.content.membership === "join").map(m => [m.state_key, m.content.displayname ?? m.state_key])),
             stage: gameStage,
+            teams: configEvent.content.teams,
+            rules: configEvent.content.rules,
         })
     }
 }

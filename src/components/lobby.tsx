@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import { NetGameClient, NetGameInstance } from "../net/client";
 import { GameStage } from "../net/models";
+import { TeamGroup } from "../logic/teams";
 
 interface Props {
     client?: NetGameClient,
     onOpenIngame: (gameInstance: NetGameInstance) => void,
     gameRoomId?: string,
 }
-
 
 export function Lobby({client, gameRoomId: initialGameRoomId, onOpenIngame}: Props) {
     const [gameRoomId, setGameRoomId] = useState<string|undefined>(initialGameRoomId);
@@ -22,7 +22,21 @@ export function Lobby({client, gameRoomId: initialGameRoomId, onOpenIngame}: Pro
         if (!client) {
             throw Error('No client in lobby screen!');
         }
-        client.createGameRoom()
+        client.createGameRoom({
+            rules: {
+                winWhenOneGroupRemains: true,
+            },
+            teams: [{
+                name: 'Foobars',
+                group: TeamGroup.Red,
+                playerUserId: client.client.getUserId(),
+                worms: [{
+                    name: 'Rev',
+                    health: 100,
+                    maxHealth: 100,
+                }]
+            }]
+        })
             .then(roomId => setGameRoomId(roomId))
             .catch(ex => {
                 setError('Failed to create new game!');

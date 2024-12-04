@@ -1,5 +1,5 @@
 import { EventEmitter } from "pixi.js";
-import { StateRecordEntitySync, StateRecordKind, StateRecordLine, StateRecordWormAction, StateRecordWormActionAim, StateRecordWormActionFire, StateRecordWormActionMove, StateRecordWormGameState, StateRecordWormSelectWeapon } from "./model";
+import { RecordedEntityState, StateRecordEntitySync, StateRecordKind, StateRecordLine, StateRecordWormAction, StateRecordWormActionAim, StateRecordWormActionFire, StateRecordWormActionMove, StateRecordWormGameState, StateRecordWormSelectWeapon } from "./model";
 import { NetGameInstance } from "../net/client";
 
 interface EventTypes {
@@ -25,6 +25,9 @@ export class StateReplay extends EventEmitter<EventTypes> {
     protected localStartTs = -1;
 
     protected waitingForStop?: StateRecordWormAction;
+
+    protected _latestEntityData?: (RecordedEntityState&{uuid: string})[];
+
     public async waitForFullGameState() {
         const startPromise = new Promise<void>(r => this.once('started', () => r()));
         const gameStatePromise = new Promise<StateRecordWormGameState["data"]>(r => this.once('gameState', (state) => r(state)));
@@ -38,6 +41,10 @@ export class StateReplay extends EventEmitter<EventTypes> {
 
     public get elapsedRelativeLocalTime() {
         return performance.now() - this.localStartTs!;
+    }
+
+    public get latestEntityData() {
+        return [...this._latestEntityData ?? []];
     }
 
     protected async parseData(data: StateRecordLine<unknown>): Promise<void> {
@@ -62,6 +69,8 @@ export class StateReplay extends EventEmitter<EventTypes> {
         this.lastActionTs = ts;
         switch (data.kind) {
             case StateRecordKind.EntitySync:
+                // TODO: Apply deltas somehow.
+                this._latestEntityData = (data as StateRecordEntitySync).data.entities;
                 this.emit('entitySync', (data as StateRecordEntitySync).data.entities);
                 break;
             case StateRecordKind.WormAction: {

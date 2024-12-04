@@ -13,6 +13,7 @@ import { TextStateReplay } from "../state/player";
 import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { EntityType } from "../entities/type";
 import { getDefinitionForCode } from "../weapons";
+import { RecordedEntityState } from "../state/model";
 
 export default async function runScenario(game: Game) {
     const parent = game.viewport;
@@ -30,11 +31,6 @@ export default async function runScenario(game: Game) {
     player.on('started', () => {
         console.log('started playback');
     });
-
-    player.on('entitySync', (syncData) => {
-        console.log('syncData', syncData);
-    });
-
 
     const dataPromise = player.waitForFullGameState();
     player.play();
@@ -122,10 +118,12 @@ export default async function runScenario(game: Game) {
                     parent.follow(newProjectile.sprite);
                     world.addEntity(newProjectile);
                 }
+                applyEntityData();
                 const res = await newProjectile.onFireResult;
                 if (newProjectile instanceof PhysicsEntity) { 
                     parent.follow(worm.sprite);
                 }
+                applyEntityData();
                 return res;
             }, overlay.toaster), existingEntData.uuid);
             wormInstances.set(wormInstance.uuid, wormEnt);
@@ -136,8 +134,22 @@ export default async function runScenario(game: Game) {
     let endOfGameFadeOut: number|null = null;
     let currentWorm: Worm|undefined;
 
+    function applyEntityData() {
+        console.log('Applying entity state data');
+        for (const ent of player.latestEntityData) {
+            const existingEnt = world.entities.get(ent.uuid);
+            if (!existingEnt) {
+                throw new Error(`Ent ${ent.uuid} ${EntityType[ent.type]} was not found during entity sync`);
+            } else if (existingEnt instanceof PhysicsEntity === false) {
+                throw new Error(`Ent ${ent.uuid} ${EntityType[ent.type]} was unexpectedly not a PhysicsEntity`);
+            }
+            existingEnt.loadState(ent);
+        }
+    }
+
     player.on('gameState', (dataUpdate) => {
         const nextState = gameState.applyGameStateUpdate(dataUpdate);
+        applyEntityData();
         console.log('advancing round', nextState);
         if ('winningTeams' in nextState) {
             if (nextState.winningTeams.length) {
