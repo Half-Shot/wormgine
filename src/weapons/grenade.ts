@@ -7,6 +7,7 @@ import { Vector2 } from "@dimforge/rapier2d-compat";
 import { add, Coordinate, mult } from "../utils";
 
 export const WeaponGrenade: IWeaponDefiniton = {
+    name: "Grenade",
     code: IWeaponCode.Grenade,
     maxDuration: 50,
     timerAdjustable: true,

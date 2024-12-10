@@ -12,6 +12,7 @@ const radius = new MetersValue(1.5);
 let fireSound: Sound;
 
 const WeaponShotgun: IWeaponDefiniton = {
+    name: "Shotgun",
     code: IWeaponCode.Shotgun,
     timerAdjustable: false,
     showTargetGuide: true,

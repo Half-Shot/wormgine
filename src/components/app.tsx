@@ -4,6 +4,7 @@ import { Menu } from "./menu";
 import { loadAssets } from "../assets";
 import { NetGameClient, NetGameInstance } from "../net/client";
 import { Lobby } from "./lobby";
+import { GameReactChannel } from "../interop/gamechannel";
 
 interface LoadGameProps {
     level: string;
@@ -20,6 +21,7 @@ export function App() {
     const lobbyGameRoomId = new URLSearchParams(window.location.search)?.get('gameRoomId') ?? undefined;
     const [clientReady, setClientReady] = useState(client?.ready);
     const [clientShouldReload, setClientShouldReload] = useState(true);
+    const gameReactChannel = new GameReactChannel();
 
     useEffect(() => {
         if (!clientShouldReload) {
@@ -42,10 +44,10 @@ export function App() {
         }
     }, [clientShouldReload]);
 
-    const onGoToMenu = useCallback(() => {
+    gameReactChannel.on('goToMenu', () => {
         // TODO: Show a win screen!
         setGameState(undefined);
-    }, []);
+    });
 
     useEffect(() => {
         void loadAssets((v) => { setAssetProgress(v) }).then(() => setAssetsLoaded(true));
@@ -89,7 +91,7 @@ export function App() {
     }
 
     if (gameState) {
-        return <IngameView level={gameState.level} onGoToMenu={onGoToMenu} gameInstance={gameState.gameInstance}/>
+        return <IngameView level={gameState.level} gameReactChannel={gameReactChannel} gameInstance={gameState.gameInstance}/>
     }
 
 

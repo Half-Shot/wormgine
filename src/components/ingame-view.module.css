@@ -1,0 +1,21 @@
+body {
+    overflow: hidden;
+}
+
+.overlay {
+    position: fixed;
+    left: 0;
+    height: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.weaponMenu {
+    position: fixed;
+    background: grey;
+    border: 1px solid white;
+    border-radius: 5px;
+    width: 50%;
+    left: 25vw;
+    top: 25vh;
+}

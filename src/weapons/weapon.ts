@@ -28,6 +28,7 @@ export enum WeaponFireResult {
 }
 
 export interface IWeaponDefiniton {
+    name: string,
     code: IWeaponCode,
     /**
      * How long can the fire button be held down for?

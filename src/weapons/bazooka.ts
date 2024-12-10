@@ -11,6 +11,7 @@ import { Sound } from "@pixi/sound";
 let fireSound: Sound;
 
 export const WeaponBazooka: IWeaponDefiniton = {
+    name: "Bazooka",
     code: IWeaponCode.Bazooka,
     maxDuration: 80,
     timerAdjustable: false,
