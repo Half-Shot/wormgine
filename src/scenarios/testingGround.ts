@@ -106,29 +106,29 @@ export default async function runScenario(game: Game) {
     let endOfGameFadeOut: number|null = null;
     let currentWorm: Worm|undefined;
 
-    let selectedWeaponIndex = 0;
     const weaponText = new Text({
-        text: `Selected Weapon (press S to switch): no-worm-selected`,
+        text: `Selected Weapon: no-worm-selected`,
         style: DefaultTextStyle,
     });
     weaponText.position.set(20, 50);
     staticController.on('inputEnd', (kind: InputKind) => {
-        if (kind !== InputKind.DebugSwitchWeapon) {
-            return;
+        if (kind === InputKind.WeaponMenu) {
+            game.gameReactChannel.openWeaponMenu(weapons);
         }
-        selectedWeaponIndex++;
-        if (selectedWeaponIndex === weapons.length) {
-            selectedWeaponIndex = 0;
-        }
+    });
 
+    game.gameReactChannel.on("weaponSelected", (code) => {
+        console.log('selected', code);
         if (!currentWorm) {
             return;
         }
-        currentWorm.selectWeapon(weapons[selectedWeaponIndex]);
-        weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
-    });
-
-    
+        const newWep = weapons.findIndex(w => w.code === code);
+        if (newWep === -1) {
+            throw Error('Selected weapon is not owned by worm');
+        }
+        currentWorm.selectWeapon(weapons[newWep]);
+        weaponText.text = `Selected Weapon: ${IWeaponCode[currentWorm.weapon.code]}`;
+    })
 
 
     const roundHandlerFn = (dt: Ticker) => {
@@ -136,7 +136,7 @@ export default async function runScenario(game: Game) {
             endOfGameFadeOut -= dt.deltaMS;
             if (endOfGameFadeOut < 0) {
                 game.pixiApp.ticker.remove(roundHandlerFn);
-                game.goToMenu({ winningTeams: gameState.getActiveTeams() });
+                game.goToMenu(gameState.getActiveTeams());
             }
             return;
         }
@@ -172,7 +172,7 @@ export default async function runScenario(game: Game) {
             }
             world.setWind(gameState.currentWind);
             currentWorm.onWormSelected();
-            weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
+            weaponText.text = `Selected Weapon: ${IWeaponCode[currentWorm.weapon.code]}`;
             endOfRoundWaitDuration = null;
             return;
         }

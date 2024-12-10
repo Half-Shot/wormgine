@@ -16,13 +16,12 @@ import { Team } from './logic/teams';
 import { readAssetsForWeapons } from './weapons';
 import { WindDial } from './overlays/windDial';
 import { NetGameInstance } from './net/client';
+import { GameReactChannel } from './interop/gamechannel';
+import staticController from './input';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
 
-export interface GoToMenuContext {
-    winningTeams?: Team[],
-}
 export class Game {
     public readonly viewport: Viewport;
     private readonly rapierWorld: RAPIER.World; 
@@ -33,14 +32,14 @@ export class Game {
         return this.viewport;
     }
 
-    public static async create(window: Window, level: string, onGoToMenu: (context: GoToMenuContext) => void, netGameInstance?: NetGameInstance): Promise<Game> {
+    public static async create(window: Window, level: string, gameReactChannel: GameReactChannel, netGameInstance?: NetGameInstance): Promise<Game> {
         await RAPIER.init();
         const pixiApp = new Application();
         await pixiApp.init({ resizeTo: window, preference: 'webgl' });
-        return new Game(pixiApp, level, onGoToMenu, netGameInstance);
+        return new Game(pixiApp, level, gameReactChannel, netGameInstance);
     }
 
-    constructor(public readonly pixiApp: Application, private readonly level: string, public readonly onGoToMenu: (context: GoToMenuContext) => void, public readonly netGameInstance?: NetGameInstance) {
+    constructor(public readonly pixiApp: Application, private readonly level: string, public readonly gameReactChannel: GameReactChannel, public readonly netGameInstance?: NetGameInstance) {
         // TODO: Set a sensible static width/height and have the canvas pan it.
         this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
         this.rapierGfx = new Graphics();
@@ -65,11 +64,14 @@ export class Game {
             .decelerate()
             .drag()
         this.viewport.zoom(8);
+
+        // TODO: Bit of a hack?
+        staticController.bindMouseInput();
     }
 
-    public goToMenu(context: GoToMenuContext) {
+    public goToMenu(winningTeams?: Team[]) {
         this.pixiApp.destroy();
-        this.onGoToMenu(context);
+        this.gameReactChannel.goToMenu(winningTeams);
     }
 
     public async loadResources() {

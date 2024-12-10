@@ -15,8 +15,10 @@ export enum InputKind {
     WeaponTimer3,
     WeaponTimer4,
     WeaponTimer5,
+    WeaponMenu,
 }
 
+const MouseButtonNames = ["MouseLeft", "MouseRight", "MouseWheel"];
 
 const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowLeft": InputKind.MoveLeft,
@@ -25,6 +27,7 @@ const DefaultBinding: Record<string, InputKind> = Object.freeze({
     "ArrowDown": InputKind.AimDown,
     "Enter": InputKind.Jump,
     "Backspace,Backspace": InputKind.Backflip,
+    "MouseRight": InputKind.WeaponMenu,
     // I LOVE THE CONSISTENCY HERE BROWSERS
     " ": InputKind.Fire,
     "F9": InputKind.ToggleDebugView,
@@ -58,6 +61,16 @@ class Controller extends EventEmitter {
         // TODO: Only bind when the game has started.
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
+    }
+
+    public bindMouseInput() {
+        const overlayElement = document.querySelector<HTMLDivElement>('#overlay');
+        if (!overlayElement) {
+            throw Error('Missing overlay element');
+        }
+        overlayElement.addEventListener('mousedown', this.onMouseDown.bind(this));
+        overlayElement.addEventListener('mouseup', this.onMouseUp.bind(this));
+        overlayElement.addEventListener('contextmenu', event => event.preventDefault());
     }
 
     public isInputActive(kind: InputKind) {
@@ -113,6 +126,33 @@ class Controller extends EventEmitter {
         }
         this.activeInputs.delete(inputKind);
         this.emit('inputEnd', inputKind);
+    }
+
+    private onMouseDown(ev: MouseEvent) {
+        const buttonNames = MouseButtonNames.filter((_name, i) => 
+            Boolean(ev.buttons & (1 << i)))
+
+        const inputKinds = buttonNames.map(v => DefaultBinding[v]);
+        for (const inputKind of inputKinds) {
+            if (this.activeInputs.has(inputKind)) {
+                continue;
+            }
+            this.activeInputs.add(inputKind);
+            this.emit('inputBegin', inputKind);
+        }
+    }
+    private onMouseUp(ev: MouseEvent) {
+        const buttonName = MouseButtonNames.find((_name, i) => 
+            Boolean(ev.button & (1 << i)));
+
+        if (buttonName) {
+            const inputKind = DefaultBinding[buttonName];
+            if (!this.activeInputs.has(inputKind)) {
+                return;
+            }
+            this.activeInputs.delete(inputKind);
+            this.emit('inputEnd', inputKind);
+        }
     }
 }
 
