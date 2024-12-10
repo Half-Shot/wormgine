@@ -133,7 +133,7 @@ export default async function runScenario(game: Game) {
             endOfGameFadeOut -= dt.deltaMS;
             if (endOfGameFadeOut < 0) {
                 game.pixiApp.ticker.remove(roundHandlerFn);
-                game.goToMenu({ winningTeams: gameState.getActiveTeams() });
+                game.goToMenu(gameState.getActiveTeams());
             }
             return;
         }
