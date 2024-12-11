@@ -1,11 +1,4 @@
 import { Application, Graphics, UPDATE_PRIORITY } from 'pixi.js';
-import grenadeIsland from './scenarios/grenadeIsland';
-import borealisTribute from './scenarios/borealisTribute';
-import testingGround from './scenarios/testingGround';
-import boneIsles from './scenarios/boneIsles';
-import uiTest from './scenarios/uiTest';
-import replayTesting from './scenarios/replayTesting';
-import netGame from './scenarios/netGame';
 import { Viewport } from 'pixi-viewport';
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlays/debugOverlay";
@@ -19,11 +12,14 @@ import { NetGameInstance } from './net/client';
 import { GameReactChannel } from './interop/gamechannel';
 import staticController from './input';
 import { sound } from '@pixi/sound';
+import Logger from './log';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
 
 sound.volumeAll = 0.25;
+
+const logger = new Logger('Game');
 
 export class Game {
     public readonly viewport: Viewport;
@@ -42,7 +38,7 @@ export class Game {
         return new Game(pixiApp, level, gameReactChannel, netGameInstance);
     }
 
-    constructor(public readonly pixiApp: Application, private readonly level: string, public readonly gameReactChannel: GameReactChannel, public readonly netGameInstance?: NetGameInstance) {
+    constructor(public readonly pixiApp: Application, private readonly scenario: string, public readonly gameReactChannel: GameReactChannel, public readonly netGameInstance?: NetGameInstance) {
         // TODO: Set a sensible static width/height and have the canvas pan it.
         this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
         this.rapierGfx = new Graphics();
@@ -86,23 +82,12 @@ export class Game {
 
     public async run() {
         // Load this scenario
-        if (this.level === "grenadeIsland") {
-            grenadeIsland(this);
-        } else if (this.level === "borealisTribute") {
-            borealisTribute(this);
-        } else if (this.level === "testingGround") {
-            testingGround(this);
-        } else if (this.level === "boneIsles") {
-            boneIsles(this);
-        } else if (this.level === "uiTest") {
-            uiTest(this);
-        } else if (this.level === "replayTesting") {
-            replayTesting(this);
-        } else if (this.level === "netGame") {
-            netGame(this);
-        } else {
-            throw Error('Unknown level');
+        if (this.scenario.replaceAll(/[A-Za-z]/g, '') !== "") {
+            throw Error('Invalid level name');
         }
+        logger.info(`Loading scenario ${this.scenario}`);
+        const module = await import(`./scenarios/${this.scenario}.ts`)
+        await module.default(this);
 
         const overlay = new GameDebugOverlay(this.rapierWorld, this.pixiApp.ticker, this.pixiApp.stage, this.viewport);
         this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
