@@ -6,6 +6,7 @@ import { Coordinate, MetersValue } from "../utils";
 import { handleDamageInRadius } from "../utils/damage";
 import { Sound } from "@pixi/sound";
 import { AssetPack } from "../assets";
+import icon from "../assets/shotgun.png";
 
 // TODO: Needs delay, two shots.
 const radius = new MetersValue(1.5);
@@ -13,6 +14,8 @@ let fireSound: Sound;
 
 const WeaponShotgun: IWeaponDefiniton = {
     name: "Shotgun",
+    iconWidth: 64,
+    icon,
     code: IWeaponCode.Shotgun,
     timerAdjustable: false,
     showTargetGuide: true,

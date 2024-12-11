@@ -7,12 +7,14 @@ import { add, Coordinate, mult } from "../utils";
 import { BazookaShell } from "../entities/phys/bazookaShell";
 import { AssetPack } from "../assets";
 import { Sound } from "@pixi/sound";
+import icon from "../assets/bazooka.png";
 
 let fireSound: Sound;
 
 export const WeaponBazooka: IWeaponDefiniton = {
     name: "Bazooka",
     code: IWeaponCode.Bazooka,
+    icon,
     maxDuration: 80,
     timerAdjustable: false,
     showTargetGuide: true,

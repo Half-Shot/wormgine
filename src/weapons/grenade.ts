@@ -5,9 +5,11 @@ import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { add, Coordinate, mult } from "../utils";
+import icon from "../assets/grenade.png";
 
 export const WeaponGrenade: IWeaponDefiniton = {
     name: "Grenade",
+    icon,
     code: IWeaponCode.Grenade,
     maxDuration: 50,
     timerAdjustable: true,
