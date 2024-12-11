@@ -5,6 +5,10 @@ import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
+import { HEALTH_CHANGE_TENSION_TIMER } from "../consts";
+import Logger from "../log";
+
+const logger = new Logger('GameStateOverlay');
 
 export class GameStateOverlay {
     public readonly physicsSamples: number[] = [];
@@ -71,6 +75,7 @@ export class GameStateOverlay {
             return;
         }
         this.previousStateIteration = this.gameState.iteration;
+        logger.debug(`Running update on iteration ${this.gameState.iteration}`);
 
         // TODO: Could the gameState flag this explicitly.
         // Check for health change.
@@ -81,7 +86,7 @@ export class GameStateOverlay {
                 }
                 if (this.visibleTeamHealth[team.name] !== team.health) {
                     // TODO: Const, same as the one for Playable.
-                    this.healthChangeTensionTimer = 75;
+                    this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
                     return;
                 }
             }
@@ -134,7 +139,10 @@ export class GameStateOverlay {
         }
 
         if (allHealthAccurate) {
-            this.healthChangeTensionTimer = null;
+            logger.debug('All health considered accurate');
+            if (this.healthChangeTensionTimer !== null && this.healthChangeTensionTimer <= 0) {
+                this.healthChangeTensionTimer = null;
+            }
         }
     }
 }
