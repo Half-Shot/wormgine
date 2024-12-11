@@ -1,18 +1,11 @@
 import { test, describe, expect } from "@jest/globals";
-import { angleForVector } from "../../../src/utils";
+import { pointOnRadius } from "../../../src/utils";
 describe('utils', () => {
-    describe('angleForVector', () => {
-        test('test positive x, positive y', () => {
-            expect(angleForVector({x: 3, y: 3})).toBeCloseTo(0.785);
-        });
-        test('test negative x, negative y', () => {
-            expect(angleForVector({x: -3, y: -3})).toBeCloseTo(-2.356);
-        });
-        test('test positive x, negative y', () => {
-            expect(angleForVector({x: 3, y: -3})).toBeCloseTo(-0.785);
-        });
-        test('test negative x, positive y', () => {
-            expect(angleForVector({x: -3, y: 3})).toBeCloseTo(0);
+    describe('pointOnRadius', () => {
+        test('should give a point on a radius', () => {
+            const { x,y } = pointOnRadius(0, 0, 2, 100);
+            expect(x).toBeCloseTo(-41.61, 1);
+            expect(y).toBeCloseTo(90.92, 1);
         });
     })
 });

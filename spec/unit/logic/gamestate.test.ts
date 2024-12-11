@@ -19,7 +19,8 @@ const RED_TEAM: Team = {
     name: "Generous Greggory",
     health: 25,
     maxHealth: 100,
-  }]
+  }],
+  playerUserId: null,
 }
 
 const RED_TEAM_2: Team = {
@@ -29,7 +30,8 @@ const RED_TEAM_2: Team = {
     name: "Unlucky dave",
     health: 100,
     maxHealth: 100,
-  }]
+  }],
+  playerUserId: null,
 }
 
 const BLUE_TEAM: Team = {
@@ -39,7 +41,8 @@ const BLUE_TEAM: Team = {
     name: "Swansong Stella",
     health: 75,
     maxHealth: 100,
-  }]
+  }],
+  playerUserId: null,
 }
 
 describe('GameState', () => {
