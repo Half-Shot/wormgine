@@ -56,15 +56,13 @@ export function IngameView({
   return (
     <>
       <div id="overlay" className={styles.overlay}>
-        {weaponMenu && (
-          <WeaponSelector
-            weapons={weaponMenu}
-            onWeaponPicked={(code) => {
-              gameReactChannel.weaponMenuSelect(code);
-              setWeaponMenu(null);
-            }}
-          />
-        )}
+        <WeaponSelector
+          weapons={weaponMenu}
+          onWeaponPicked={(code) => {
+            gameReactChannel.weaponMenuSelect(code);
+            setWeaponMenu(null);
+          }}
+        />
       </div>
       <div ref={ref} />
     </>

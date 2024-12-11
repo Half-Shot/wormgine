@@ -151,6 +151,9 @@ export default async function runScenario(game: Game) {
   });
   weaponText.position.set(20, 50);
   staticController.on("inputEnd", (kind: InputKind) => {
+    if (currentWorm?.currentState !== WormState.Idle) {
+      return;
+    }
     if (kind === InputKind.WeaponMenu) {
       game.gameReactChannel.openWeaponMenu(weapons);
     }

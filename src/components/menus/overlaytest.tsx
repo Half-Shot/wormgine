@@ -3,25 +3,25 @@ import { useState } from "preact/hooks";
 import { WeaponSelector } from "../gameui/weapon-select";
 import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../../weapons";
 
+const wepList = [
+  WeaponBazooka,
+  WeaponGrenade,
+  WeaponShotgun,
+  WeaponGrenade,
+  WeaponShotgun,
+  WeaponGrenade,
+  WeaponShotgun,
+];
+
 export const OverlayTest: FunctionalComponent = () => {
-  const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  const [weaponMenu, setWeaponMenu] = useState<typeof wepList | null>(null);
   return (
     <main>
-      <button onClick={() => setWeaponMenuOpen(true)}>Open Weapon Menu</button>
-      {weaponMenuOpen && (
-        <WeaponSelector
-          weapons={[
-            WeaponBazooka,
-            WeaponGrenade,
-            WeaponShotgun,
-            WeaponGrenade,
-            WeaponShotgun,
-            WeaponGrenade,
-            WeaponShotgun,
-          ]}
-          onWeaponPicked={() => setWeaponMenuOpen(false)}
-        />
-      )}
+      <button onClick={() => setWeaponMenu(wepList)}>Open Weapon Menu</button>
+      <WeaponSelector
+        weapons={weaponMenu}
+        onWeaponPicked={() => setWeaponMenu(null)}
+      />
     </main>
   );
 };

@@ -38,5 +38,19 @@
       margin-top: 1em;
       width: 16px;
     }
+
+    &:hover,
+    &.selected {
+      background: rgba(63, 55, 55, 0.8);
+    }
   }
+}
+
+.weaponText {
+  text-align: center;
+  left: 50%;
+  position: relative;
+  top: 50%;
+  transform-origin: 50% 50%;
+  transform: translate(-50%, -50%);
 }
