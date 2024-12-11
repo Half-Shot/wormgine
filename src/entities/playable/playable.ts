@@ -9,6 +9,10 @@ import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
+import { HEALTH_CHANGE_TENSION_TIMER } from "../../consts";
+import Logger from "../../log";
+
+const logger = new Logger('Playable');
 
 
 interface Opts {
@@ -17,7 +21,6 @@ interface Opts {
 }
 
 // This is clearly not milliseconds, something is odd about our dt.
-const HEALTH_TENSION_MS = 75;
 const SELF_EXPLODE_MAX_DAMAGE = 25;
 
 interface RecordedState extends RecordedEntityState {
@@ -47,8 +50,9 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
 
     set health(v: number) {
         this.wormIdent.health = v;
+        logger.info(`Worm (${this.wormIdent.uuid}, ${this.wormIdent.name}) health adjusted`);
         // Potentially further delay until the player has stopped moving.
-        this.healthChangeTensionTimer = HEALTH_TENSION_MS;
+        this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
     }
 
     constructor(sprite: Sprite, body: RapierPhysicsObject, world: GameWorld, protected parent: Viewport, public readonly wormIdent: WormInstance, private readonly opts: Opts) {
@@ -140,7 +144,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
 
             // If we are dead, set a new timer to decrease to explode after a small delay.
             if (this.visibleHealth === 0) {
-                this.healthChangeTensionTimer = HEALTH_TENSION_MS;
+                this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
             }
         }
 

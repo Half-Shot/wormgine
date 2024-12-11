@@ -5,6 +5,9 @@ import Flags from "../flags";
 import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { Collider, ColliderDesc, RigidBody, RigidBodyDesc, Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../utils/coodinate";
+import Logger from "../log";
+
+const logger = new Logger('BitmapTerrain');
 
 export type OnDamage = () => void;
 
@@ -115,7 +118,7 @@ export class BitmapTerrain implements IPhysicalEntity {
 
         // Turn it into a quadtree of rects
         const quadtreeRects = generateQuadTreeFromTerrain(boundaries, boundingBox.width, boundingBox.height, boundingBox.x, boundingBox.y);
-        console.log("Found", quadtreeRects.length, "quads in terrain");
+        logger.debug("Found", quadtreeRects.length, "quads in terrain");
 
         // Now create the pieces
         const newParts: RapierPhysicsObject[] = [];
@@ -137,7 +140,7 @@ export class BitmapTerrain implements IPhysicalEntity {
     }
 
     onDamage(point: Vector2, radius: MetersValue) {
-        console.log('Damaged');
+        logger.debug(`Terrain took damaged (${point.x} ${point.y}`,radius);
         const context = this.foregroundCanvas.getContext('2d');
         if (!context) {
             throw Error('Failed to get context');
@@ -280,7 +283,7 @@ export class BitmapTerrain implements IPhysicalEntity {
             return { point: closestTerrainPoint, fell: false};
         }
 
-        console.log("Looking at rejected points", rejectedPoints);
+        logger.verbose("Rejected points from getNearestTerrainPosition", rejectedPoints);
 
         // We have fallen, look for the closest X position to land on.
         return {

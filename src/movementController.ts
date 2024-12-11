@@ -1,6 +1,9 @@
 import { Collider, Cuboid, Vector2 } from "@dimforge/rapier2d-compat";
 import { GameWorld, RapierPhysicsObject } from "./world";
 import { add, Coordinate, MetersValue, mult } from "./utils";
+import Logger from "./log";
+
+const logger = new Logger('movementController');
 
 export let debugData: {
     rayCoodinate: Coordinate,
@@ -50,7 +53,7 @@ export function calculateMovement(physObject: RapierPhysicsObject, movement: Vec
 
     // No collisions, go go go!
     if (!highestCollider) {
-        console.log('No collision');
+        logger.debug('No collision');
         return move;
     }
 

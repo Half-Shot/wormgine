@@ -5,6 +5,9 @@ import { Coordinate, MetersValue } from "./utils/coodinate";
 import { add, mult } from "./utils";
 import type { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { RecordedEntityState } from "./state/model";
+import Logger from "./log";
+
+const logger = new Logger('World');
 
 /**
  * Utility class holding the matterjs composite and entity map.
@@ -78,7 +81,7 @@ export class GameWorld {
             }
         });
         this.eventQueue.drainContactForceEvents((event) => {
-            console.log('contactForceEvents', event);
+            logger.verbose('contactForceEvents', event);
         });
     }
 

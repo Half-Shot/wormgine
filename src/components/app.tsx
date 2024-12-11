@@ -31,7 +31,6 @@ export function App() {
             return;
         }
         setClientShouldReload(false);
-        console.log('Starting client');
         // Load client.
         const configStr = localStorage.getItem('wormgine_client_config');
         if (configStr) {

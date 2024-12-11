@@ -22,7 +22,7 @@ export class MetersValue {
     }
 
     public toString() {
-        return `MetersValue {meters: ${this.value}, pixels: ${this.value}}`
+        return `{${this.value}m, ${this.value}px}`
     }
 }
 

@@ -1,4 +1,5 @@
 import { ColorSource } from "pixi.js";
+import Logger from "../log";
 
 export interface WormIdentity {
     uuid?: string;
@@ -15,6 +16,7 @@ export enum TeamGroup {
     Purple,
     Orange,
 }
+
 
 export interface Team {
     name: string;
@@ -34,6 +36,8 @@ export function teamGroupToColorSet(group: TeamGroup): {bg: ColorSource, fg: Col
             return { bg: 0xCC00CC, fg: 0x111111 };
     }
 }
+
+const logger = new Logger('WormInstance');
 
 /**
  * Instance of a worm, keeping track of it's status.
@@ -58,6 +62,7 @@ export class WormInstance {
     }
 
     set health(health: number) {
+        logger.debug(`Worm (${this.uuid}, ${this.name}) health updated ${health}`);
         this.identity.health = health;
         this.onHealthUpdated();
     }

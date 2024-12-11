@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import { NetGameClient, NetGameInstance } from "../net/client";
 import { GameStage } from "../net/models";
 import { TeamGroup } from "../logic/teams";
+import Logger from "../log";
+
+const logger = new Logger('Lobby');
+
 
 interface Props {
     client?: NetGameClient,
@@ -55,11 +59,11 @@ export function Lobby({client, gameRoomId: initialGameRoomId, onOpenIngame}: Pro
         if (!client) {
             throw Error('No client in lobby screen!');
         }
-        console.log('Loading game instance...');
+        logger.info('Loading game instance', gameRoomId);
         client.joinGameRoom(gameRoomId).then((instance) => {
             setGameInstance(instance);
         }).catch((ex) => {
-            console.error('Failed to load game', ex);
+            logger.error('Failed to load game', ex);
             setError('Failed load existing game!');
         });
     }, [gameRoomId, gameInstance, client]);
@@ -72,7 +76,7 @@ export function Lobby({client, gameRoomId: initialGameRoomId, onOpenIngame}: Pro
             await gameInstance.startGame();
             onOpenIngame(gameInstance);
         } catch (ex) {
-            console.error('Failed to start game', ex);
+            logger.error('Failed to start game', ex);
             setError('Failed to start game!');
         }
     }, [gameInstance]);

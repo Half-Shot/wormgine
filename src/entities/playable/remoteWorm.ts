@@ -6,6 +6,9 @@ import { GameWorld } from "../../world";
 import { FireFn, Worm, WormState } from "./worm";
 import { StateWormAction } from "../../state/model";
 import { InputKind } from "../../input";
+import Logger from "../../log";
+
+const logger = new Logger('RemoteWorm');
 
 /**
  * An instance of the worm class controlled by a remote (or AI) player.
@@ -54,7 +57,7 @@ export class RemoteWorm extends Worm {
     update(dt: number): void {
         if (this.state === WormState.Firing) {
             if (this.remoteWeaponFiringDuration === undefined || this.fireWeaponDuration > this.remoteWeaponFiringDuration) {
-                console.log('firing weapon');
+                logger.debug('firing weapon');
                 this.fireWeaponDuration = this.remoteWeaponFiringDuration ?? 0;
                 this.onEndFireWeapon();
             }

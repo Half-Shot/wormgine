@@ -1,0 +1,1 @@
+export const HEALTH_CHANGE_TENSION_TIMER = 75;
