@@ -3,19 +3,6 @@ import { PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { Cuboid } from "@dimforge/rapier2d-compat";
 import { DefaultTextStyle } from "./styles";
 
-/**
- * Render a wireframe in pixi.js around a matter body.
- */
-
-const globalWindow = window as unknown as {
-  debugPivotModX: number;
-  debugPivotModY: number;
-  debugRotation: number;
-};
-
-globalWindow.debugPivotModX = 0;
-globalWindow.debugPivotModY = 0;
-globalWindow.debugRotation = 0;
 export class BodyWireframe {
   private gfx = new Graphics();
   private debugText = new Text({

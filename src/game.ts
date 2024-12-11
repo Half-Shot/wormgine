@@ -75,7 +75,7 @@ export class Game {
     this.viewport.zoom(8);
 
     // TODO: Bit of a hack?
-    staticController.bindMouseInput();
+    staticController.bindInput();
   }
 
   public goToMenu(winningTeams?: Team[]) {
@@ -85,7 +85,7 @@ export class Game {
 
   public async loadResources() {
     const assetPack = getAssets();
-    readAssetsForEntities(assetPack);
+    await readAssetsForEntities(assetPack);
     readAssetsForWeapons(assetPack);
     WindDial.loadAssets(assetPack.textures);
   }

@@ -10,7 +10,8 @@
     "lint:eslint": "eslint src/",
     "test": "jest",
     "assets": "node scripts/generateAssetManifest.mjs > src/assets/manifest.ts",
-    "lint:prettier": "prettier 'src/**/*.(ts|tsx|md)' '*.md' -w",
+    "lint:prettier": "prettier 'src/**/*.(ts|tsx|md)' '*.md' -c",
+    "lint:prettier-fix": "prettier 'src/**/*.(ts|tsx|md)' '*.md' -w",
     "lint": "yarn lint:eslint && yarn lint:prettier"
   },
   "dependencies": {

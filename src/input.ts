@@ -60,12 +60,11 @@ class Controller extends EventEmitter {
       }
       this.sequences.push({ sequence: parts, inputKind });
     }
-    // TODO: Only bind when the game has started.
-    window.addEventListener("keydown", this.onKeyDown.bind(this));
-    window.addEventListener("keyup", this.onKeyUp.bind(this));
   }
 
-  public bindMouseInput() {
+  public bindInput() {
+    window.addEventListener("keydown", this.onKeyDown.bind(this));
+    window.addEventListener("keyup", this.onKeyUp.bind(this));
     const overlayElement = document.querySelector<HTMLDivElement>("#overlay");
     if (!overlayElement) {
       throw Error("Missing overlay element");

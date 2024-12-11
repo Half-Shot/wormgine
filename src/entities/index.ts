@@ -7,13 +7,15 @@ import { Mine } from "./phys/mine";
 import { PhysicsEntity } from "./phys/physicsEntity";
 import { TestDummy } from "./playable/testDummy";
 import { Worm } from "./playable/worm";
+import { Water } from "./water";
 
 /**
  * Should be called during game startup to load all assets to
  * entitires that need them.
  * @param assets
  */
-export function readAssetsForEntities(assets: AssetPack): void {
+export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
+  const p = Water.readAssets();
   BazookaShell.readAssets(assets);
   Grenade.readAssets(assets);
   Mine.readAssets(assets);
@@ -22,4 +24,5 @@ export function readAssetsForEntities(assets: AssetPack): void {
   Worm.readAssets(assets);
   Explosion.readAssets(assets);
   PhysicsEntity.readAssets(assets);
+  await p;
 }

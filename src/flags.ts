@@ -12,7 +12,8 @@ class Flags extends EventEmitter {
 
   constructor() {
     super();
-    const qs = new URLSearchParams(window.location.search);
+    // Don't assume that window exists (e.g. searching)
+    const qs = new URLSearchParams(globalThis?.location?.search ?? "");
     this.DebugView = qs.get("debug")
       ? DebugLevel.PhysicsOverlay
       : DebugLevel.None;

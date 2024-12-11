@@ -7,8 +7,6 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IPhysicalEntity } from "./entity";
-import vertex from "../shaders/water.vert?raw";
-import fragment from "../shaders/water.frag?raw";
 import {
   collisionGroupBitmask,
   CollisionGroups,
@@ -35,6 +33,14 @@ export class Water implements IPhysicalEntity {
   public get destroyed() {
     // Water cannot be destroyed
     return false;
+  }
+
+  private static vertexSrc: string;
+  private static fragmentSrc: string;
+
+  static async readAssets() {
+    Water.vertexSrc = (await import("../shaders/water.vert?raw")).default;
+    Water.fragmentSrc = (await import("../shaders/water.frag?raw")).default;
   }
 
   private readonly physObject: RapierPhysicsObject;
@@ -73,7 +79,11 @@ export class Water implements IPhysicalEntity {
       indexBuffer,
     });
     this.shader = Filter.from({
-      gl: { vertex, fragment, name: "water" },
+      gl: {
+        vertex: Water.vertexSrc,
+        fragment: Water.fragmentSrc,
+        name: "water",
+      },
       resources: {
         waveUniforms: {
           iTime: { type: "f32", value: 0 },

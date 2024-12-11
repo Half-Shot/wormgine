@@ -26,6 +26,10 @@ export class ViewportCamera {
   private userWantsControl = false;
   private lastMoveHash = 0;
 
+  public get lockTarget() {
+    return this.currentLockTarget;
+  }
+
   constructor(
     private readonly viewport: Viewport,
     private readonly world: GameWorld,
@@ -36,6 +40,8 @@ export class ViewportCamera {
         return;
       }
       this.userWantsControl = true;
+      // Reset move hash, since the camera is under control.
+      this.lastMoveHash = 0;
       logger.debug("Player took control");
     });
   }
@@ -63,7 +69,7 @@ export class ViewportCamera {
     if (newTarget !== this.currentLockTarget) {
       // Reset user control.
       this.userWantsControl = false;
-      logger.debug("New lock target", newTarget);
+      logger.debug("New lock target", newTarget.toString());
     }
     this.currentLockTarget = newTarget;
 
@@ -76,6 +82,7 @@ export class ViewportCamera {
       this.currentLockTarget.sprite.position.x +
       this.currentLockTarget.sprite.position.y;
     if (this.lastMoveHash === newMoveHash) {
+      logger.debug("Hash match, not moving");
       return;
     }
     this.lastMoveHash = newMoveHash;
