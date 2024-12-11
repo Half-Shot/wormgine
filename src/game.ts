@@ -18,9 +18,12 @@ import { WindDial } from './overlays/windDial';
 import { NetGameInstance } from './net/client';
 import { GameReactChannel } from './interop/gamechannel';
 import staticController from './input';
+import { sound } from '@pixi/sound';
 
 const worldWidth = 1920;
 const worldHeight = 1080;
+
+sound.volumeAll = 0.25;
 
 export class Game {
     public readonly viewport: Viewport;
