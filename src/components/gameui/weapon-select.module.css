@@ -1,42 +1,42 @@
 .root {
-    position: relative;
-    width: 500px;
-    height: 500px;
-    top: 25vh;
-    ul {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 250px;
-        background: rgba(63, 55, 55, 0.800);
-    }
-    margin-left: auto;
-    margin-right: auto;
+  position: relative;
+  width: 500px;
+  height: 500px;
+  top: 25vh;
+  ul {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 250px;
+    background: rgba(63, 55, 55, 0.8);
+  }
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .weaponOption {
-    position: absolute;
-    display: inline;
-    button {
-        border: none;
-        margin-left: auto;
-        margin-top: auto;
-        border-radius: 75px;
-        width: 1;
-        height: 1;
-        transform-origin: 50% 50%;
-        transform: translate(-50%, -50%);
-        display: grid;
-        padding: 24px;
-        font-size: 13pt;
-        width: 128px;
-        height: 128px;
-        img {
-            margin-left: auto;
-            margin-right: auto;
-            margin-top: 1em;
-            width: 16px;
-        }
+  position: absolute;
+  display: inline;
+  button {
+    border: none;
+    margin-left: auto;
+    margin-top: auto;
+    border-radius: 75px;
+    width: 1;
+    height: 1;
+    transform-origin: 50% 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    padding: 24px;
+    font-size: 13pt;
+    width: 128px;
+    height: 128px;
+    img {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 1em;
+      width: 16px;
     }
+  }
 }

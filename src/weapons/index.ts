@@ -9,19 +9,19 @@ export { WeaponBazooka } from "./bazooka";
 export { WeaponShotgun };
 
 export function getDefinitionForCode(code: IWeaponCode) {
-    switch (code) {
-        case IWeaponCode.Bazooka:
-            return WeaponBazooka;
-        case IWeaponCode.Grenade:
-            return WeaponGrenade;
-        case IWeaponCode.Shotgun:
-            return WeaponShotgun;
-        default:
-            throw Error('Unknown weapon code');
-    }
+  switch (code) {
+    case IWeaponCode.Bazooka:
+      return WeaponBazooka;
+    case IWeaponCode.Grenade:
+      return WeaponGrenade;
+    case IWeaponCode.Shotgun:
+      return WeaponShotgun;
+    default:
+      throw Error("Unknown weapon code");
+  }
 }
 
 export function readAssetsForWeapons(assets: AssetPack): void {
-    WeaponShotgun.loadAssets?.(assets);
-    WeaponBazooka.loadAssets?.(assets);
+  WeaponShotgun.loadAssets?.(assets);
+  WeaponBazooka.loadAssets?.(assets);
 }

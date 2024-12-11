@@ -1,4 +1,3 @@
-
 import { AssetsManifest, Texture } from "pixi.js";
 import { Sound } from "@pixi/sound";
 import "@pixi/sound";
@@ -41,81 +40,88 @@ import splashSnd from "./splash.ogg";
 import monogramFnt from "./monogram.woff2";
 
 export interface AssetTextures {
-    bazooka: Texture;
-    boneIsles: Texture;
-    firework: Texture;
-    grenade: Texture;
-    island1: Texture;
-    mine: Texture;
-    mineActive: Texture;
-    terrain2: Texture;
-    testDolby: Texture;
-    testDolbyBlush: Texture;
-    testDolbyDamage1: Texture;
-    testDolbyDamage1Blush: Texture;
-    testDolbyDamage2Blush: Texture;
-    testDolbyDamage3: Texture;
-    testDolbyDamage3Blush: Texture;
-    testingGround: Texture;
-    windScroll: Texture;
+  bazooka: Texture;
+  boneIsles: Texture;
+  firework: Texture;
+  grenade: Texture;
+  island1: Texture;
+  mine: Texture;
+  mineActive: Texture;
+  terrain2: Texture;
+  testDolby: Texture;
+  testDolbyBlush: Texture;
+  testDolbyDamage1: Texture;
+  testDolbyDamage1Blush: Texture;
+  testDolbyDamage2Blush: Texture;
+  testDolbyDamage3: Texture;
+  testDolbyDamage3Blush: Texture;
+  testingGround: Texture;
+  windScroll: Texture;
 }
 
 export interface AssetSounds {
-    bazookafire: Sound;
-    explosion1: Sound;
-    explosion2: Sound;
-    explosion3: Sound;
-    firework: Sound;
-    metalBounceHeavy: Sound;
-    metalBounceLight: Sound;
-    mineBeep: Sound;
-    placeholder: Sound;
-    shotgun: Sound;
-    splash: Sound;
+  bazookafire: Sound;
+  explosion1: Sound;
+  explosion2: Sound;
+  explosion3: Sound;
+  firework: Sound;
+  metalBounceHeavy: Sound;
+  metalBounceLight: Sound;
+  mineBeep: Sound;
+  placeholder: Sound;
+  shotgun: Sound;
+  splash: Sound;
 }
 
 export const manifest = {
-    bundles: [{
-        name: "textures",
-        assets: [
-            {src: bazookaTex, alias: "bazooka"},
-            {src: boneIslesTex, alias: "boneIsles"},
-            {src: fireworkTex, alias: "firework"},
-            {src: grenadeTex, alias: "grenade"},
-            {src: island1Tex, alias: "island1"},
-            {src: mineTex, alias: "mine"},
-            {src: mineActiveTex, alias: "mineActive"},
-            {src: terrain2Tex, alias: "terrain2"},
-            {src: testDolbyTex, alias: "testDolby"},
-            {src: testDolbyBlushTex, alias: "testDolbyBlush"},
-            {src: testDolbyDamage1Tex, alias: "testDolbyDamage1"},
-            {src: testDolbyDamage1BlushTex, alias: "testDolbyDamage1Blush"},
-            {src: testDolbyDamage2BlushTex, alias: "testDolbyDamage2Blush"},
-            {src: testDolbyDamage3Tex, alias: "testDolbyDamage3"},
-            {src: testDolbyDamage3BlushTex, alias: "testDolbyDamage3Blush"},
-            {src: testingGroundTex, alias: "testingGround"},
-            {src: windScrollTex, alias: "windScroll"}
-        ]
-    }, {
-        name: "sounds",
-        assets: [
-            {src: bazookafireSnd, alias: "bazookafire"},
-            {src: explosion1Snd, alias: "explosion1"},
-            {src: explosion2Snd, alias: "explosion2"},
-            {src: explosion3Snd, alias: "explosion3"},
-            {src: fireworkSnd, alias: "firework"},
-            {src: metalBounceHeavySnd, alias: "metalBounceHeavy"},
-            {src: metalBounceLightSnd, alias: "metalBounceLight"},
-            {src: mineBeepSnd, alias: "mineBeep"},
-            {src: placeholderSnd, alias: "placeholder"},
-            {src: shotgunSnd, alias: "shotgun"},
-            {src: splashSnd, alias: "splash"}
-        ]
-    }, {
-        name: "fonts",
-        assets: [
-            {src: monogramFnt, alias: "monogram", data: {"family":"Monogram","weights":["normal"]}}
-        ]
-    }]
+  bundles: [
+    {
+      name: "textures",
+      assets: [
+        { src: bazookaTex, alias: "bazooka" },
+        { src: boneIslesTex, alias: "boneIsles" },
+        { src: fireworkTex, alias: "firework" },
+        { src: grenadeTex, alias: "grenade" },
+        { src: island1Tex, alias: "island1" },
+        { src: mineTex, alias: "mine" },
+        { src: mineActiveTex, alias: "mineActive" },
+        { src: terrain2Tex, alias: "terrain2" },
+        { src: testDolbyTex, alias: "testDolby" },
+        { src: testDolbyBlushTex, alias: "testDolbyBlush" },
+        { src: testDolbyDamage1Tex, alias: "testDolbyDamage1" },
+        { src: testDolbyDamage1BlushTex, alias: "testDolbyDamage1Blush" },
+        { src: testDolbyDamage2BlushTex, alias: "testDolbyDamage2Blush" },
+        { src: testDolbyDamage3Tex, alias: "testDolbyDamage3" },
+        { src: testDolbyDamage3BlushTex, alias: "testDolbyDamage3Blush" },
+        { src: testingGroundTex, alias: "testingGround" },
+        { src: windScrollTex, alias: "windScroll" },
+      ],
+    },
+    {
+      name: "sounds",
+      assets: [
+        { src: bazookafireSnd, alias: "bazookafire" },
+        { src: explosion1Snd, alias: "explosion1" },
+        { src: explosion2Snd, alias: "explosion2" },
+        { src: explosion3Snd, alias: "explosion3" },
+        { src: fireworkSnd, alias: "firework" },
+        { src: metalBounceHeavySnd, alias: "metalBounceHeavy" },
+        { src: metalBounceLightSnd, alias: "metalBounceLight" },
+        { src: mineBeepSnd, alias: "mineBeep" },
+        { src: placeholderSnd, alias: "placeholder" },
+        { src: shotgunSnd, alias: "shotgun" },
+        { src: splashSnd, alias: "splash" },
+      ],
+    },
+    {
+      name: "fonts",
+      assets: [
+        {
+          src: monogramFnt,
+          alias: "monogram",
+          data: { family: "Monogram", weights: ["normal"] },
+        },
+      ],
+    },
+  ],
 } satisfies AssetsManifest;
-

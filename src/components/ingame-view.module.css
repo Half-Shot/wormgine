@@ -1,11 +1,11 @@
 body {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 .overlay {
-    position: fixed;
-    left: 0;
-    height: 0;
-    width: 100vw;
-    height: 100vh;
+  position: fixed;
+  left: 0;
+  height: 0;
+  width: 100vw;
+  height: 100vh;
 }

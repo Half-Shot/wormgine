@@ -12,29 +12,32 @@ import icon from "../assets/bazooka.png";
 let fireSound: Sound;
 
 export const WeaponBazooka: IWeaponDefiniton = {
-    name: "Bazooka",
-    code: IWeaponCode.Bazooka,
-    icon,
-    maxDuration: 80,
-    timerAdjustable: false,
-    showTargetGuide: true,
-    loadAssets(assets: AssetPack) {
-        fireSound = assets.sounds.bazookafire;
-    },
-    fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
-        if (opts.duration === undefined) {
-            throw Error('Duration expected but not given');
-        }
-        if (opts.angle === undefined) {
-            throw Error('Angle expected but not given');
-        }
-        fireSound.play();
-        const forceComponent = Math.log(opts.duration/10)*3;
-        const x = forceComponent*Math.cos(opts.angle);
-        const y = forceComponent*Math.sin(opts.angle);
-        const force = mult(new Vector2(1.5 * forceComponent, forceComponent), { x, y });
-        // TODO: Refactor ALL OF THIS
-        const position = Coordinate.fromWorld(add(worm.position, {x, y: -0.5})); 
-        return BazookaShell.create(parent, world, position, force, worm.wormIdent);
-    },
-}
+  name: "Bazooka",
+  code: IWeaponCode.Bazooka,
+  icon,
+  maxDuration: 80,
+  timerAdjustable: false,
+  showTargetGuide: true,
+  loadAssets(assets: AssetPack) {
+    fireSound = assets.sounds.bazookafire;
+  },
+  fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
+    if (opts.duration === undefined) {
+      throw Error("Duration expected but not given");
+    }
+    if (opts.angle === undefined) {
+      throw Error("Angle expected but not given");
+    }
+    fireSound.play();
+    const forceComponent = Math.log(opts.duration / 10) * 3;
+    const x = forceComponent * Math.cos(opts.angle);
+    const y = forceComponent * Math.sin(opts.angle);
+    const force = mult(new Vector2(1.5 * forceComponent, forceComponent), {
+      x,
+      y,
+    });
+    // TODO: Refactor ALL OF THIS
+    const position = Coordinate.fromWorld(add(worm.position, { x, y: -0.5 }));
+    return BazookaShell.create(parent, world, position, force, worm.wormIdent);
+  },
+};

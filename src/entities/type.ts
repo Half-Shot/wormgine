@@ -1,8 +1,8 @@
 export enum EntityType {
-    Worm,
-    Grenade,
-    BazookaShell,
-    Mine,
-    Firework,
-    TestDummy,
+  Worm,
+  Grenade,
+  BazookaShell,
+  Mine,
+  Firework,
+  TestDummy,
 }

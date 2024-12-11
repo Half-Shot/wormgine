@@ -11,15 +11,15 @@ import { Worm } from "./playable/worm";
 /**
  * Should be called during game startup to load all assets to
  * entitires that need them.
- * @param assets 
+ * @param assets
  */
 export function readAssetsForEntities(assets: AssetPack): void {
-    BazookaShell.readAssets(assets);
-    Grenade.readAssets(assets);
-    Mine.readAssets(assets);
-    TestDummy.readAssets(assets);
-    Firework.readAssets(assets);
-    Worm.readAssets(assets);
-    Explosion.readAssets(assets);
-    PhysicsEntity.readAssets(assets);
+  BazookaShell.readAssets(assets);
+  Grenade.readAssets(assets);
+  Mine.readAssets(assets);
+  TestDummy.readAssets(assets);
+  Firework.readAssets(assets);
+  Worm.readAssets(assets);
+  Explosion.readAssets(assets);
+  PhysicsEntity.readAssets(assets);
 }

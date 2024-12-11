@@ -1,7 +1,6 @@
-wormgine
---------
+## wormgine
 
-*Everything, including the name is subject to change.*
+_Everything, including the name is subject to change._
 
 This project started off as an attempt to clone Worms Armageddon for the browser,
 however for a few reasons the plan has changed. This will hopefully be an entirely

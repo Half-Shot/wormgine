@@ -3,7 +3,7 @@ import fragment from "./gradient.frag?raw";
 import { GlProgram } from "pixi.js";
 
 export default GlProgram.from({
-    vertex,
-    fragment,
-    name: 'rain'
+  vertex,
+  fragment,
+  name: "rain",
 });
