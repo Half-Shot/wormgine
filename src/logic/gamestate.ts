@@ -1,6 +1,7 @@
 import { Ticker } from "pixi.js";
 import { Team, WormInstance } from "./teams";
 import type { StateRecordWormGameState } from "../state/model";
+import Logger from "../log";
 
 export interface GameRules {
     winWhenOneGroupRemains: boolean;
@@ -8,6 +9,8 @@ export interface GameRules {
 
 const PreRoundMs = 5000;
 const RoundTimerMs = 60000;
+
+const logger = new Logger('GameState');
 
 export class InternalTeam implements Team {
     public readonly worms: WormInstance[];
@@ -77,6 +80,12 @@ export class GameState {
 
     private stateIteration = 0;
 
+    public iterateRound() {
+        const prev = this.stateIteration;
+        logger.debug("Iterating round", prev, prev+1);
+        this.stateIteration++;
+    }
+
     get currentWind() {
         return this.wind;
     }
@@ -98,7 +107,7 @@ export class GameState {
             throw Error('Must have at least one team');
         }
         this.teams = teams.map((team) => new InternalTeam(team, () => {
-            this.stateIteration++;
+            this.iterateRound();
         }));
         this.nextTeamStack = [...this.teams];
     }
@@ -150,6 +159,7 @@ export class GameState {
     }
 
     public advanceRound(): {nextTeam: InternalTeam, nextWorm: WormInstance}|{winningTeams: InternalTeam[]} {
+        logger.debug('Advancing round');
         this.wind = Math.ceil((Math.random()*20)-11);
         if (!this.currentTeam) {
             const [firstTeam] = this.nextTeamStack.splice(0, 1);
@@ -175,8 +185,8 @@ export class GameState {
         }
         // We wrapped around.
         if (this.currentTeam === previousTeam) {
+            this.stateIteration++;
             if (this.rules.winWhenOneGroupRemains) {
-                this.stateIteration++;
                 // All remaining teams are part of the same group
                 return { 
                     winningTeams: this.getActiveTeams(),
