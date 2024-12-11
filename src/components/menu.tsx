@@ -4,6 +4,7 @@ import "./menu.css";
 import { NetGameClient } from "../net/client";
 import { GameMenu } from "./menus/types";
 import AccountMenu from "./menus/account";
+import { OverlayTest } from "./menus/overlaytest";
 
 interface Props {
     onNewGame: (level: string) => void,
@@ -57,6 +58,10 @@ function mainMenu(onStartNewGame: (level: string) => void, setCurrentMenu: (menu
             <li>
                 <button disabled={!clientReady} onClick={() => onStartNewGame("lobbyGame")}>Start new network game</button> (Requires configured client)
             </li>
+            <h2> Developer tools </h2>
+            <li>
+                <button onClick={() => setCurrentMenu(GameMenu.OverlayTest)}>Test Game UI elements</button>
+            </li>
         </ul>
         <ChangelogModal buildNumber={buildNumber} buildCommit={buildCommit} lastCommit={lastCommit}/>
         <p>
@@ -67,8 +72,6 @@ function mainMenu(onStartNewGame: (level: string) => void, setCurrentMenu: (menu
         </p>
     </main>;
 }
-
-
 
 export function Menu({onNewGame, client, reloadClient}: Props) {
     const [currentMenu, setCurrentMenu] = useState(GameMenu.MainMenu);
@@ -89,6 +92,8 @@ export function Menu({onNewGame, client, reloadClient}: Props) {
         return <AccountMenu client={client} reloadClient={reloadClient} setCurrentMenu={setCurrentMenu} />;
     } else if (currentMenu === GameMenu.TeamEditor) {
         return <AccountMenu client={client} reloadClient={reloadClient} setCurrentMenu={setCurrentMenu} />;
+    } else if (currentMenu === GameMenu.OverlayTest) {
+        return <OverlayTest />;
     }
 
     return null;

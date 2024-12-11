@@ -4,6 +4,7 @@ import { Game } from '../game';
 import { NetGameInstance } from '../net/client';
 import { GameReactChannel } from '../interop/gamechannel';
 import { IWeaponDefiniton } from '../weapons/weapon';
+import { WeaponSelector } from './gameui/weapon-select';
 
 export function IngameView({level, gameReactChannel, gameInstance}: {level: string, gameReactChannel: GameReactChannel, gameInstance?: NetGameInstance}) {
   const [game, setGame] = useState<Game>();
@@ -46,16 +47,10 @@ export function IngameView({level, gameReactChannel, gameInstance}: {level: stri
 
   return <>
     <div id="overlay" className={styles.overlay}>
-      {weaponMenu && <div className={styles.weaponMenu}>
-        <ul>
-          {weaponMenu.map(weapon => <li key={weapon.code}>
-              <button onClick={() => {
-                gameReactChannel.weaponMenuSelect(weapon.code);
-                setWeaponMenu(null);
-              }}>{weapon.name}</button>
-          </li>)}
-        </ul>
-      </div>}
+      {weaponMenu && <WeaponSelector weapons={weaponMenu} onWeaponPicked={(code) => {
+        gameReactChannel.weaponMenuSelect(code);
+        setWeaponMenu(null);
+      }} />}
     </div>
     <div ref={ref} />
   </>
