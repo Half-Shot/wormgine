@@ -1,4 +1,4 @@
-import { Graphics, Sprite, Texture } from "pixi.js";
+import { Graphics, Point, Sprite, Texture } from "pixi.js";
 import {
   FireOpts,
   IWeaponDefiniton,
@@ -46,6 +46,7 @@ import { StateRecorder } from "../../state/recorder";
 import { StateWormAction } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
 import { OnDamageOpts } from "../entity";
+import Logger from "../../log";
 
 export enum WormState {
   Idle = 0,
@@ -73,6 +74,7 @@ const targettingRadius = new MetersValue(5);
 const FireAngleArcPadding = 0.15;
 const maxWormStep = new MetersValue(0.6);
 const aimMoveSpeed = 0.02;
+const logger = new Logger("Worm");
 
 export type FireFn = (
   worm: Worm,
@@ -82,6 +84,7 @@ export type FireFn = (
 
 interface PerRoundState {
   shotsTaken: number;
+  weaponTarget?: Coordinate;
 }
 
 const DEFAULT_PER_ROUND_STATE = {
@@ -244,11 +247,15 @@ export class Worm extends PlayableEntity {
     this.body.applyImpulse({ x: this.facingRight ? -3 : 3, y: -13 }, true);
   }
 
-  onInputBegin = (inputKind: InputKind) => {
+  onInputBegin = (
+    inputKind: InputKind,
+    position?: { x: number; y: number },
+  ) => {
     if (this.state === WormState.Firing) {
       // Ignore all input when the worm is firing.
       return;
     }
+    logger.info("Got input", inputKind, position);
     if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
       this.setMoveDirection(inputKind);
     } else if (this.state !== WormState.Idle) {
@@ -257,12 +264,24 @@ export class Worm extends PlayableEntity {
       this.state = WormState.AimingUp;
     } else if (inputKind === InputKind.AimDown) {
       this.state = WormState.AimingDown;
-    } else if (inputKind === InputKind.Fire) {
+    } else if (inputKind === InputKind.Fire && !this.needsTarget) {
       this.onBeginFireWeapon();
     } else if (inputKind === InputKind.Jump) {
       this.onJump();
     } else if (inputKind === InputKind.Backflip) {
       this.onBackflip();
+    } else if (inputKind === InputKind.PickTarget && position) {
+      console.log(position);
+      const point = new Point();
+      this.parent.options.events.mapPositionToPoint(
+        point,
+        position.x,
+        position.y,
+      );
+      const screenPoint = this.parent.toWorld(point.x, point.y);
+      const newCoodinate = Coordinate.fromScreen(screenPoint.x, screenPoint.y);
+      logger.info("Picked target", position, point, newCoodinate);
+      this.perRoundState.weaponTarget = newCoodinate;
     }
     if (this.currentWeapon.timerAdjustable) {
       const oldTime = this.weaponTimerSecs;
@@ -430,6 +449,7 @@ export class Worm extends PlayableEntity {
       duration,
       timer: this.weaponTimerSecs,
       angle: this.fireAngle,
+      target: this.perRoundState.weaponTarget,
     }).then((fireResult) => {
       if (maxShots === this.perRoundState.shotsTaken) {
         this.turnEndedReason = EndTurnReason.FiredWeapon;
@@ -562,6 +582,10 @@ export class Worm extends PlayableEntity {
     }
   }
 
+  get needsTarget() {
+    return !!this.weapon.showTargetPicker && !this.perRoundState.weaponTarget;
+  }
+
   update(dt: number): void {
     super.update(dt);
     if (this.sprite.destroyed) {
@@ -575,7 +599,9 @@ export class Worm extends PlayableEntity {
       return;
     }
     const falling = !this.isSinking && this.body.linvel().y > 4;
+
     this.targettingGfx.visible =
+      !this.needsTarget &&
       !!this.currentWeapon.showTargetGuide &&
       [
         WormState.Firing,

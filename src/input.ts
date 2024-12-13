@@ -1,4 +1,5 @@
 import { EventEmitter } from "pixi.js";
+import Logger from "./log";
 
 export enum InputKind {
   MoveLeft,
@@ -16,6 +17,7 @@ export enum InputKind {
   WeaponTimer4,
   WeaponTimer5,
   WeaponMenu,
+  PickTarget,
 }
 
 const MouseButtonNames = ["MouseLeft", "MouseRight", "MouseWheel"];
@@ -27,6 +29,7 @@ const DefaultBinding: Record<string, InputKind> = Object.freeze({
   ArrowDown: InputKind.AimDown,
   Enter: InputKind.Jump,
   "Backspace,Backspace": InputKind.Backflip,
+  MouseLeft: InputKind.PickTarget,
   MouseRight: InputKind.WeaponMenu,
   // I LOVE THE CONSISTENCY HERE BROWSERS
   " ": InputKind.Fire,
@@ -42,6 +45,8 @@ const DefaultBinding: Record<string, InputKind> = Object.freeze({
 const sequenceTimeoutMs = 250;
 
 type Sequence = { sequence: string[]; inputKind: InputKind };
+
+const logger = new Logger("Controller");
 
 class Controller extends EventEmitter {
   private readonly activeInputs = new Set();
@@ -146,26 +151,36 @@ class Controller extends EventEmitter {
     );
 
     const inputKinds = buttonNames.map((v) => DefaultBinding[v]);
+    logger.debug(`onMouseDown`, buttonNames, inputKinds, ev);
     for (const inputKind of inputKinds) {
       if (this.activeInputs.has(inputKind)) {
         continue;
       }
+      logger.debug(`onMouseDown.inputBegin`, inputKind);
       this.activeInputs.add(inputKind);
-      this.emit("inputBegin", inputKind);
+      this.emit("inputBegin", inputKind, { x: ev.clientX, y: ev.clientY });
     }
   }
   private onMouseUp(ev: MouseEvent) {
-    const buttonName = MouseButtonNames.find((_name, i) =>
+    let buttonName = MouseButtonNames.find((_name, i) =>
       Boolean(ev.button & (1 << i)),
     );
 
+    // Observed this on FireFox.
+    if (ev.button === 0) {
+      buttonName = "MouseLeft";
+    }
+
+    logger.debug(`onMouseUp`, buttonName, ev);
     if (buttonName) {
       const inputKind = DefaultBinding[buttonName];
+      logger.debug(`onMouseUp `, inputKind);
       if (!this.activeInputs.has(inputKind)) {
         return;
       }
+      logger.debug(`onMouseUp.inputEnd`, inputKind);
       this.activeInputs.delete(inputKind);
-      this.emit("inputEnd", inputKind);
+      this.emit("inputEnd", inputKind, { x: ev.clientX, y: ev.clientY });
     }
   }
 }

@@ -6,7 +6,6 @@ import {
   ColliderDesc,
   RigidBodyDesc,
   Vector2,
-  VectorOps,
 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
@@ -27,8 +26,6 @@ export class BazookaShell extends TimedExplosive {
     [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
   );
   private static texture: Texture;
-
-  private readonly force: Vector2 = VectorOps.zeros();
   private readonly gfx = new Graphics();
 
   static create(
@@ -96,9 +93,6 @@ export class BazookaShell extends TimedExplosive {
     if (!this.physObject || this.sprite.destroyed) {
       return;
     }
-    // Fix for other angles.
-    this.force.x *= Math.min(1, dt * 3);
-    this.force.y *= Math.min(1, dt * 3);
   }
 
   destroy(): void {

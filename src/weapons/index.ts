@@ -2,11 +2,18 @@ import { AssetPack } from "../assets";
 import { WeaponBazooka } from "./bazooka";
 import { WeaponGrenade } from "./grenade";
 import WeaponShotgun from "./shotgun";
-import { IWeaponCode } from "./weapon";
-export { WeaponGrenade } from "./grenade";
-export { WeaponBazooka } from "./bazooka";
+import WeaponFireworkLauncher from "./firework";
+import WeaponHomingMissile from "./homingMissile";
 
-export { WeaponShotgun };
+import { IWeaponCode } from "./weapon";
+
+export {
+  WeaponGrenade,
+  WeaponBazooka,
+  WeaponFireworkLauncher,
+  WeaponHomingMissile,
+  WeaponShotgun,
+};
 
 export function getDefinitionForCode(code: IWeaponCode) {
   switch (code) {
@@ -16,6 +23,8 @@ export function getDefinitionForCode(code: IWeaponCode) {
       return WeaponGrenade;
     case IWeaponCode.Shotgun:
       return WeaponShotgun;
+    case IWeaponCode.FireworkLauncher:
+      return WeaponFireworkLauncher;
     default:
       throw Error("Unknown weapon code");
   }
@@ -24,4 +33,6 @@ export function getDefinitionForCode(code: IWeaponCode) {
 export function readAssetsForWeapons(assets: AssetPack): void {
   WeaponShotgun.loadAssets?.(assets);
   WeaponBazooka.loadAssets?.(assets);
+  WeaponFireworkLauncher.loadAssets?.(assets);
+  WeaponHomingMissile.loadAssets?.(assets);
 }

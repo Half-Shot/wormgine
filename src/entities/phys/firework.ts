@@ -22,6 +22,7 @@ import { AssetPack } from "../../assets";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
+import { WormInstance } from "../../logic/teams";
 
 const COLOUR_SET = [0x08ff08, 0xffcf00, 0xfe1493, 0xff5555, 0x00fdff, 0xccff02];
 
@@ -53,8 +54,14 @@ export class Firework extends TimedExplosive {
 
   priority = UPDATE_PRIORITY.LOW;
 
-  static create(parent: Container, world: GameWorld, position: Coordinate) {
-    const ent = new Firework(position, world, parent);
+  static create(
+    parent: Container,
+    world: GameWorld,
+    position: Coordinate,
+    force: Vector2,
+    owner?: WormInstance,
+  ) {
+    const ent = new Firework(position, world, parent, force, owner);
     parent.addChild(ent.sprite, ent.wireframe.renderable, ent.gfx);
     return ent;
   }
@@ -63,13 +70,12 @@ export class Firework extends TimedExplosive {
     position: Coordinate,
     world: GameWorld,
     parent: Container,
+    initialForce: Vector2,
+    owner?: WormInstance,
   ) {
     const sprite = new Sprite(Firework.texture);
     sprite.scale.set(0.15);
     sprite.anchor.set(0.5);
-
-    const upwardVeolcity = 60 + Math.ceil(Math.random() * 30);
-    const xVelocity = -30 + Math.ceil(Math.random() * 120);
 
     const primaryColor =
       COLOUR_SET[Math.floor(Math.random() * COLOUR_SET.length)];
@@ -84,8 +90,8 @@ export class Firework extends TimedExplosive {
         .setMass(0.5),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
+        .setLinvel(initialForce.x, initialForce.y)
         // Fix rot
-        .setLinvel(xVelocity, -upwardVeolcity)
         .setLinearDamping(1.5),
     );
 
@@ -98,6 +104,7 @@ export class Firework extends TimedExplosive {
       timerSecs: 1.33,
       autostartTimer: true,
       maxDamage: 35,
+      ownerWorm: owner,
     });
     this.rotationOffset = Math.PI / 2;
     this.scream = Promise.resolve(Firework.screamSound.play());

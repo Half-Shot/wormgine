@@ -12,6 +12,9 @@ import grenadeTex from "./grenade.png";
 import island1Tex from "./island1.png";
 import mineTex from "./mine.png";
 import mineActiveTex from "./mine_active.png";
+import missileActiveTex from "./missile_active.png";
+import missileInactiveTex from "./missile_inactive.png";
+import shotgunTex from "./shotgun.png";
 import terrain2Tex from "./terrain2.png";
 import testDolbyTex from "./test_dolby.png";
 import testDolbyBlushTex from "./test_dolby_blush.png";
@@ -47,6 +50,9 @@ export interface AssetTextures {
   island1: Texture;
   mine: Texture;
   mineActive: Texture;
+  missileActive: Texture;
+  missileInactive: Texture;
+  shotgun: Texture;
   terrain2: Texture;
   testDolby: Texture;
   testDolbyBlush: Texture;
@@ -85,6 +91,9 @@ export const manifest = {
         { src: island1Tex, alias: "island1" },
         { src: mineTex, alias: "mine" },
         { src: mineActiveTex, alias: "mineActive" },
+        { src: missileActiveTex, alias: "missileActive" },
+        { src: missileInactiveTex, alias: "missileInactive" },
+        { src: shotgunTex, alias: "shotgun" },
         { src: terrain2Tex, alias: "terrain2" },
         { src: testDolbyTex, alias: "testDolby" },
         { src: testDolbyBlushTex, alias: "testDolbyBlush" },

@@ -15,13 +15,25 @@ import {
 } from "../text/toasts";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import { DefaultTextStyle } from "../mixins/styles";
-import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../weapons";
+import {
+  WeaponBazooka,
+  WeaponFireworkLauncher,
+  WeaponGrenade,
+  WeaponHomingMissile,
+  WeaponShotgun,
+} from "../weapons";
 import staticController, { InputKind } from "../input";
 import { IWeaponCode } from "../weapons/weapon";
 import { StateRecorder } from "../state/recorder";
 import { CameraLockPriority, ViewportCamera } from "../camera";
 
-const weapons = [WeaponBazooka, WeaponGrenade, WeaponShotgun];
+const weapons = [
+  WeaponBazooka,
+  WeaponGrenade,
+  WeaponShotgun,
+  WeaponFireworkLauncher,
+  WeaponHomingMissile,
+];
 
 export default async function runScenario(game: Game) {
   const parent = game.viewport;
@@ -160,7 +172,6 @@ export default async function runScenario(game: Game) {
   });
 
   game.gameReactChannel.on("weaponSelected", (code) => {
-    console.log("selected", code);
     if (!currentWorm) {
       return;
     }

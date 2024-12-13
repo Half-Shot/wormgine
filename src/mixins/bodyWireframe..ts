@@ -61,9 +61,7 @@ export class BodyWireframe {
     this.gfx
       .circle(this.width / 2, this.height / 2, 3)
       .stroke({ width: 1, color: 0xff0000 });
-    this.gfx
-      .rect(0, 0, this.width, this.height)
-      .stroke({ width: 1, color: 0xffbd01, alpha: 1 });
+    this.gfx.rect(0, 0, this.width, this.height);
     const t = this.parent.body.translation();
     this.gfx.updateTransform({
       x: t.x * PIXELS_PER_METER - this.width / 2,

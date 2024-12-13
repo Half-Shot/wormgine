@@ -3,6 +3,7 @@ import { Explosion } from "./explosion";
 import { BazookaShell } from "./phys/bazookaShell";
 import { Firework } from "./phys/firework";
 import { Grenade } from "./phys/grenade";
+import { HomingMissile } from "./phys/homingMissile";
 import { Mine } from "./phys/mine";
 import { PhysicsEntity } from "./phys/physicsEntity";
 import { TestDummy } from "./playable/testDummy";
@@ -24,5 +25,6 @@ export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
   Worm.readAssets(assets);
   Explosion.readAssets(assets);
   PhysicsEntity.readAssets(assets);
+  HomingMissile.readAssets(assets);
   await p;
 }

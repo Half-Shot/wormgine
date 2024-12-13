@@ -82,7 +82,6 @@ export class ViewportCamera {
       this.currentLockTarget.sprite.position.x +
       this.currentLockTarget.sprite.position.y;
     if (this.lastMoveHash === newMoveHash) {
-      logger.debug("Hash match, not moving");
       return;
     }
     this.lastMoveHash = newMoveHash;
