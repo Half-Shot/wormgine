@@ -174,7 +174,7 @@ export default async function runScenario(game: Game) {
     } else if (wep === "mine") {
       entity = Mine.create(parent, world, position);
     } else if (wep === "firework") {
-      entity = Firework.create(parent, world, position);
+      entity = Firework.create(parent, world, position, { x: 0, y: 0 });
     } else {
       throw new Error("unknown weapon");
     }
