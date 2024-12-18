@@ -1,12 +1,7 @@
 import { UPDATE_PRIORITY, Sprite, Container, Texture } from "pixi.js";
-import { IPhysicalEntity, OnDamageOpts } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
-import {
-  collisionGroupBitmask,
-  CollisionGroups,
-  GameWorld,
-  RapierPhysicsObject,
-} from "../../world";
+import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";
 import {
   ActiveEvents,
   ColliderDesc,

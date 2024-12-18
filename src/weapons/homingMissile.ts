@@ -1,9 +1,12 @@
 import { Container } from "pixi.js";
-import { FireOpts, IWeaponCode, IWeaponDefiniton, projectileWeaponHelper } from "./weapon";
+import {
+  FireOpts,
+  IWeaponCode,
+  IWeaponDefiniton,
+  projectileWeaponHelper,
+} from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
-import { Vector2 } from "@dimforge/rapier2d-compat";
-import { add, Coordinate, mult } from "../utils";
 import { AssetPack } from "../assets";
 import { Sound } from "@pixi/sound";
 import icon from "../assets/missile_active.png";
@@ -38,7 +41,11 @@ const WeaponHomingMissile: IWeaponDefiniton = {
       throw Error("Target expected but not given");
     }
     fireSound.play();
-    const { position, force } = projectileWeaponHelper(worm.position, duration, angle);
+    const { position, force } = projectileWeaponHelper(
+      worm.position,
+      duration,
+      angle,
+    );
     return HomingMissile.create(
       parent,
       world,

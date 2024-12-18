@@ -39,7 +39,11 @@ export enum WeaponFireResult {
  * @param angle Aiming angle
  * @returns A position coodinate and a force vector.
  */
-export function projectileWeaponHelper(wormPosition: Vector2, duration: number, angle: number) {
+export function projectileWeaponHelper(
+  wormPosition: Vector2,
+  duration: number,
+  angle: number,
+) {
   const forceComponent = Math.log(duration / 10) * 3;
   const x = forceComponent * Math.cos(angle);
   const y = forceComponent * Math.sin(angle);

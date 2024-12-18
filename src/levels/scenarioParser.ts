@@ -84,14 +84,9 @@ function determineRules(rules?: TiledGameRulesProperties): GameRules {
   }
   if (rules["wormgine.end_condition"] === "objects_destroyed") {
     const obj = rules["wormgine.end_condition.objects_destroyed.object_type"];
-    console.log(
-      EntityType,
-      rules,
-      Object.entries(EntityType).find(([k, v]) => v === obj),
-    );
     return {
       winWhenAllObjectsOfTypeDestroyed: Object.entries(EntityType).find(
-        ([k, v]) => v === obj,
+        ([_k, v]) => v === obj,
       )?.[1],
     };
   }

@@ -27,6 +27,7 @@ class Flags extends EventEmitter {
       this.emit("toggleDebugView", this.DebugView);
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any)["wormgineFlags"] = {
       toggleSimulatePhysics: () =>
         (this.simulatePhysics = !this.simulatePhysics),

@@ -5,13 +5,16 @@ import { GameWorld } from "../../src/world";
 import { Ticker } from "pixi.js";
 import { MockViewport } from "../test-utils/viewport-mock";
 import { MockPhysicsEntity } from "../test-utils/physent-mock";
+import { MetersValue } from "../../src/utils";
+
 
 function createTestEnv() {
     const viewport = new MockViewport();
     const gameWorld = jest.mocked<Partial<GameWorld>>({
         entities: new Map(),
     });
-    const camera = new ViewportCamera(viewport as unknown as Viewport, gameWorld as GameWorld);
+    const waterPosition = new MetersValue(30);
+    const camera = new ViewportCamera(viewport as unknown as Viewport, gameWorld as GameWorld, waterPosition);
     return { viewport, camera, gameWorld };
 }
 
