@@ -1,6 +1,6 @@
 import { Graphics, Text } from "pixi.js";
 import { PIXELS_PER_METER, RapierPhysicsObject } from "../world";
-import { Cuboid } from "@dimforge/rapier2d-compat";
+import { Ball, Cuboid } from "@dimforge/rapier2d-compat";
 import { DefaultTextStyle } from "./styles";
 
 export class BodyWireframe {
@@ -37,10 +37,17 @@ export class BodyWireframe {
     enabled = true,
   ) {
     this.gfx.addChild(this.debugText);
-    // TODO
-    const shape = parent.collider.shape as Cuboid;
-    this.width = shape.halfExtents.x * 2 * PIXELS_PER_METER;
-    this.height = shape.halfExtents.y * 2 * PIXELS_PER_METER;
+    if (parent.collider.shape instanceof Cuboid) {
+      this.width = parent.collider.shape.halfExtents.x * 2 * PIXELS_PER_METER;
+      this.height = parent.collider.shape.halfExtents.y * 2 * PIXELS_PER_METER;
+    } else if (parent.collider.shape instanceof Ball) {
+      this.width = this.height =
+        parent.collider.shape.radius * 2 * PIXELS_PER_METER;
+    } else {
+      // Unknown shape.
+      this.width = 1;
+      this.height = 1;
+    }
     this.debugText.position.x = this.width + 5;
 
     // To make TS happy.
@@ -61,7 +68,11 @@ export class BodyWireframe {
     this.gfx
       .circle(this.width / 2, this.height / 2, 3)
       .stroke({ width: 1, color: 0xff0000 });
-    this.gfx.rect(0, 0, this.width, this.height);
+    if (this.parent.collider.shape instanceof Ball === false) {
+      this.gfx.rect(0, 0, this.width, this.height);
+    } else {
+      this.gfx.circle(this.width / 2, this.height / 2, this.width);
+    }
     const t = this.parent.body.translation();
     this.gfx.updateTransform({
       x: t.x * PIXELS_PER_METER - this.width / 2,

@@ -6,6 +6,7 @@ import { Grenade } from "./phys/grenade";
 import { HomingMissile } from "./phys/homingMissile";
 import { Mine } from "./phys/mine";
 import { PhysicsEntity } from "./phys/physicsEntity";
+import { WeaponTarget } from "./phys/target";
 import { TestDummy } from "./playable/testDummy";
 import { Worm } from "./playable/worm";
 import { Water } from "./water";
@@ -26,5 +27,6 @@ export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
   Explosion.readAssets(assets);
   PhysicsEntity.readAssets(assets);
   HomingMissile.readAssets(assets);
+  WeaponTarget.readAssets(assets);
   await p;
 }
