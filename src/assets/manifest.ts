@@ -1,6 +1,7 @@
 import { AssetsManifest, Texture } from "pixi.js";
 import { Sound } from "@pixi/sound";
 import "@pixi/sound";
+import "../loaders";
 
 // NOTE: Do not edit, use ./scripts/generateAssetManifest.mjs
 
@@ -15,6 +16,7 @@ import mineActiveTex from "./mine_active.png";
 import missileActiveTex from "./missile_active.png";
 import missileInactiveTex from "./missile_inactive.png";
 import shotgunTex from "./shotgun.png";
+import targetTex from "./target.png";
 import terrain2Tex from "./terrain2.png";
 import testDolbyTex from "./test_dolby.png";
 import testDolbyBlushTex from "./test_dolby_blush.png";
@@ -25,6 +27,7 @@ import testDolbyDamage3Tex from "./test_dolby_damage3.png";
 import testDolbyDamage3BlushTex from "./test_dolby_damage3_blush.png";
 import testingGroundTex from "./testing_ground.png";
 import windScrollTex from "./windScroll.png";
+import trainingTex from "./levels/training.png";
 
 // Sounds
 import bazookafireSnd from "./bazookafire.ogg";
@@ -42,6 +45,10 @@ import splashSnd from "./splash.ogg";
 // Fonts
 import monogramFnt from "./monogram.woff2";
 
+// Data
+import objectsData from "./objects.tsj?url";
+import targetTrainingData from "./levels/target_training.tmj?url";
+
 export interface AssetTextures {
   bazooka: Texture;
   boneIsles: Texture;
@@ -53,6 +60,7 @@ export interface AssetTextures {
   missileActive: Texture;
   missileInactive: Texture;
   shotgun: Texture;
+  target: Texture;
   terrain2: Texture;
   testDolby: Texture;
   testDolbyBlush: Texture;
@@ -63,6 +71,7 @@ export interface AssetTextures {
   testDolbyDamage3Blush: Texture;
   testingGround: Texture;
   windScroll: Texture;
+  training: Texture;
 }
 
 export interface AssetSounds {
@@ -77,6 +86,11 @@ export interface AssetSounds {
   placeholder: Sound;
   shotgun: Sound;
   splash: Sound;
+}
+
+export interface AssetData {
+  objects: unknown;
+  targetTraining: unknown;
 }
 
 export const manifest = {
@@ -94,6 +108,7 @@ export const manifest = {
         { src: missileActiveTex, alias: "missileActive" },
         { src: missileInactiveTex, alias: "missileInactive" },
         { src: shotgunTex, alias: "shotgun" },
+        { src: targetTex, alias: "target" },
         { src: terrain2Tex, alias: "terrain2" },
         { src: testDolbyTex, alias: "testDolby" },
         { src: testDolbyBlushTex, alias: "testDolbyBlush" },
@@ -104,6 +119,7 @@ export const manifest = {
         { src: testDolbyDamage3BlushTex, alias: "testDolbyDamage3Blush" },
         { src: testingGroundTex, alias: "testingGround" },
         { src: windScrollTex, alias: "windScroll" },
+        { src: trainingTex, alias: "training" },
       ],
     },
     {
@@ -130,6 +146,13 @@ export const manifest = {
           alias: "monogram",
           data: { family: "Monogram", weights: ["normal"] },
         },
+      ],
+    },
+    {
+      name: "data",
+      assets: [
+        { src: objectsData, alias: "objects" },
+        { src: targetTrainingData, alias: "targetTraining" },
       ],
     },
   ],

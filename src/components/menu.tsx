@@ -59,6 +59,11 @@ function mainMenu(
           </button>
         </li>
         <li>
+          <button onClick={() => onStartNewGame("tiledMap")}>
+            Test map loading
+          </button>
+        </li>
+        <li>
           <button
             className="borealis"
             onClick={() => onStartNewGame("borealisTribute")}

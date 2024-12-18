@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
-import { TimedExplosive } from "./timedExplosive";
+import { TimedExplosive, TimedExplosiveRecordedState } from "./timedExplosive";
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";
 import {
   ActiveEvents,
@@ -17,6 +17,21 @@ import { EntityType } from "../type";
  * Standard shell, affected by wind.
  */
 export class BazookaShell extends TimedExplosive {
+  public static loadFromRecordedState(
+    parent: Container,
+    gameWorld: GameWorld,
+    state: TimedExplosiveRecordedState,
+  ) {
+    BazookaShell.create(
+      parent,
+      gameWorld,
+      Coordinate.fromWorld(
+        new Vector2(parseFloat(state.tra.x), parseFloat(state.tra.y)),
+      ),
+      new Vector2(0, 0),
+    );
+  }
+
   public static readAssets(assets: AssetPack) {
     BazookaShell.texture = assets.textures.bazooka;
   }

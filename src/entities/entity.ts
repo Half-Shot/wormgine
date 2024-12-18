@@ -2,11 +2,13 @@ import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
 import { WeaponFireResult } from "../weapons/weapon";
+import { EntityType } from "./type";
 
 /**
  * Base entity which all game objects implement
  */
 export interface IGameEntity {
+  type?: EntityType;
   priority: UPDATE_PRIORITY;
   destroyed: boolean;
 

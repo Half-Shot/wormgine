@@ -2,7 +2,7 @@ import { TeamGroup } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
 
 export interface RecordedEntityState {
-  type: number;
+  type: number | string;
   // Translation
   tra: { x: string; y: string };
   // Rotation

@@ -2,9 +2,12 @@ import { Ticker } from "pixi.js";
 import { Team, WormInstance } from "./teams";
 import type { StateRecordWormGameState } from "../state/model";
 import Logger from "../log";
+import { EntityType } from "../entities/type";
+import { GameWorld } from "../world";
 
 export interface GameRules {
-  winWhenOneGroupRemains: boolean;
+  winWhenOneGroupRemains?: boolean;
+  winWhenAllObjectsOfTypeDestroyed?: EntityType;
 }
 
 const PreRoundMs = 5000;
@@ -115,6 +118,7 @@ export class GameState {
 
   constructor(
     teams: Team[],
+    private readonly world: GameWorld,
     private readonly rules: GameRules = { winWhenOneGroupRemains: false },
   ) {
     if (teams.length < 1) {
@@ -203,6 +207,17 @@ export class GameState {
       if (nextTeam.worms.some((w) => w.health > 0)) {
         this.nextTeamStack.splice(index, 1);
         this.currentTeam = nextTeam;
+      }
+    }
+    if (this.rules.winWhenAllObjectsOfTypeDestroyed) {
+      const hasEntityRemaining = this.world.entities
+        .values()
+        .some((s) => s.type === this.rules.winWhenAllObjectsOfTypeDestroyed);
+      console.log(hasEntityRemaining);
+      if (!hasEntityRemaining) {
+        return {
+          winningTeams: [this.currentTeam],
+        };
       }
     }
     // We wrapped around.

@@ -66,61 +66,47 @@ export class BitmapTerrain implements IPhysicalEntity {
   // collider.handle -> fn
   private registeredDamageFunctions = new Map<number, OnDamage>();
 
-  static create(
-    viewWidth: number,
-    viewHeight: number,
-    gameWorld: GameWorld,
-    texture: Texture,
-  ) {
-    return new BitmapTerrain(viewWidth, viewHeight, gameWorld, texture);
+  static create(gameWorld: GameWorld, texture: Texture, position?: Coordinate) {
+    return new BitmapTerrain(gameWorld, texture, position);
   }
 
-  static drawToCanvas(viewWidth: number, viewHeight: number, texture: Texture) {
+  static drawToCanvas(texture: Texture) {
+    const bitmap = texture.source.resource as ImageBitmap;
     const canvas = document.createElement("canvas");
-    canvas.width = viewWidth;
-    canvas.height = viewHeight;
+    canvas.width = bitmap.width + 10;
+    canvas.height = bitmap.height + 10;
     const context = canvas.getContext("2d");
     if (!context) {
       throw Error("Failed to get render context of canvas");
     }
-    const bitmap = texture.source.resource;
-    context.drawImage(
-      bitmap as CanvasImageSource,
-      viewWidth / 2 - texture.width / 2,
-      viewHeight - texture.height,
-    );
+    context.drawImage(bitmap as CanvasImageSource, 10, 10);
     return canvas;
   }
 
   private constructor(
-    viewWidth: number,
-    viewHeight: number,
     private readonly gameWorld: GameWorld,
     texture: Texture,
+    position?: Coordinate,
   ) {
-    this.foregroundCanvas = BitmapTerrain.drawToCanvas(
-      viewWidth,
-      viewHeight,
-      texture,
-    );
+    this.foregroundCanvas = BitmapTerrain.drawToCanvas(texture);
     this.texture = Texture.from(this.foregroundCanvas, true);
     this.sprite = new Sprite(this.texture);
-    this.sprite.anchor.x = 0;
-    this.sprite.anchor.y = 0;
+    if (position) {
+      this.sprite.x = position.screenX;
+      this.sprite.y = position.screenY;
+    }
 
     // Somehow make rain fall infront of this.
-    this.backgroundCanvas = BitmapTerrain.drawToCanvas(
-      viewWidth,
-      viewHeight,
-      texture,
-    );
+    this.backgroundCanvas = BitmapTerrain.drawToCanvas(texture);
     this.textureBg = Texture.from(this.foregroundCanvas, true);
     this.spriteBackdrop = new Sprite(
       Texture.from(this.textureBg._source, true),
     );
-    this.spriteBackdrop.anchor.x = 0;
-    this.spriteBackdrop.anchor.y = 0;
     this.spriteBackdrop.tint = "0x222222";
+    if (position) {
+      this.spriteBackdrop.x = position.screenX;
+      this.spriteBackdrop.y = position.screenY;
+    }
 
     this.bounds = new Rectangle(
       Number.MAX_SAFE_INTEGER,
@@ -205,6 +191,7 @@ export class BitmapTerrain implements IPhysicalEntity {
     // Now create the pieces
     const newParts: RapierPhysicsObject[] = [];
     for (const quad of quadtreeRects) {
+      const y = (quad.y + this.sprite.y) / PIXELS_PER_METER;
       const body = this.gameWorld.createRigidBodyCollider(
         ColliderDesc.cuboid(
           quad.width / (PIXELS_PER_METER * 2),
@@ -215,7 +202,7 @@ export class BitmapTerrain implements IPhysicalEntity {
 
         RigidBodyDesc.fixed().setTranslation(
           (quad.x + this.sprite.x) / PIXELS_PER_METER,
-          (quad.y + this.sprite.y) / PIXELS_PER_METER,
+          y,
         ),
       );
       newParts.push(body);

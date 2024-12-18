@@ -1,0 +1,59 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 1,
+    "orientation": "orthogonal",
+    "width": 1
+  },
+  "margin": 0,
+  "name": "objects",
+  "spacing": 0,
+  "tilecount": 3,
+  "tiledversion": "1.11.0",
+  "tileheight": 44,
+  "tiles": [
+    {
+      "id": 3,
+      "image": "level_tileset/spawn_icon.png",
+      "imageheight": 44,
+      "imagewidth": 33,
+      "properties": [
+        {
+          "name": "wormgine.bazooka_ammo",
+          "type": "int",
+          "value": -1
+        }
+      ],
+      "type": "wormgine.worm_spawn"
+    },
+    {
+      "id": 4,
+      "image": "target.png",
+      "imageheight": 38,
+      "imagewidth": 35,
+      "type": "wormgine.target"
+    },
+    {
+      "id": 5,
+      "image": "level_tileset/rules_icon.png",
+      "imageheight": 44,
+      "imagewidth": 33,
+      "properties": [
+        {
+          "name": "wormgine.end_condition",
+          "type": "string",
+          "value": "objects_destroyed"
+        },
+        {
+          "name": "wormgine.end_condition.objects_destroyed.object_type",
+          "type": "string",
+          "value": ""
+        }
+      ],
+      "type": "wormgine.game_rules"
+    }
+  ],
+  "tilewidth": 35,
+  "type": "tileset",
+  "version": "1.10"
+}

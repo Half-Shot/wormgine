@@ -23,3 +23,4 @@ src/assets/borrowed/*
 *.sln
 *.sw?
 test-out
+wormgine.tiled-session

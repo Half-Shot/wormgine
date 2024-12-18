@@ -26,7 +26,7 @@ interface Opts {
   maxDamage: number;
 }
 
-interface RecordedState extends RecordedEntityState {
+export interface TimedExplosiveRecordedState extends RecordedEntityState {
   owner?: string;
   timerSecs?: number;
   timer?: number;
@@ -37,7 +37,7 @@ interface RecordedState extends RecordedEntityState {
  * must include their own timer.
  */
 export abstract class TimedExplosive
-  extends PhysicsEntity<RecordedState>
+  extends PhysicsEntity<TimedExplosiveRecordedState>
   implements IWeaponEntity
 {
   protected timer: number | undefined;
@@ -146,7 +146,7 @@ export abstract class TimedExplosive
     };
   }
 
-  loadState(d: RecordedState) {
+  loadState(d: TimedExplosiveRecordedState) {
     super.loadState(d);
     this.timer = d.timer;
     this.opts.timerSecs = d.timerSecs;
