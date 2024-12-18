@@ -1,9 +1,15 @@
 import { Assets, Texture } from "pixi.js";
-import { AssetSounds, AssetTextures, manifest } from "./assets/manifest";
+import {
+  AssetData,
+  AssetSounds,
+  AssetTextures,
+  manifest,
+} from "./assets/manifest";
 import { Sound } from "@pixi/sound";
 
 let textures: Record<string, Texture>;
 let sounds: Record<string, Sound>;
+let data: Record<string, unknown>;
 
 export async function loadAssets(progressFn: (totalProgress: number) => void) {
   await Assets.init({ manifest });
@@ -20,18 +26,23 @@ export async function loadAssets(progressFn: (totalProgress: number) => void) {
       textures = bundle;
     } else if (name === "sounds") {
       sounds = bundle;
+    } else if (name === "data") {
+      data = bundle;
     }
   }
 }
 
 export function getAssets() {
-  if (!textures || !sounds) {
+  if (!textures || !sounds || !data) {
     throw Error("Assets not preloaded");
   }
   return {
     textures: textures as unknown as AssetTextures,
     sounds: sounds as unknown as AssetSounds,
+    data: data as unknown as AssetData,
   };
 }
+
+(globalThis as any).getAssets = () => getAssets();
 
 export type AssetPack = ReturnType<typeof getAssets>;
