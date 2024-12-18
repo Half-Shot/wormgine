@@ -57,23 +57,14 @@ export class Game {
       screenWidth: this.pixiApp.screen.width,
       worldWidth: worldWidth,
 
-      // Needs increasing
+      // TODO: Needs increasing
       worldHeight: worldHeight,
       // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
       events: this.pixiApp.renderer.events,
     });
     this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
-    this.viewport
-      .clamp({
-        top: -3000,
-        bottom: 2000,
-        left: -2000,
-        right: 3000,
-        direction: "y",
-      })
-      .decelerate()
-      .drag();
+    this.viewport.decelerate().drag();
     this.viewport.zoom(8);
 
     // TODO: Bit of a hack?

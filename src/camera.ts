@@ -1,10 +1,11 @@
 import { Viewport } from "pixi-viewport";
-import { Ticker } from "pixi.js";
+import { Point, Ticker } from "pixi.js";
 import { GameWorld } from "./world";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { PlayableEntity } from "./entities/playable/playable";
 import { MovedEvent } from "pixi-viewport/dist/types";
 import Logger from "./log";
+import { MetersValue } from "./utils";
 
 const logger = new Logger("ViewportCamera");
 
@@ -24,7 +25,7 @@ export enum CameraLockPriority {
 export class ViewportCamera {
   private currentLockTarget: PhysicsEntity | null = null;
   private userWantsControl = false;
-  private lastMoveHash = 0;
+  private lastMoveHash = Number.MIN_SAFE_INTEGER;
 
   public get lockTarget() {
     return this.currentLockTarget;
@@ -33,17 +34,81 @@ export class ViewportCamera {
   constructor(
     private readonly viewport: Viewport,
     private readonly world: GameWorld,
+    private readonly clampY: MetersValue,
   ) {
     viewport.on("moved", (event: MovedEvent) => {
-      if (event.type === "clamp-y" || event.type === "clamp-x") {
+      if (
+        event.type === "clamp-y" ||
+        event.type === "clamp-x" ||
+        event.type === "snap"
+      ) {
         // Ignore, the director moved us.
         return;
       }
-      this.userWantsControl = true;
-      // Reset move hash, since the camera is under control.
-      this.lastMoveHash = 0;
-      logger.debug("Player took control");
+      console.log(event.type);
+      if (this.userWantsControl === false) {
+        this.userWantsControl = true;
+        // Reset move hash, since the camera is under control.
+        this.lastMoveHash = 0;
+        logger.debug("Player took control");
+      }
     });
+  }
+
+  public snapToPosition(
+    newTarget: Point,
+    priority: CameraLockPriority,
+    currentEntityIsLocal: boolean,
+  ) {
+    const targetXY: [number, number] = [newTarget.x, newTarget.y];
+
+    // Short circuit skip move if it's cheaper not to.
+    const newMoveHash = newTarget.x + newTarget.y;
+    if (this.lastMoveHash === newMoveHash) {
+      return;
+    }
+    this.lastMoveHash = newMoveHash;
+
+    const clampYTo = 200 + this.clampY.pixels - this.viewport.screenHeight / 2;
+
+    if (targetXY[1] > clampYTo) {
+      logger.info("Clamped Y", {
+        from: targetXY[1],
+        to: clampYTo,
+        pixels: this.clampY.pixels,
+        height: this.viewport.screenHeight,
+      });
+      targetXY[1] = clampYTo;
+    }
+
+    switch (priority) {
+      case CameraLockPriority.SuggestedLockNonLocal:
+        if (this.userWantsControl) {
+          return;
+        }
+        // Need a better way to determine this.
+        if (!currentEntityIsLocal) {
+          this.viewport.moveCenter(...targetXY);
+        }
+        break;
+      case CameraLockPriority.SuggestedLockLocal:
+        if (this.userWantsControl) {
+          return;
+        }
+        this.viewport.moveCenter(...targetXY);
+        break;
+      case CameraLockPriority.LockIfNotLocalPlayer:
+        if (!currentEntityIsLocal) {
+          this.viewport.moveCenter(...targetXY);
+        } else if (!this.userWantsControl) {
+          this.viewport.moveCenter(...targetXY);
+        }
+        break;
+
+      case CameraLockPriority.AlwaysLock:
+        this.viewport.moveCenter(...targetXY);
+        break;
+    }
   }
 
   public update(_dt: Ticker, currentWorm: PlayableEntity | undefined) {
@@ -72,47 +137,10 @@ export class ViewportCamera {
       logger.debug("New lock target", newTarget.toString());
     }
     this.currentLockTarget = newTarget;
-
-    const targetXY: [number, number] = [
-      this.currentLockTarget.sprite.position.x,
-      this.currentLockTarget.sprite.position.y,
-    ];
-    // Short circuit skip move if it's cheaper not to.
-    const newMoveHash =
-      this.currentLockTarget.sprite.position.x +
-      this.currentLockTarget.sprite.position.y;
-    if (this.lastMoveHash === newMoveHash) {
-      return;
-    }
-    this.lastMoveHash = newMoveHash;
-
-    switch (this.currentLockTarget.cameraLockPriority) {
-      case CameraLockPriority.SuggestedLockNonLocal:
-        if (this.userWantsControl) {
-          return;
-        }
-        // Need a better way to determine this.
-        if (!isLocal) {
-          this.viewport.moveCenter(...targetXY);
-        }
-        break;
-      case CameraLockPriority.SuggestedLockLocal:
-        if (this.userWantsControl) {
-          return;
-        }
-        this.viewport.moveCenter(...targetXY);
-        break;
-      case CameraLockPriority.LockIfNotLocalPlayer:
-        if (!isLocal) {
-          this.viewport.moveCenter(...targetXY);
-        } else if (!this.userWantsControl) {
-          this.viewport.moveCenter(...targetXY);
-        }
-        break;
-
-      case CameraLockPriority.AlwaysLock:
-        this.viewport.moveCenter(...targetXY);
-        break;
-    }
+    this.snapToPosition(
+      newTarget.sprite.position,
+      newTarget.cameraLockPriority,
+      isLocal,
+    );
   }
 }

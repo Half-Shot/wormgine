@@ -43,6 +43,4 @@ export function getAssets() {
   };
 }
 
-(globalThis as any).getAssets = () => getAssets();
-
 export type AssetPack = ReturnType<typeof getAssets>;

@@ -1,5 +1,6 @@
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { PIXELS_PER_METER } from "../world";
+import { Point } from "pixi.js";
 
 export class MetersValue {
   static fromPixels(pixels: number) {
@@ -32,8 +33,17 @@ export class Coordinate {
     );
   }
 
-  static fromWorld(vec: Vector2) {
-    return new Coordinate(vec.x, vec.y);
+  static fromWorld(x: number, y: number): Coordinate;
+  static fromWorld(vec: Vector2): Coordinate;
+
+  static fromWorld(vec: Vector2 | number, y?: number) {
+    if (typeof vec === "object") {
+      return new Coordinate(vec.x, vec.y);
+    }
+    if (typeof y !== "number") {
+      throw Error("Expected y to be a number");
+    }
+    return new Coordinate(vec, y);
   }
 
   constructor(
@@ -43,6 +53,10 @@ export class Coordinate {
 
   toWorldVector(): Vector2 {
     return new Vector2(this.worldX, this.worldY);
+  }
+
+  toScreenPoint(): Point {
+    return new Point(this.screenX, this.screenY);
   }
 
   get screenX() {

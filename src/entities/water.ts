@@ -35,6 +35,10 @@ export class Water implements IPhysicalEntity {
     return false;
   }
 
+  public get body() {
+    return this.physObject.body;
+  }
+
   private static vertexSrc: string;
   private static fragmentSrc: string;
 
@@ -43,8 +47,12 @@ export class Water implements IPhysicalEntity {
     Water.fragmentSrc = (await import("../shaders/water.frag?raw")).default;
   }
 
-  private readonly physObject: RapierPhysicsObject;
+  public readonly physObject: RapierPhysicsObject;
   private readonly shader: Shader;
+
+  public get waterHeight(): MetersValue {
+    return this.height;
+  }
 
   constructor(
     private readonly width: MetersValue,
