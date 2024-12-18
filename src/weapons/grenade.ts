@@ -1,6 +1,6 @@
 import { Container } from "pixi.js";
 import { Grenade } from "../entities/phys/grenade";
-import { FireOpts, IWeaponCode, IWeaponDefiniton } from "./weapon";
+import { FireOpts, IWeaponCode, IWeaponDefiniton, projectileWeaponHelper } from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
@@ -24,15 +24,7 @@ export const WeaponGrenade: IWeaponDefiniton = {
     if (opts.angle === undefined) {
       throw Error("Angle expected but not given");
     }
-    const forceComponent = opts.duration / 8;
-    const x = forceComponent * Math.cos(opts.angle);
-    const y = forceComponent * Math.sin(opts.angle);
-    const force = mult(new Vector2(1 * forceComponent, forceComponent), {
-      x,
-      y,
-    });
-    // TODO: Refactor ALL OF THIS
-    const position = Coordinate.fromWorld(add(worm.position, { x, y: -0.3 }));
+    const { position, force } = projectileWeaponHelper(worm.position, opts.duration, opts.angle);
     return Grenade.create(
       parent,
       world,

@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { FireOpts, IWeaponCode, IWeaponDefiniton } from "./weapon";
+import { FireOpts, IWeaponCode, IWeaponDefiniton, projectileWeaponHelper } from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
@@ -38,15 +38,7 @@ const WeaponHomingMissile: IWeaponDefiniton = {
       throw Error("Target expected but not given");
     }
     fireSound.play();
-    const forceComponent = Math.log(duration / 10) * 3;
-    const x = forceComponent * Math.cos(angle);
-    const y = forceComponent * Math.sin(angle);
-    const force = mult(new Vector2(1.5 * forceComponent, forceComponent), {
-      x,
-      y,
-    });
-    // TODO: Refactor ALL OF THIS
-    const position = Coordinate.fromWorld(add(worm.position, { x, y: -0.5 }));
+    const { position, force } = projectileWeaponHelper(worm.position, duration, angle);
     return HomingMissile.create(
       parent,
       world,

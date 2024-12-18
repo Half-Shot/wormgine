@@ -3,7 +3,8 @@ import { Container } from "pixi.js";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { AssetPack } from "../assets";
-import { Coordinate } from "../utils";
+import { add, Coordinate, mult } from "../utils";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 
 export enum IWeaponCode {
   Grenade,
@@ -29,6 +30,31 @@ export enum WeaponFireResult {
   HitEnemy,
   HitOwnTeam,
   HitSelf,
+}
+
+/**
+ * Calculate starting position and angle for a given projectile from a projectile weapon
+ * @param wormPosition Worm position.
+ * @param duration Duration fire button was held down for.
+ * @param angle Aiming angle
+ * @returns A position coodinate and a force vector.
+ */
+export function projectileWeaponHelper(wormPosition: Vector2, duration: number, angle: number) {
+  const forceComponent = Math.log(duration / 10) * 3;
+  const x = forceComponent * Math.cos(angle);
+  const y = forceComponent * Math.sin(angle);
+  const force = mult(new Vector2(1.5 * forceComponent, forceComponent), {
+    x,
+    y,
+  });
+  // TODO: Refactor ALL OF THIS
+  const position = Coordinate.fromWorld(
+    add(wormPosition, {
+      x: Math.cos(angle) * 2,
+      y: Math.sin(angle) * 2,
+    }),
+  );
+  return { position, force };
 }
 
 export interface IWeaponDefiniton {
