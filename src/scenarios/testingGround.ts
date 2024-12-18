@@ -40,12 +40,7 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    game.world,
-    Assets.get("testingGround"),
-  );
+  const terrain = BitmapTerrain.create(game.world, Assets.get("testingGround"));
 
   const gameState = new GameState(
     [
@@ -74,6 +69,7 @@ export default async function runScenario(game: Game) {
         playerUserId: null,
       },
     ],
+    world,
     {
       winWhenOneGroupRemains: true,
     },
@@ -111,7 +107,6 @@ export default async function runScenario(game: Game) {
     game.viewport.screenWidth,
     game.viewport.screenHeight,
   );
-  const camera = new ViewportCamera(game.viewport, world);
 
   const water = world.addEntity(
     new Water(
@@ -121,6 +116,7 @@ export default async function runScenario(game: Game) {
     ),
   );
   water.addToWorld(parent, world);
+  const camera = new ViewportCamera(game.viewport, world, water.waterHeight);
 
   const wormInstances = new Map<string, Worm>();
 

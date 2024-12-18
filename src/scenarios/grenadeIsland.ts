@@ -22,54 +22,52 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    game.world,
-    Assets.get("terrain2"),
-  );
+  const terrain = BitmapTerrain.create(game.world, Assets.get("terrain2"));
 
-  const gameState = new GameState([
-    {
-      name: "The Dummys",
-      group: TeamGroup.Blue,
-      worms: [
-        {
-          name: "Test Dolby",
-          maxHealth: 100,
-          health: 100,
-        },
-        {
-          name: "Yeen #2",
-          maxHealth: 100,
-          health: 100,
-        },
-        {
-          name: "Accident prone",
-          maxHealth: 100,
-          health: 100,
-        },
-      ],
-      playerUserId: null,
-    },
-    {
-      name: "The Invisible Duo",
-      group: TeamGroup.Red,
-      worms: [
-        {
-          name: "Egg face",
-          maxHealth: 100,
-          health: 100,
-        },
-        {
-          name: "Cream Guy",
-          maxHealth: 100,
-          health: 100,
-        },
-      ],
-      playerUserId: null,
-    },
-  ]);
+  const gameState = new GameState(
+    [
+      {
+        name: "The Dummys",
+        group: TeamGroup.Blue,
+        worms: [
+          {
+            name: "Test Dolby",
+            maxHealth: 100,
+            health: 100,
+          },
+          {
+            name: "Yeen #2",
+            maxHealth: 100,
+            health: 100,
+          },
+          {
+            name: "Accident prone",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+      {
+        name: "The Invisible Duo",
+        group: TeamGroup.Red,
+        worms: [
+          {
+            name: "Egg face",
+            maxHealth: 100,
+            health: 100,
+          },
+          {
+            name: "Cream Guy",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+    ],
+    world,
+  );
 
   new GameStateOverlay(
     game.pixiApp.ticker,

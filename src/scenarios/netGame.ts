@@ -27,12 +27,7 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    game.world,
-    Assets.get("testingGround"),
-  );
+  const terrain = BitmapTerrain.create(game.world, Assets.get("testingGround"));
 
   const gameState = new GameState(
     [
@@ -61,6 +56,7 @@ export default async function runScenario(game: Game) {
         playerUserId: null,
       },
     ],
+    world,
     {
       winWhenOneGroupRemains: true,
     },

@@ -20,27 +20,25 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    game.world,
-    Assets.get("boneIsles"),
-  );
+  const terrain = BitmapTerrain.create(game.world, Assets.get("boneIsles"));
 
-  const gameState = new GameState([
-    {
-      name: "The Dummys",
-      group: TeamGroup.Blue,
-      worms: [
-        {
-          name: "Test Dolby",
-          maxHealth: 100,
-          health: 100,
-        },
-      ],
-      playerUserId: null,
-    },
-  ]);
+  const gameState = new GameState(
+    [
+      {
+        name: "The Dummys",
+        group: TeamGroup.Blue,
+        worms: [
+          {
+            name: "Test Dolby",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+    ],
+    world,
+  );
 
   new GameStateOverlay(
     game.pixiApp.ticker,

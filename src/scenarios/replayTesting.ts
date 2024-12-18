@@ -23,12 +23,7 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    game.world,
-    Assets.get("testingGround"),
-  );
+  const terrain = BitmapTerrain.create(game.world, Assets.get("testingGround"));
 
   const player = new TextStateReplay(replayData);
   player.on("started", () => {
@@ -40,7 +35,7 @@ export default async function runScenario(game: Game) {
 
   const initialData = await dataPromise;
 
-  const gameState = new GameState(initialData.gameState.teams, {
+  const gameState = new GameState(initialData.gameState.teams, world, {
     // TODO: Rules.
     winWhenOneGroupRemains: true,
   });
@@ -169,11 +164,11 @@ export default async function runScenario(game: Game) {
       const existingEnt = world.entities.get(ent.uuid);
       if (!existingEnt) {
         throw new Error(
-          `Ent ${ent.uuid} ${EntityType[ent.type]} was not found during entity sync`,
+          `Ent ${ent.uuid} ${ent.type} was not found during entity sync`,
         );
       } else if (existingEnt instanceof PhysicsEntity === false) {
         throw new Error(
-          `Ent ${ent.uuid} ${EntityType[ent.type]} was unexpectedly not a PhysicsEntity`,
+          `Ent ${ent.uuid} ${ent.type} was unexpectedly not a PhysicsEntity`,
         );
       }
       existingEnt.loadState(ent);

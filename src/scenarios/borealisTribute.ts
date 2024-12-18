@@ -11,12 +11,7 @@ export default async function runScenario(game: Game) {
   const world = game.world;
   const { worldWidth, worldHeight } = game.viewport;
 
-  const terrain = BitmapTerrain.create(
-    worldWidth,
-    worldHeight,
-    world,
-    Assets.get("island1"),
-  );
+  const terrain = BitmapTerrain.create(world, Assets.get("island1"));
 
   const bg = await world.addEntity(
     Background.create(
