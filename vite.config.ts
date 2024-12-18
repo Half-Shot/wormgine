@@ -8,6 +8,7 @@ export default defineConfig({
   appType: 'spa',
   build: {
     minify: false,
+    assetsInlineLimit: 0,
   },
   define: {
     global: {},
