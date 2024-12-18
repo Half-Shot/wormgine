@@ -18,6 +18,7 @@ import { add, mult } from "./utils";
 import type { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { RecordedEntityState } from "./state/model";
 import Logger from "./log";
+import globalFlags from "./flags";
 
 const logger = new Logger("World");
 
@@ -91,6 +92,9 @@ export class GameWorld {
   }
 
   public step() {
+    if (!globalFlags.simulatePhysics) {
+      return;
+    }
     this.rapierWorld.step(this.eventQueue);
     this.eventQueue.drainCollisionEvents((collider1, collider2, started) => {
       if (started) {
@@ -283,6 +287,7 @@ export class GameWorld {
       undefined,
       ignore,
     );
+    logger.debug("rayTrace results", hit);
     if (hit?.collider) {
       const entity = this.bodyEntityMap.get(hit.collider.handle);
       if (!entity) {
