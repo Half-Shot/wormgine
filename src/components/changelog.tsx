@@ -74,7 +74,7 @@ export function ChangelogModal({
 
   let newChangesButton = null;
 
-  if (latestChanges?.length) {
+  if (hasNewBuild && latestChanges?.length) {
     newChangesButton = <button onClick={onClick}>See what's new!</button>;
   }
 
