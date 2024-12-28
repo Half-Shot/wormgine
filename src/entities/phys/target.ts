@@ -10,8 +10,6 @@ import {
 } from "@dimforge/rapier2d-compat";
 import { handleDamageInRadius } from "../../utils/damage";
 import { Coordinate, MetersValue } from "../../utils";
-import { Worm } from "../playable/worm";
-import { BitmapTerrain } from "../bitmapTerrain";
 import { AssetPack } from "../../assets";
 import { EntityType } from "../type";
 
