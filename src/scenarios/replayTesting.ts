@@ -3,7 +3,7 @@ import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Worm, WormState } from "../entities/playable/worm";
+import { Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { GameState } from "../logic/gamestate";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
@@ -209,7 +209,7 @@ export default async function runScenario(game: Game) {
       }
       return;
     }
-    if (currentWorm && currentWorm.currentState !== WormState.Inactive) {
+    if (currentWorm && currentWorm.currentState.active) {
       return;
     }
     if (endOfRoundWaitDuration === null) {

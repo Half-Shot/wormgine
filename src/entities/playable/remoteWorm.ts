@@ -3,10 +3,11 @@ import { WormInstance } from "../../logic/teams";
 import { Toaster } from "../../overlays/toaster";
 import { Coordinate } from "../../utils";
 import { GameWorld } from "../../world";
-import { FireFn, Worm, WormState } from "./worm";
+import { FireFn, Worm } from "./worm";
 import { StateWormAction } from "../../state/model";
 import { InputKind } from "../../input";
 import Logger from "../../log";
+import { InnerWormState } from "./wormState";
 
 const logger = new Logger("RemoteWorm");
 
@@ -78,7 +79,7 @@ export class RemoteWorm extends Worm {
   }
 
   update(dt: number): void {
-    if (this.state === WormState.Firing) {
+    if (this.state.isFiring) {
       if (
         this.remoteWeaponFiringDuration === undefined ||
         this.fireWeaponDuration > this.remoteWeaponFiringDuration
@@ -90,12 +91,12 @@ export class RemoteWorm extends Worm {
     }
     super.update(dt);
     if (
-      this.state === WormState.MovingLeft ||
-      this.state === WormState.MovingRight
+      this.state.state === InnerWormState.MovingLeft ||
+      this.state.state === InnerWormState.MovingRight
     ) {
       this.movementCyclesLeft -= 1;
       if (this.movementCyclesLeft === 0) {
-        this.state = WormState.Idle;
+        this.state.transition(InnerWormState.Idle);
       }
     }
   }
