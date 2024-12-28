@@ -10,7 +10,6 @@ import bazookaTex from "./bazooka.png";
 import boneIslesTex from "./bone_isles.png";
 import fireworkTex from "./firework.png";
 import grenadeTex from "./grenade.png";
-import island1Tex from "./island1.png";
 import mineTex from "./mine.png";
 import mineActiveTex from "./mine_active.png";
 import missileActiveTex from "./missile_active.png";
@@ -27,7 +26,8 @@ import testDolbyDamage3Tex from "./test_dolby_damage3.png";
 import testDolbyDamage3BlushTex from "./test_dolby_damage3_blush.png";
 import testingGroundTex from "./testing_ground.png";
 import windScrollTex from "./windScroll.png";
-import trainingTex from "./levels/training.png";
+import levels_island1Tex from "./levels/island1.png";
+import levels_trainingTex from "./levels/training.png";
 
 // Sounds
 import bazookafireSnd from "./bazookafire.ogg";
@@ -47,14 +47,14 @@ import monogramFnt from "./monogram.woff2";
 
 // Data
 import objectsData from "./objects.tsj?url";
-import targetTrainingData from "./levels/target_training.tmj?url";
+import levels_borealisData from "./levels/borealis.tmj?url";
+import levels_targetTrainingData from "./levels/target_training.tmj?url";
 
 export interface AssetTextures {
   bazooka: Texture;
   boneIsles: Texture;
   firework: Texture;
   grenade: Texture;
-  island1: Texture;
   mine: Texture;
   mineActive: Texture;
   missileActive: Texture;
@@ -71,7 +71,8 @@ export interface AssetTextures {
   testDolbyDamage3Blush: Texture;
   testingGround: Texture;
   windScroll: Texture;
-  training: Texture;
+  levels_island1: Texture;
+  levels_training: Texture;
 }
 
 export interface AssetSounds {
@@ -90,7 +91,8 @@ export interface AssetSounds {
 
 export interface AssetData {
   objects: unknown;
-  targetTraining: unknown;
+  levels_borealis: unknown;
+  levels_targetTraining: unknown;
 }
 
 export const manifest = {
@@ -102,7 +104,6 @@ export const manifest = {
         { src: boneIslesTex, alias: "boneIsles" },
         { src: fireworkTex, alias: "firework" },
         { src: grenadeTex, alias: "grenade" },
-        { src: island1Tex, alias: "island1" },
         { src: mineTex, alias: "mine" },
         { src: mineActiveTex, alias: "mineActive" },
         { src: missileActiveTex, alias: "missileActive" },
@@ -119,7 +120,8 @@ export const manifest = {
         { src: testDolbyDamage3BlushTex, alias: "testDolbyDamage3Blush" },
         { src: testingGroundTex, alias: "testingGround" },
         { src: windScrollTex, alias: "windScroll" },
-        { src: trainingTex, alias: "training" },
+        { src: levels_island1Tex, alias: "levels_island1" },
+        { src: levels_trainingTex, alias: "levels_training" },
       ],
     },
     {
@@ -152,7 +154,8 @@ export const manifest = {
       name: "data",
       assets: [
         { src: objectsData, alias: "objects" },
-        { src: targetTrainingData, alias: "targetTraining" },
+        { src: levels_borealisData, alias: "levels_borealis" },
+        { src: levels_targetTrainingData, alias: "levels_targetTraining" },
       ],
     },
   ],

@@ -5,9 +5,11 @@ import { loadAssets } from "../assets";
 import { NetGameClient, NetGameInstance } from "../net/client";
 import { Lobby } from "./lobby";
 import { GameReactChannel } from "../interop/gamechannel";
+import type { AssetData } from "../assets/manifest";
 
 interface LoadGameProps {
-  level: string;
+  scenario: string;
+  level?: keyof AssetData;
   gameInstance?: NetGameInstance;
 }
 
@@ -62,12 +64,12 @@ export function App() {
   });
 
   const onNewGame = useCallback(
-    (level: string) => {
-      if (level === "lobbyGame") {
+    (scenario: string, level?: keyof AssetData) => {
+      if (scenario === "lobbyGame") {
         // TODO: Bit of a hack
         setShowLobby(true);
       } else {
-        setGameState({ level });
+        setGameState({ scenario, level });
       }
     },
     [setGameState],
@@ -75,7 +77,7 @@ export function App() {
 
   const onLobbyGameStarted = useCallback(
     (instance: NetGameInstance) => {
-      setGameState({ level: "netGame", gameInstance: instance });
+      setGameState({ scenario: "netGame", gameInstance: instance });
       setShowLobby(false);
     },
     [setGameState],
@@ -108,6 +110,7 @@ export function App() {
   if (gameState) {
     return (
       <IngameView
+        scenario={gameState.scenario}
         level={gameState.level}
         gameReactChannel={gameReactChannel}
         gameInstance={gameState.gameInstance}

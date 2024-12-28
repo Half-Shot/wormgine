@@ -5,26 +5,32 @@ import { NetGameInstance } from "../net/client";
 import { GameReactChannel } from "../interop/gamechannel";
 import { IWeaponDefiniton } from "../weapons/weapon";
 import { WeaponSelector } from "./gameui/weapon-select";
+import { AssetData } from "../assets/manifest";
 
 export function IngameView({
+  scenario,
   level,
   gameReactChannel,
   gameInstance,
 }: {
-  level: string;
+  scenario: string;
+  level?: keyof AssetData;
   gameReactChannel: GameReactChannel;
   gameInstance?: NetGameInstance;
 }) {
+  console.log(scenario, level);
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<IWeaponDefiniton[] | null>(null);
   useEffect(() => {
-    Game.create(window, level, gameReactChannel, gameInstance).then((game) => {
-      (window as unknown as { wormgine: Game }).wormgine = game;
-      game.loadResources().then(() => {
-        setGame(game);
-      });
-    });
+    Game.create(window, scenario, gameReactChannel, level, gameInstance).then(
+      (game) => {
+        (window as unknown as { wormgine: Game }).wormgine = game;
+        game.loadResources().then(() => {
+          setGame(game);
+        });
+      },
+    );
   }, []);
 
   useEffect(() => {

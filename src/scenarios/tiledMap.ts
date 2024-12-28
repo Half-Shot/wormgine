@@ -39,12 +39,15 @@ const weapons = [
 ];
 
 export default async function runScenario(game: Game) {
+  if (!game.level) {
+    throw Error("Level required!");
+  }
   const parent = game.viewport;
   const world = game.world;
   const { worldWidth } = game.viewport;
 
   const assets = getAssets();
-  const level = await scenarioParser(assets.data);
+  const level = await scenarioParser(game.level, assets.data, assets.textures);
   const bitmapPosition = Coordinate.fromScreen(
     level.terrain.x,
     level.terrain.y,
@@ -52,7 +55,7 @@ export default async function runScenario(game: Game) {
   const terrain = BitmapTerrain.create(
     game.world,
     // TODO: Autoload from map.
-    assets.textures["training"],
+    level.terrain.bitmap,
     bitmapPosition,
   );
 

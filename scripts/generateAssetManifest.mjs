@@ -30,9 +30,9 @@ async function main() {
     let assetFonts = [];
     let assetData = [];
 
-    function parseDirectory(root, element) {
+    function parseDirectory(root, element, prefix = "") {
         const extName = path.extname(element);
-        const camelCaseName = element.slice(0, -extName.length).split("_").map(camelCaseString).join('');
+        const camelCaseName = (prefix ? prefix + "_" : "") + element.slice(0, -extName.length).split("_").map(camelCaseString).join('');
         switch(extName) {
             case ".png":
                 importTextures += `import ${camelCaseName}Tex from "${root}${element}";\n`
@@ -63,7 +63,7 @@ async function main() {
         parseDirectory("./", element);
     }
     for (const element of await readdir(join(assetLocation, "levels"))) {
-        parseDirectory("./levels/", element);
+        parseDirectory("./levels/", element, "levels");
     }
     console.log(MANIFEST_TEMPLATE
         .replace("$IMPORT_TEXTURES", importTextures)
