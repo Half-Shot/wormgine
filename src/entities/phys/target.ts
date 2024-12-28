@@ -90,13 +90,6 @@ export class WeaponTarget extends PhysicsEntity {
       return true;
     }
 
-    if (
-      (otherEnt instanceof Worm || otherEnt instanceof BitmapTerrain) === false
-    ) {
-      this.onExplode();
-      return true;
-    }
-
     return false;
   }
 
