@@ -56,7 +56,7 @@ function mainMenu(
         </li>
         <li>
           <button
-            onClick={() => onStartNewGame("tiledMap", "levels_targetTraining")}
+            onClick={() => onStartNewGame("tiledMap", "levels_bones")}
           >
             Bone Isles
           </button>
