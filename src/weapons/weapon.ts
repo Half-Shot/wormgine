@@ -7,11 +7,11 @@ import { add, Coordinate, mult } from "../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 
 export enum IWeaponCode {
-  Grenade,
-  Bazooka,
-  Shotgun,
-  FireworkLauncher,
-  HomingMissile,
+  Grenade = "wep_grenade",
+  Bazooka = "wep_bazooka",
+  Shotgun = "wep_shotgun",
+  FireworkLauncher = "wep_firework",
+  HomingMissile = "wep_missile",
 }
 
 export interface FireOpts {

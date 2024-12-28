@@ -72,6 +72,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: -1,
+        }
       },
     ],
     world,
@@ -198,7 +201,9 @@ export default async function runScenario(game: Game) {
       return;
     }
     if (kind === InputKind.WeaponMenu) {
-      game.gameReactChannel.openWeaponMenu(weapons);
+      game.gameReactChannel.openWeaponMenu(
+        currentWorm.wormIdent.team.availableWeapons,
+      );
     }
   });
 

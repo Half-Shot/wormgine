@@ -1,5 +1,5 @@
 import { Ticker } from "pixi.js";
-import { Team, WormInstance } from "./teams";
+import { InternalTeam, Team, WormInstance } from "./teams";
 import type { StateRecordWormGameState } from "../state/model";
 import Logger from "../log";
 import { EntityType } from "../entities/type";
@@ -15,51 +15,6 @@ const RoundTimerMs = 60000;
 
 const logger = new Logger("GameState");
 
-export class InternalTeam implements Team {
-  public readonly worms: WormInstance[];
-  private nextWormStack: WormInstance[];
-
-  constructor(
-    private readonly team: Team,
-    onHealthChange: () => void,
-  ) {
-    this.worms = team.worms.map(
-      (w) => new WormInstance(w, team, onHealthChange),
-    );
-    this.nextWormStack = [...this.worms];
-  }
-
-  get name() {
-    return this.team.name;
-  }
-
-  get playerUserId() {
-    return this.team.playerUserId;
-  }
-
-  get group() {
-    return this.team.group;
-  }
-
-  get health() {
-    return this.worms.map((w) => w.health).reduce((a, b) => a + b);
-  }
-
-  get maxHealth() {
-    return this.worms.map((w) => w.maxHealth).reduce((a, b) => a + b);
-  }
-
-  public popNextWorm(): WormInstance {
-    // Clear any dead worms
-    this.nextWormStack = this.nextWormStack.filter((w) => w.health > 0);
-    const [next] = this.nextWormStack.splice(0, 1);
-    if (!next) {
-      throw Error("Exhausted all worms from team");
-    }
-    this.nextWormStack.push(next);
-    return next;
-  }
-}
 export class GameState {
   static getTeamMaxHealth(team: Team) {
     return team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b);

@@ -20,7 +20,7 @@ import {
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
 import { PlayableEntity } from "./playable";
-import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
+import { teamGroupToColorSet, WormInstance } from "../../logic";
 import { calculateMovement } from "../../movementController";
 import { Viewport } from "pixi-viewport";
 import { magnitude, pointOnRadius, sub } from "../../utils";
@@ -436,6 +436,7 @@ export class Worm extends PlayableEntity {
     if (this.state !== WormState.Firing) {
       return;
     }
+    this.wormIdent.team.consumeAmmo(this.weapon.code);
     const maxShots = this.weapon.shots ?? 1;
     const duration = this.fireWeaponDuration;
     this.recorder?.recordWormFire(this.wormIdent.uuid, duration);
