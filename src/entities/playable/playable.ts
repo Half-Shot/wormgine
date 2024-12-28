@@ -79,7 +79,6 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       style: {
         ...DefaultTextStyle,
         fontSize: 28,
-        lineHeight: 32,
         fill: fg,
         align: "center",
       },
@@ -89,27 +88,24 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       style: {
         ...DefaultTextStyle,
         fontSize: 28,
-        lineHeight: 32,
         fill: fg,
         align: "center",
       },
     });
     this.visibleHealth = this.health;
+
+    this.nameText.position.set(0, -5);
     this.healthTextBox = new Graphics();
-    this.healthText.position.set(
-      this.nameText.width / 2 - this.healthText.width / 2,
-      34,
-    );
+    this.healthText.position.set(this.healthText.width / 2, 24);
     applyGenericBoxStyle(this.healthTextBox)
-      .roundRect(-5, 0, this.nameText.width + 10, 30, 4)
+      .roundRect(-5, 0, this.nameText.width + 10, this.nameText.height - 2, 4)
       .stroke()
-      .fill();
-    applyGenericBoxStyle(this.healthTextBox)
+      .fill()
       .roundRect(
         this.nameText.width / 2 - this.healthText.width / 2 - 5,
-        36,
+        30,
         this.healthText.width + 10,
-        28,
+        this.healthText.height - 4,
         4,
       )
       .stroke()

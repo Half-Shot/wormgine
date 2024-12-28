@@ -78,10 +78,10 @@ export class WindDial {
       2;
     applyGenericBoxStyle(this.gfx)
       .roundRect(boxX, this.windY + 2, 96 * Math.abs(windScale), 21, 4)
-      .fill({ color: windScale > 0 ? 0xee5555 : 0x5555ee });
+      .fill({ color: windScale > 0 ? 0xdb6f6f : 0x7085db });
     this.windScroller.x = boxX;
     this.windScroller.tileRotation = windScale > 0 ? Math.PI : 0;
-    this.windScroller.tint = windScale > 0 ? 0xee3333 : 0x3333ee;
+    this.windScroller.tint = windScale > 0 ? 0xcc3333 : 0x2649d9;
     this.windScroller.width = 96 * Math.abs(windScale);
     applyGenericBoxStyle(this.gfx)
       .moveTo(this.windX + 100, this.windY)

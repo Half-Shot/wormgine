@@ -53,10 +53,10 @@ export class Toaster {
         this.currentToastIsInterruptable = newToast.interruptable;
         this.gfx.position.set(
           this.screenWidth / 2 - this.text.width / 2 - 6,
-          this.screenHeight / 20 - this.text.height / 2 - 4,
+          this.screenHeight / 20 - 16,
         );
         applyGenericBoxStyle(this.gfx)
-          .roundRect(0, 0, this.text.width + 12, this.text.height + 8, 4)
+          .roundRect(0, 0, this.text.width + 12, this.text.height, 4)
           .stroke()
           .fill();
       }
