@@ -32,6 +32,54 @@ export default async function runScenario(game: Game) {
         ],
         playerUserId: null,
       },
+      {
+        name: "Purple Rain",
+        group: TeamGroup.Purple,
+        worms: [
+          {
+            name: "Welsh boy",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+      {
+        name: "The Yellow Raincoats",
+        group: TeamGroup.Yellow,
+        worms: [
+          {
+            name: "Welsh boy",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+      {
+        name: "The Onion Enjoyers",
+        group: TeamGroup.Green,
+        worms: [
+          {
+            name: "Welsh boy",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
+      {
+        name: "Creamy Orange Grease Gang",
+        group: TeamGroup.Orange,
+        worms: [
+          {
+            name: "Welsh boy",
+            maxHealth: 100,
+            health: 100,
+          },
+        ],
+        playerUserId: null,
+      },
     ],
     world,
     {

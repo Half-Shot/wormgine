@@ -31,9 +31,17 @@ export function teamGroupToColorSet(group: TeamGroup): {
 } {
   switch (group) {
     case TeamGroup.Red:
-      return { bg: 0xcc3333, fg: 0xbb5555 };
+      return { bg: 0xcc3333, fg: 0xdb6f6f };
     case TeamGroup.Blue:
-      return { bg: 0x2244cc, fg: 0x3366cc };
+      return { bg: 0x2649d9, fg: 0x7085db };
+    case TeamGroup.Purple:
+      return { bg: 0xa226d9, fg: 0xbb70db };
+    case TeamGroup.Yellow:
+      return { bg: 0xd9c526, fg: 0xdbcf70 };
+    case TeamGroup.Orange:
+      return { bg: 0xd97a26, fg: 0xdba270 };
+    case TeamGroup.Green:
+      return { bg: 0x30d926, fg: 0x75db70 };
     default:
       return { bg: 0xcc00cc, fg: 0x111111 };
   }
