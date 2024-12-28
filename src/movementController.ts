@@ -84,9 +84,9 @@ export function calculateMovement(
     physObject.collider,
   );
   // Pop the highest collider
-  const highestCollider = collides.filter(s => !s.collider.isSensor()).sort(
-    (a, b) => a.collider.translation().y - b.collider.translation().y,
-  )[0];
+  const highestCollider = collides
+    .filter((s) => !s.collider.isSensor())
+    .sort((a, b) => a.collider.translation().y - b.collider.translation().y)[0];
 
   // No collisions, go go go!
   if (!highestCollider) {

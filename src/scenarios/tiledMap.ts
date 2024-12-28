@@ -28,7 +28,6 @@ import { CameraLockPriority, ViewportCamera } from "../camera";
 import { getAssets } from "../assets";
 import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
-import { WormState } from "../entities/playable/wormState";
 
 const weapons = [
   WeaponBazooka,

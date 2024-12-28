@@ -19,11 +19,9 @@ export class WormState {
   transition(newState: InnerWormState) {
     if (newState === InnerWormState.InMotion) {
       this.innerStatePriorToMotion = this.innerState;
-    }
-    else if (newState === InnerWormState.MovingLeft) {
+    } else if (newState === InnerWormState.MovingLeft) {
       this.innerStatePriorToMotion = this.innerState;
-    }
-    else if (newState === InnerWormState.MovingRight) {
+    } else if (newState === InnerWormState.MovingRight) {
       this.innerStatePriorToMotion = this.innerState;
     }
     this.innerState = newState;
@@ -46,7 +44,10 @@ export class WormState {
   }
 
   get shouldHandleNewInput() {
-    return this.innerState !== InnerWormState.Firing && this.innerState !== InnerWormState.InactiveWaiting;
+    return (
+      this.innerState !== InnerWormState.Firing &&
+      this.innerState !== InnerWormState.InactiveWaiting
+    );
   }
 
   get isFiring() {

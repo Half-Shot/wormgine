@@ -112,16 +112,22 @@ export class Mine extends TimedExplosive {
     if (this.sprite.destroyed) {
       return;
     }
-    if (this.inactiveUntilTs !== 0 && this.inactiveUntilTs < performance.now()) {
+    if (
+      this.inactiveUntilTs !== 0 &&
+      this.inactiveUntilTs < performance.now()
+    ) {
       console.log(this.inactiveUntilTs, performance.now());
       this.inactiveUntilTs = 0;
       const colliders = this.gameWorld.checkCollision(
-        Coordinate.fromWorld(this.body.translation().x, this.body.translation().y),
+        Coordinate.fromWorld(
+          this.body.translation().x,
+          this.body.translation().y,
+        ),
         this.opts.explosionRadius,
         this.sensor,
       );
       console.log(colliders);
-      if (colliders.some(s => s instanceof Worm)) {
+      if (colliders.some((s) => s instanceof Worm)) {
         this.startTimer();
       }
     }
