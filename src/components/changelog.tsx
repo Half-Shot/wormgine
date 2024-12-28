@@ -34,13 +34,15 @@ export function ChangelogModal({
       if (!req.ok) {
         // No good.
         setLatestChanges(["Could not load changes"]);
+        return;
       }
-      const result = await req.json() as { commits: { commit: { message: string } }[]};
-
+      const result = (await req.json()) as {
+        commits: { commit: { message: string } }[];
+      };
       setLatestChanges(
         result.commits
           .map((c) => c.commit.message)
-          .filter(m => m.trim().match(/^\[(feat|bugfix|note)\]/i))
+          .filter((m) => m.trim().match(/^\[(feat|bugfix|note)\]/i))
           .reverse(),
       );
     })();
