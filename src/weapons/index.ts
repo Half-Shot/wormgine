@@ -6,6 +6,7 @@ import WeaponFireworkLauncher from "./firework";
 import WeaponHomingMissile from "./homingMissile";
 
 import { IWeaponCode } from "./weapon";
+import { WeaponMine } from "./mine";
 
 export {
   WeaponGrenade,
@@ -13,6 +14,7 @@ export {
   WeaponFireworkLauncher,
   WeaponHomingMissile,
   WeaponShotgun,
+  WeaponMine,
 };
 
 export function getDefinitionForCode(code: IWeaponCode) {
@@ -25,14 +27,18 @@ export function getDefinitionForCode(code: IWeaponCode) {
       return WeaponShotgun;
     case IWeaponCode.FireworkLauncher:
       return WeaponFireworkLauncher;
+    case IWeaponCode.Mine:
+      return WeaponMine;
     default:
       throw Error("Unknown weapon code");
   }
 }
 
 export function readAssetsForWeapons(assets: AssetPack): void {
+  WeaponGrenade.loadAssets?.(assets);
   WeaponShotgun.loadAssets?.(assets);
   WeaponBazooka.loadAssets?.(assets);
   WeaponFireworkLauncher.loadAssets?.(assets);
   WeaponHomingMissile.loadAssets?.(assets);
+  WeaponMine.loadAssets?.(assets);
 }

@@ -1,5 +1,5 @@
 import { IWeaponEntity } from "../entities/entity";
-import { Container } from "pixi.js";
+import { Container, PointData, Texture } from "pixi.js";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { AssetPack } from "../assets";
@@ -12,6 +12,7 @@ export enum IWeaponCode {
   Shotgun,
   FireworkLauncher,
   HomingMissile,
+  Mine,
 }
 
 export interface FireOpts {
@@ -74,9 +75,24 @@ export interface IWeaponDefiniton {
    * Can the timer on the weapon be adjusted?
    */
   timerAdjustable?: boolean;
+  /**
+   * Should a guidance target be shown?
+   */
   showTargetGuide?: boolean;
+  /**
+   * Does the worm need to pick a target first?
+   */
   showTargetPicker?: boolean;
+  /**
+   * Should the worm be given getaway time?
+   */
+  getawayTime?: number;
 
+  sprite?: {
+    texture: Texture;
+    scale: PointData;
+    offset: PointData;
+  };
   /**
    * How many shots can the player take. Defaults to 1.
    */

@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Point } from "pixi.js";
 import { Grenade } from "../entities/phys/grenade";
 import {
   FireOpts,
@@ -17,6 +17,13 @@ export const WeaponGrenade: IWeaponDefiniton = {
   maxDuration: 50,
   timerAdjustable: true,
   showTargetGuide: true,
+  loadAssets(assets) {
+    this.sprite = {
+      texture: assets.textures.grenade,
+      scale: new Point(0.33, 0.33),
+      offset: new Point(3, -10),
+    };
+  },
   fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
     if (!opts.duration) {
       throw Error("Duration expected but not given");

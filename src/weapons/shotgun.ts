@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Point } from "pixi.js";
 import {
   FireOpts,
   IWeaponCode,
@@ -27,6 +27,11 @@ const WeaponShotgun: IWeaponDefiniton = {
   shots: 2,
   loadAssets(assets: AssetPack) {
     fireSound = assets.sounds.shotgun;
+    this.sprite = {
+      texture: assets.textures.shotgun,
+      scale: new Point(0.15, 0.15),
+      offset: new Point(3, -10),
+    };
   },
   fireFn(parent: Container, world: GameWorld, worm: Worm, opts: FireOpts) {
     if (opts.angle === undefined) {
