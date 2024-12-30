@@ -54,12 +54,9 @@ export default async function runScenario(game: Game) {
   );
   const terrain = BitmapTerrain.create(
     game.world,
-    // TODO: Autoload from map.
     level.terrain.bitmap,
     bitmapPosition,
   );
-
-  console.log(level.rules);
 
   // TODO: Determine from state?
   const gameState = new GameState(
@@ -128,7 +125,6 @@ export default async function runScenario(game: Game) {
   water.addToWorld(parent, world);
 
   const camera = new ViewportCamera(game.viewport, world, water.waterHeight);
-  console.log(bitmapPosition.toScreenPoint());
   camera.snapToPosition(
     bitmapPosition.toScreenPoint(),
     CameraLockPriority.SuggestedLockNonLocal,
@@ -147,7 +143,6 @@ export default async function runScenario(game: Game) {
       );
       world.addEntity(t);
       parent.addChild(t.sprite);
-      console.log("Added target");
     }
   }
 
@@ -193,11 +188,13 @@ export default async function runScenario(game: Game) {
   let currentWorm: Worm | undefined;
 
   staticController.on("inputEnd", (kind: InputKind) => {
-    if (!currentWorm?.currentState.showWeapon) {
+    if (!currentWorm?.currentState.canFire) {
       return;
     }
     if (kind === InputKind.WeaponMenu) {
       game.gameReactChannel.openWeaponMenu(weapons);
+    } else if (kind === InputKind.PickTarget) {
+      game.gameReactChannel.closeWeaponMenu();
     }
   });
 

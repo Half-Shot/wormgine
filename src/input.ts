@@ -74,8 +74,20 @@ class Controller extends EventEmitter {
     if (!overlayElement) {
       throw Error("Missing overlay element");
     }
-    overlayElement.addEventListener("mousedown", this.onMouseDown.bind(this));
-    overlayElement.addEventListener("mouseup", this.onMouseUp.bind(this));
+    overlayElement.addEventListener("mousedown", (ev) => {
+      if ((ev.target as HTMLElement).tagName === "button") {
+        // Ignore.
+        return;
+      }
+      this.onMouseDown(ev);
+    });
+    overlayElement.addEventListener("mouseup", (ev) => {
+      if ((ev.target as HTMLElement).tagName === "button") {
+        // Ignore.
+        return;
+      }
+      this.onMouseUp(ev);
+    });
     overlayElement.addEventListener("contextmenu", (event) =>
       event.preventDefault(),
     );

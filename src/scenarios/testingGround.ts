@@ -92,6 +92,7 @@ export default async function runScenario(game: Game) {
       game.viewport,
       [20, 21, 50, 35],
       terrain,
+      world,
     ),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
@@ -159,7 +160,7 @@ export default async function runScenario(game: Game) {
   });
   weaponText.position.set(20, 50);
   staticController.on("inputEnd", (kind: InputKind) => {
-    if (currentWorm?.currentState.showWeapon) {
+    if (!currentWorm?.currentState.canFire) {
       return;
     }
     if (kind === InputKind.WeaponMenu) {
