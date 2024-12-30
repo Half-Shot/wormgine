@@ -29,8 +29,10 @@ export function getDefinitionForCode(code: IWeaponCode) {
       return WeaponFireworkLauncher;
     case IWeaponCode.Mine:
       return WeaponMine;
+    case IWeaponCode.HomingMissile:
+      return WeaponHomingMissile;
     default:
-      throw Error("Unknown weapon code");
+      throw Error(`Unknown weapon code '${code}'`);
   }
 }
 

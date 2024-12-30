@@ -15,7 +15,7 @@ import { HomingMissile } from "../entities/phys/homingMissile";
 let fireSound: Sound;
 
 const WeaponHomingMissile: IWeaponDefiniton = {
-  name: "HomingMisisle",
+  name: "HomingMissile",
   code: IWeaponCode.HomingMissile,
   icon,
   maxDuration: 80,
