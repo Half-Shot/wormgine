@@ -37,7 +37,7 @@ function mainMenu(
       </p>
       <ul className="levelPicker">
         <li>
-          <button onClick={() => onStartNewGame("testingGround")}>
+          <button onClick={() => onStartNewGame("tiledMap", "levels_testing")}>
             Gameplay Demo
           </button>
         </li>

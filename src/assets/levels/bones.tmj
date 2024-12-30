@@ -28,6 +28,12 @@
                          "name":"wormgine.bazooka_ammo",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Red"
                         }],
                  "rotation":0,
                  "type":"",
@@ -55,9 +61,10 @@
                  "name":"",
                  "properties":[
                         {
-                         "name":"wormgine.end_condition.objects_destroyed.object_type",
+                         "name":"wormgine.end_condition",
+                         "propertytype":"GameWinCondition",
                          "type":"string",
-                         "value":"wormgine.target"
+                         "value":"ObjectsDestroyed"
                         }],
                  "rotation":0,
                  "type":"",
@@ -149,6 +156,35 @@
                  "width":35,
                  "x":768.002079619727,
                  "y":669.057040998217
+                }, 
+                {
+                 "gid":8,
+                 "height":44,
+                 "id":24,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Red"
+                        }, 
+                        {
+                         "name":"wormgine.team_name",
+                         "type":"string",
+                         "value":"Test Candidates"
+                        }, 
+                        {
+                         "name":"wormgine.worm_names",
+                         "type":"string",
+                         "value":"Lil Guy"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":467.97789275635,
+                 "y":-257.183443085607
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -157,7 +193,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":24,
+ "nextobjectid":25,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.0",
@@ -169,6 +205,6 @@
         }],
  "tilewidth":16,
  "type":"map",
- "version":"1.10",
+ "version":"1.11",
  "width":80
 }

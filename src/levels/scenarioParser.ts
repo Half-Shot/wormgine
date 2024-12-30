@@ -4,9 +4,12 @@ import { EntityType } from "../entities/type";
 import Logger from "../log";
 import { GameRules } from "../logic/gamestate";
 import { RecordedEntityState } from "../state/model";
-import { TiledGameRulesProperties, TiledLevel, TiledTileset } from "./types";
+import { TiledEnumTeamGroup, TiledGameRulesProperties, TiledLevel, TiledTeamProperties, TiledTileset } from "./types";
+import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
+import { Team, TeamGroup, WormIdentity } from "../logic/teams";
+import { IWeaponCode } from "../weapons/weapon";
 
-export const COMPATIBLE_TILED_VERSION = "1.10";
+export const COMPATIBLE_TILED_VERSION = "1.11";
 const logger = new Logger("scenarioParser");
 
 interface Scenario {
@@ -17,11 +20,12 @@ interface Scenario {
   };
   objects: RecordedEntityState[];
   rules: GameRules;
+  teams: Team[];
 }
 
 function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
   if (object.type === "wormgine.worm_spawn") {
-    return {
+    const wp: WormSpawnRecordedState = {
       type: "wormgine.worm_spawn",
       tra: {
         x: object.x.toString(),
@@ -32,7 +36,9 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
         x: "0",
         y: "0",
       },
+      teamGroup: TeamGroup[object.properties["wormgine.team_group"] as TiledEnumTeamGroup],
     };
+    return wp;
   }
   if (object.type === "wormgine.water") {
     return {
@@ -76,6 +82,33 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
   };
 }
 
+function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
+  return teamProps.map(tiledTeam => {
+    const health = tiledTeam["wormgine.starting_health"] ?? 100;
+    // TODO: Make this cleaner
+    const loadout: Team["loadout"] = {};
+    for (const [wep, ammo] of Object.entries(tiledTeam["wormgine.loadout"] ?? {})) {
+      const loadoutWepCode = IWeaponCode[wep as any];
+      if (loadoutWepCode === undefined) {
+        continue;
+      }
+      // @ts-ignore
+      loadout[IWeaponCode[loadoutWepCode] as any] = ammo;
+    }
+    return {
+      name: tiledTeam["wormgine.team_name"],
+      worms: tiledTeam["wormgine.worm_names"].split(';').map<WormIdentity>((wormName) => ({
+        name: wormName,
+        maxHealth: health,
+        health
+      })),
+      // TODO: Net games?
+      playerUserId: null,
+      group: TeamGroup[tiledTeam["wormgine.team_group"]],
+      loadout,
+    }})
+}
+
 function determineRules(rules?: TiledGameRulesProperties): GameRules {
   if (!rules) {
     logger.warning("No rules in level, assuming deathmatch");
@@ -83,12 +116,18 @@ function determineRules(rules?: TiledGameRulesProperties): GameRules {
       winWhenOneGroupRemains: true,
     };
   }
-  if (rules["wormgine.end_condition"] === "objects_destroyed") {
+  rules["wormgine.end_condition"] ??= "Deathmatch";
+  // TODO: Import default values from tiled-project.
+  if (rules["wormgine.end_condition"] === "ObjectsDestroyed") {
     const obj = rules["wormgine.end_condition.objects_destroyed.object_type"];
     return {
       winWhenAllObjectsOfTypeDestroyed: Object.entries(EntityType).find(
         ([_k, v]) => v === obj,
       )?.[1],
+    };
+  } else if (rules["wormgine.end_condition"] === "Deathmatch") {
+    return {
+      winWhenOneGroupRemains: true
     };
   }
   throw Error("Misconfigured rules object");
@@ -185,6 +224,8 @@ export async function scenarioParser(
     throw Error("Could not find texture for level.");
   }
 
+  const teams = determineTeams(prefilteredObjects.filter(o => o.type === "wormgine.team").map(v => v.properties as unknown as TiledTeamProperties))
+
   return {
     terrain: {
       bitmap: textureAssets[bitmapName as keyof AssetTextures],
@@ -193,5 +234,6 @@ export async function scenarioParser(
     },
     objects,
     rules,
+    teams,
   };
 }

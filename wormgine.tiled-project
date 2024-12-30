@@ -2,7 +2,6 @@
     "automappingRulesFile": "",
     "commands": [
     ],
-    "compatibilityVersion": 1100,
     "extensionsPath": "extensions",
     "folders": [
         "."
@@ -10,5 +9,182 @@
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "id": 2,
+            "name": "GameWinCondition",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Deathmatch",
+                "ObjectsDestroyed"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "id": 4,
+            "name": "ObjectType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "wormgine.target",
+                "Unknown"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "wormgine.end_condition",
+                    "propertyType": "GameWinCondition",
+                    "type": "string",
+                    "value": "Deathmatch"
+                },
+                {
+                    "name": "wormgine.end_condition.objects_destroyed.object_type",
+                    "propertyType": "ObjectType",
+                    "type": "string",
+                    "value": "Unknown"
+                }
+            ],
+            "name": "wormgine.game_rules",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 9,
+            "members": [
+                {
+                    "name": "Bazooka",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "FireworkLauncher",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Grenade",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "HomingMissile",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Mine",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Shotgun",
+                    "type": "int",
+                    "value": 0
+                }
+            ],
+            "name": "wormgine.weapon_loadout",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 5,
+            "members": [
+                {
+                    "name": "wormgine.team_group",
+                    "propertyType": "WormTeamGroup",
+                    "type": "string",
+                    "value": "None"
+                }
+            ],
+            "name": "wormgine.worm_spawn",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 6,
+            "members": [
+                {
+                    "name": "wormgine.loadout",
+                    "propertyType": "wormgine.weapon_loadout",
+                    "type": "class",
+                    "value": {
+                    }
+                },
+                {
+                    "name": "wormgine.starting_health",
+                    "type": "int",
+                    "value": 100
+                },
+                {
+                    "name": "wormgine.team_group",
+                    "propertyType": "WormTeamGroup",
+                    "type": "string",
+                    "value": "None"
+                },
+                {
+                    "name": "wormgine.team_name",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "wormgine.worm_names",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "wormgine.team",
+            "type": "class",
+            "useAs": [
+                "property",
+                "map",
+                "layer",
+                "object",
+                "tile",
+                "tileset",
+                "wangcolor",
+                "wangset",
+                "project"
+            ]
+        },
+        {
+            "id": 7,
+            "name": "WormTeamGroup",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Red",
+                "Blue",
+                "Purple",
+                "Yellow",
+                "Orange",
+                "Green",
+                "None"
+            ],
+            "valuesAsFlags": false
+        }
     ]
 }

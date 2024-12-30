@@ -63,8 +63,22 @@ export interface TiledLevel {
   layers: (TiledForgroundLayer | TiledObjectLayer)[];
 }
 
-export type TiledGameRulesProperties = TiledGameRulesObjectDestroyedProperties;
+export type TiledGameRulesProperties = TiledGameRulesObjectDestroyedProperties|TiledGameRulesDeathmatchProperties;
 export interface TiledGameRulesObjectDestroyedProperties {
-  "wormgine.end_condition": "objects_destroyed";
+  "wormgine.end_condition": "ObjectsDestroyed";
   "wormgine.end_condition.objects_destroyed.object_type": string;
+}
+
+export interface TiledGameRulesDeathmatchProperties {
+  "wormgine.end_condition": "Deathmatch";
+}
+
+export type TiledEnumTeamGroup = "Red"|"Blue"|"Purple"|"Yellow"|"Orange"|"Green";
+
+export interface TiledTeamProperties {
+  "wormgine.team_group": TiledEnumTeamGroup;
+  "wormgine.team_name": string;
+  "wormgine.worm_names": string;
+  "wormgine.starting_health"?: number;
+  "wormgine.loadout": Record<string, number>,
 }

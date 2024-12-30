@@ -1,5 +1,6 @@
 import { ColorSource } from "pixi.js";
 import Logger from "../log";
+import { IWeaponCode } from "../weapons/weapon";
 
 export interface WormIdentity {
   uuid?: string;
@@ -23,6 +24,7 @@ export interface Team {
   worms: WormIdentity[];
   // For net games only
   playerUserId: string | null;
+  loadout?: Partial<Record<IWeaponCode, number>>,
 }
 
 export function teamGroupToColorSet(group: TeamGroup): {

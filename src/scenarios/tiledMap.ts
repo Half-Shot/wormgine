@@ -6,7 +6,6 @@ import { Water } from "../entities/water";
 import { Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { GameState } from "../logic/gamestate";
-import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import {
   GameDrawText,
@@ -28,6 +27,7 @@ import { CameraLockPriority, ViewportCamera } from "../camera";
 import { getAssets } from "../assets";
 import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
+import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 
 const weapons = [
   WeaponBazooka,
@@ -58,22 +58,8 @@ export default async function runScenario(game: Game) {
     bitmapPosition,
   );
 
-  // TODO: Determine from state?
   const gameState = new GameState(
-    [
-      {
-        name: "The Prawns",
-        group: TeamGroup.Red,
-        worms: [
-          {
-            name: "Shrimp",
-            maxHealth: 100,
-            health: 100,
-          },
-        ],
-        playerUserId: null,
-      },
-    ],
+    level.teams,
     world,
     level.rules,
   );
@@ -147,14 +133,16 @@ export default async function runScenario(game: Game) {
   }
 
   const wormInstances = new Map<string, Worm>();
+  const spawnPositions = level.objects.filter(
+    (v) => v.type === "wormgine.worm_spawn",
+  ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
-      const nextLocation = level.objects.find(
-        (v) => v.type === "wormgine.worm_spawn",
-      );
-      if (!nextLocation) {
+      const nextLocationIdx = spawnPositions.findIndex(v => v && v.teamGroup === wormInstance.team.group);
+      if (nextLocationIdx === -1) {
         throw Error("No location to spawn worm");
       }
+      const nextLocation = spawnPositions[nextLocationIdx];
       const wormEnt = world.addEntity(
         await Worm.create(
           parent,
@@ -179,6 +167,7 @@ export default async function runScenario(game: Game) {
           stateRecorder,
         ),
       );
+      delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }

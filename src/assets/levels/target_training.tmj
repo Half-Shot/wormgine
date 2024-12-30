@@ -28,6 +28,12 @@
                          "name":"wormgine.bazooka_ammo",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Red"
                         }],
                  "rotation":0,
                  "type":"",
@@ -55,7 +61,14 @@
                  "name":"",
                  "properties":[
                         {
+                         "name":"wormgine.end_condition",
+                         "propertytype":"GameWinCondition",
+                         "type":"string",
+                         "value":"ObjectsDestroyed"
+                        }, 
+                        {
                          "name":"wormgine.end_condition.objects_destroyed.object_type",
+                         "propertytype":"ObjectType",
                          "type":"string",
                          "value":"wormgine.target"
                         }],
@@ -101,6 +114,45 @@
                  "width":35,
                  "x":415,
                  "y":158.5
+                }, 
+                {
+                 "gid":8,
+                 "height":44,
+                 "id":21,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"wormgine.loadout",
+                         "propertytype":"wormgine.weapon_loadout",
+                         "type":"class",
+                         "value":
+                            {
+                             "Bazooka":6,
+                             "bazooka":6
+                            }
+                        }, 
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Red"
+                        }, 
+                        {
+                         "name":"wormgine.team_name",
+                         "type":"string",
+                         "value":"Test Candidates"
+                        }, 
+                        {
+                         "name":"wormgine.worm_names",
+                         "type":"string",
+                         "value":"Lil Guy"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":-103.500086406744,
+                 "y":-238.059710484721
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -109,7 +161,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":20,
+ "nextobjectid":23,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.0",
@@ -121,6 +173,6 @@
         }],
  "tilewidth":16,
  "type":"map",
- "version":"1.10",
+ "version":"1.11",
  "width":80
 }

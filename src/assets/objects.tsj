@@ -1,59 +1,59 @@
-{
-  "columns": 0,
-  "grid": {
-    "height": 1,
-    "orientation": "orthogonal",
-    "width": 1
-  },
-  "margin": 0,
-  "name": "objects",
-  "spacing": 0,
-  "tilecount": 3,
-  "tiledversion": "1.11.0",
-  "tileheight": 44,
-  "tiles": [
+{ "columns":0,
+ "grid":
     {
-      "id": 3,
-      "image": "level_tileset/spawn_icon.png",
-      "imageheight": 44,
-      "imagewidth": 33,
-      "properties": [
-        {
-          "name": "wormgine.bazooka_ammo",
-          "type": "int",
-          "value": -1
-        }
-      ],
-      "type": "wormgine.worm_spawn"
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
     },
-    {
-      "id": 4,
-      "image": "target.png",
-      "imageheight": 38,
-      "imagewidth": 35,
-      "type": "wormgine.target"
-    },
-    {
-      "id": 5,
-      "image": "level_tileset/rules_icon.png",
-      "imageheight": 44,
-      "imagewidth": 33,
-      "properties": [
+ "margin":0,
+ "name":"objects",
+ "spacing":0,
+ "tilecount":5,
+ "tiledversion":"1.11.0",
+ "tileheight":44,
+ "tiles":[
         {
-          "name": "wormgine.end_condition",
-          "type": "string",
-          "value": "objects_destroyed"
-        },
+         "id":3,
+         "image":"level_tileset\/spawn_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "properties":[
+                {
+                 "name":"wormgine.bazooka_ammo",
+                 "type":"int",
+                 "value":-1
+                }],
+         "type":"wormgine.worm_spawn"
+        }, 
         {
-          "name": "wormgine.end_condition.objects_destroyed.object_type",
-          "type": "string",
-          "value": ""
-        }
-      ],
-      "type": "wormgine.game_rules"
-    }
-  ],
-  "tilewidth": 35,
-  "type": "tileset",
-  "version": "1.10"
+         "id":4,
+         "image":"target.png",
+         "imageheight":38,
+         "imagewidth":35,
+         "type":"wormgine.target"
+        }, 
+        {
+         "id":5,
+         "image":"level_tileset\/rules_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "type":"wormgine.game_rules"
+        }, 
+        {
+         "id":7,
+         "image":"level_tileset\/team_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "type":"wormgine.team"
+        }, 
+        {
+         "id":8,
+         "image":"level_tileset\/weapon_loadout_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "type":"wormgine.weapon_loadout"
+        }],
+ "tilewidth":35,
+ "type":"tileset",
+ "version":"1.11"
 }
