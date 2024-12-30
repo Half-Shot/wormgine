@@ -51,6 +51,7 @@ export function Lobby({
                 maxHealth: 100,
               },
             ],
+            ammo: {},
           },
         ],
       })

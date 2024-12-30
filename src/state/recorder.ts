@@ -153,6 +153,7 @@ export class StateRecorder {
             health: w.health,
             maxHealth: w.maxHealth,
           })),
+          ammo: t.ammo,
         })),
       },
       kind: StateRecordKind.GameState,

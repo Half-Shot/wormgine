@@ -1,7 +1,6 @@
 import Logger from "./log";
-import EventEmitter from "events";
 import { PointData } from "pixi.js";
-import TypedEmitter from "typed-emitter";
+import { EventEmitter } from "pixi.js";
 
 export enum InputKind {
   MoveLeft,
@@ -49,12 +48,12 @@ const sequenceTimeoutMs = 250;
 type Sequence = { sequence: string[]; inputKind: InputKind };
 
 const logger = new Logger("Controller");
-type GameReactChannelEvents = {
+interface GameReactChannelEvents {
   inputBegin: (kind: InputKind, position?: PointData) => void;
   inputEnd: (kind: InputKind, position?: PointData) => void;
 };
 
-class Controller extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents>) {
+class Controller extends EventEmitter<GameReactChannelEvents> {
   private readonly activeInputs = new Set();
   private activeSequences = new Array<Sequence>();
   private readonly sequences = new Array<Sequence>();

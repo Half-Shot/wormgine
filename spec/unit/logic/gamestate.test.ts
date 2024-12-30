@@ -21,6 +21,7 @@ const RED_TEAM: Team = {
     health: 25,
     maxHealth: 100,
   }],
+  ammo: {},
   playerUserId: null,
 }
 
@@ -32,6 +33,7 @@ const RED_TEAM_2: Team = {
     health: 100,
     maxHealth: 100,
   }],
+  ammo: {},
   playerUserId: null,
 }
 
@@ -43,6 +45,7 @@ const BLUE_TEAM: Team = {
     health: 75,
     maxHealth: 100,
   }],
+  ammo: {},
   playerUserId: null,
 }
 

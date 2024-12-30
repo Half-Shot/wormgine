@@ -2,15 +2,13 @@ import { FunctionalComponent } from "preact";
 import { useState } from "preact/hooks";
 import { WeaponSelector } from "../gameui/weapon-select";
 import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../../weapons";
+import { AmmoCount } from "../../interop/gamechannel";
+import { IWeaponDefiniton } from "../../weapons/weapon";
 
-const wepList = [
-  WeaponBazooka,
-  WeaponGrenade,
-  WeaponShotgun,
-  WeaponGrenade,
-  WeaponShotgun,
-  WeaponGrenade,
-  WeaponShotgun,
+const wepList: [IWeaponDefiniton, number][] = [
+  [WeaponBazooka, 0],
+  [WeaponGrenade, 0],
+  [WeaponShotgun, 0],
 ];
 
 export const OverlayTest: FunctionalComponent = () => {
