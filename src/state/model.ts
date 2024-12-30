@@ -1,4 +1,4 @@
-import { TeamGroup } from "../logic/teams";
+import { Team, TeamGroup } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
 
 export interface RecordedEntityState {
@@ -84,6 +84,7 @@ export type StateRecordWormGameState = StateRecordLine<{
       maxHealth: number;
     }[];
     playerUserId: string | null;
+    ammo: Team["ammo"],
   }[];
   iteration: number;
   wind: number;

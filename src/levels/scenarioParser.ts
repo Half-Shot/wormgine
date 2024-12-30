@@ -95,10 +95,11 @@ function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
   return teamProps.map((tiledTeam) => {
     const health = tiledTeam["wormgine.starting_health"] ?? 100;
     // TODO: Make this cleaner
-    const loadout: Team["loadout"] = {};
-    for (const [wep, ammo] of Object.entries(
+    const ammo: Team["ammo"] = {};
+    for (const [wep, ammoCount] of Object.entries(
       tiledTeam["wormgine.loadout"] ?? {},
     )) {
+      // @ts-expect-error Bad types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const loadoutWepCode = IWeaponCode[wep as any];
       if (loadoutWepCode === undefined) {
@@ -106,7 +107,7 @@ function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
       }
       // @ts-expect-error Bad types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      loadout[IWeaponCode[loadoutWepCode] as any] = ammo;
+      ammo[IWeaponCode[loadoutWepCode] as any] = ammoCount;
     }
     return {
       name: tiledTeam["wormgine.team_name"],
@@ -120,7 +121,7 @@ function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
       // TODO: Net games?
       playerUserId: null,
       group: TeamGroup[tiledTeam["wormgine.team_group"]],
-      loadout,
+      ammo,
     };
   });
 }

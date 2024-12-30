@@ -39,6 +39,7 @@ export function ChangelogModal({
       const result = (await req.json()) as {
         commits: { commit: { message: string } }[];
       };
+
       setLatestChanges(
         result.commits
           .map((c) => c.commit.message)

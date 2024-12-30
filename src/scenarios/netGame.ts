@@ -42,6 +42,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "The Whales",
@@ -54,6 +57,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
     ],
     world,
@@ -161,7 +167,6 @@ export default async function runScenario(game: Game) {
       return;
     }
     currentWorm.selectWeapon(weapons[selectedWeaponIndex]);
-    weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
   });
 
   const roundHandlerFn = (dt: Ticker) => {
@@ -208,7 +213,6 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
-      weaponText.text = `Selected Weapon (press S to switch): ${IWeaponCode[currentWorm.weapon.code]}`;
       game.viewport.follow(currentWorm.sprite);
       endOfRoundWaitDuration = null;
       return;

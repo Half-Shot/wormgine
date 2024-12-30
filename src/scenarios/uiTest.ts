@@ -2,6 +2,7 @@ import type { Game } from "../game";
 import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
+import { IWeaponCode } from "../weapons/weapon";
 
 export default async function runScenario(game: Game) {
   const world = game.world;
@@ -19,6 +20,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "The Whales",
@@ -31,6 +35,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "Purple Rain",
@@ -43,6 +50,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "The Yellow Raincoats",
@@ -55,6 +65,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "The Onion Enjoyers",
@@ -67,6 +80,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
       {
         name: "Creamy Orange Grease Gang",
@@ -79,6 +95,9 @@ export default async function runScenario(game: Game) {
           },
         ],
         playerUserId: null,
+        ammo: {
+          [IWeaponCode.Bazooka]: 999,
+        }
       },
     ],
     world,

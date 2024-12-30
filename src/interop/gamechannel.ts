@@ -9,8 +9,8 @@ interface GoToMenuEvent {
 
 type GameReactChannelEvents = {
   goToMenu: (event: GoToMenuEvent) => void;
-  openWeaponMenu: (weapons: IWeaponDefiniton[]) => void;
   closeWeaponMenu: () => void;
+  openWeaponMenu: (weapons: [IWeaponDefiniton, number][]) => void;
   weaponSelected: (code: IWeaponCode) => void;
 };
 
@@ -23,7 +23,7 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
     this.emit("goToMenu", { winningTeams });
   }
 
-  public openWeaponMenu(weapons: IWeaponDefiniton[]) {
+  public openWeaponMenu(weapons: [IWeaponDefiniton, number][]) {
     this.emit("openWeaponMenu", weapons);
   }
 
