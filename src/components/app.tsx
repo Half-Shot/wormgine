@@ -9,7 +9,7 @@ import type { AssetData } from "../assets/manifest";
 
 interface LoadGameProps {
   scenario: string;
-  level?: keyof AssetData;
+  level?: string;
   gameInstance?: NetGameInstance;
 }
 
@@ -19,11 +19,27 @@ export function App() {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
   const [client, setClient] = useState<NetGameClient>();
-  const lobbyGameRoomId =
-    new URLSearchParams(window.location.search)?.get("gameRoomId") ?? undefined;
   const [clientReady, setClientReady] = useState(client?.ready);
   const [clientShouldReload, setClientShouldReload] = useState(true);
   const gameReactChannel = new GameReactChannel();
+
+  const [lobbyGameRoomId, setLobbyGameRoomId] = useState<string>();
+
+  useEffect(() => {
+    const parameters = new URLSearchParams(window.location.search);
+    const gId = parameters.get('gameRoomId');
+    const preStateConfig = parameters.get('stateConfig');
+    if (gId) {
+      setLobbyGameRoomId(gId);
+    }
+    if (preStateConfig) {
+      const [scenario, level] = preStateConfig.split(';');
+      setGameState({
+        scenario,
+        level,
+      });
+    }
+  });
 
   useEffect(() => {
     if (!clientShouldReload) {

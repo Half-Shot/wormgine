@@ -116,13 +116,17 @@ interface ParsedObject {
 }
 
 export async function scenarioParser(
-  level: keyof AssetData,
+  level: string,
   dataAssets: AssetData,
   textureAssets: AssetTextures,
 ): Promise<Scenario> {
   // Load tiled object layer.
   const tileset = loadObjectListing(dataAssets);
-  const scenarioMap = dataAssets[level] as TiledLevel;
+  if (level in dataAssets === false) {
+    throw Error(`Level '${level}' not found`);
+  }
+  // Tested above.
+  const scenarioMap = dataAssets[level as keyof AssetData] as TiledLevel;
   if (scenarioMap.version !== COMPATIBLE_TILED_VERSION) {
     throw Error(
       `Tiled map was built for ${scenarioMap.version}, but we only support ${COMPATIBLE_TILED_VERSION}`,

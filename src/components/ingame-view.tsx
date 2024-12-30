@@ -5,7 +5,6 @@ import { NetGameInstance } from "../net/client";
 import { GameReactChannel } from "../interop/gamechannel";
 import { IWeaponDefiniton } from "../weapons/weapon";
 import { WeaponSelector } from "./gameui/weapon-select";
-import { AssetData } from "../assets/manifest";
 
 export function IngameView({
   scenario,
@@ -14,11 +13,11 @@ export function IngameView({
   gameInstance,
 }: {
   scenario: string;
-  level?: keyof AssetData;
+  level?: string;
   gameReactChannel: GameReactChannel;
   gameInstance?: NetGameInstance;
 }) {
-  console.log(scenario, level);
+  const [fatalError, setFatalError] = useState<Error>();
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<IWeaponDefiniton[] | null>(null);
@@ -30,10 +29,15 @@ export function IngameView({
           setGame(game);
         });
       },
-    );
+    ).catch((ex) => {
+      setFatalError(ex);
+    });
   }, []);
 
   useEffect(() => {
+    if (fatalError) {
+      return;
+    }
     if (!ref.current || !game) {
       return;
     }
@@ -44,10 +48,16 @@ export function IngameView({
 
     // Bind the game to the window such that we can debug it.
     ref.current.appendChild(game.canvas);
-    game.run();
-  }, [ref, game]);
+    game.run().catch((ex) => {
+      setFatalError(ex);
+      game.destroy();
+    });
+  }, [ref, game, fatalError]);
 
   useEffect(() => {
+    if (fatalError) {
+      return;
+    }
     const fn = (weapons: IWeaponDefiniton[]) => {
       if (weaponMenu) {
         setWeaponMenu(null);
@@ -57,7 +67,20 @@ export function IngameView({
     };
     gameReactChannel.on("openWeaponMenu", fn);
     return () => gameReactChannel.off("openWeaponMenu", fn);
-  }, [gameReactChannel, weaponMenu]);
+  }, [gameReactChannel, weaponMenu, fatalError]);
+
+  if (fatalError) {
+    return <div className={styles.fatalScreen}>
+      <h1>A fatal error has occured and the game must be stopped</h1>
+      <h2>
+        {fatalError.message}
+      </h2>
+      {fatalError.cause ? <h3> {(fatalError.cause as Error).message}</h3> : null}
+      <pre>
+        {fatalError.cause ? (fatalError.cause as Error).stack : fatalError.stack}
+      </pre>
+    </div>
+  }
 
   return (
     <>

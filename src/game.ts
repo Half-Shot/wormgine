@@ -14,6 +14,7 @@ import staticController from "./input";
 import { sound } from "@pixi/sound";
 import Logger from "./log";
 import { AssetData } from "./assets/manifest";
+import { CriticalGameError } from "./errors";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -36,7 +37,7 @@ export class Game {
     window: Window,
     scenario: string,
     gameReactChannel: GameReactChannel,
-    level?: keyof AssetData,
+    level?: string,
     netGameInstance?: NetGameInstance,
   ): Promise<Game> {
     await RAPIER.init();
@@ -55,7 +56,7 @@ export class Game {
     public readonly pixiApp: Application,
     private readonly scenario: string,
     public readonly gameReactChannel: GameReactChannel,
-    public readonly level?: keyof AssetData,
+    public readonly level?: string,
     public readonly netGameInstance?: NetGameInstance,
   ) {
     // TODO: Set a sensible static width/height and have the canvas pan it.
@@ -95,11 +96,15 @@ export class Game {
   public async run() {
     // Load this scenario
     if (this.scenario.replaceAll(/[A-Za-z]/g, "") !== "") {
-      throw Error("Invalid level name");
+      throw new CriticalGameError(Error("Invalid level name"));
     }
-    logger.info(`Loading scenario ${this.scenario}`);
-    const module = await import(`./scenarios/${this.scenario}.ts`);
-    await module.default(this);
+    try {
+      logger.info(`Loading scenario ${this.scenario}`);
+      const module = await import(`./scenarios/${this.scenario}.ts`);
+      await module.default(this);
+    } catch (ex) {
+      throw new CriticalGameError(ex instanceof Error ? ex : Error('Scenario could not be loaded'));
+    }
 
     const overlay = new GameDebugOverlay(
       this.rapierWorld,
