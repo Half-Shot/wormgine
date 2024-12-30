@@ -5,9 +5,10 @@ import { NetGameClient } from "../net/client";
 import { GameMenu } from "./menus/types";
 import AccountMenu from "./menus/account";
 import { OverlayTest } from "./menus/overlaytest";
+import type { AssetData } from "../assets/manifest";
 
 interface Props {
-  onNewGame: (level: string) => void;
+  onNewGame: (scenario: string, level?: keyof AssetData) => void;
   reloadClient: () => void;
   client?: NetGameClient;
 }
@@ -17,7 +18,7 @@ const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
 const lastCommit = localStorage.getItem("wormgine_last_commit");
 
 function mainMenu(
-  onStartNewGame: (level: string) => void,
+  onStartNewGame: (scenario: string, level?: keyof AssetData) => void,
   setCurrentMenu: (menu: GameMenu) => void,
   clientReady?: boolean,
 ) {
@@ -54,19 +55,21 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button onClick={() => onStartNewGame("boneIsles")}>
+          <button onClick={() => onStartNewGame("tiledMap", "levels_bones")}>
             Bone Isles
           </button>
         </li>
         <li>
-          <button onClick={() => onStartNewGame("tiledMap")}>
+          <button
+            onClick={() => onStartNewGame("tiledMap", "levels_targetTraining")}
+          >
             Test map loading
           </button>
         </li>
         <li>
           <button
             className="borealis"
-            onClick={() => onStartNewGame("borealisTribute")}
+            onClick={() => onStartNewGame("tiledMap", "levels_borealis")}
           >
             Borealis Tribute Rock
           </button>
@@ -131,9 +134,9 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
   });
 
   const onStartNewGame = useCallback(
-    (level: string) => {
+    (scenario: string, level?: keyof AssetData) => {
       localStorage.setItem("wormgine_last_commit", buildCommit);
-      onNewGame(level);
+      onNewGame(scenario, level);
     },
     [onNewGame],
   );

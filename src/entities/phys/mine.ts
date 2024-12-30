@@ -15,6 +15,7 @@ import { AssetPack } from "../../assets";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { DefaultTextStyle } from "../../mixins/styles";
 import { EntityType } from "../type";
+import { Worm } from "../playable/worm";
 
 /**
  * Proximity mine.
@@ -42,9 +43,15 @@ export class Mine extends TimedExplosive {
   private readonly sensor: Collider;
   private beeping?: Promise<IMediaInstance>;
   private readonly timerText: Text;
+  private inactiveUntilTs: number;
 
-  static create(parent: Container, world: GameWorld, position: Coordinate) {
-    const ent = new Mine(position, world, parent);
+  static create(
+    parent: Container,
+    world: GameWorld,
+    position: Coordinate,
+    inactiveForMs?: number,
+  ) {
+    const ent = new Mine(position, world, parent, inactiveForMs);
     parent.addChild(ent.sprite, ent.wireframe.renderable);
     return ent;
   }
@@ -58,6 +65,7 @@ export class Mine extends TimedExplosive {
     position: Coordinate,
     world: GameWorld,
     parent: Container,
+    inactiveForMs = 0,
   ) {
     const sprite = new Sprite(Mine.texture);
     sprite.scale.set(0.15);
@@ -79,6 +87,7 @@ export class Mine extends TimedExplosive {
       autostartTimer: false,
       maxDamage: 40,
     });
+    this.inactiveUntilTs = performance.now() + inactiveForMs;
     this.sensor = world.rapierWorld.createCollider(
       ColliderDesc.ball(Mine.MineTriggerRadius.value)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
@@ -103,7 +112,25 @@ export class Mine extends TimedExplosive {
     if (this.sprite.destroyed) {
       return;
     }
-
+    if (
+      this.inactiveUntilTs !== 0 &&
+      this.inactiveUntilTs < performance.now()
+    ) {
+      console.log(this.inactiveUntilTs, performance.now());
+      this.inactiveUntilTs = 0;
+      const colliders = this.gameWorld.checkCollision(
+        Coordinate.fromWorld(
+          this.body.translation().x,
+          this.body.translation().y,
+        ),
+        this.opts.explosionRadius,
+        this.sensor,
+      );
+      console.log(colliders);
+      if (colliders.some((s) => s instanceof Worm)) {
+        this.startTimer();
+      }
+    }
     if (this.timer) {
       this.sprite.texture =
         this.timer % 20 > 10 ? Mine.texture : Mine.textureActive;
@@ -117,6 +144,11 @@ export class Mine extends TimedExplosive {
   }
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
+    if (this.inactiveUntilTs > performance.now()) {
+      // Inactive.
+      return false;
+    }
+    console.log("active!");
     if (super.onCollision(otherEnt, contactPoint)) {
       if (this.isSinking) {
         this.timerText.destroy();
@@ -136,9 +168,13 @@ export class Mine extends TimedExplosive {
 
     if (this.timer === undefined) {
       this.startTimer();
-      this.beeping = Promise.resolve(Mine.beep.play({ loop: true }));
     }
     return false;
+  }
+
+  startTimer(): void {
+    this.beeping = Promise.resolve(Mine.beep.play({ loop: true }));
+    super.startTimer();
   }
 
   recordState() {

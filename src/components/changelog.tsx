@@ -34,6 +34,7 @@ export function ChangelogModal({
       if (!req.ok) {
         // No good.
         setLatestChanges(["Could not load changes"]);
+        return;
       }
       const result = (await req.json()) as {
         commits: { commit: { message: string } }[];

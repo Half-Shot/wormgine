@@ -246,8 +246,40 @@ export class BitmapTerrain implements IPhysicalEntity {
     context.beginPath();
     context.arc(imageX, imageY, radius.pixels, 0, 2 * Math.PI);
     context.fill();
+    // Fetch the new image
+    const after = context.getImageData(
+      snapshotX,
+      snapshotY,
+      snapshotWidth,
+      snapshotHeight,
+    );
+
+    // See what has changed, hopefully a red cricle!
+    for (let i = 0; i < before.data.length; i += 4) {
+      const oldDataValue =
+        before.data[i] +
+        before.data[i + 1] +
+        before.data[i + 2] +
+        before.data[i + 3];
+      const newDataValue =
+        after.data[i] +
+        after.data[i + 1] +
+        after.data[i + 2] +
+        after.data[i + 3];
+      if (oldDataValue !== newDataValue) {
+        // Zero the alpha channel for anything that has changed...like a red cricle
+        after.data[i + 0] = 0;
+        after.data[i + 1] = 0;
+        after.data[i + 2] = 0;
+        after.data[i + 3] = 0;
+      }
+    }
+
+    // Show the new image with our newly created hole.
+    context.putImageData(after, snapshotX, snapshotY);
 
     const smallerRadius = radius.pixels / 3;
+    // TODO: Only do this conditionally
     if (smallerRadius) {
       const beforeBg = context.getImageData(
         snapshotX,
@@ -304,38 +336,6 @@ export class BitmapTerrain implements IPhysicalEntity {
       this.textureBg.destroy();
       this.textureBg = newTex;
     }
-
-    // Fetch the new image
-    const after = context.getImageData(
-      snapshotX,
-      snapshotY,
-      snapshotWidth,
-      snapshotHeight,
-    );
-
-    // See what has changed, hopefully a red cricle!
-    for (let i = 0; i < before.data.length; i += 4) {
-      const oldDataValue =
-        before.data[i] +
-        before.data[i + 1] +
-        before.data[i + 2] +
-        before.data[i + 3];
-      const newDataValue =
-        after.data[i] +
-        after.data[i + 1] +
-        after.data[i + 2] +
-        after.data[i + 3];
-      if (oldDataValue !== newDataValue) {
-        // Zero the alpha channel for anything that has changed...like a red cricle
-        after.data[i + 0] = 0;
-        after.data[i + 1] = 0;
-        after.data[i + 2] = 0;
-        after.data[i + 3] = 0;
-      }
-    }
-
-    // Show the new image with our newly created hole.
-    context.putImageData(after, snapshotX, snapshotY);
 
     // Remember to recalculate the collision paths
     this.calculateBoundaryVectors(

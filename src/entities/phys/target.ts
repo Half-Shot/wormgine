@@ -10,8 +10,6 @@ import {
 } from "@dimforge/rapier2d-compat";
 import { handleDamageInRadius } from "../../utils/damage";
 import { Coordinate, MetersValue } from "../../utils";
-import { Worm } from "../playable/worm";
-import { BitmapTerrain } from "../bitmapTerrain";
 import { AssetPack } from "../../assets";
 import { EntityType } from "../type";
 
@@ -87,13 +85,6 @@ export class WeaponTarget extends PhysicsEntity {
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
     if (super.onCollision(otherEnt, contactPoint)) {
-      return true;
-    }
-
-    if (
-      (otherEnt instanceof Worm || otherEnt instanceof BitmapTerrain) === false
-    ) {
-      this.onExplode();
       return true;
     }
 

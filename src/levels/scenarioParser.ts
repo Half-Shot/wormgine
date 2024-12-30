@@ -1,4 +1,5 @@
-import { AssetData } from "../assets/manifest";
+import { Texture } from "pixi.js";
+import { AssetData, AssetTextures } from "../assets/manifest";
 import { EntityType } from "../entities/type";
 import Logger from "../log";
 import { GameRules } from "../logic/gamestate";
@@ -10,7 +11,7 @@ const logger = new Logger("scenarioParser");
 
 interface Scenario {
   terrain: {
-    bitmap: string;
+    bitmap: Texture;
     x: number;
     y: number;
   };
@@ -114,10 +115,14 @@ interface ParsedObject {
   y: number;
 }
 
-export async function scenarioParser(dataAssets: AssetData): Promise<Scenario> {
+export async function scenarioParser(
+  level: keyof AssetData,
+  dataAssets: AssetData,
+  textureAssets: AssetTextures,
+): Promise<Scenario> {
   // Load tiled object layer.
   const tileset = loadObjectListing(dataAssets);
-  const scenarioMap = dataAssets["targetTraining"] as TiledLevel;
+  const scenarioMap = dataAssets[level] as TiledLevel;
   if (scenarioMap.version !== COMPATIBLE_TILED_VERSION) {
     throw Error(
       `Tiled map was built for ${scenarioMap.version}, but we only support ${COMPATIBLE_TILED_VERSION}`,
@@ -138,7 +143,6 @@ export async function scenarioParser(dataAssets: AssetData): Promise<Scenario> {
 
   const prefilteredObjects = objectLayer.objects.map((object) => {
     const data = tileset.find((tiledata) => tiledata.id === object.gid - 1);
-    console.log(data, object, tileset);
     return {
       ...object,
       x: object.x + (data?.imagewidth ?? 0) / 2,
@@ -171,9 +175,15 @@ export async function scenarioParser(dataAssets: AssetData): Promise<Scenario> {
       ?.properties as unknown as TiledGameRulesProperties,
   );
 
+  const bitmapName = "levels_" + foregroundLayer.image.split(".png")[0];
+  const bitmap = textureAssets[bitmapName as keyof AssetTextures];
+  if (!bitmap) {
+    throw Error("Could not find texture for level.");
+  }
+
   return {
     terrain: {
-      bitmap: foregroundLayer.image,
+      bitmap: textureAssets[bitmapName as keyof AssetTextures],
       x: foregroundLayer.offsetx ?? foregroundLayer.x,
       y: foregroundLayer.offsety ?? foregroundLayer.y,
     },

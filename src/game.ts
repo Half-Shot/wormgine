@@ -13,6 +13,7 @@ import { GameReactChannel } from "./interop/gamechannel";
 import staticController from "./input";
 import { sound } from "@pixi/sound";
 import Logger from "./log";
+import { AssetData } from "./assets/manifest";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -33,20 +34,28 @@ export class Game {
 
   public static async create(
     window: Window,
-    level: string,
+    scenario: string,
     gameReactChannel: GameReactChannel,
+    level?: keyof AssetData,
     netGameInstance?: NetGameInstance,
   ): Promise<Game> {
     await RAPIER.init();
     const pixiApp = new Application();
     await pixiApp.init({ resizeTo: window, preference: "webgl" });
-    return new Game(pixiApp, level, gameReactChannel, netGameInstance);
+    return new Game(
+      pixiApp,
+      scenario,
+      gameReactChannel,
+      level,
+      netGameInstance,
+    );
   }
 
   constructor(
     public readonly pixiApp: Application,
     private readonly scenario: string,
     public readonly gameReactChannel: GameReactChannel,
+    public readonly level?: keyof AssetData,
     public readonly netGameInstance?: NetGameInstance,
   ) {
     // TODO: Set a sensible static width/height and have the canvas pan it.

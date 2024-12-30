@@ -1,9 +1,9 @@
-import { Ticker, Text } from "pixi.js";
+import { Ticker } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Worm, WormState } from "../entities/playable/worm";
+import { Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
@@ -14,16 +14,15 @@ import {
   templateRandomText,
 } from "../text/toasts";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
-import { DefaultTextStyle } from "../mixins/styles";
 import {
   WeaponBazooka,
   WeaponFireworkLauncher,
   WeaponGrenade,
   WeaponHomingMissile,
   WeaponShotgun,
+  WeaponMine,
 } from "../weapons";
 import staticController, { InputKind } from "../input";
-import { IWeaponCode } from "../weapons/weapon";
 import { StateRecorder } from "../state/recorder";
 import { CameraLockPriority, ViewportCamera } from "../camera";
 import { getAssets } from "../assets";
@@ -36,15 +35,19 @@ const weapons = [
   WeaponShotgun,
   WeaponFireworkLauncher,
   WeaponHomingMissile,
+  WeaponMine,
 ];
 
 export default async function runScenario(game: Game) {
+  if (!game.level) {
+    throw Error("Level required!");
+  }
   const parent = game.viewport;
   const world = game.world;
   const { worldWidth } = game.viewport;
 
   const assets = getAssets();
-  const level = await scenarioParser(assets.data);
+  const level = await scenarioParser(game.level, assets.data, assets.textures);
   const bitmapPosition = Coordinate.fromScreen(
     level.terrain.x,
     level.terrain.y,
@@ -52,7 +55,7 @@ export default async function runScenario(game: Game) {
   const terrain = BitmapTerrain.create(
     game.world,
     // TODO: Autoload from map.
-    assets.textures["training"],
+    level.terrain.bitmap,
     bitmapPosition,
   );
 
@@ -191,13 +194,8 @@ export default async function runScenario(game: Game) {
   let endOfGameFadeOut: number | null = null;
   let currentWorm: Worm | undefined;
 
-  const weaponText = new Text({
-    text: `Selected Weapon: no-worm-selected`,
-    style: DefaultTextStyle,
-  });
-  weaponText.position.set(20, 50);
   staticController.on("inputEnd", (kind: InputKind) => {
-    if (currentWorm?.currentState !== WormState.Idle) {
+    if (!currentWorm?.currentState.showWeapon) {
       return;
     }
     if (kind === InputKind.WeaponMenu) {
@@ -216,7 +214,6 @@ export default async function runScenario(game: Game) {
       throw Error("Selected weapon is not owned by worm");
     }
     currentWorm.selectWeapon(weapons[newWep]);
-    weaponText.text = `Selected Weapon: ${IWeaponCode[currentWorm.weapon.code]}`;
   });
 
   const roundHandlerFn = (dt: Ticker) => {
@@ -228,7 +225,7 @@ export default async function runScenario(game: Game) {
       }
       return;
     }
-    if (currentWorm && currentWorm.currentState !== WormState.Inactive) {
+    if (currentWorm && currentWorm.currentState.active) {
       return;
     }
     if (endOfRoundWaitDuration === null) {
@@ -262,7 +259,6 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
-      weaponText.text = `Selected Weapon: ${IWeaponCode[currentWorm.weapon.code]}`;
       endOfRoundWaitDuration = null;
       return;
     }
@@ -272,7 +268,6 @@ export default async function runScenario(game: Game) {
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
 
   game.pixiApp.ticker.add(roundHandlerFn);
-  game.pixiApp.stage.addChild(weaponText);
   stateRecorder.recordGameStare();
   stateRecorder.syncEntityState();
 }

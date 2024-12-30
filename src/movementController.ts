@@ -1,4 +1,10 @@
-import { Collider, Cuboid, Vector2 } from "@dimforge/rapier2d-compat";
+import {
+  Ball,
+  Collider,
+  Cuboid,
+  Shape,
+  Vector2,
+} from "@dimforge/rapier2d-compat";
 import { GameWorld, RapierPhysicsObject } from "./world";
 import { add, Coordinate, MetersValue, mult } from "./utils";
 import Logger from "./log";
@@ -10,14 +16,22 @@ export let debugData: {
   shape: Cuboid;
 };
 
+export function getHalfHeight(shape: Shape) {
+  if (shape instanceof Cuboid) {
+    return shape.halfExtents.y;
+  }
+  if (shape instanceof Ball) {
+    return shape.radius;
+  }
+  throw Error("Unknown shape");
+}
+
 export function getGroundDifference(colliderA: Collider, colliderB: Collider) {
   const [higher, lower] = [colliderA, colliderB].sort(
     (a, b) => b.translation().y - a.translation().y,
   );
-  const higherBottom =
-    higher.translation().y - (higher.shape as Cuboid).halfExtents.y;
-  const lowerTop =
-    lower.translation().y + (lower.shape as Cuboid).halfExtents.y;
+  const higherBottom = higher.translation().y - getHalfHeight(higher.shape);
+  const lowerTop = lower.translation().y + getHalfHeight(lower.shape);
   return Math.round((lowerTop - higherBottom) * 100) / 100;
 }
 
@@ -70,9 +84,9 @@ export function calculateMovement(
     physObject.collider,
   );
   // Pop the highest collider
-  const highestCollider = collides.sort(
-    (a, b) => a.collider.translation().y - b.collider.translation().y,
-  )[0];
+  const highestCollider = collides
+    .filter((s) => !s.collider.isSensor())
+    .sort((a, b) => a.collider.translation().y - b.collider.translation().y)[0];
 
   // No collisions, go go go!
   if (!highestCollider) {

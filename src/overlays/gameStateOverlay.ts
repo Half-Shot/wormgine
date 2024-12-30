@@ -10,6 +10,8 @@ import Logger from "../log";
 
 const logger = new Logger("GameStateOverlay");
 
+const TEAM_HEALTH_WIDTH_PX = 204;
+
 export class GameStateOverlay {
   public readonly physicsSamples: number[] = [];
   private readonly roundTimer: Text;
@@ -117,9 +119,9 @@ export class GameStateOverlay {
     applyGenericBoxStyle(this.gfx, currentTeamColors.fg)
       .roundRect(
         this.roundTimer.x - 8,
-        this.roundTimer.y - 8,
+        this.roundTimer.y + 8,
         this.roundTimer.width + 16,
-        this.roundTimer.height + 16,
+        this.roundTimer.height,
         4,
       )
       .stroke()
@@ -129,8 +131,12 @@ export class GameStateOverlay {
     // TODO: Sort by health and group
     // TODO: Evenly space.
     let allHealthAccurate = true;
-    let teamBottomY = this.bottomOfScreenY;
-    for (const team of this.gameState.getActiveTeams()) {
+    const activeTeams = this.gameState.getActiveTeams();
+    const teamSeperationHeight = 40;
+    let teamBottomY =
+      this.bottomOfScreenY -
+      (teamSeperationHeight * (activeTeams.length - 2)) / 2;
+    for (const team of activeTeams) {
       if (
         this.visibleTeamHealth[team.name] > team.health &&
         shouldChangeTeamHealth
@@ -145,27 +151,34 @@ export class GameStateOverlay {
         text: team.name,
         style: {
           ...DefaultTextStyle,
-          fontSize: 28,
+          fontSize: 36,
           align: "center",
         },
       });
       const border = team === this.gameState.activeTeam ? 0xffffff : undefined;
       const nameTagStartX = centerX - nameTag.width - 120;
+
+      const nameWidth = nameTag.width + 6;
+      const nameHeight = nameTag.height - 2;
+      applyGenericBoxStyle(this.gfx, border)
+        .roundRect(nameTagStartX - 3, teamBottomY - 2, nameWidth, nameHeight, 4)
+        .stroke()
+        .fill();
+      nameTag.position.set(nameTagStartX, teamBottomY - 8);
+
+      // Render health box.
       applyGenericBoxStyle(this.gfx, border)
         .roundRect(
-          nameTagStartX - 3,
+          centerX - TEAM_HEALTH_WIDTH_PX / 2,
           teamBottomY - 2,
-          nameTag.width + 6,
-          nameTag.height + 4,
+          TEAM_HEALTH_WIDTH_PX,
+          nameHeight,
           4,
         )
         .stroke()
         .fill();
-      nameTag.position.set(nameTagStartX, teamBottomY);
-      applyGenericBoxStyle(this.gfx, border)
-        .roundRect(centerX - 102, teamBottomY - 2, 204, 24, 4)
-        .stroke()
-        .fill();
+
+      // Render inner health fill.
       this.gfx
         .setStrokeStyle({
           width: 5,
@@ -175,15 +188,15 @@ export class GameStateOverlay {
         })
         .setFillStyle({ color: bg })
         .roundRect(
-          centerX - 100,
-          teamBottomY,
-          200 * teamHealthPercentage,
-          20,
+          centerX - 99,
+          teamBottomY + 1,
+          (TEAM_HEALTH_WIDTH_PX - 4) * teamHealthPercentage - 2,
+          nameHeight - 5,
           4,
         )
         .fill();
       this.gfx.addChild(nameTag);
-      teamBottomY += 30;
+      teamBottomY += teamSeperationHeight;
     }
 
     if (allHealthAccurate) {

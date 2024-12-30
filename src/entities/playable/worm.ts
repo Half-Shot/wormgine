@@ -14,6 +14,7 @@ import {
 import {
   ActiveEvents,
   ColliderDesc,
+  Cuboid,
   RigidBodyDesc,
   Vector2,
 } from "@dimforge/rapier2d-compat";
@@ -47,18 +48,7 @@ import { StateWormAction } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
 import { OnDamageOpts } from "../entity";
 import Logger from "../../log";
-
-export enum WormState {
-  Idle = 0,
-  InMotion = 1,
-  Firing = 2,
-  MovingLeft = 3,
-  MovingRight = 4,
-  AimingUp = 5,
-  AimingDown = 6,
-  InactiveWaiting = 98,
-  Inactive = 99,
-}
+import { WormState, InnerWormState } from "./wormState";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -85,6 +75,7 @@ export type FireFn = (
 interface PerRoundState {
   shotsTaken: number;
   weaponTarget?: Coordinate;
+  getawayTimer?: number;
 }
 
 const DEFAULT_PER_ROUND_STATE = {
@@ -110,8 +101,7 @@ export class Worm extends PlayableEntity {
 
   protected fireWeaponDuration = 0;
   private currentWeapon: IWeaponDefiniton = WeaponBazooka;
-  protected state: WormState = WormState.Inactive;
-  private statePriorToMotion: WormState = WormState.Idle;
+  protected state = new WormState(InnerWormState.Inactive);
   private turnEndedReason: EndTurnReason | undefined;
   private impactVelocity = 0;
   // TODO: Best place for this var?
@@ -121,6 +111,16 @@ export class Worm extends PlayableEntity {
   private facingRight = true;
   private movingCycles = 0;
   private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
+  private weaponSprite: Sprite;
+
+  get itemPlacementPosition() {
+    const trans = this.body.translation();
+    const width = (this.body.collider(0).shape as Cuboid).halfExtents.x;
+    if (this.facingRight) {
+      return new Coordinate(trans.x + width + 2, trans.y);
+    }
+    return new Coordinate(trans.x - (width + 0.33), trans.y);
+  }
 
   static create(
     parent: Viewport,
@@ -145,6 +145,7 @@ export class Worm extends PlayableEntity {
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
     parent.addChild(ent.healthTextBox);
+    parent.addChild(ent.weaponSprite);
     return ent;
   }
 
@@ -166,15 +167,6 @@ export class Worm extends PlayableEntity {
 
   get weapon() {
     return this.currentWeapon;
-  }
-
-  public selectWeapon(weapon: IWeaponDefiniton) {
-    if (this.perRoundState.shotsTaken > 0) {
-      // Worm is already in progress of shooting things.
-      return;
-    }
-    this.currentWeapon = weapon;
-    this.recorder?.recordWormSelectWeapon(this.wormIdent.uuid, weapon.code);
   }
 
   protected constructor(
@@ -205,12 +197,29 @@ export class Worm extends PlayableEntity {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
     });
+    this.weaponSprite = new Sprite({
+      texture: this.currentWeapon.sprite?.texture,
+    });
     this.targettingGfx = new Graphics({ visible: false });
     this.updateTargettingGfx();
   }
 
+  public selectWeapon(weapon: IWeaponDefiniton) {
+    if (this.perRoundState.shotsTaken > 0) {
+      // Worm is already in progress of shooting things.
+      return;
+    }
+    this.currentWeapon = weapon;
+    this.recorder?.recordWormSelectWeapon(this.wormIdent.uuid, weapon.code);
+    this.toaster?.pushToast(weapon.name, undefined, undefined, true);
+    if (weapon.sprite?.texture) {
+      this.weaponSprite.texture = weapon.sprite.texture;
+      this.weaponSprite.scale = weapon.sprite.scale ?? { x: 1, y: 1 };
+    }
+  }
+
   onWormSelected() {
-    this.state = WormState.Idle;
+    this.state.transition(InnerWormState.Idle);
     this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
     this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
     this.toaster?.pushToast(
@@ -220,6 +229,7 @@ export class Worm extends PlayableEntity {
       }),
       3000,
       teamGroupToColorSet(this.wormIdent.team.group).fg,
+      true,
     );
     Controller.on("inputBegin", this.onInputBegin);
     Controller.on("inputEnd", this.onInputEnd);
@@ -234,12 +244,12 @@ export class Worm extends PlayableEntity {
 
   onJump() {
     this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Jump);
-    this.state = WormState.InMotion;
+    this.state.transition(InnerWormState.InMotion);
     this.body.applyImpulse({ x: this.facingRight ? 5 : -5, y: -8 }, true);
   }
 
   onBackflip() {
-    this.state = WormState.InMotion;
+    this.state.transition(InnerWormState.InMotion);
     this.recorder?.recordWormAction(
       this.wormIdent.uuid,
       StateWormAction.Backflip,
@@ -251,27 +261,26 @@ export class Worm extends PlayableEntity {
     inputKind: InputKind,
     position?: { x: number; y: number },
   ) => {
-    if (this.state === WormState.Firing) {
+    if (!this.state.shouldHandleNewInput) {
       // Ignore all input when the worm is firing.
       return;
     }
     logger.info("Got input", inputKind, position);
     if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
       this.setMoveDirection(inputKind);
-    } else if (this.state !== WormState.Idle) {
-      return;
-    } else if (inputKind === InputKind.AimUp) {
-      this.state = WormState.AimingUp;
-    } else if (inputKind === InputKind.AimDown) {
-      this.state = WormState.AimingDown;
-    } else if (inputKind === InputKind.Fire && !this.needsTarget) {
-      this.onBeginFireWeapon();
     } else if (inputKind === InputKind.Jump) {
       this.onJump();
     } else if (inputKind === InputKind.Backflip) {
       this.onBackflip();
+    } else if (!this.state.canFire) {
+      return;
+    } else if (inputKind === InputKind.AimUp) {
+      this.state.transition(InnerWormState.AimingUp);
+    } else if (inputKind === InputKind.AimDown) {
+      this.state.transition(InnerWormState.AimingDown);
+    } else if (inputKind === InputKind.Fire && !this.needsTarget) {
+      this.onBeginFireWeapon();
     } else if (inputKind === InputKind.PickTarget && position) {
-      console.log(position);
       const point = new Point();
       this.parent.options.events.mapPositionToPoint(
         point,
@@ -319,7 +328,7 @@ export class Worm extends PlayableEntity {
     if (inputKind === InputKind.Fire) {
       this.onEndFireWeapon();
     }
-    if (this.state === WormState.Firing) {
+    if (!this.state.shouldHandleNewInput) {
       // Ignore all input when the worm is firing.
       return;
     }
@@ -329,16 +338,16 @@ export class Worm extends PlayableEntity {
     if (inputKind === InputKind.AimUp || inputKind === InputKind.AimDown) {
       this.recorder?.recordWormAim(
         this.wormIdent.uuid,
-        this.state === WormState.AimingUp ? "up" : "down",
+        this.state.state === InnerWormState.AimingUp ? "up" : "down",
         this.fireAngle,
       );
-      this.state = WormState.Idle;
+      this.state.transition(InnerWormState.Idle);
     }
   };
 
   setMoveDirection(direction: InputKind.MoveLeft | InputKind.MoveRight) {
     // We can only change direction if we are idle.
-    if (this.state !== WormState.Idle) {
+    if (!this.state.canMove) {
       // Falling, can't move
       return;
     }
@@ -357,10 +366,11 @@ export class Worm extends PlayableEntity {
       this.facingRight = !this.facingRight;
     }
 
-    this.state =
+    this.state.transition(
       direction === InputKind.MoveLeft
-        ? WormState.MovingLeft
-        : WormState.MovingRight;
+        ? InnerWormState.MovingLeft
+        : InnerWormState.MovingRight,
+    );
   }
 
   protected onHealthTensionTimerExpired(decreasing: boolean): void {
@@ -375,32 +385,35 @@ export class Worm extends PlayableEntity {
     // We can only stop moving if we are in control of our movements and the input that
     // completed was the movement key.
 
-    if (this.state === WormState.InMotion) {
-      this.statePriorToMotion = WormState.Idle;
+    if (this.state.state === InnerWormState.InMotion) {
+      this.state.voidStatePriorToMotion();
     }
 
     if (
-      (this.state === WormState.MovingLeft &&
+      (this.state.state === InnerWormState.MovingLeft &&
         inputDirection === InputKind.MoveLeft) ||
-      (this.state === WormState.MovingRight &&
+      (this.state.state === InnerWormState.MovingRight &&
         inputDirection === InputKind.MoveRight) ||
       !inputDirection
     ) {
       this.recorder?.recordWormMove(
         this.wormIdent.uuid,
-        this.state === WormState.MovingLeft ? "left" : "right",
+        this.state.state === InnerWormState.MovingLeft ? "left" : "right",
         this.movingCycles,
       );
       this.movingCycles = 0;
-      this.state = WormState.Idle;
+      this.state.transition(this.state.statePriorToMotion);
       return;
     }
   }
 
-  onMove(moveState: WormState.MovingLeft | WormState.MovingRight, dt: number) {
+  onMove(
+    moveState: InnerWormState.MovingLeft | InnerWormState.MovingRight,
+    dt: number,
+  ) {
     const movementMod = 0.1 * dt;
     const moveMod = new Vector2(
-      moveState === WormState.MovingLeft ? -movementMod : movementMod,
+      moveState === InnerWormState.MovingLeft ? -movementMod : movementMod,
       0,
     );
     const move = calculateMovement(
@@ -414,7 +427,7 @@ export class Worm extends PlayableEntity {
   }
 
   onBeginFireWeapon() {
-    this.state = WormState.Firing;
+    this.state.transition(InnerWormState.Firing);
   }
 
   public onDamage(
@@ -423,17 +436,14 @@ export class Worm extends PlayableEntity {
     opts: OnDamageOpts,
   ): void {
     super.onDamage(point, radius, opts);
-    if (
-      this.state === WormState.InactiveWaiting ||
-      this.state === WormState.Idle
-    ) {
-      this.state = WormState.Inactive;
+    if (this.state.isPlaying) {
+      this.state.transition(InnerWormState.Inactive);
       this.turnEndedReason = EndTurnReason.TookDamage;
     }
   }
 
   onEndFireWeapon() {
-    if (this.state !== WormState.Firing) {
+    if (!this.state.isFiring) {
       return;
     }
     this.wormIdent.team.consumeAmmo(this.weapon.code);
@@ -444,7 +454,12 @@ export class Worm extends PlayableEntity {
     this.perRoundState.shotsTaken++;
     // TODO: Need a middle state for while the world is still active.
     this.cameraLockPriority = CameraLockPriority.NoLock;
-    this.state = WormState.InactiveWaiting;
+    if (this.weapon.getawayTime) {
+      this.perRoundState.getawayTimer = this.weapon.getawayTime;
+      this.state.transition(InnerWormState.Getaway);
+    } else {
+      this.state.transition(InnerWormState.InactiveWaiting);
+    }
     this.fireWeaponDuration = 0;
     this.onFireWeapon(this, this.currentWeapon, {
       duration,
@@ -454,9 +469,9 @@ export class Worm extends PlayableEntity {
     }).then((fireResult) => {
       if (maxShots === this.perRoundState.shotsTaken) {
         this.turnEndedReason = EndTurnReason.FiredWeapon;
-        this.state = WormState.Inactive;
+        this.state.transition(InnerWormState.Inactive);
       } else {
-        this.state = WormState.Idle;
+        this.state.transition(InnerWormState.Idle);
       }
       let randomTextSet: string[];
       if (fireResult.includes(WeaponFireResult.KilledOwnTeam)) {
@@ -510,7 +525,10 @@ export class Worm extends PlayableEntity {
       .fill({
         color: "white",
       });
-    if (this.state === WormState.Firing && this.currentWeapon.maxDuration) {
+    if (
+      this.state.state === InnerWormState.Firing &&
+      this.currentWeapon.maxDuration
+    ) {
       const mag = this.fireWeaponDuration / this.currentWeapon.maxDuration;
       const relativeSpritePos = sub(
         this.sprite.position,
@@ -533,7 +551,7 @@ export class Worm extends PlayableEntity {
   }
 
   updateAiming() {
-    if (this.state === WormState.AimingUp) {
+    if (this.state.state === InnerWormState.AimingUp) {
       if (this.facingRight) {
         if (this.fireAngle >= MaxAim || this.fireAngle <= MinAim) {
           this.fireAngle = this.fireAngle - aimMoveSpeed;
@@ -543,7 +561,7 @@ export class Worm extends PlayableEntity {
           this.fireAngle = this.fireAngle + aimMoveSpeed;
         }
       }
-    } else if (this.state === WormState.AimingDown) {
+    } else if (this.state.state === InnerWormState.AimingDown) {
       if (this.facingRight) {
         if (this.fireAngle >= MaxAim || this.fireAngle <= MinAim) {
           this.fireAngle = this.fireAngle + aimMoveSpeed; // Math.max(this.fireAngle - aimMoveSpeed, MinAim);
@@ -593,23 +611,27 @@ export class Worm extends PlayableEntity {
       return;
     }
     this.wireframe.setDebugText(
-      `worm_state: ${WormState[this.state]}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, getaway: ${this.perRoundState.getawayTimer}`,
     );
-    if (this.state === WormState.Inactive) {
+    if (!this.state.shouldUpdate) {
       // Do nothing.
       return;
     }
+
+    if (typeof this.perRoundState.getawayTimer === "number") {
+      if (this.perRoundState.getawayTimer <= 0) {
+        this.state.transition(InnerWormState.Inactive);
+      } else {
+        this.perRoundState.getawayTimer -= dt;
+      }
+    }
+
     const falling = !this.isSinking && this.body.linvel().y > 4;
 
     this.targettingGfx.visible =
       !this.needsTarget &&
       !!this.currentWeapon.showTargetGuide &&
-      [
-        WormState.Firing,
-        WormState.Idle,
-        WormState.AimingDown,
-        WormState.AimingUp,
-      ].includes(this.state);
+      this.state.showWeapon;
 
     if (this.targettingGfx.visible) {
       const { x, y } = pointOnRadius(
@@ -621,25 +643,48 @@ export class Worm extends PlayableEntity {
       this.targettingGfx.position.set(x, y);
     }
 
-    if (this.state === WormState.Firing) {
+    if (this.currentWeapon.sprite) {
+      this.weaponSprite.visible = this.state.showWeapon;
+
+      if (this.facingRight) {
+        this.weaponSprite.position.set(
+          this.sprite.x + this.currentWeapon.sprite.offset.x,
+          this.sprite.y + this.currentWeapon.sprite.offset.y,
+        );
+        this.weaponSprite.rotation = this.fireAngle;
+        this.weaponSprite.scale.x = this.currentWeapon.sprite.scale.x ?? 1;
+      } else {
+        this.weaponSprite.position.set(
+          this.sprite.x -
+            (this.sprite.width + this.currentWeapon.sprite.offset.x),
+          this.sprite.y + this.currentWeapon.sprite.offset.y,
+        );
+        this.weaponSprite.rotation = this.fireAngle - Math.PI;
+        this.weaponSprite.scale.x = this.currentWeapon.sprite.scale.x * -1;
+      }
+    } else {
+      this.weaponSprite.visible = false;
+    }
+
+    if (this.state.isFiring) {
       this.updateTargettingGfx();
     }
 
-    if (this.state === WormState.InMotion) {
+    if (this.state.state === InnerWormState.InMotion) {
       this.impactVelocity = Math.max(
         magnitude(this.body.linvel()),
         this.impactVelocity,
       );
       if (!this.body.isMoving()) {
         // Stopped moving, must not be in motion anymore.
-        this.state = this.statePriorToMotion;
-        this.statePriorToMotion = WormState.Idle;
+        this.state.transition(this.state.statePriorToMotion);
+        this.state.voidStatePriorToMotion();
         // Gravity does not affect us while we are idle.
         //this.body.setGravityScale(0, false);
         if (this.impactVelocity > Worm.minImpactForDamage) {
           const damage = this.impactVelocity * Worm.impactDamageMultiplier;
           this.health -= damage;
-          this.state = WormState.Inactive;
+          this.state.transition(InnerWormState.Inactive);
           this.toaster?.pushToast(
             templateRandomText(TurnEndTextFall, {
               WormName: this.wormIdent.name,
@@ -651,7 +696,7 @@ export class Worm extends PlayableEntity {
         }
         this.impactVelocity = 0;
       }
-    } else if (this.state === WormState.Firing) {
+    } else if (this.state.isFiring) {
       if (!this.currentWeapon.maxDuration) {
         this.onEndFireWeapon();
       } else if (this.fireWeaponDuration > this.currentWeapon.maxDuration) {
@@ -660,18 +705,17 @@ export class Worm extends PlayableEntity {
         this.fireWeaponDuration += dt;
       }
     } else if (falling) {
-      this.statePriorToMotion = this.state;
       this.resetMoveDirection();
-      this.state = WormState.InMotion;
+      this.state.transition(InnerWormState.InMotion);
     } else if (
-      this.state === WormState.MovingLeft ||
-      this.state === WormState.MovingRight
+      this.state.state === InnerWormState.MovingLeft ||
+      this.state.state === InnerWormState.MovingRight
     ) {
-      this.onMove(this.state, dt);
+      this.onMove(this.state.state, dt);
       // TODO: Allow moving aim while firing.
     } else if (
-      this.state === WormState.AimingUp ||
-      this.state === WormState.AimingDown
+      this.state.state === InnerWormState.AimingUp ||
+      this.state.state === InnerWormState.AimingDown
     ) {
       this.updateAiming();
     }
@@ -688,7 +732,7 @@ export class Worm extends PlayableEntity {
   destroy(): void {
     super.destroy();
     // XXX: This might need to be dead.
-    this.state = WormState.Inactive;
+    this.state.transition(InnerWormState.Inactive);
     if (this.isSinking) {
       this.toaster?.pushToast(
         templateRandomText(WormDeathSinking, {
