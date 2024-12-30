@@ -28,6 +28,7 @@ import { getAssets } from "../assets";
 import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
+import { InnerWormState } from "../entities/playable/wormState";
 
 const weapons = [
   WeaponBazooka,
@@ -199,6 +200,13 @@ export default async function runScenario(game: Game) {
     currentWorm.selectWeapon(weapons[newWep]);
   });
 
+  let getawaySet = false;
+  function transitionHandler(prev: InnerWormState, next: InnerWormState) {
+    if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
+      gameState.setTimer(5000);
+    }
+  }
+
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);
     if (endOfGameFadeOut !== null) {
@@ -210,11 +218,17 @@ export default async function runScenario(game: Game) {
       return;
     }
     if (currentWorm && currentWorm.currentState.active) {
+      if (!gameState.isPreRound) {
+        if (gameState.paused && currentWorm.currentState.timerShouldRun) {
+          gameState.unpauseTimer();
+        } else if (!gameState.paused && !currentWorm.currentState.timerShouldRun) {
+          gameState.pauseTimer();
+        }
+      }
       if (gameState.isPreRound && currentWorm.hasPerformedAction) {
         gameState.playerMoved();
         return;
       } else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
-        overlay.toaster.pushToast("Round ended without any actions!");
         currentWorm?.onEndOfTurn();
         currentWorm = undefined;
         endOfRoundWaitDuration = null;
@@ -241,6 +255,7 @@ export default async function runScenario(game: Game) {
         endOfGameFadeOut = 8000;
       } else {
         currentWorm?.onEndOfTurn();
+        currentWorm?.currentState.off('transition',transitionHandler);
         currentWorm = wormInstances.get(nextState.nextWorm.uuid);
         // Turn just ended.
         endOfRoundWaitDuration = 5000;
@@ -253,6 +268,7 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
+      currentWorm.currentState.on('transition',transitionHandler);
       gameState.beginRound();
       endOfRoundWaitDuration = null;
       return;

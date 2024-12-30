@@ -76,7 +76,6 @@ export type FireFn = (
 interface PerRoundState {
   shotsTaken: number;
   weaponTarget?: Coordinate;
-  getawayTimer?: number;
   hasPerformedAction: boolean;
 }
 
@@ -491,7 +490,6 @@ export class Worm extends PlayableEntity {
     // TODO: Need a middle state for while the world is still active.
     this.cameraLockPriority = CameraLockPriority.NoLock;
     if (this.weapon.getawayTime) {
-      this.perRoundState.getawayTimer = this.weapon.getawayTime;
       this.state.transition(InnerWormState.Getaway);
     } else {
       this.state.transition(InnerWormState.InactiveWaiting);
@@ -649,19 +647,11 @@ export class Worm extends PlayableEntity {
       return;
     }
     this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, getaway: ${this.perRoundState.getawayTimer}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
     );
     if (!this.state.shouldUpdate) {
       // Do nothing.
       return;
-    }
-
-    if (typeof this.perRoundState.getawayTimer === "number") {
-      if (this.perRoundState.getawayTimer <= 0) {
-        this.state.transition(InnerWormState.Inactive);
-      } else {
-        this.perRoundState.getawayTimer -= dt;
-      }
     }
 
     const falling = !this.isSinking && this.body.linvel().y > 4;

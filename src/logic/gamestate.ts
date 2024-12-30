@@ -96,6 +96,20 @@ export class GameState {
     this.roundDurationMs = rules.roundDurationMs ?? 45000;
   }
 
+  public pauseTimer() {
+    this.roundState = RoundState.Paused;
+    this.iterateRound();
+  }
+
+  public unpauseTimer() {
+    this.roundState = RoundState.Playing;
+    this.iterateRound();
+  }
+
+  public setTimer(milliseconds: number) {
+    this.remainingRoundTimeMs = milliseconds;
+  }
+
   public getTeamByIndex(index: number) {
     return this.teams[index];
   }
@@ -110,6 +124,10 @@ export class GameState {
 
   public get iteration(): number {
     return this.stateIteration;
+  }
+
+  public get paused() {
+    return this.roundState === RoundState.Paused;
   }
 
   public update(ticker: Ticker) {

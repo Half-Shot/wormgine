@@ -1,3 +1,7 @@
+import TypedEmitter from "typed-emitter";
+import { EventEmitter } from "events";
+
+
 export enum InnerWormState {
   Idle = 0,
   InMotion = 1,
@@ -11,10 +15,19 @@ export enum InnerWormState {
   Inactive = 99,
 }
 
-export class WormState {
+
+
+type Events = {
+  transition: (before: InnerWormState, after: InnerWormState) => void,
+};
+
+
+export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
   private innerStatePriorToMotion?: InnerWormState;
 
-  constructor(private innerState: InnerWormState) {}
+  constructor(private innerState: InnerWormState) {
+    super();
+  }
 
   transition(newState: InnerWormState) {
     if (newState === InnerWormState.InMotion) {
@@ -24,11 +37,25 @@ export class WormState {
     } else if (newState === InnerWormState.MovingRight) {
       this.innerStatePriorToMotion = this.innerState;
     }
+    const prev = this.innerState;
     this.innerState = newState;
+    this.emit('transition', prev, newState);
   }
 
   voidStatePriorToMotion() {
     this.innerStatePriorToMotion = InnerWormState.Idle;
+  }
+
+  get timerShouldRun() {
+    return [
+      InnerWormState.Idle,
+      InnerWormState.InMotion,
+      InnerWormState.MovingLeft,
+      InnerWormState.MovingRight,
+      InnerWormState.AimingUp,
+      InnerWormState.AimingDown,
+      InnerWormState.Getaway,
+    ].includes(this.innerState);
   }
 
   get statePriorToMotion() {

@@ -92,7 +92,12 @@
                          "type":"class",
                          "value":
                             {
-                             "wep_bazooka":-1
+                             "wep_bazooka":-1,
+                             "wep_firework":-1,
+                             "wep_grenade":-1,
+                             "wep_mine":-1,
+                             "wep_missile":-1,
+                             "wep_shotgun":-1
                             }
                         }, 
                         {
@@ -130,7 +135,12 @@
                          "type":"class",
                          "value":
                             {
-                             "wep_bazooka":-1
+                             "wep_bazooka":-1,
+                             "wep_firework":-1,
+                             "wep_grenade":-1,
+                             "wep_mine":-1,
+                             "wep_missile":-1,
+                             "wep_shotgun":-1
                             }
                         }, 
                         {
