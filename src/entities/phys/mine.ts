@@ -18,7 +18,7 @@ import { EntityType } from "../type";
 import { Worm } from "../playable/worm";
 import Logger from "../../log";
 
-const log = new Logger('Mine')
+const log = new Logger("Mine");
 
 /**
  * Proximity mine.
@@ -149,7 +149,7 @@ export class Mine extends TimedExplosive {
       // Inactive.
       return false;
     }
-    
+
     if (super.onCollision(otherEnt, contactPoint)) {
       if (this.isSinking) {
         this.timerText.destroy();
@@ -174,7 +174,7 @@ export class Mine extends TimedExplosive {
   }
 
   startTimer(): void {
-    log.info('Activated');
+    log.info("Activated");
     this.beeping = Promise.resolve(Mine.beep.play({ loop: true }));
     super.startTimer();
   }

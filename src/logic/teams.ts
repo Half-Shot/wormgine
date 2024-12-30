@@ -24,7 +24,7 @@ export interface Team {
   worms: WormIdentity[];
   // For net games only
   playerUserId: string | null;
-  loadout?: Partial<Record<IWeaponCode, number>>,
+  loadout?: Partial<Record<IWeaponCode, number>>;
 }
 
 export function teamGroupToColorSet(group: TeamGroup): {

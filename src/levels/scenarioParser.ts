@@ -4,7 +4,13 @@ import { EntityType } from "../entities/type";
 import Logger from "../log";
 import { GameRules } from "../logic/gamestate";
 import { RecordedEntityState } from "../state/model";
-import { TiledEnumTeamGroup, TiledGameRulesProperties, TiledLevel, TiledTeamProperties, TiledTileset } from "./types";
+import {
+  TiledEnumTeamGroup,
+  TiledGameRulesProperties,
+  TiledLevel,
+  TiledTeamProperties,
+  TiledTileset,
+} from "./types";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { Team, TeamGroup, WormIdentity } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
@@ -36,7 +42,10 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
         x: "0",
         y: "0",
       },
-      teamGroup: TeamGroup[object.properties["wormgine.team_group"] as TiledEnumTeamGroup],
+      teamGroup:
+        TeamGroup[
+          object.properties["wormgine.team_group"] as TiledEnumTeamGroup
+        ],
     };
     return wp;
   }
@@ -83,30 +92,37 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
 }
 
 function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
-  return teamProps.map(tiledTeam => {
+  return teamProps.map((tiledTeam) => {
     const health = tiledTeam["wormgine.starting_health"] ?? 100;
     // TODO: Make this cleaner
     const loadout: Team["loadout"] = {};
-    for (const [wep, ammo] of Object.entries(tiledTeam["wormgine.loadout"] ?? {})) {
+    for (const [wep, ammo] of Object.entries(
+      tiledTeam["wormgine.loadout"] ?? {},
+    )) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const loadoutWepCode = IWeaponCode[wep as any];
       if (loadoutWepCode === undefined) {
         continue;
       }
-      // @ts-ignore
+      // @ts-expect-error Bad types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       loadout[IWeaponCode[loadoutWepCode] as any] = ammo;
     }
     return {
       name: tiledTeam["wormgine.team_name"],
-      worms: tiledTeam["wormgine.worm_names"].split(';').map<WormIdentity>((wormName) => ({
-        name: wormName,
-        maxHealth: health,
-        health
-      })),
+      worms: tiledTeam["wormgine.worm_names"]
+        .split(";")
+        .map<WormIdentity>((wormName) => ({
+          name: wormName,
+          maxHealth: health,
+          health,
+        })),
       // TODO: Net games?
       playerUserId: null,
       group: TeamGroup[tiledTeam["wormgine.team_group"]],
       loadout,
-    }})
+    };
+  });
 }
 
 function determineRules(rules?: TiledGameRulesProperties): GameRules {
@@ -127,7 +143,7 @@ function determineRules(rules?: TiledGameRulesProperties): GameRules {
     };
   } else if (rules["wormgine.end_condition"] === "Deathmatch") {
     return {
-      winWhenOneGroupRemains: true
+      winWhenOneGroupRemains: true,
     };
   }
   throw Error("Misconfigured rules object");
@@ -224,7 +240,11 @@ export async function scenarioParser(
     throw Error("Could not find texture for level.");
   }
 
-  const teams = determineTeams(prefilteredObjects.filter(o => o.type === "wormgine.team").map(v => v.properties as unknown as TiledTeamProperties))
+  const teams = determineTeams(
+    prefilteredObjects
+      .filter((o) => o.type === "wormgine.team")
+      .map((v) => v.properties as unknown as TiledTeamProperties),
+  );
 
   return {
     terrain: {

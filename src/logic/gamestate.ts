@@ -214,12 +214,14 @@ export class GameState {
         .values()
         .some((s) => s.type === this.rules.winWhenAllObjectsOfTypeDestroyed);
       if (!hasEntityRemaining) {
-        logger.debug('Game stopped because type of entity no longer exists');
+        logger.debug("Game stopped because type of entity no longer exists");
         return {
           winningTeams: [this.currentTeam],
         };
       } else {
-        logger.debug('Game continues because type of entity continues to exist');
+        logger.debug(
+          "Game continues because type of entity continues to exist",
+        );
       }
     }
     // We wrapped around.

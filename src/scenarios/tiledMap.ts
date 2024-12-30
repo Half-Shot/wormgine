@@ -58,11 +58,7 @@ export default async function runScenario(game: Game) {
     bitmapPosition,
   );
 
-  const gameState = new GameState(
-    level.teams,
-    world,
-    level.rules,
-  );
+  const gameState = new GameState(level.teams, world, level.rules);
 
   const recordedGameplayKey = `wormgine_recorded_${new Date().toISOString()}`;
   let recordedState = "";
@@ -138,7 +134,9 @@ export default async function runScenario(game: Game) {
   ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
-      const nextLocationIdx = spawnPositions.findIndex(v => v && v.teamGroup === wormInstance.team.group);
+      const nextLocationIdx = spawnPositions.findIndex(
+        (v) => v && v.teamGroup === wormInstance.team.group,
+      );
       if (nextLocationIdx === -1) {
         throw Error("No location to spawn worm");
       }

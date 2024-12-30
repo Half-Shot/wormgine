@@ -78,6 +78,7 @@ export default async function runScenario(game: Game) {
       game.viewport,
       [20, 21, 50, 35],
       terrain,
+      world,
     ),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
