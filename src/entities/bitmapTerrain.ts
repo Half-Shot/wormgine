@@ -66,8 +66,8 @@ export class BitmapTerrain implements IPhysicalEntity {
   // collider.handle -> fn
   private registeredDamageFunctions = new Map<number, OnDamage>();
 
-  static create(gameWorld: GameWorld, texture: Texture, position?: Coordinate) {
-    return new BitmapTerrain(gameWorld, texture, position);
+  static create(gameWorld: GameWorld, texture: Texture, position?: Coordinate, destructible?: boolean) {
+    return new BitmapTerrain(gameWorld, texture, position, destructible);
   }
 
   static drawToCanvas(texture: Texture) {
@@ -87,6 +87,7 @@ export class BitmapTerrain implements IPhysicalEntity {
     private readonly gameWorld: GameWorld,
     texture: Texture,
     position?: Coordinate,
+    private readonly destructible = true,
   ) {
     this.foregroundCanvas = BitmapTerrain.drawToCanvas(texture);
     this.texture = Texture.from(this.foregroundCanvas, true);
@@ -215,6 +216,10 @@ export class BitmapTerrain implements IPhysicalEntity {
 
   onDamage(point: Vector2, radius: MetersValue) {
     logger.debug(`Terrain took damaged (${point.x} ${point.y}`, radius);
+    if (!this.destructible) {
+      // Terrain is indestructible, ignore all damage.
+      return;
+    }
     const context = this.foregroundCanvas.getContext("2d");
     if (!context) {
       throw Error("Failed to get context");

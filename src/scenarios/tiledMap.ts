@@ -56,6 +56,7 @@ export default async function runScenario(game: Game) {
     game.world,
     level.terrain.bitmap,
     bitmapPosition,
+    level.terrain.destructible,
   );
 
   const gameState = new GameState(level.teams, world, level.rules);

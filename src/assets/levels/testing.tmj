@@ -87,6 +87,15 @@
                  "name":"",
                  "properties":[
                         {
+                         "name":"wormgine.loadout",
+                         "propertytype":"wormgine.weapon_loadout",
+                         "type":"class",
+                         "value":
+                            {
+                             "wep_bazooka":-1
+                            }
+                        }, 
+                        {
                          "name":"wormgine.team_group",
                          "propertytype":"WormTeamGroup",
                          "type":"string",
@@ -115,6 +124,15 @@
                  "id":28,
                  "name":"",
                  "properties":[
+                        {
+                         "name":"wormgine.loadout",
+                         "propertytype":"wormgine.weapon_loadout",
+                         "type":"class",
+                         "value":
+                            {
+                             "wep_bazooka":-1
+                            }
+                        }, 
                         {
                          "name":"wormgine.team_group",
                          "propertytype":"WormTeamGroup",

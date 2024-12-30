@@ -225,11 +225,14 @@ export async function scenarioParser(
       .map((v) => v.properties as unknown as TiledTeamProperties),
   );
 
+  const destructible = !!(foregroundLayer.properties?.find(v => v.name === "wormgine.terrain_destructible")?.value ?? true);
+
   return {
     terrain: {
       bitmap: textureAssets[bitmapName as keyof AssetTextures],
       x: foregroundLayer.offsetx ?? foregroundLayer.x,
       y: foregroundLayer.offsety ?? foregroundLayer.y,
+      destructible,
     },
     objects,
     rules,
