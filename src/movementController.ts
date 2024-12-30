@@ -23,7 +23,7 @@ export function getHalfHeight(shape: Shape) {
   if (shape instanceof Ball) {
     return shape.radius;
   }
-  throw Error("Unknown shape");
+  throw Error(`Unknown shape ${shape.type}`);
 }
 
 export function getGroundDifference(colliderA: Collider, colliderB: Collider) {

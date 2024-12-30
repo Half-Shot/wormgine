@@ -66,7 +66,12 @@ export class BitmapTerrain implements IPhysicalEntity {
   // collider.handle -> fn
   private registeredDamageFunctions = new Map<number, OnDamage>();
 
-  static create(gameWorld: GameWorld, texture: Texture, position?: Coordinate, destructible?: boolean) {
+  static create(
+    gameWorld: GameWorld,
+    texture: Texture,
+    position?: Coordinate,
+    destructible?: boolean,
+  ) {
     return new BitmapTerrain(gameWorld, texture, position, destructible);
   }
 

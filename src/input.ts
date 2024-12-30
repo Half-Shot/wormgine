@@ -50,8 +50,8 @@ type Sequence = { sequence: string[]; inputKind: InputKind };
 
 const logger = new Logger("Controller");
 type GameReactChannelEvents = {
-  inputBegin: (kind: InputKind, position?: PointData) => void,
-  inputEnd: (kind: InputKind, position?: PointData) => void,
+  inputBegin: (kind: InputKind, position?: PointData) => void;
+  inputEnd: (kind: InputKind, position?: PointData) => void;
 };
 
 class Controller extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents>) {

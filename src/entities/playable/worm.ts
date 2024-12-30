@@ -649,6 +649,7 @@ export class Worm extends PlayableEntity {
     this.wireframe.setDebugText(
       `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
     );
+    this.weaponSprite.visible = this.state.showWeapon;
     if (!this.state.shouldUpdate) {
       // Do nothing.
       return;
@@ -672,8 +673,6 @@ export class Worm extends PlayableEntity {
     }
 
     if (this.currentWeapon.sprite) {
-      this.weaponSprite.visible = this.state.showWeapon;
-
       if (this.facingRight) {
         this.weaponSprite.position.set(
           this.sprite.x + this.currentWeapon.sprite.offset.x,

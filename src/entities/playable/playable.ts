@@ -94,10 +94,16 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
 
     this.nameText.position.set(0, -5);
     this.healthTextBox = new Graphics();
-    const nameTextXY = [-this.nameText.width/2, 0];
-    const healthTextXY = [ -this.healthText.width/2, this.nameText.height + 4];
+    const nameTextXY = [-this.nameText.width / 2, 0];
+    const healthTextXY = [-this.healthText.width / 2, this.nameText.height + 4];
     applyGenericBoxStyle(this.healthTextBox)
-      .roundRect(nameTextXY[0], nameTextXY[1], this.nameText.width + 10, this.nameText.height - 2, 4)
+      .roundRect(
+        nameTextXY[0],
+        nameTextXY[1],
+        this.nameText.width + 10,
+        this.nameText.height - 2,
+        4,
+      )
       .stroke()
       .fill()
       .roundRect(
@@ -110,7 +116,6 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       .stroke()
       .fill();
 
-
     this.nameText.position.set(nameTextXY[0] + 4, nameTextXY[1] - 4);
     this.setHealthTextPosition();
 
@@ -118,7 +123,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
   }
 
   public setHealthTextPosition() {
-    const healthTextXY = [ -this.healthText.width/2, this.nameText.height + 4];
+    const healthTextXY = [-this.healthText.width / 2, this.nameText.height + 4];
     this.healthText.position.set(healthTextXY[0] + 4, healthTextXY[1] - 4);
   }
 
@@ -132,7 +137,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       // Nice and simple parenting
       this.healthTextBox.rotation = 0;
       this.healthTextBox.position.set(
-        this.sprite.x - (this.sprite.width/4),
+        this.sprite.x - this.sprite.width / 4,
         this.sprite.y - 85,
       );
     }

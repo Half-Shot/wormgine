@@ -30,7 +30,7 @@ export class Mine extends TimedExplosive {
     Mine.beep = assets.sounds.mineBeep;
   }
 
-  private static MineTriggerRadius = new MetersValue(5);
+  private static MineTriggerRadius = new MetersValue(4);
 
   private static readonly collisionBitmask = collisionGroupBitmask(
     CollisionGroups.WorldObjects,
@@ -72,9 +72,9 @@ export class Mine extends TimedExplosive {
   ) {
     const sprite = new Sprite(Mine.texture);
     sprite.scale.set(0.15);
-    sprite.anchor.set(0.5, 0.10);
+    sprite.anchor.set(0.5, 0.95);
     const body = world.createRigidBodyCollider(
-      ColliderDesc.roundCuboid(0.05, 0.05, 0.5)
+      ColliderDesc.cuboid(0.05, 0.05)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Mine.collisionBitmask)
         .setSolverGroups(Mine.collisionBitmask)

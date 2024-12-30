@@ -93,7 +93,6 @@ export interface TiledTeamProperties {
   "wormgine.loadout"?: Record<string, number>;
 }
 
-
 export function parseObj(obj: TiledObject, tileset?: TiledTileset) {
   const data = tileset?.tiles.find((tiledata) => tiledata.id === obj.gid - 1);
   return {

@@ -18,7 +18,7 @@ import { CriticalGameError } from "./errors";
 const worldWidth = 1920;
 const worldHeight = 1080;
 
-sound.volumeAll = 0.25;
+sound.volumeAll = 0.1;
 
 const logger = new Logger("Game");
 

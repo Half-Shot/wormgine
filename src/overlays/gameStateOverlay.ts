@@ -1,6 +1,10 @@
 import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameState } from "../logic/gamestate";
-import { applyGenericBoxStyle, DefaultTextStyle, LargeTextStyle } from "../mixins/styles";
+import {
+  applyGenericBoxStyle,
+  DefaultTextStyle,
+  LargeTextStyle,
+} from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 import { Toaster } from "./toaster";
@@ -116,9 +120,10 @@ export class GameStateOverlay {
 
     // Remove any previous text.
     this.gfx.removeChildren(0, this.gfx.children.length);
-    const currentTeamColors = !this.gameState.paused && this.gameState.activeTeam
-      ? teamGroupToColorSet(this.gameState.activeTeam?.group)
-      : { fg: 0xaaaaaa };
+    const currentTeamColors =
+      !this.gameState.paused && this.gameState.activeTeam
+        ? teamGroupToColorSet(this.gameState.activeTeam?.group)
+        : { fg: 0xaaaaaa };
 
     // Round timer
     applyGenericBoxStyle(this.gfx, currentTeamColors.fg)

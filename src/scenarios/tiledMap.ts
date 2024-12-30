@@ -200,7 +200,6 @@ export default async function runScenario(game: Game) {
     currentWorm.selectWeapon(weapons[newWep]);
   });
 
-  let getawaySet = false;
   function transitionHandler(prev: InnerWormState, next: InnerWormState) {
     if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
       gameState.setTimer(5000);
@@ -221,7 +220,10 @@ export default async function runScenario(game: Game) {
       if (!gameState.isPreRound) {
         if (gameState.paused && currentWorm.currentState.timerShouldRun) {
           gameState.unpauseTimer();
-        } else if (!gameState.paused && !currentWorm.currentState.timerShouldRun) {
+        } else if (
+          !gameState.paused &&
+          !currentWorm.currentState.timerShouldRun
+        ) {
           gameState.pauseTimer();
         }
       }
@@ -255,7 +257,7 @@ export default async function runScenario(game: Game) {
         endOfGameFadeOut = 8000;
       } else {
         currentWorm?.onEndOfTurn();
-        currentWorm?.currentState.off('transition',transitionHandler);
+        currentWorm?.currentState.off("transition", transitionHandler);
         currentWorm = wormInstances.get(nextState.nextWorm.uuid);
         // Turn just ended.
         endOfRoundWaitDuration = 5000;
@@ -268,7 +270,7 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
-      currentWorm.currentState.on('transition',transitionHandler);
+      currentWorm.currentState.on("transition", transitionHandler);
       gameState.beginRound();
       endOfRoundWaitDuration = null;
       return;

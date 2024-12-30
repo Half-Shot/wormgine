@@ -1,7 +1,6 @@
 import TypedEmitter from "typed-emitter";
 import { EventEmitter } from "events";
 
-
 export enum InnerWormState {
   Idle = 0,
   InMotion = 1,
@@ -15,12 +14,9 @@ export enum InnerWormState {
   Inactive = 99,
 }
 
-
-
 type Events = {
-  transition: (before: InnerWormState, after: InnerWormState) => void,
+  transition: (before: InnerWormState, after: InnerWormState) => void;
 };
-
 
 export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
   private innerStatePriorToMotion?: InnerWormState;
@@ -39,7 +35,7 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     }
     const prev = this.innerState;
     this.innerState = newState;
-    this.emit('transition', prev, newState);
+    this.emit("transition", prev, newState);
   }
 
   voidStatePriorToMotion() {

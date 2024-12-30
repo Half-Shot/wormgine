@@ -195,7 +195,9 @@ export async function scenarioParser(
     throw Error("Tiled map is missing object layer");
   }
 
-  const prefilteredObjects = objectLayer.objects.map(o => parseObj(o, tileset));
+  const prefilteredObjects = objectLayer.objects.map((o) =>
+    parseObj(o, tileset),
+  );
 
   const objects = prefilteredObjects
     .map((oData) => {
@@ -225,7 +227,11 @@ export async function scenarioParser(
       .map((v) => v.properties as unknown as TiledTeamProperties),
   );
 
-  const destructible = !!(foregroundLayer.properties?.find(v => v.name === "wormgine.terrain_destructible")?.value ?? true);
+  const destructible = !!(
+    foregroundLayer.properties?.find(
+      (v) => v.name === "wormgine.terrain_destructible",
+    )?.value ?? true
+  );
 
   return {
     terrain: {
