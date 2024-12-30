@@ -280,7 +280,11 @@ export class Worm extends PlayableEntity {
       this.state.transition(InnerWormState.AimingDown);
     } else if (inputKind === InputKind.Fire && !this.needsTarget) {
       this.onBeginFireWeapon();
-    } else if (inputKind === InputKind.PickTarget && position) {
+    } else if (
+      inputKind === InputKind.PickTarget &&
+      position &&
+      this.weapon.showTargetPicker
+    ) {
       const point = new Point();
       this.parent.options.events.mapPositionToPoint(
         point,
