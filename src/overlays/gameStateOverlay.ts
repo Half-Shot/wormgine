@@ -48,7 +48,7 @@ export class GameStateOverlay {
     this.winddial = new WindDial(
       (this.screenWidth / 30) * 26,
       this.bottomOfScreenY,
-      this.gameState,
+      this.gameWorld,
     );
 
     this.roundTimer.position.set(

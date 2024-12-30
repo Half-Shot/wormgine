@@ -1,7 +1,6 @@
 import { Container, Graphics, Texture, TilingSprite } from "pixi.js";
 import { applyGenericBoxStyle } from "../mixins/styles";
-import { GameState } from "../logic/gamestate";
-import { MAX_WIND } from "../world";
+import { GameWorld, MAX_WIND } from "../world";
 import { AssetTextures } from "../assets/manifest";
 
 /**
@@ -23,7 +22,7 @@ export class WindDial {
   constructor(
     x: number,
     y: number,
-    private gameState: GameState,
+    private world: GameWorld,
   ) {
     this.gfx = new Graphics({});
 
@@ -49,9 +48,7 @@ export class WindDial {
   public update() {
     if (this.currentWind !== null) {
       this.windScroller.tilePosition.x += this.currentWind * 0.1;
-      const windAbsDelta = Math.abs(
-        this.gameState.currentWind - this.currentWind,
-      );
+      const windAbsDelta = Math.abs(this.world.wind - this.currentWind);
       if (windAbsDelta <= 0.1) {
         return;
       }
@@ -61,9 +58,9 @@ export class WindDial {
     this.gfx.clear();
 
     // Move progressively
-    if (this.gameState.currentWind > this.currentWind) {
+    if (this.world.wind > this.currentWind) {
       this.currentWind += 0.1;
-    } else if (this.gameState.currentWind < this.currentWind) {
+    } else if (this.world.wind < this.currentWind) {
       this.currentWind -= 0.1;
     }
 
