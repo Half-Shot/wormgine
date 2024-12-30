@@ -10,20 +10,27 @@ import {
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
 import { WormInstance } from "../../logic/teams";
-import { angleForVector } from "../../utils";
+import { angleForVector, mult } from "../../utils";
 import { EntityType } from "../type";
 import Logger from "../../log";
 import globalFlags, { DebugLevel } from "../../flags";
-import { pointsOnBezierCurves } from "points-on-curve";
+import { arcPoints } from "../../utils/arc";
 
 const logger = new Logger("HomingMissile");
 
-const ACTIVATION_TIME_MS = 50;
+const ACTIVATION_TIME_MS = 65;
+const ADJUSTMENT_TIME_MS = 6;
+const forceMult = new Vector2(7, 7);
 
 /**
  * Homing missile that attempts to hit a point target.
  */
 export class HomingMissile extends TimedExplosive {
+
+  public static getMissilePath(start: Coordinate, target: Coordinate): Coordinate[] {
+    return arcPoints([start.worldX, start.worldY], [target.worldX, target.worldY], 0.550).map(v => Coordinate.fromWorld(v[0], v[1]));
+  }
+
   public static readAssets(assets: AssetPack) {
     HomingMissile.textureInactive = assets.textures.missileInactive;
     HomingMissile.textureActive = assets.textures.missileActive;
@@ -102,7 +109,7 @@ export class HomingMissile extends TimedExplosive {
     );
     this.sprite.x = position.screenX;
     this.sprite.y = position.screenY;
-    this.sprite.scale.set(0.5, 0.5);
+    this.sprite.scale.set(0.75, 0.75);
     this.sprite.anchor.set(0.5, 0.5);
 
     // Align sprite with body.
@@ -116,41 +123,13 @@ export class HomingMissile extends TimedExplosive {
       return;
     }
     this.lastPathAdjustment += dt;
+  
     if (!this.hasActivated && this.lastPathAdjustment >= ACTIVATION_TIME_MS) {
       this.hasActivated = true;
       const { target } = this;
       const { position } = this.sprite;
       this.sprite.texture = HomingMissile.textureActive;
-      const diff = {
-        x: Math.abs(position.x - target.screenX),
-        y: Math.abs(position.y - target.screenY),
-      };
-
-      // TODO: This makes a triangle when the target is behind position??
-      const midPointA = Coordinate.fromScreen(
-        (position.x > target.screenX ? target.screenX : position.x) +
-          diff.x * 0.25,
-        (position.y > target.screenY ? target.screenY : position.y) +
-          diff.y * 0.25 -
-          250,
-      );
-      const midPointB = Coordinate.fromScreen(
-        (position.x > target.screenX ? target.screenX : position.x) +
-          diff.x * 0.75,
-        (position.y > target.screenY ? target.screenY : position.y) +
-          diff.y * 0.75 -
-          250,
-      );
-      this.forcePath = pointsOnBezierCurves(
-        [
-          [position.x, position.y],
-          [midPointA.screenX, midPointA.screenY],
-          [midPointB.screenX, midPointB.screenY],
-          [target.screenX, target.screenY],
-        ],
-        0.05,
-      ).map(([x, y]) => Coordinate.fromScreen(x, y));
-      this.body.sleep();
+      this.forcePath = HomingMissile.getMissilePath(Coordinate.fromScreen(position.x, position.y), target);
       // Draw paths once
       const start = this.forcePath.pop()!;
       this.debugGfx.moveTo(start.screenX, start.screenY);
@@ -161,13 +140,15 @@ export class HomingMissile extends TimedExplosive {
       }
       logger.debug("Activated!");
     }
-    if (this.hasActivated) {
+
+
+    if (this.hasActivated && this.lastPathAdjustment >= ADJUSTMENT_TIME_MS) {
       this.lastPathAdjustment = 0;
       const [nextOrLastItem] = this.forcePath.splice(0, 1);
       if (nextOrLastItem) {
-        this.body.setTranslation(nextOrLastItem.toWorldVector(), false);
-      } else {
-        this.body.wakeUp();
+        const translation = this.body.translation();
+        const impulse = mult(new Vector2(nextOrLastItem.worldX - translation.x, nextOrLastItem.worldY - translation.y), forceMult);
+        this.body.setLinvel(impulse, true);
       }
     }
     this.body.setRotation(angleForVector(this.body.linvel()), false);
