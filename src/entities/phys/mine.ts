@@ -72,7 +72,7 @@ export class Mine extends TimedExplosive {
   ) {
     const sprite = new Sprite(Mine.texture);
     sprite.scale.set(0.15);
-    sprite.anchor.set(0.5);
+    sprite.anchor.set(0.5, 0.10);
     const body = world.createRigidBodyCollider(
       ColliderDesc.roundCuboid(0.05, 0.05, 0.5)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
