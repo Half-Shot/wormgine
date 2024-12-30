@@ -39,7 +39,14 @@ export class Background implements IGameEntity {
     terrain: BitmapTerrain,
     world: GameWorld,
   ): Background {
-    return new Background(viewWidth, viewHeight, viewport, color, terrain, world);
+    return new Background(
+      viewWidth,
+      viewHeight,
+      viewport,
+      color,
+      terrain,
+      world,
+    );
   }
   private rainSpeed = 5;
   private rainSpeedVariation = 1;
@@ -163,8 +170,8 @@ export class Background implements IGameEntity {
         this.addRainParticle();
         continue;
       }
-      const anglularVelocity = particle.angle * 0.1;
-      particle.position.x += this.world.wind + anglularVelocity;
+      const anglularVelocity = this.world.wind + particle.angle * 0.1;
+      particle.position.x += anglularVelocity;
       particle.position.y += particle.speed;
       const lengthX = particle.position.x + anglularVelocity * 5;
       const lengthY = particle.position.y - particle.length + anglularVelocity;
