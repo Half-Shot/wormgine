@@ -179,7 +179,9 @@ export default async function runScenario(game: Game) {
       return;
     }
     if (kind === InputKind.WeaponMenu) {
-      game.gameReactChannel.openWeaponMenu(currentWorm.wormIdent.team.availableWeapons);
+      game.gameReactChannel.openWeaponMenu(
+        currentWorm.wormIdent.team.availableWeapons,
+      );
     } else if (kind === InputKind.PickTarget) {
       game.gameReactChannel.closeWeaponMenu();
     }
@@ -210,9 +212,8 @@ export default async function runScenario(game: Game) {
       if (gameState.isPreRound && currentWorm.hasPerformedAction) {
         gameState.playerMoved();
         return;
-      }
-      else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
-        overlay.toaster.pushToast('Round ended without any actions!');
+      } else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
+        overlay.toaster.pushToast("Round ended without any actions!");
         currentWorm?.onEndOfTurn();
         currentWorm = undefined;
         endOfRoundWaitDuration = null;

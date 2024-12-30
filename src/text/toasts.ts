@@ -84,8 +84,6 @@ export const EndTurnTookDamange = [
   "Ouch, that's gotta hurt...their self esteem.",
 ];
 
-
-
 export function templateRandomText(
   options: string[],
   parameters: Record<string, string> = {},

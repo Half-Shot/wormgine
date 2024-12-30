@@ -6,7 +6,7 @@ import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 
 export interface GameRules {
-  roundDurationMs?: number,
+  roundDurationMs?: number;
   winWhenOneGroupRemains?: boolean;
   winWhenAllObjectsOfTypeDestroyed?: EntityType;
 }
@@ -113,7 +113,11 @@ export class GameState {
   }
 
   public update(ticker: Ticker) {
-    if (this.roundState === RoundState.Finished || this.roundState === RoundState.Paused || this.roundState === RoundState.WaitingToBegin) {
+    if (
+      this.roundState === RoundState.Finished ||
+      this.roundState === RoundState.Paused ||
+      this.roundState === RoundState.WaitingToBegin
+    ) {
       return;
     }
     if (this.remainingRoundTimeMs) {
@@ -121,7 +125,6 @@ export class GameState {
         0,
         this.remainingRoundTimeMs - ticker.deltaMS,
       );
-      logger.debug("Remaining", this.remainingRoundTimeMs)
       return;
     }
     if (this.isPreRound) {
@@ -156,7 +159,7 @@ export class GameState {
 
   public beginRound() {
     if (this.roundState !== RoundState.WaitingToBegin) {
-      throw Error('Expected to be waiting to begin');
+      throw Error("Expected to be waiting to begin");
     }
     this.roundState = RoundState.Preround;
     this.remainingRoundTimeMs = 5000;
@@ -175,7 +178,7 @@ export class GameState {
       this.stateIteration++;
       this.remainingRoundTimeMs = 5000;
       this.roundState = RoundState.WaitingToBegin;
-  
+
       return {
         nextTeam: this.currentTeam,
         // Team *should* have at least one healthy worm.

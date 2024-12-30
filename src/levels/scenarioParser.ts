@@ -5,6 +5,7 @@ import Logger from "../log";
 import { GameRules } from "../logic/gamestate";
 import { RecordedEntityState } from "../state/model";
 import {
+  parseObj,
   TiledEnumTeamGroup,
   TiledGameRulesProperties,
   TiledLevel,
@@ -21,6 +22,7 @@ const logger = new Logger("scenarioParser");
 interface Scenario {
   terrain: {
     bitmap: Texture;
+    destructible: boolean;
     x: number;
     y: number;
   };
@@ -99,15 +101,7 @@ function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
     for (const [wep, ammoCount] of Object.entries(
       tiledTeam["wormgine.loadout"] ?? {},
     )) {
-      // @ts-expect-error Bad types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const loadoutWepCode = IWeaponCode[wep as any];
-      if (loadoutWepCode === undefined) {
-        continue;
-      }
-      // @ts-expect-error Bad types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ammo[IWeaponCode[loadoutWepCode] as any] = ammoCount;
+      ammo[wep as IWeaponCode] = ammoCount;
     }
     return {
       name: tiledTeam["wormgine.team_name"],
@@ -157,12 +151,12 @@ function loadObjectListing(dataAssets: AssetData) {
       `Tiled map was built for ${tileset.version}, but we only support ${COMPATIBLE_TILED_VERSION}`,
     );
   }
-  return tileset.tiles;
+  return tileset;
 }
 
 interface ParsedObject {
   properties: {
-    [x: string]: string | number;
+    [x: string]: string | number | boolean;
   };
   type: string;
   gid: number;
@@ -201,23 +195,7 @@ export async function scenarioParser(
     throw Error("Tiled map is missing object layer");
   }
 
-  const prefilteredObjects = objectLayer.objects.map((object) => {
-    const data = tileset.find((tiledata) => tiledata.id === object.gid - 1);
-    return {
-      ...object,
-      x: object.x + (data?.imagewidth ?? 0) / 2,
-      y: object.y - (data?.imageheight ?? 0) / 2,
-      properties: {
-        ...Object.fromEntries(
-          (data?.properties ?? []).map((v) => [v.name, v.value]),
-        ),
-        ...Object.fromEntries(
-          (object?.properties ?? []).map((v) => [v.name, v.value]),
-        ),
-      },
-      type: data?.type ?? object.type ?? "unknown",
-    };
-  });
+  const prefilteredObjects = objectLayer.objects.map(o => parseObj(o, tileset));
 
   const objects = prefilteredObjects
     .map((oData) => {

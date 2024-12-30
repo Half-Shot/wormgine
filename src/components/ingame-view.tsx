@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import styles from "./ingame-view.module.css";
 import { Game } from "../game";
 import { NetGameInstance } from "../net/client";
-import { GameReactChannel } from "../interop/gamechannel";
-import { IWeaponDefiniton } from "../weapons/weapon";
+import { AmmoCount, GameReactChannel } from "../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
 
 export function IngameView({
@@ -20,7 +19,7 @@ export function IngameView({
   const [fatalError, setFatalError] = useState<Error>();
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
-  const [weaponMenu, setWeaponMenu] = useState<IWeaponDefiniton[] | null>(null);
+  const [weaponMenu, setWeaponMenu] = useState<AmmoCount | null>(null);
   useEffect(() => {
     Game.create(window, scenario, gameReactChannel, level, gameInstance)
       .then((game) => {
@@ -52,7 +51,7 @@ export function IngameView({
   }, [ref, game]);
 
   useEffect(() => {
-    const fnToggle = (weapons: IWeaponDefiniton[]) => {
+    const fnToggle = (weapons: AmmoCount) => {
       setWeaponMenu((s) => (s ? null : weapons));
     };
     const fnClose = () => {

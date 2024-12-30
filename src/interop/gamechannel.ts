@@ -7,10 +7,12 @@ interface GoToMenuEvent {
   winningTeams?: Team[];
 }
 
+export type AmmoCount = [IWeaponDefiniton, number][];
+
 type GameReactChannelEvents = {
   goToMenu: (event: GoToMenuEvent) => void;
   closeWeaponMenu: () => void;
-  openWeaponMenu: (weapons: [IWeaponDefiniton, number][]) => void;
+  openWeaponMenu: (weapons: AmmoCount) => void;
   weaponSelected: (code: IWeaponCode) => void;
 };
 
@@ -23,7 +25,7 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
     this.emit("goToMenu", { winningTeams });
   }
 
-  public openWeaponMenu(weapons: [IWeaponDefiniton, number][]) {
+  public openWeaponMenu(weapons: AmmoCount) {
     this.emit("openWeaponMenu", weapons);
   }
 

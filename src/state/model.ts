@@ -84,7 +84,7 @@ export type StateRecordWormGameState = StateRecordLine<{
       maxHealth: number;
     }[];
     playerUserId: string | null;
-    ammo: Team["ammo"],
+    ammo: Team["ammo"];
   }[];
   iteration: number;
   wind: number;

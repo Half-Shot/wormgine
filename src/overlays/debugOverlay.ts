@@ -93,7 +93,6 @@ export class GameDebugOverlay {
       ) / 100;
 
     this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)} | Ticker fns: ${this.ticker.count}`;
-    
 
     this.skippedUpdatesTarget = 180 / avgFps;
 

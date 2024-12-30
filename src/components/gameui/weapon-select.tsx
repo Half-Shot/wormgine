@@ -4,15 +4,16 @@ import styles from "./weapon-select.module.css";
 import { pointOnRadius } from "../../utils";
 import { useAnimate } from "framer-motion";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { AmmoCount } from "../../interop/gamechannel";
 
 const ANIMATION_DURATION = 0.075;
 
 export const WeaponSelector: FunctionalComponent<{
-  weapons: IWeaponDefiniton[] | null;
+  weapons: AmmoCount | null;
   onWeaponPicked: (code: IWeaponCode) => void;
 }> = ({ weapons, onWeaponPicked }) => {
-  const [selectedWeapon, setSelectedWeapon] = useState<number>(-1);
-  const [weaponSet, setWeaponSet] = useState<IWeaponDefiniton[]>([]);
+  const [selectedWeaponIndex, setSelectedWeapon] = useState<number>(-1);
+  const [weaponSet, setWeaponSet] = useState<AmmoCount>([]);
   const shouldBeVisible = useMemo(() => weapons?.length, [weapons]);
   const [scope, animate] = useAnimate();
 
@@ -55,6 +56,17 @@ export const WeaponSelector: FunctionalComponent<{
     ? (2 * Math.PI) / weaponSet.length
     : 0;
 
+  function weaponDescription(wep: IWeaponDefiniton, ammo: number) {
+    if (ammo === -1) {
+      return `${wep.name} (∞)`;
+    }
+    if (ammo) {
+      return `${wep.name} (${ammo})`;
+    }
+  }
+
+  const selectedWeapon = weaponSet[selectedWeaponIndex];
+
   return (
     <div ref={scope}>
       {!weaponSet.length ? null : (
@@ -66,6 +78,7 @@ export const WeaponSelector: FunctionalComponent<{
         >
           <ul>
             {weaponSet.map((weapon, i) => {
+              const wepData = weapon[0];
               const point = pointOnRadius(-250, 250, radiansPerItem * i, 250);
               return (
                 <li
@@ -76,23 +89,25 @@ export const WeaponSelector: FunctionalComponent<{
                   <button
                     onClick={() => {
                       setSelectedWeapon(i);
-                      onWeaponPicked(weapon.code);
+                      onWeaponPicked(wepData.code);
                     }}
                     onMouseOver={() => {
                       setSelectedWeapon(i);
                     }}
-                    className={selectedWeapon === i ? styles.selected : ""}
+                    className={selectedWeaponIndex === i ? styles.selected : ""}
                   >
                     <img
-                      src={weapon.icon}
-                      style={{ width: `${weapon.iconWidth}px` }}
+                      src={wepData.icon}
+                      style={{ width: `${wepData.iconWidth}px` }}
                     ></img>
                   </button>
                 </li>
               );
             })}
             <p className={styles.weaponText}>
-              {weaponSet[selectedWeapon]?.name || "Select a weapon"}
+              {selectedWeapon
+                ? weaponDescription(...selectedWeapon)
+                : "Select a weapon"}
             </p>
           </ul>
         </div>

@@ -17,12 +17,6 @@
          "image":"level_tileset\/spawn_icon.png",
          "imageheight":44,
          "imagewidth":33,
-         "properties":[
-                {
-                 "name":"wormgine.bazooka_ammo",
-                 "type":"int",
-                 "value":-1
-                }],
          "type":"wormgine.worm_spawn"
         }, 
         {

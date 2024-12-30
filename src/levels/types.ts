@@ -7,6 +7,7 @@ interface TiledProperty<T, X> {
 type Properties = (
   | TiledProperty<"int", number>
   | TiledProperty<"string", string>
+  | TiledProperty<"boolean", boolean>
 )[];
 
 export interface TiledTileset {
@@ -31,6 +32,7 @@ interface TiledForgroundLayer {
   offsety: number;
   x: number;
   y: number;
+  properties?: Properties;
 }
 
 interface TiledObject {
@@ -88,5 +90,24 @@ export interface TiledTeamProperties {
   "wormgine.team_name": string;
   "wormgine.worm_names": string;
   "wormgine.starting_health"?: number;
-  "wormgine.loadout": Record<string, number>;
+  "wormgine.loadout"?: Record<string, number>;
+}
+
+
+export function parseObj(obj: TiledObject, tileset?: TiledTileset) {
+  const data = tileset?.tiles.find((tiledata) => tiledata.id === obj.gid - 1);
+  return {
+    ...obj,
+    x: obj.x + (data?.imagewidth ?? 0) / 2,
+    y: obj.y - (data?.imageheight ?? 0) / 2,
+    properties: {
+      ...Object.fromEntries(
+        (data?.properties ?? []).map((v) => [v.name, v.value]),
+      ),
+      ...Object.fromEntries(
+        (obj?.properties ?? []).map((v) => [v.name, v.value]),
+      ),
+    },
+    type: data?.type ?? obj.type ?? "unknown",
+  };
 }

@@ -1,5 +1,4 @@
 import { ColorSource } from "pixi.js";
-import Logger from "../log";
 
 export interface WormIdentity {
   uuid?: string;
@@ -26,7 +25,7 @@ export interface Team {
   worms: WormIdentity[];
   // For net games only
   playerUserId: string | null;
-  ammo: Record<IWeaponCode|string, number>;
+  ammo: Record<IWeaponCode | string, number>;
 }
 
 export function teamGroupToColorSet(group: TeamGroup): {
@@ -109,7 +108,11 @@ export class InternalTeam implements Team {
 
   public consumeAmmo(code: IWeaponCode) {
     if (this.ammo[code] === 0) {
-      throw Error('Cannot consume ammo, no ammo left');
+      throw Error("Cannot consume ammo, no ammo left");
+    }
+    if (this.ammo[code] === -1) {
+      // Unlimited
+      return;
     }
     this.ammo[code]--;
   }

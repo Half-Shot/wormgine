@@ -1,5 +1,5 @@
 import Logger from "../log";
-import { InternalTeam, Team } from "./teams";
+import { InternalTeam } from "./teams";
 
 const logger = new Logger("WormInstance");
 

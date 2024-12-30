@@ -60,35 +60,53 @@
         {
             "color": "#ffa0a0a4",
             "drawFill": true,
+            "id": 11,
+            "members": [
+                {
+                    "name": "wormgine.terrain_destructible",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "wormgine.terrain",
+            "type": "class",
+            "useAs": [
+                "layer",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
             "id": 9,
             "members": [
                 {
-                    "name": "Bazooka",
+                    "name": "wep_bazooka",
                     "type": "int",
                     "value": 0
                 },
                 {
-                    "name": "FireworkLauncher",
+                    "name": "wep_firework",
                     "type": "int",
                     "value": 0
                 },
                 {
-                    "name": "Grenade",
+                    "name": "wep_grenade",
                     "type": "int",
                     "value": 0
                 },
                 {
-                    "name": "HomingMissile",
+                    "name": "wep_mine",
                     "type": "int",
                     "value": 0
                 },
                 {
-                    "name": "Mine",
+                    "name": "wep_missile",
                     "type": "int",
                     "value": 0
                 },
                 {
-                    "name": "Shotgun",
+                    "name": "wep_shotgun",
                     "type": "int",
                     "value": 0
                 }
@@ -159,14 +177,7 @@
             "name": "wormgine.team",
             "type": "class",
             "useAs": [
-                "property",
-                "map",
-                "layer",
                 "object",
-                "tile",
-                "tileset",
-                "wangcolor",
-                "wangset",
                 "project"
             ]
         },

@@ -239,7 +239,7 @@ export class Worm extends PlayableEntity {
   }
 
   onEndOfTurn() {
-    let endOfTurnMsg: string[]|null = null;
+    let endOfTurnMsg: string[] | null = null;
     switch (this.turnEndedReason) {
       case EndTurnReason.FallDamage:
         endOfTurnMsg = EndTurnFallDamage;

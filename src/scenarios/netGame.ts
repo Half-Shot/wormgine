@@ -44,7 +44,7 @@ export default async function runScenario(game: Game) {
         playerUserId: null,
         ammo: {
           [IWeaponCode.Bazooka]: 999,
-        }
+        },
       },
       {
         name: "The Whales",
@@ -59,7 +59,7 @@ export default async function runScenario(game: Game) {
         playerUserId: null,
         ammo: {
           [IWeaponCode.Bazooka]: 999,
-        }
+        },
       },
     ],
     world,
