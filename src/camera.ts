@@ -45,7 +45,6 @@ export class ViewportCamera {
         // Ignore, the director moved us.
         return;
       }
-      console.log(event.type);
       if (this.userWantsControl === false) {
         this.userWantsControl = true;
         // Reset move hash, since the camera is under control.

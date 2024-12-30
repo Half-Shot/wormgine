@@ -10,6 +10,7 @@ interface GoToMenuEvent {
 type GameReactChannelEvents = {
   goToMenu: (event: GoToMenuEvent) => void;
   openWeaponMenu: (weapons: IWeaponDefiniton[]) => void;
+  closeWeaponMenu: () => void;
   weaponSelected: (code: IWeaponCode) => void;
 };
 
@@ -24,6 +25,10 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
 
   public openWeaponMenu(weapons: IWeaponDefiniton[]) {
     this.emit("openWeaponMenu", weapons);
+  }
+
+  public closeWeaponMenu() {
+    this.emit("closeWeaponMenu");
   }
 
   public weaponMenuSelect(code: IWeaponCode) {

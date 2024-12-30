@@ -102,7 +102,6 @@ export class HomingMissile extends TimedExplosive {
     );
     this.sprite.x = position.screenX;
     this.sprite.y = position.screenY;
-    console.log(this.sprite.position);
     this.sprite.scale.set(0.5, 0.5);
     this.sprite.anchor.set(0.5, 0.5);
 

@@ -27,19 +27,19 @@ export function App() {
 
   useEffect(() => {
     const parameters = new URLSearchParams(window.location.search);
-    const gId = parameters.get('gameRoomId');
-    const preStateConfig = parameters.get('stateConfig');
+    const gId = parameters.get("gameRoomId");
+    const preStateConfig = parameters.get("stateConfig");
     if (gId) {
       setLobbyGameRoomId(gId);
     }
     if (preStateConfig) {
-      const [scenario, level] = preStateConfig.split(';');
+      const [scenario, level] = preStateConfig.split(";");
       setGameState({
         scenario,
         level,
       });
     }
-  });
+  }, []);
 
   useEffect(() => {
     if (!clientShouldReload) {

@@ -22,22 +22,19 @@ export function IngameView({
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<IWeaponDefiniton[] | null>(null);
   useEffect(() => {
-    Game.create(window, scenario, gameReactChannel, level, gameInstance).then(
-      (game) => {
+    Game.create(window, scenario, gameReactChannel, level, gameInstance)
+      .then((game) => {
         (window as unknown as { wormgine: Game }).wormgine = game;
         game.loadResources().then(() => {
           setGame(game);
         });
-      },
-    ).catch((ex) => {
-      setFatalError(ex);
-    });
+      })
+      .catch((ex) => {
+        setFatalError(ex);
+      });
   }, []);
 
   useEffect(() => {
-    if (fatalError) {
-      return;
-    }
     if (!ref.current || !game) {
       return;
     }
@@ -52,34 +49,39 @@ export function IngameView({
       setFatalError(ex);
       game.destroy();
     });
-  }, [ref, game, fatalError]);
+  }, [ref, game]);
 
   useEffect(() => {
-    if (fatalError) {
-      return;
-    }
-    const fn = (weapons: IWeaponDefiniton[]) => {
-      if (weaponMenu) {
-        setWeaponMenu(null);
-      } else {
-        setWeaponMenu(weapons);
-      }
+    const fnToggle = (weapons: IWeaponDefiniton[]) => {
+      setWeaponMenu((s) => (s ? null : weapons));
     };
-    gameReactChannel.on("openWeaponMenu", fn);
-    return () => gameReactChannel.off("openWeaponMenu", fn);
-  }, [gameReactChannel, weaponMenu, fatalError]);
+    const fnClose = () => {
+      setWeaponMenu(null);
+    };
+
+    gameReactChannel.on("openWeaponMenu", fnToggle);
+    gameReactChannel.on("closeWeaponMenu", fnClose);
+    return () => {
+      gameReactChannel.off("openWeaponMenu", fnToggle);
+      gameReactChannel.off("closeWeaponMenu", fnClose);
+    };
+  }, [gameReactChannel]);
 
   if (fatalError) {
-    return <div className={styles.fatalScreen}>
-      <h1>A fatal error has occured and the game must be stopped</h1>
-      <h2>
-        {fatalError.message}
-      </h2>
-      {fatalError.cause ? <h3> {(fatalError.cause as Error).message}</h3> : null}
-      <pre>
-        {fatalError.cause ? (fatalError.cause as Error).stack : fatalError.stack}
-      </pre>
-    </div>
+    return (
+      <div className={styles.fatalScreen}>
+        <h1>A fatal error has occured and the game must be stopped</h1>
+        <h2>{fatalError.message}</h2>
+        {fatalError.cause ? (
+          <h3> {(fatalError.cause as Error).message}</h3>
+        ) : null}
+        <pre>
+          {fatalError.cause
+            ? (fatalError.cause as Error).stack
+            : fatalError.stack}
+        </pre>
+      </div>
+    );
   }
 
   return (

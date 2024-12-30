@@ -84,8 +84,6 @@ export class StateReplay extends EventEmitter<EventTypes> {
     // and substract the local runtime. (e.g. if the relative time is 10s and we are 5s along, wait 5s)
     const waitFor = elapsedRelativeTimeForState - this.elapsedRelativeLocalTime;
 
-    console.log(ts, elapsedRelativeTimeForState, waitFor, data.data);
-
     await new Promise((r) => setTimeout(r, waitFor));
     this.lastActionTs = ts;
     switch (data.kind) {

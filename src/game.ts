@@ -13,7 +13,6 @@ import { GameReactChannel } from "./interop/gamechannel";
 import staticController from "./input";
 import { sound } from "@pixi/sound";
 import Logger from "./log";
-import { AssetData } from "./assets/manifest";
 import { CriticalGameError } from "./errors";
 
 const worldWidth = 1920;
@@ -103,7 +102,9 @@ export class Game {
       const module = await import(`./scenarios/${this.scenario}.ts`);
       await module.default(this);
     } catch (ex) {
-      throw new CriticalGameError(ex instanceof Error ? ex : Error('Scenario could not be loaded'));
+      throw new CriticalGameError(
+        ex instanceof Error ? ex : Error("Scenario could not be loaded"),
+      );
     }
 
     const overlay = new GameDebugOverlay(

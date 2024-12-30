@@ -16,6 +16,9 @@ import { BitmapTerrain } from "../bitmapTerrain";
 import { DefaultTextStyle } from "../../mixins/styles";
 import { EntityType } from "../type";
 import { Worm } from "../playable/worm";
+import Logger from "../../log";
+
+const log = new Logger('Mine')
 
 /**
  * Proximity mine.
@@ -116,7 +119,6 @@ export class Mine extends TimedExplosive {
       this.inactiveUntilTs !== 0 &&
       this.inactiveUntilTs < performance.now()
     ) {
-      console.log(this.inactiveUntilTs, performance.now());
       this.inactiveUntilTs = 0;
       const colliders = this.gameWorld.checkCollision(
         Coordinate.fromWorld(
@@ -126,7 +128,6 @@ export class Mine extends TimedExplosive {
         this.opts.explosionRadius,
         this.sensor,
       );
-      console.log(colliders);
       if (colliders.some((s) => s instanceof Worm)) {
         this.startTimer();
       }
@@ -148,7 +149,7 @@ export class Mine extends TimedExplosive {
       // Inactive.
       return false;
     }
-    console.log("active!");
+    
     if (super.onCollision(otherEnt, contactPoint)) {
       if (this.isSinking) {
         this.timerText.destroy();
@@ -173,6 +174,7 @@ export class Mine extends TimedExplosive {
   }
 
   startTimer(): void {
+    log.info('Activated');
     this.beeping = Promise.resolve(Mine.beep.play({ loop: true }));
     super.startTimer();
   }
