@@ -4,12 +4,6 @@ export const TurnStartText = [
   "Let's see if $WormName has what it takes.",
 ];
 
-export const TurnEndTextFall = [
-  "Better dial 999, $WormName had a fall!",
-  "Accidental or insurance fraud? Either way, $TeamName is not cashing in this round.",
-  "Ouch, that's gotta hurt...their self esteem.",
-];
-
 export const TeamKilledText = [
   "$TeamName has bitten the dusty dusty dirt",
   "$TeamName is pushing up the daises",
@@ -43,7 +37,6 @@ export const WormDeathGeneric = [
   "$WormName is providing to the funeral industry now.",
 ];
 
-export const FireResultHitSelf = ["Hmm, you probably didn't want to do that?"];
 export const FireResultKilledSelf = ["$WormName has won the darwin award!."];
 
 export const FireResultHitEnemy = ["$WormName takes a chunk out of the enemy."];
@@ -66,6 +59,33 @@ export const FireResultMiss = [
   "$TeamName looking to disprove the the old saying about monkeys and typewriters",
   "$TeamName may be entering their pacifist arc.",
 ];
+
+export const EndTurnFallDamage = [
+  "$WormName is taken for a fool",
+  "$WormName discovers a slippery surface",
+  "$WormName pays the price for not looking twice",
+  "Better dial 999, $WormName had a fall!",
+];
+
+export const EndTurnTimerElapsed = [
+  "$TeamName shoud pay closer attention to the time",
+  "You do know this game is timed, right?",
+  "$WormName may need to work on their expedience",
+  "Stalling for time? It won't help you",
+  "$WormName should brush up on their brain training",
+];
+
+export const EndTurnTookDamange = [
+  "$TeamName should really pay more attention",
+  "$TeamName is really not helping themselves here",
+  "$WormName hurt itself in it's confusion",
+  "Accidents happen, apparently often to $TeamName",
+  "Accidental or insurance fraud? Either way, $TeamName is not cashing in this round.",
+  "Ouch, that's gotta hurt...their self esteem.",
+];
+
+
+
 export function templateRandomText(
   options: string[],
   parameters: Record<string, string> = {},

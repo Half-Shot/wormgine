@@ -197,6 +197,7 @@ export default async function runScenario(game: Game) {
   });
 
   const roundHandlerFn = (dt: Ticker) => {
+    gameState.update(dt);
     if (endOfGameFadeOut !== null) {
       endOfGameFadeOut -= dt.deltaMS;
       if (endOfGameFadeOut < 0) {
@@ -206,7 +207,18 @@ export default async function runScenario(game: Game) {
       return;
     }
     if (currentWorm && currentWorm.currentState.active) {
-      return;
+      if (gameState.isPreRound && currentWorm.hasPerformedAction) {
+        gameState.playerMoved();
+        return;
+      }
+      else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
+        overlay.toaster.pushToast('Round ended without any actions!');
+        currentWorm?.onEndOfTurn();
+        currentWorm = undefined;
+        endOfRoundWaitDuration = null;
+      } else {
+        return;
+      }
     }
     if (endOfRoundWaitDuration === null) {
       stateRecorder.syncEntityState();
@@ -239,6 +251,7 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
+      gameState.beginRound();
       endOfRoundWaitDuration = null;
       return;
     }

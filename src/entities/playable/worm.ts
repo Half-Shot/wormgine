@@ -27,15 +27,16 @@ import { Viewport } from "pixi-viewport";
 import { magnitude, pointOnRadius, sub } from "../../utils";
 import { Toaster } from "../../overlays/toaster";
 import {
+  EndTurnFallDamage,
+  EndTurnTimerElapsed,
+  EndTurnTookDamange,
   FireResultHitEnemy,
   FireResultHitOwnTeam,
-  FireResultHitSelf,
   FireResultKilledEnemy,
   FireResultKilledOwnTeam,
   FireResultKilledSelf,
   FireResultMiss,
   templateRandomText,
-  TurnEndTextFall,
   TurnStartText,
   WeaponTimerText,
   WormDeathGeneric,
@@ -76,10 +77,12 @@ interface PerRoundState {
   shotsTaken: number;
   weaponTarget?: Coordinate;
   getawayTimer?: number;
+  hasPerformedAction: boolean;
 }
 
-const DEFAULT_PER_ROUND_STATE = {
+const DEFAULT_PER_ROUND_STATE: PerRoundState = {
   shotsTaken: 0,
+  hasPerformedAction: false,
 };
 
 /**
@@ -122,6 +125,10 @@ export class Worm extends PlayableEntity {
     return new Coordinate(trans.x - (width + 0.33), trans.y);
   }
 
+  get hasPerformedAction() {
+    return this.perRoundState.hasPerformedAction;
+  }
+
   static create(
     parent: Viewport,
     world: GameWorld,
@@ -155,10 +162,6 @@ export class Worm extends PlayableEntity {
 
   get currentState() {
     return this.state;
-  }
-
-  get endTurnReason() {
-    return this.turnEndedReason;
   }
 
   get collider() {
@@ -219,9 +222,6 @@ export class Worm extends PlayableEntity {
   }
 
   onWormSelected() {
-    this.state.transition(InnerWormState.Idle);
-    this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
-    this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
     this.toaster?.pushToast(
       templateRandomText(TurnStartText, {
         WormName: this.wormIdent.name,
@@ -231,11 +231,42 @@ export class Worm extends PlayableEntity {
       teamGroupToColorSet(this.wormIdent.team.group).fg,
       true,
     );
+    this.state.transition(InnerWormState.Idle);
+    this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
+    this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
     Controller.on("inputBegin", this.onInputBegin);
     Controller.on("inputEnd", this.onInputEnd);
   }
 
   onEndOfTurn() {
+    let endOfTurnMsg: string[]|null = null;
+    switch (this.turnEndedReason) {
+      case EndTurnReason.FallDamage:
+        endOfTurnMsg = EndTurnFallDamage;
+        break;
+      case EndTurnReason.TimerElapsed:
+        endOfTurnMsg = EndTurnTimerElapsed;
+        break;
+      case EndTurnReason.TookDamage:
+        endOfTurnMsg = EndTurnTookDamange;
+        break;
+      case EndTurnReason.Sank:
+        // Handled in destroy
+        break;
+      default:
+        break;
+    }
+    if (endOfTurnMsg) {
+      this.toaster?.pushToast(
+        templateRandomText(endOfTurnMsg, {
+          WormName: this.wormIdent.name,
+          TeamName: this.wormIdent.team.name,
+        }),
+        3000,
+      );
+    }
+
+    this.state.transition(InnerWormState.Inactive);
     Controller.removeListener("inputBegin", this.onInputBegin);
     Controller.removeListener("inputEnd", this.onInputEnd);
     this.cameraLockPriority = CameraLockPriority.NoLock;
@@ -265,6 +296,7 @@ export class Worm extends PlayableEntity {
       // Ignore all input when the worm is firing.
       return;
     }
+    this.perRoundState.hasPerformedAction = true;
     logger.info("Got input", inputKind, position);
     if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
       this.setMoveDirection(inputKind);
@@ -488,7 +520,9 @@ export class Worm extends PlayableEntity {
       } else if (fireResult.includes(WeaponFireResult.HitOwnTeam)) {
         randomTextSet = FireResultHitOwnTeam;
       } else if (fireResult.includes(WeaponFireResult.HitSelf)) {
-        randomTextSet = FireResultHitSelf;
+        // Not required, will be caught by turn end.
+        // randomTextSet = FireResultHitSelf;
+        return;
       } else if (fireResult.includes(WeaponFireResult.NoHit)) {
         randomTextSet = FireResultMiss;
       } else {
@@ -688,13 +722,6 @@ export class Worm extends PlayableEntity {
           const damage = this.impactVelocity * Worm.impactDamageMultiplier;
           this.health -= damage;
           this.state.transition(InnerWormState.Inactive);
-          this.toaster?.pushToast(
-            templateRandomText(TurnEndTextFall, {
-              WormName: this.wormIdent.name,
-              TeamName: this.wormIdent.team.name,
-            }),
-            2000,
-          );
           this.turnEndedReason = EndTurnReason.FallDamage;
         }
         this.impactVelocity = 0;

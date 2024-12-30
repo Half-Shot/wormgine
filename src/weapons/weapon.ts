@@ -48,7 +48,7 @@ export function projectileWeaponHelper(
   const forceComponent = Math.log(duration / 10) * 3;
   const x = forceComponent * Math.cos(angle);
   const y = forceComponent * Math.sin(angle);
-  const force = mult(new Vector2(1.5 * forceComponent, forceComponent), {
+  const force = mult(new Vector2(1.15 * forceComponent, forceComponent), {
     x,
     y,
   });

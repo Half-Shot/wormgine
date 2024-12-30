@@ -6,14 +6,20 @@ import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 
 export interface GameRules {
+  roundDurationMs?: number,
   winWhenOneGroupRemains?: boolean;
   winWhenAllObjectsOfTypeDestroyed?: EntityType;
 }
 
-const PreRoundMs = 5000;
-const RoundTimerMs = 60000;
-
 const logger = new Logger("GameState");
+
+enum RoundState {
+  WaitingToBegin,
+  Preround,
+  Playing,
+  Paused,
+  Finished,
+}
 
 export class InternalTeam implements Team {
   public readonly worms: WormInstance[];
@@ -82,17 +88,18 @@ export class GameState {
   private currentTeam?: InternalTeam;
   private readonly teams: InternalTeam[];
   private nextTeamStack: InternalTeam[];
-  private remainingRoundTimeMs = 0;
 
   /**
    * Wind strength. Integer between -10 and 10.
    */
   private wind = 0;
 
-  private roundOverAtTs = 0;
-  private preRoundOverAtTs = 0;
+  private readonly roundDurationMs: number;
+  private remainingRoundTimeMs = 0;
 
   private stateIteration = 0;
+
+  private roundState: RoundState = RoundState.Finished;
 
   public iterateRound() {
     const prev = this.stateIteration;
@@ -109,7 +116,7 @@ export class GameState {
   }
 
   get isPreRound() {
-    return this.preRoundOverAtTs !== 0;
+    return this.roundState === RoundState.Preround;
   }
 
   get activeTeam() {
@@ -131,6 +138,7 @@ export class GameState {
         }),
     );
     this.nextTeamStack = [...this.teams];
+    this.roundDurationMs = rules.roundDurationMs ?? 45000;
   }
 
   public getTeamByIndex(index: number) {
@@ -150,17 +158,21 @@ export class GameState {
   }
 
   public update(ticker: Ticker) {
+    if (this.roundState === RoundState.Finished || this.roundState === RoundState.Paused || this.roundState === RoundState.WaitingToBegin) {
+      return;
+    }
     if (this.remainingRoundTimeMs) {
-      this.remainingRoundTimeMs = Math.min(
+      this.remainingRoundTimeMs = Math.max(
         0,
         this.remainingRoundTimeMs - ticker.deltaMS,
       );
+      logger.debug("Remaining", this.remainingRoundTimeMs)
+      return;
     }
-    if (this.remainingRoundTimeMs === 0 && this.preRoundOverAtTs) {
-      // Timer expired.
-      this.preRoundOverAtTs = 0;
-      this.roundOverAtTs = Date.now() + RoundTimerMs;
-      this.remainingRoundTimeMs = RoundTimerMs;
+    if (this.isPreRound) {
+      this.playerMoved();
+    } else {
+      this.roundState = RoundState.Finished;
     }
   }
 
@@ -182,6 +194,19 @@ export class GameState {
     return data;
   }
 
+  public playerMoved() {
+    this.roundState = RoundState.Playing;
+    this.remainingRoundTimeMs = this.roundDurationMs;
+  }
+
+  public beginRound() {
+    if (this.roundState !== RoundState.WaitingToBegin) {
+      throw Error('Expected to be waiting to begin');
+    }
+    this.roundState = RoundState.Preround;
+    this.remainingRoundTimeMs = 5000;
+  }
+
   public advanceRound():
     | { nextTeam: InternalTeam; nextWorm: WormInstance }
     | { winningTeams: InternalTeam[] } {
@@ -190,6 +215,12 @@ export class GameState {
     if (!this.currentTeam) {
       const [firstTeam] = this.nextTeamStack.splice(0, 1);
       this.currentTeam = firstTeam;
+
+      // 5 seconds preround
+      this.stateIteration++;
+      this.remainingRoundTimeMs = 5000;
+      this.roundState = RoundState.WaitingToBegin;
+  
       return {
         nextTeam: this.currentTeam,
         // Team *should* have at least one healthy worm.
@@ -240,7 +271,9 @@ export class GameState {
       }
     }
     this.stateIteration++;
-    this.preRoundOverAtTs = Date.now() + PreRoundMs;
+    // 5 seconds preround
+    this.remainingRoundTimeMs = 0;
+    this.roundState = RoundState.WaitingToBegin;
 
     return {
       nextTeam: this.currentTeam,

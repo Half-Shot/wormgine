@@ -25,6 +25,7 @@ export class GameStateOverlay {
   public readonly toaster: Toaster;
   private readonly winddial: WindDial;
   private readonly bottomOfScreenY;
+  private readonly roundTimerWidth;
 
   constructor(
     private readonly ticker: Ticker,
@@ -42,6 +43,7 @@ export class GameStateOverlay {
         align: "center",
       },
     });
+    this.roundTimerWidth = this.roundTimer.width
     this.bottomOfScreenY = (this.screenHeight / 10) * 8.75;
 
     this.toaster = new Toaster(screenWidth, screenHeight);
@@ -82,6 +84,8 @@ export class GameStateOverlay {
       this.healthChangeTensionTimer !== null &&
       this.healthChangeTensionTimer <= 0;
 
+    this.roundTimer.text = this.gameState.remainingRoundTime === 0 ? '--' : Math.ceil(this.gameState.remainingRoundTime / 1000);
+
     if (
       this.previousStateIteration === this.gameState.iteration &&
       !shouldChangeTeamHealth
@@ -106,7 +110,6 @@ export class GameStateOverlay {
       }
     }
 
-    this.roundTimer.text = Math.floor(this.gameState.remainingRoundTime / 1000);
     this.gfx.clear();
 
     // Remove any previous text.
@@ -120,7 +123,7 @@ export class GameStateOverlay {
       .roundRect(
         this.roundTimer.x - 8,
         this.roundTimer.y + 8,
-        this.roundTimer.width + 16,
+        this.roundTimerWidth + 16,
         this.roundTimer.height,
         4,
       )
