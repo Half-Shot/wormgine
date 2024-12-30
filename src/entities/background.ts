@@ -14,6 +14,7 @@ import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
 import { Coordinate } from "../utils";
 import globalFlags from "../flags";
+import { GameWorld } from "../world";
 
 interface RainParticle {
   position: Point;
@@ -36,10 +37,11 @@ export class Background implements IGameEntity {
     viewport: Viewport,
     color: [number, number, number, number],
     terrain: BitmapTerrain,
+    world: GameWorld,
   ): Background {
-    return new Background(viewWidth, viewHeight, viewport, color, terrain);
+    return new Background(viewWidth, viewHeight, viewport, color, terrain, world);
   }
-  private rainSpeed = 15;
+  private rainSpeed = 5;
   private rainSpeedVariation = 1;
   // TODO: Constrain to size of screen.
   private windDirection = 5;
@@ -57,6 +59,7 @@ export class Background implements IGameEntity {
     private viewport: Viewport,
     color: [number, number, number, number],
     private readonly terrain: BitmapTerrain,
+    private readonly world: GameWorld,
   ) {
     const halfViewWidth = viewWidth / 2;
     const halfViewHeight = viewHeight / 2;
@@ -161,7 +164,7 @@ export class Background implements IGameEntity {
         continue;
       }
       const anglularVelocity = particle.angle * 0.1;
-      particle.position.x += this.windDirection + anglularVelocity;
+      particle.position.x += this.world.wind + anglularVelocity;
       particle.position.y += particle.speed;
       const lengthX = particle.position.x + anglularVelocity * 5;
       const lengthY = particle.position.y - particle.length + anglularVelocity;
