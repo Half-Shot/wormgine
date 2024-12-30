@@ -1,6 +1,6 @@
 import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameState } from "../logic/gamestate";
-import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
+import { applyGenericBoxStyle, DefaultTextStyle, LargeTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 import { Toaster } from "./toaster";
@@ -36,10 +36,9 @@ export class GameStateOverlay {
     private readonly screenHeight: number,
   ) {
     this.roundTimer = new Text({
-      text: "60",
+      text: "00",
       style: {
-        ...DefaultTextStyle,
-        fontSize: 64,
+        ...LargeTextStyle,
         align: "center",
       },
     });
@@ -117,7 +116,7 @@ export class GameStateOverlay {
 
     // Remove any previous text.
     this.gfx.removeChildren(0, this.gfx.children.length);
-    const currentTeamColors = this.gameState.activeTeam
+    const currentTeamColors = !this.gameState.paused && this.gameState.activeTeam
       ? teamGroupToColorSet(this.gameState.activeTeam?.group)
       : { fg: 0xaaaaaa };
 
@@ -138,7 +137,7 @@ export class GameStateOverlay {
     // TODO: Evenly space.
     let allHealthAccurate = true;
     const activeTeams = this.gameState.getActiveTeams();
-    const teamSeperationHeight = 40;
+    const teamSeperationHeight = 32;
     let teamBottomY =
       this.bottomOfScreenY -
       (teamSeperationHeight * (activeTeams.length - 2)) / 2;
@@ -157,7 +156,6 @@ export class GameStateOverlay {
         text: team.name,
         style: {
           ...DefaultTextStyle,
-          fontSize: 36,
           align: "center",
         },
       });

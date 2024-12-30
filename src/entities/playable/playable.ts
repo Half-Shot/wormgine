@@ -78,7 +78,6 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       text: this.wormIdent.name,
       style: {
         ...DefaultTextStyle,
-        fontSize: 28,
         fill: fg,
         align: "center",
       },
@@ -87,7 +86,6 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       text: this.health,
       style: {
         ...DefaultTextStyle,
-        fontSize: 28,
         fill: fg,
         align: "center",
       },
@@ -96,21 +94,32 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
 
     this.nameText.position.set(0, -5);
     this.healthTextBox = new Graphics();
-    this.healthText.position.set(this.healthText.width / 2, 24);
+    const nameTextXY = [-this.nameText.width/2, 0];
+    const healthTextXY = [ -this.healthText.width/2, this.nameText.height + 4];
     applyGenericBoxStyle(this.healthTextBox)
-      .roundRect(-5, 0, this.nameText.width + 10, this.nameText.height - 2, 4)
+      .roundRect(nameTextXY[0], nameTextXY[1], this.nameText.width + 10, this.nameText.height - 2, 4)
       .stroke()
       .fill()
       .roundRect(
-        this.nameText.width / 2 - this.healthText.width / 2 - 5,
-        30,
+        healthTextXY[0],
+        healthTextXY[1],
         this.healthText.width + 10,
         this.healthText.height - 4,
         4,
       )
       .stroke()
       .fill();
+
+
+    this.nameText.position.set(nameTextXY[0] + 4, nameTextXY[1] - 4);
+    this.setHealthTextPosition();
+
     this.healthTextBox.addChild(this.healthText, this.nameText);
+  }
+
+  public setHealthTextPosition() {
+    const healthTextXY = [ -this.healthText.width/2, this.nameText.height + 4];
+    this.healthText.position.set(healthTextXY[0] + 4, healthTextXY[1] - 4);
   }
 
   public update(dt: number): void {
@@ -120,11 +129,11 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       return;
     }
     if (!this.healthTextBox.destroyed) {
-      // Nice and simple parenting :Z
+      // Nice and simple parenting
       this.healthTextBox.rotation = 0;
       this.healthTextBox.position.set(
-        this.sprite.x - this.healthTextBox.width / 2 + this.sprite.width / 2,
-        this.sprite.y - 100,
+        this.sprite.x - (this.sprite.width/4),
+        this.sprite.y - 85,
       );
     }
 
@@ -164,10 +173,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
         this.onHealthTensionTimerExpired(true);
         this.visibleHealth--;
         this.healthText.text = this.visibleHealth;
-        this.healthText.position.set(
-          this.nameText.width / 2 - this.healthText.width / 2,
-          34,
-        );
+        this.setHealthTextPosition();
         if (this.visibleHealth <= this.health) {
           this.onHealthTensionTimerExpired(false);
         }

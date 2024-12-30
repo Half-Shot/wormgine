@@ -16,7 +16,14 @@ export function applyGenericBoxStyle(
 
 export const DefaultTextStyle = {
   fontFamily: "Monogram",
-  fontSize: 24,
+  fontSize: 28,
+  fill: 0xffffff,
+  align: "left",
+} as TextOptions["style"];
+
+export const LargeTextStyle = {
+  fontFamily: "Monogram",
+  fontSize: 64,
   fill: 0xffffff,
   align: "left",
 } as TextOptions["style"];
