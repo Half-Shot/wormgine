@@ -2,7 +2,6 @@ import { FunctionalComponent } from "preact";
 import { useState } from "preact/hooks";
 import { WeaponSelector } from "../gameui/weapon-select";
 import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../../weapons";
-import { AmmoCount } from "../../interop/gamechannel";
 import { IWeaponDefiniton } from "../../weapons/weapon";
 
 const wepList: [IWeaponDefiniton, number][] = [

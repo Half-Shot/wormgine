@@ -26,9 +26,15 @@ const forceMult = new Vector2(7, 7);
  * Homing missile that attempts to hit a point target.
  */
 export class HomingMissile extends TimedExplosive {
-
-  public static getMissilePath(start: Coordinate, target: Coordinate): Coordinate[] {
-    return arcPoints([start.worldX, start.worldY], [target.worldX, target.worldY], 0.550).map(v => Coordinate.fromWorld(v[0], v[1]));
+  public static getMissilePath(
+    start: Coordinate,
+    target: Coordinate,
+  ): Coordinate[] {
+    return arcPoints(
+      [start.worldX, start.worldY],
+      [target.worldX, target.worldY],
+      0.55,
+    ).map((v) => Coordinate.fromWorld(v[0], v[1]));
   }
 
   public static readAssets(assets: AssetPack) {
@@ -123,13 +129,16 @@ export class HomingMissile extends TimedExplosive {
       return;
     }
     this.lastPathAdjustment += dt;
-  
+
     if (!this.hasActivated && this.lastPathAdjustment >= ACTIVATION_TIME_MS) {
       this.hasActivated = true;
       const { target } = this;
       const { position } = this.sprite;
       this.sprite.texture = HomingMissile.textureActive;
-      this.forcePath = HomingMissile.getMissilePath(Coordinate.fromScreen(position.x, position.y), target);
+      this.forcePath = HomingMissile.getMissilePath(
+        Coordinate.fromScreen(position.x, position.y),
+        target,
+      );
       // Draw paths once
       const start = this.forcePath.pop()!;
       this.debugGfx.moveTo(start.screenX, start.screenY);
@@ -141,13 +150,18 @@ export class HomingMissile extends TimedExplosive {
       logger.debug("Activated!");
     }
 
-
     if (this.hasActivated && this.lastPathAdjustment >= ADJUSTMENT_TIME_MS) {
       this.lastPathAdjustment = 0;
       const [nextOrLastItem] = this.forcePath.splice(0, 1);
       if (nextOrLastItem) {
         const translation = this.body.translation();
-        const impulse = mult(new Vector2(nextOrLastItem.worldX - translation.x, nextOrLastItem.worldY - translation.y), forceMult);
+        const impulse = mult(
+          new Vector2(
+            nextOrLastItem.worldX - translation.x,
+            nextOrLastItem.worldY - translation.y,
+          ),
+          forceMult,
+        );
         this.body.setLinvel(impulse, true);
       }
     }

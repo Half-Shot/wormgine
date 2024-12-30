@@ -51,7 +51,7 @@ const logger = new Logger("Controller");
 interface GameReactChannelEvents {
   inputBegin: (kind: InputKind, position?: PointData) => void;
   inputEnd: (kind: InputKind, position?: PointData) => void;
-};
+}
 
 class Controller extends EventEmitter<GameReactChannelEvents> {
   private readonly activeInputs = new Set();
