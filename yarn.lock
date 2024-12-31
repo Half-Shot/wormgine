@@ -3173,6 +3173,11 @@ nth-check@^2.0.1:
   dependencies:
     boolbase "^1.0.0"
 
+observable-hooks@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/observable-hooks/-/observable-hooks-4.2.4.tgz#e1ee0f867e0f2216f79c1e13c58716fb50b410ec"
+  integrity sha512-FdTQgyw1h5bG/QHCBIqctdBSnv9VARJCEilgpV6L2qlw1yeLqFIwPm4U15dMtl5kDmNN0hSt+Nl6iYbLFwEcQA==
+
 oidc-client-ts@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/oidc-client-ts/-/oidc-client-ts-3.0.1.tgz#be264fb87c89f74f73863646431c32cd06f5ceb7"
@@ -3480,7 +3485,7 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rxjs@^7.5.2:
+rxjs@^7.5.2, rxjs@^7.8.1:
   version "7.8.1"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
   integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==

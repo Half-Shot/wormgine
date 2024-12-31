@@ -19,10 +19,12 @@
     "@pixi/sound": "^6.0.1",
     "matrix-js-sdk": "^34.8.0",
     "motion": "^11.13.5",
+    "observable-hooks": "^4.2.4",
     "pixi-viewport": "^5.0.3",
     "pixi.js": "^8.5.1",
     "preact": "^10.24.3",
-    "prettier": "^3.4.2"
+    "prettier": "^3.4.2",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

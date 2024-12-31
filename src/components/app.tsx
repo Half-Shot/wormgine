@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
-import { loadAssets } from "../assets";
+import { assetLoadPercentage, assetsAreReady, loadAssets } from "../assets";
 import { NetGameClient, NetGameInstance } from "../net/client";
 import { Lobby } from "./lobby";
 import { GameReactChannel } from "../interop/gamechannel";
 import type { AssetData } from "../assets/manifest";
+import { useObservableEagerState } from "observable-hooks";
 
 interface LoadGameProps {
   scenario: string;
@@ -15,8 +16,8 @@ interface LoadGameProps {
 
 export function App() {
   const [gameState, setGameState] = useState<LoadGameProps>();
-  const [assetProgress, setAssetProgress] = useState(0);
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const assetProgress = useObservableEagerState(assetLoadPercentage);
+  const assetsLoaded = useObservableEagerState(assetsAreReady);
   const [showLobby, setShowLobby] = useState(false);
   const [client, setClient] = useState<NetGameClient>();
   const [clientReady, setClientReady] = useState(client?.ready);
@@ -65,12 +66,6 @@ export function App() {
     // TODO: Show a win screen!
     setGameState(undefined);
   });
-
-  useEffect(() => {
-    void loadAssets((v) => {
-      setAssetProgress(v);
-    }).then(() => setAssetsLoaded(true));
-  }, [setAssetProgress]);
 
   useEffect(() => {
     if (client && lobbyGameRoomId && clientReady && !gameState) {

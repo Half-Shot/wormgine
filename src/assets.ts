@@ -6,12 +6,19 @@ import {
   manifest,
 } from "./assets/manifest";
 import { Sound } from "@pixi/sound";
+import { BehaviorSubject, map } from 'rxjs';
+
 
 let textures: Record<string, Texture>;
 let sounds: Record<string, Sound>;
 let data: Record<string, unknown>;
 
-export async function loadAssets(progressFn: (totalProgress: number) => void) {
+const internalAssetLoadPercentage = new BehaviorSubject(0);
+
+export const assetLoadPercentage = internalAssetLoadPercentage.pipe();
+export const assetsAreReady = internalAssetLoadPercentage.pipe(map<number, boolean>(v => v === 1));
+
+export async function loadAssets() {
   await Assets.init({ manifest });
 
   const bundleCount = Object.keys(manifest.bundles).length;
@@ -19,7 +26,7 @@ export async function loadAssets(progressFn: (totalProgress: number) => void) {
   for (const { name } of manifest.bundles) {
     const bundle = await Assets.loadBundle(name, (progress) => {
       const totalProgress = bundleIndex / bundleCount + progress / bundleCount;
-      progressFn(totalProgress);
+      internalAssetLoadPercentage.next(totalProgress);
     });
     bundleIndex++;
     if (name === "textures") {

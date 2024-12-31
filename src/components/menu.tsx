@@ -1,6 +1,6 @@
 import { useCallback, useState } from "preact/hooks";
 import { ChangelogModal } from "./changelog";
-import "./menu.css";
+import styles from "./menu.module.css";
 import { NetGameClient } from "../net/client";
 import { GameMenu } from "./menus/types";
 import AccountMenu from "./menus/account";
@@ -23,92 +23,47 @@ function mainMenu(
   clientReady?: boolean,
 ) {
   return (
-    <main className="menu">
-      <h1>Wormgine Debug Build</h1>
-      <p>
+    <main className={styles.menu}>
+      <h1>Kobold Kombat</h1>
+      <p className={styles.betaWarning}>
         The game is still in heavy development, this site is updated with the
-        latest builds as they are built.
+        latest builds automatically.
+        <ChangelogModal
+          buildNumber={buildNumber}
+          buildCommit={buildCommit}
+          lastCommit={lastCommit}
+        />
       </p>
-      <h2>Test Scenarios</h2>
-      <p>
-        Each of these levels are used to test certain engine features. Gameplay
-        Demo is the most complete, as it demonstrates a match between two human
-        players.
-      </p>
-      <ul className="levelPicker">
+      <ul className={styles.levelPicker}>
         <li>
           <button onClick={() => onStartNewGame("tiledMap", "levels_testing")}>
-            Gameplay Demo
+            Skrimish
           </button>
         </li>
         <li>
-          <button onClick={() => onStartNewGame("grenadeIsland")}>
-            Terrain Demo
+          <button disabled>
+            Missions
           </button>
         </li>
         <li>
-          <button onClick={() => onStartNewGame("uiTest")}>UI Test</button>
-        </li>
-        <li>
-          <button onClick={() => onStartNewGame("replayTesting")}>
-            Test gameplay replay
+          <button>
+            Team Editor
           </button>
         </li>
         <li>
-          <button onClick={() => onStartNewGame("tiledMap", "levels_bones")}>
-            Bone Isles
+          <button disabled>
+            Settings
           </button>
         </li>
         <li>
-          <button
-            onClick={() => onStartNewGame("tiledMap", "levels_targetTraining")}
-          >
-            Test map loading
+          <button disabled>
+            Online Play
           </button>
         </li>
         <li>
-          <button
-            className="borealis"
-            onClick={() => onStartNewGame("tiledMap", "levels_borealis")}
-          >
-            Borealis Tribute Rock
-          </button>
-        </li>
-        <h2> Network options (requires configured client) </h2>
-        <li>
-          <button onClick={() => setCurrentMenu(GameMenu.AccountMenu)}>
-            Manage Account
-          </button>
-        </li>
-        <li>
-          <button
-            disabled={!clientReady}
-            onClick={() => setCurrentMenu(GameMenu.TeamEditor)}
-          >
-            Edit Teams
-          </button>
-        </li>
-        <li>
-          <button
-            disabled={!clientReady}
-            onClick={() => onStartNewGame("lobbyGame")}
-          >
-            Start new network game
-          </button>{" "}
-          (Requires configured client)
-        </li>
-        <h2> Developer tools </h2>
-        <li>
-          <button onClick={() => setCurrentMenu(GameMenu.OverlayTest)}>
-            Test Game UI elements
-          </button>
+          <button>Developer Tools</button>
         </li>
       </ul>
-      <ChangelogModal
-        buildNumber={buildNumber}
-        buildCommit={buildCommit}
-        lastCommit={lastCommit}
-      />
       <p>
         You can check out the source code over on{" "}
         <a href="https://github.com/Half-Shot/wormgine" target="_blank">

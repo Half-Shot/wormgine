@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
+import styles from "./changelog.module.css";
 
 export function ChangelogModal({
   buildNumber,
@@ -75,18 +76,14 @@ export function ChangelogModal({
     return <p>Unknown build</p>;
   }
 
-  let newChangesButton = null;
-
-  if (hasNewBuild && latestChanges?.length) {
-    newChangesButton = <button onClick={onClick}>See what's new!</button>;
-  }
+  const newChangesButton = <a className={styles.buildNumber} href={hasNewBuild && latestChanges?.length ? '#' : undefined} onClick={hasNewBuild && latestChanges?.length ? onClick : undefined}>{buildNumber ?? <code>{buildCommit}</code>}</a>;
 
   return (
     <>
-      <p>
-        Build number {buildNumber ?? <code>{buildCommit}</code>}{" "}
+      <span>
+        Build number {' '}
         {newChangesButton}
-      </p>
+      </span>
       {newChangesModal}
     </>
   );

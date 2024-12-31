@@ -1,0 +1,8 @@
+.buildNumber {
+  text-decoration: underline dashed;
+  color: unset;
+}
+
+.buildNumber:any-link {
+  text-decoration: underline dashed;
+}
