@@ -25,6 +25,7 @@ const WeaponShotgun: IWeaponDefiniton = {
   timerAdjustable: false,
   showTargetGuide: true,
   shots: 2,
+  allowGetaway: true,
   loadAssets(assets: AssetPack) {
     fireSound = assets.sounds.shotgun;
     this.sprite = {

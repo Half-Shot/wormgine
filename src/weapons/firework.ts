@@ -19,6 +19,7 @@ const WeaponFireworkLauncher: IWeaponDefiniton = {
   code: IWeaponCode.FireworkLauncher,
   icon,
   maxDuration: 80,
+  allowGetaway: true,
   timerAdjustable: false,
   showTargetGuide: true,
   loadAssets(assets: AssetPack) {

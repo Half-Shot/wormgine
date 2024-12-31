@@ -9,7 +9,7 @@ export const WeaponMine: IWeaponDefiniton = {
   name: "Mine",
   icon,
   code: IWeaponCode.Mine,
-  getawayTime: 350,
+  allowGetaway: true,
   loadAssets(assets) {
     this.sprite = {
       texture: assets.textures.mine,
@@ -18,6 +18,7 @@ export const WeaponMine: IWeaponDefiniton = {
     };
   },
   fireFn(parent: Container, world: GameWorld, worm: Worm) {
-    return Mine.create(parent, world, worm.itemPlacementPosition, 3000);
+    // Getaway time + some time
+    return Mine.create(parent, world, worm.itemPlacementPosition, 7000);
   },
 };

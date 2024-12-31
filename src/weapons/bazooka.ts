@@ -20,6 +20,7 @@ export const WeaponBazooka: IWeaponDefiniton = {
   icon,
   maxDuration: 80,
   timerAdjustable: false,
+  allowGetaway: true,
   showTargetGuide: true,
   loadAssets(assets: AssetPack) {
     fireSound = assets.sounds.bazookafire;

@@ -84,7 +84,7 @@ export class Mine extends TimedExplosive {
 
     sprite.position = body.body.translation();
     super(sprite, body, world, parent, {
-      explosionRadius: new MetersValue(4),
+      explosionRadius: new MetersValue(3.5),
       explodeOnContact: false,
       timerSecs: 5,
       autostartTimer: false,

@@ -14,6 +14,16 @@
   -webkit-text-size-adjust: 100%;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #bdbdbd;
+    --bg: #2e2e2e;
+    --highlight: #b96724;
+    --links: #df8b1c;
+    --subheading: #adadad;
+  }
+}
+
 a {
   font-weight: 500;
   color: #646cff;

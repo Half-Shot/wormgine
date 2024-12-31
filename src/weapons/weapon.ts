@@ -86,7 +86,7 @@ export interface IWeaponDefiniton {
   /**
    * Should the worm be given getaway time?
    */
-  getawayTime?: number;
+  allowGetaway?: boolean;
 
   sprite?: {
     texture: Texture;

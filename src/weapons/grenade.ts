@@ -15,6 +15,7 @@ export const WeaponGrenade: IWeaponDefiniton = {
   icon,
   code: IWeaponCode.Grenade,
   maxDuration: 50,
+  allowGetaway: true,
   timerAdjustable: true,
   showTargetGuide: true,
   loadAssets(assets) {

@@ -489,11 +489,6 @@ export class Worm extends PlayableEntity {
     this.perRoundState.shotsTaken++;
     // TODO: Need a middle state for while the world is still active.
     this.cameraLockPriority = CameraLockPriority.NoLock;
-    if (this.weapon.getawayTime) {
-      this.state.transition(InnerWormState.Getaway);
-    } else {
-      this.state.transition(InnerWormState.InactiveWaiting);
-    }
     this.fireWeaponDuration = 0;
     this.onFireWeapon(this, this.currentWeapon, {
       duration,
@@ -503,7 +498,11 @@ export class Worm extends PlayableEntity {
     }).then((fireResult) => {
       if (maxShots === this.perRoundState.shotsTaken) {
         this.turnEndedReason = EndTurnReason.FiredWeapon;
-        this.state.transition(InnerWormState.Inactive);
+        if (this.weapon.allowGetaway) {
+          this.state.transition(InnerWormState.Getaway);
+        } else {
+          this.state.transition(InnerWormState.InactiveWaiting);
+        }
       } else {
         this.state.transition(InnerWormState.Idle);
       }

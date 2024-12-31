@@ -19,6 +19,7 @@ const WeaponHomingMissile: IWeaponDefiniton = {
   code: IWeaponCode.HomingMissile,
   icon,
   maxDuration: 80,
+  allowGetaway: true,
   timerAdjustable: false,
   showTargetGuide: true,
   showTargetPicker: true,
