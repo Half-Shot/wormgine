@@ -490,22 +490,25 @@ export class Worm extends PlayableEntity {
     // TODO: Need a middle state for while the world is still active.
     this.cameraLockPriority = CameraLockPriority.NoLock;
     this.fireWeaponDuration = 0;
+
+    // Determine worm state based on the kind of weapon
+    const hasMoreShots = maxShots > this.perRoundState.shotsTaken;
+    if (hasMoreShots) {
+      this.state.transition(InnerWormState.Idle);
+    } else if (this.weapon.allowGetaway) {
+      this.state.transition(InnerWormState.Getaway);
+    } else {
+      this.state.transition(InnerWormState.InactiveWaiting);
+    }
+
     this.onFireWeapon(this, this.currentWeapon, {
       duration,
       timer: this.weaponTimerSecs,
       angle: this.fireAngle,
       target: this.perRoundState.weaponTarget,
     }).then((fireResult) => {
-      if (maxShots === this.perRoundState.shotsTaken) {
-        this.turnEndedReason = EndTurnReason.FiredWeapon;
-        if (this.weapon.allowGetaway) {
-          this.state.transition(InnerWormState.Getaway);
-        } else {
-          this.state.transition(InnerWormState.InactiveWaiting);
-        }
-      } else {
-        this.state.transition(InnerWormState.Idle);
-      }
+      // Weapon has hit.
+      this.turnEndedReason = EndTurnReason.FiredWeapon;
       let randomTextSet: string[];
       if (fireResult.includes(WeaponFireResult.KilledOwnTeam)) {
         randomTextSet = FireResultKilledOwnTeam;
