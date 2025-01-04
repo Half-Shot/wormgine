@@ -6,8 +6,7 @@ import {
   manifest,
 } from "./assets/manifest";
 import { Sound } from "@pixi/sound";
-import { BehaviorSubject, map } from 'rxjs';
-
+import { BehaviorSubject, map } from "rxjs";
 
 let textures: Record<string, Texture>;
 let sounds: Record<string, Sound>;
@@ -16,7 +15,9 @@ let data: Record<string, unknown>;
 const internalAssetLoadPercentage = new BehaviorSubject(0);
 
 export const assetLoadPercentage = internalAssetLoadPercentage.pipe();
-export const assetsAreReady = internalAssetLoadPercentage.pipe(map<number, boolean>(v => v === 1));
+export const assetsAreReady = internalAssetLoadPercentage.pipe(
+  map<number, boolean>((v) => v === 1),
+);
 
 export async function loadAssets() {
   await Assets.init({ manifest });

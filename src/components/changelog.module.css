@@ -1,8 +1,16 @@
 .buildNumber {
-  text-decoration: underline dashed;
   color: unset;
+}
+
+.buildNumber:hover {
+  color: unset;
+}
+
+.buildNumber:any-link:hover {
+  color: var(--links);
 }
 
 .buildNumber:any-link {
   text-decoration: underline dashed;
+  cursor: pointer;
 }

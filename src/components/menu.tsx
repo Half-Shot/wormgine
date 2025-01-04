@@ -41,24 +41,16 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button disabled>
-            Missions
-          </button>
+          <button disabled>Missions</button>
         </li>
         <li>
-          <button>
-            Team Editor
-          </button>
+          <button>Team Editor</button>
         </li>
         <li>
-          <button disabled>
-            Settings
-          </button>
+          <button disabled>Settings</button>
         </li>
         <li>
-          <button disabled>
-            Online Play
-          </button>
+          <button disabled>Online Play</button>
         </li>
         <li>
           <button>Developer Tools</button>

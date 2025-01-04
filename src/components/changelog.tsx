@@ -17,11 +17,15 @@ export function ChangelogModal({
   lastCommit?: string | null;
 }) {
   const modalRef = useRef<HTMLDialogElement>(null);
-  const hasNewBuild = useMemo(
-    () => buildCommit && lastCommit && buildCommit !== lastCommit,
-    [buildCommit, lastCommit],
-  );
   const [latestChanges, setLatestChanges] = useState<string[]>();
+  const hasNewBuild = true; /*useMemo(
+    () =>
+      buildCommit &&
+      lastCommit &&
+      buildCommit !== lastCommit &&
+      latestChanges?.length,
+    [buildCommit, lastCommit, latestChanges],
+  );*/
 
   useEffect(() => {
     if (!buildCommit || !lastCommit) {
@@ -64,7 +68,7 @@ export function ChangelogModal({
       : `Developer Build ${buildCommit}`;
     return (
       <dialog ref={modalRef}>
-        <h1>{title}</h1>
+        <h2>{title}</h2>
         <p>Changes since {lastCommit?.slice(0, 8)}</p>
         <ol>{latestChanges?.map((v, i) => <li key={i}>{v}</li>)}</ol>
         <button onClick={() => modalRef.current?.close()}>Close</button>
@@ -76,14 +80,19 @@ export function ChangelogModal({
     return <p>Unknown build</p>;
   }
 
-  const newChangesButton = <a className={styles.buildNumber} href={hasNewBuild && latestChanges?.length ? '#' : undefined} onClick={hasNewBuild && latestChanges?.length ? onClick : undefined}>{buildNumber ?? <code>{buildCommit}</code>}</a>;
+  const newChangesButton = (
+    <a
+      className={styles.buildNumber}
+      href={hasNewBuild ? "#" : undefined}
+      onClick={hasNewBuild ? onClick : undefined}
+    >
+      {buildNumber ?? <code>{buildCommit}</code>}
+    </a>
+  );
 
   return (
     <>
-      <span>
-        Build number {' '}
-        {newChangesButton}
-      </span>
+      <span>Build number {newChangesButton}</span>
       {newChangesModal}
     </>
   );
