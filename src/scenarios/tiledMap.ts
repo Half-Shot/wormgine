@@ -29,6 +29,7 @@ import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
+import { Subscription } from "rxjs";
 
 const weapons = [
   WeaponBazooka,
@@ -200,12 +201,13 @@ export default async function runScenario(game: Game) {
     currentWorm.selectWeapon(weapons[newWep]);
   });
 
-  function transitionHandler(prev: InnerWormState, next: InnerWormState) {
+  function transitionHandler([prev, next]: [InnerWormState,InnerWormState]) {
     if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
       gameState.setTimer(5000);
     }
   }
 
+  let sub: Subscription;
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);
     if (endOfGameFadeOut !== null) {
@@ -232,6 +234,7 @@ export default async function runScenario(game: Game) {
         return;
       } else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
         currentWorm?.onEndOfTurn();
+        sub.unsubscribe();
         currentWorm = undefined;
         endOfRoundWaitDuration = null;
       } else {
@@ -257,7 +260,7 @@ export default async function runScenario(game: Game) {
         endOfGameFadeOut = 8000;
       } else {
         currentWorm?.onEndOfTurn();
-        currentWorm?.currentState.off("transition", transitionHandler);
+        sub.unsubscribe();
         currentWorm = wormInstances.get(nextState.nextWorm.uuid);
         // Turn just ended.
         endOfRoundWaitDuration = 5000;
@@ -270,7 +273,7 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
-      currentWorm.currentState.on("transition", transitionHandler);
+      sub = currentWorm.currentState.observeTransition.subscribe(transitionHandler);
       gameState.beginRound();
       endOfRoundWaitDuration = null;
       return;

@@ -1,5 +1,4 @@
-import TypedEmitter from "typed-emitter";
-import { EventEmitter } from "events";
+import { BehaviorSubject, Observable, OperatorFunction, pairwise } from "rxjs";
 
 export enum InnerWormState {
   Idle = 0,
@@ -14,28 +13,28 @@ export enum InnerWormState {
   Inactive = 99,
 }
 
-type Events = {
-  transition: (before: InnerWormState, after: InnerWormState) => void;
-};
 
-export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
+export class WormState {
   private innerStatePriorToMotion?: InnerWormState;
+  private readonly innerState: BehaviorSubject<InnerWormState>;
 
-  constructor(private innerState: InnerWormState) {
-    super();
+  public readonly observeTransition: Observable<[InnerWormState, InnerWormState]>;
+
+  constructor(innerState: InnerWormState) {
+    const subjectInnerState = new BehaviorSubject<InnerWormState>(innerState);
+    this.observeTransition = subjectInnerState.pipe(pairwise());
+    this.innerState = subjectInnerState;
   }
 
   transition(newState: InnerWormState) {
     if (newState === InnerWormState.InMotion) {
-      this.innerStatePriorToMotion = this.innerState;
+      this.innerStatePriorToMotion = this.innerState.value;
     } else if (newState === InnerWormState.MovingLeft) {
-      this.innerStatePriorToMotion = this.innerState;
+      this.innerStatePriorToMotion = this.innerState.value;
     } else if (newState === InnerWormState.MovingRight) {
-      this.innerStatePriorToMotion = this.innerState;
+      this.innerStatePriorToMotion = this.innerState.value;
     }
-    const prev = this.innerState;
-    this.innerState = newState;
-    this.emit("transition", prev, newState);
+    this.innerState.next(newState);
   }
 
   voidStatePriorToMotion() {
@@ -51,7 +50,7 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
       InnerWormState.AimingUp,
       InnerWormState.AimingDown,
       InnerWormState.Getaway,
-    ].includes(this.innerState);
+    ].includes(this.innerState.value);
   }
 
   get statePriorToMotion() {
@@ -59,26 +58,26 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   get shouldUpdate() {
-    return this.innerState !== InnerWormState.Inactive;
+    return this.innerState.value !== InnerWormState.Inactive;
   }
 
   get active() {
-    return this.innerState !== InnerWormState.Inactive;
+    return this.innerState.value !== InnerWormState.Inactive;
   }
 
   get shouldHandleNewInput() {
     return (
-      this.innerState !== InnerWormState.Firing &&
-      this.innerState !== InnerWormState.InactiveWaiting
+      this.innerState.value !== InnerWormState.Firing &&
+      this.innerState.value !== InnerWormState.InactiveWaiting
     );
   }
 
   get isFiring() {
-    return this.innerState === InnerWormState.Firing;
+    return this.innerState.value === InnerWormState.Firing;
   }
 
   get canFire() {
-    return this.innerState === InnerWormState.Idle;
+    return this.innerState.value === InnerWormState.Idle;
   }
 
   get showWeapon() {
@@ -87,22 +86,22 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
       InnerWormState.Idle,
       InnerWormState.AimingDown,
       InnerWormState.AimingUp,
-    ].includes(this.innerState);
+    ].includes(this.innerState.value);
   }
 
   get canMove() {
     return (
-      this.innerState === InnerWormState.Idle ||
-      this.innerState === InnerWormState.Getaway
+      this.innerState.value === InnerWormState.Idle ||
+      this.innerState.value === InnerWormState.Getaway
     );
   }
 
   get state() {
-    return this.innerState;
+    return this.innerState.value;
   }
 
   get stateName() {
-    return InnerWormState[this.innerState];
+    return InnerWormState[this.innerState.value];
   }
 
   get isPlaying() {
@@ -111,6 +110,6 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
       InnerWormState.InMotion,
       InnerWormState.Getaway,
       InnerWormState.InactiveWaiting,
-    ].includes(this.innerState);
+    ].includes(this.innerState.value);
   }
 }
