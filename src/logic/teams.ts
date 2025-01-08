@@ -23,6 +23,7 @@ export interface Team {
   name: string;
   group: TeamGroup;
   worms: WormIdentity[];
+  flag?: string;
   // For net games only
   playerUserId: string | null;
   ammo: Record<IWeaponCode | string, number>;
@@ -85,6 +86,10 @@ export class InternalTeam implements Team {
 
   get group() {
     return this.team.group;
+  }
+
+  get flag() {
+    return this.team.flag;
   }
 
   get health() {

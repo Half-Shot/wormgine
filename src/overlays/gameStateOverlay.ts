@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, Ticker, UPDATE_PRIORITY } from "pixi.js";
+import { Assets, Container, Graphics, Text, Texture, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameState } from "../logic/gamestate";
 import {
   applyGenericBoxStyle,
@@ -30,6 +30,7 @@ export class GameStateOverlay {
   private readonly winddial: WindDial;
   private readonly bottomOfScreenY;
   private readonly roundTimerWidth;
+  private readonly teamFlagTextures: Record<string, Texture> = {};
 
   constructor(
     private readonly ticker: Ticker,
@@ -72,6 +73,10 @@ export class GameStateOverlay {
       .reduceRight((value, team) => Math.max(value, team.maxHealth), 0);
     this.gameState.getActiveTeams().forEach((t) => {
       this.visibleTeamHealth[t.name] = t.health;
+      if (t.flag) {
+        this.teamFlagTextures[t.name] = Texture.from(`team-flag-${t.name}`, true);
+        console.log(this.teamFlagTextures);
+      }
     });
   }
 
@@ -166,6 +171,7 @@ export class GameStateOverlay {
       });
       const border = team === this.gameState.activeTeam ? 0xffffff : undefined;
       const nameTagStartX = centerX - nameTag.width - 120;
+      const flagBoxWidth = 24;
 
       const nameWidth = nameTag.width + 6;
       const nameHeight = nameTag.height - 2;
@@ -175,10 +181,30 @@ export class GameStateOverlay {
         .fill();
       nameTag.position.set(nameTagStartX, teamBottomY - 8);
 
+      // Render flag
+      if (this.teamFlagTextures[team.name]) {
+        const flagX = (centerX - TEAM_HEALTH_WIDTH_PX / 2) - 8;
+        const flagY = teamBottomY - 2;
+        applyGenericBoxStyle(this.gfx, border)
+        .roundRect(
+          flagX,
+          flagY,
+          nameHeight,
+          nameHeight,
+          4,
+        )
+        .stroke()
+        .fill();
+        this.gfx.texture(this.teamFlagTextures[team.name], undefined, flagX + 2, flagY + 2, nameHeight - 4, nameHeight - 4);
+      }
+
+
+
+
       // Render health box.
       applyGenericBoxStyle(this.gfx, border)
         .roundRect(
-          centerX - TEAM_HEALTH_WIDTH_PX / 2,
+          (centerX - TEAM_HEALTH_WIDTH_PX / 2) + flagBoxWidth,
           teamBottomY - 2,
           TEAM_HEALTH_WIDTH_PX,
           nameHeight,
@@ -197,7 +223,7 @@ export class GameStateOverlay {
         })
         .setFillStyle({ color: bg })
         .roundRect(
-          centerX - 99,
+          centerX + flagBoxWidth - 99,
           teamBottomY + 1,
           (TEAM_HEALTH_WIDTH_PX - 4) * teamHealthPercentage - 2,
           nameHeight - 5,

@@ -1,4 +1,4 @@
-import { Ticker } from "pixi.js";
+import { Assets, Ticker } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
@@ -29,6 +29,7 @@ import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
+import { getLocalTeams } from "../settings";
 
 const weapons = [
   WeaponBazooka,
@@ -59,6 +60,24 @@ export default async function runScenario(game: Game) {
     bitmapPosition,
     level.terrain.destructible,
   );
+
+  // Hack!
+  const [topLocalTeam] = getLocalTeams();
+  if (topLocalTeam) {
+    const team = level.teams[0] = {
+      ...level.teams[0],
+      name: topLocalTeam.name,
+      worms: level.teams[0].worms.map((w,i) => ({
+        ...w,
+        name: topLocalTeam.worms[i]
+      })),
+      flag: topLocalTeam.flagb64,
+    }
+    if (team.flag) {
+      Assets.add({alias: `team-flag-${team.name}`, src: team.flag});
+      await Assets.load(`team-flag-${team.name}`);
+    }
+  }
 
   const gameState = new GameState(level.teams, world, level.rules);
 
