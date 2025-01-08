@@ -76,11 +76,6 @@ function mainMenu(
 
 export function Menu({ onNewGame, client, reloadClient }: Props) {
   const [currentMenu, setCurrentMenu] = useState(GameMenu.MainMenu);
-  const [clientReady, setClientReady] = useState(client?.ready);
-
-  client?.once("sync", () => {
-    setClientReady(true);
-  });
 
   const onStartNewGame = useCallback(
     (scenario: string, level?: keyof AssetData) => {
@@ -91,7 +86,7 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
   );
 
   if (currentMenu === GameMenu.MainMenu) {
-    return mainMenu(onStartNewGame, setCurrentMenu, clientReady);
+    return mainMenu(onStartNewGame, setCurrentMenu);
   } else if (currentMenu === GameMenu.AccountMenu) {
     return (
       <AccountMenu
