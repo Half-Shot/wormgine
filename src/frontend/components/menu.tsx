@@ -60,7 +60,7 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button>Developer Tools</button>
+          <button disabled>Developer Tools</button>
         </li>
       </ul>
       <p>
