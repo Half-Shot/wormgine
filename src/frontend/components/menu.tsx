@@ -7,6 +7,7 @@ import AccountMenu from "./menus/account";
 import { OverlayTest } from "./menus/overlaytest";
 import type { AssetData } from "../../assets/manifest";
 import TeamEditorMenu from "./menus/team-editor";
+import SettingsMenu from "./menus/settings";
 
 interface Props {
   onNewGame: (scenario: string, level?: keyof AssetData) => void;
@@ -49,7 +50,7 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button disabled>Settings</button>
+          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>Settings</button>
         </li>
         <li>
           <button disabled>Online Play</button>
@@ -99,6 +100,12 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
     return (
       <TeamEditorMenu
         client={client}
+        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
+      />
+    );
+  } else if (currentMenu === GameMenu.Settings) {
+    return (
+      <SettingsMenu
         onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
       />
     );

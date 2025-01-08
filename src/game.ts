@@ -14,11 +14,10 @@ import staticController from "./input";
 import { sound } from "@pixi/sound";
 import Logger from "./log";
 import { CriticalGameError } from "./errors";
+import { getGameSettings } from "./settings";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
-
-sound.volumeAll = 0.1;
 
 const logger = new Logger("Game");
 
@@ -75,6 +74,7 @@ export class Game {
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
     this.viewport.zoom(8);
+    sound.volumeAll = getGameSettings().soundEffectVolume;
 
     // TODO: Bit of a hack?
     staticController.bindInput();

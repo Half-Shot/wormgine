@@ -3,4 +3,5 @@ export enum GameMenu {
   AccountMenu,
   TeamEditor,
   OverlayTest,
+  Settings,
 }

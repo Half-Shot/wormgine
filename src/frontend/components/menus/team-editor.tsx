@@ -198,7 +198,6 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
           existing[selectedTeam] = t;
           return existing;
         });
-        console.log("Updated team", t);
       },
       [selectedTeam],
     );
@@ -222,7 +221,6 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
           Create Team
         </button>
         <button onClick={onDeleteTeam}>Delete Team</button>
-        <button onClick={onGoBack}>Back</button>
       </>
     );
   } else {
@@ -237,6 +235,7 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
     <main className={menuStyles.menu}>
       <h1>Team Editor</h1>
       {content}
+      <button onClick={onGoBack}>Back</button>
     </main>
   );
 }
