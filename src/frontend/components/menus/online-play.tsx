@@ -3,10 +3,10 @@ import { NetClientConfig, NetGameClient } from "../../../net/client";
 import menuStyles from "../menu.module.css";
 import config from "../config";
 import styles from "./account.module.css";
+import MenuHeader from "../atoms/menu-header";
 
 interface Props {
   client: NetGameClient | undefined;
-  onGoBack: () => void;
   reloadClient: () => void;
 }
 
@@ -63,7 +63,7 @@ function LoggedInView({ client }: { client: NetGameClient }) {
   );
 }
 
-export default function AccountMenu({ client, onGoBack, reloadClient }: Props) {
+export default function OnlinePlayMenu({ client, reloadClient }: Props) {
   const [loginInProgress, setLoginInProgress] = useState(false);
   const [error, setError] = useState<string>();
   const onSubmit = useCallback(
@@ -103,17 +103,16 @@ export default function AccountMenu({ client, onGoBack, reloadClient }: Props) {
     [reloadClient],
   );
 
-  let content;
   if (client?.ready) {
-    content = <LoggedInView client={client} />;
+    return <LoggedInView client={client} />;
   } else if (client?.ready === false) {
-    content = (
+    return (
       <p>Account information is stored and in the progress of connecting.</p>
     );
   } else if (!client && !config.defaultHomeserver) {
-    content = <p>This instance is not configured for network play.</p>;
+    return <p>This instance is not configured for network play.</p>;
   } else {
-    content = (
+    return (
       <section>
         <p>
           You may log into an existing account below by specifying a username
@@ -133,12 +132,4 @@ export default function AccountMenu({ client, onGoBack, reloadClient }: Props) {
       </section>
     );
   }
-
-  return (
-    <main className={menuStyles.menu}>
-      <h1>Wormgine Account</h1>
-      <button onClick={() => onGoBack()}>Go Back</button>
-      {content}
-    </main>
-  );
 }

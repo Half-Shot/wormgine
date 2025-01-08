@@ -3,11 +3,12 @@ import { ChangelogModal } from "./changelog";
 import styles from "./menu.module.css";
 import { NetGameClient } from "../../net/client";
 import { GameMenu } from "./menus/types";
-import AccountMenu from "./menus/account";
+import OnlinePlayMenu from "./menus/online-play";
 import { OverlayTest } from "./menus/overlaytest";
 import type { AssetData } from "../../assets/manifest";
 import TeamEditorMenu from "./menus/team-editor";
 import SettingsMenu from "./menus/settings";
+import MenuHeader from "./atoms/menu-header";
 
 interface Props {
   onNewGame: (scenario: string, level?: keyof AssetData) => void;
@@ -55,7 +56,7 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.AccountMenu)}>
+          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)}>
             Online Play
           </button>
         </li>
@@ -90,27 +91,37 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
     [onNewGame],
   );
 
+  const goBack = () => setCurrentMenu(GameMenu.MainMenu);
+
   if (currentMenu === GameMenu.MainMenu) {
     return mainMenu(onStartNewGame, setCurrentMenu);
-  } else if (currentMenu === GameMenu.AccountMenu) {
+  } else if (currentMenu === GameMenu.OnlinePlay) {
     return (
-      <AccountMenu
-        client={client}
-        reloadClient={reloadClient}
-        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
-      />
+      <menu className={styles.menu}>
+        <MenuHeader onGoBack={goBack}>Online Play</MenuHeader>
+        <OnlinePlayMenu client={client} reloadClient={reloadClient} />
+      </menu>
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
     return (
-      <TeamEditorMenu
-        client={client}
-        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
-      />
+      <menu className={styles.menu}>
+        <MenuHeader onGoBack={goBack}>Team Editor</MenuHeader>
+        <TeamEditorMenu client={client} />
+      </menu>
     );
   } else if (currentMenu === GameMenu.Settings) {
-    return <SettingsMenu onGoBack={() => setCurrentMenu(GameMenu.MainMenu)} />;
+    return (
+      <menu className={styles.menu}>
+        <MenuHeader onGoBack={goBack}>Settings</MenuHeader>
+        <SettingsMenu />
+      </menu>
+    );
+    return;
   } else if (currentMenu === GameMenu.OverlayTest) {
-    return <OverlayTest />;
+    <menu className={styles.menu}>
+      <MenuHeader onGoBack={goBack}>Overlay Test</MenuHeader>
+      <OverlayTest />
+    </menu>;
   }
 
   return null;

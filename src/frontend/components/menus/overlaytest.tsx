@@ -13,12 +13,12 @@ const wepList: [IWeaponDefiniton, number][] = [
 export const OverlayTest: FunctionalComponent = () => {
   const [weaponMenu, setWeaponMenu] = useState<typeof wepList | null>(null);
   return (
-    <main>
+    <>
       <button onClick={() => setWeaponMenu(wepList)}>Open Weapon Menu</button>
       <WeaponSelector
         weapons={weaponMenu}
         onWeaponPicked={() => setWeaponMenu(null)}
       />
-    </main>
+    </>
   );
 };

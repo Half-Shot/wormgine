@@ -1,6 +1,6 @@
 export enum GameMenu {
   MainMenu,
-  AccountMenu,
+  OnlinePlay,
   TeamEditor,
   OverlayTest,
   Settings,

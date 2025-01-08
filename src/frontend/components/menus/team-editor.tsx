@@ -1,13 +1,11 @@
 import useLocalStorageState from "use-local-storage-state";
 import { NetGameClient } from "../../../net/client";
-import menuStyles from "../menu.module.css";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import styles from "./team-editor.module.css";
 import { StoredTeam, WORMGINE_STORAGE_KEY_TEAMS } from "../../../settings";
 
 interface Props {
-  onGoBack: () => void;
   client?: NetGameClient;
 }
 
@@ -54,9 +52,11 @@ async function scaleFile(
 export function TeamEditor({
   team: initialTeam,
   onChange,
+  onDeleteTeam,
 }: {
   team: StoredTeam;
   onChange: (team: StoredTeam) => void;
+  onDeleteTeam: () => void,
 }) {
   const [team, setTeam] = useState(initialTeam);
   const [tempBlobUrl, setTempBlobUrl] = useState<string | null>(null);
@@ -101,40 +101,46 @@ export function TeamEditor({
 
   return (
     <section className={styles.teamEditor}>
-      <input
-        className={styles.editable}
-        type="text"
-        value={team.name}
-        onChange={(v) => {
-          const value = (v.target as HTMLInputElement).value;
-          if (value.length < 3 || value.length > 16) {
-            return;
-          }
-          setTeam((t) => ({ ...t, name: value }));
-        }}
-      />
-      <ol>
-        {team.worms.map((wormName, i) => (
-          <li key={i}>
-            <input
-              minLength={3}
-              maxLength={16}
-              onChange={(v) => {
-                const value = (v.target as HTMLInputElement).value;
-                if (value.length < 3 || value.length > 16) {
-                  return;
-                }
-                team.worms[i] = value;
-                setTeam((t) => ({ ...t, worms: t.worms }));
-              }}
-              type="text"
-              value={wormName}
-            ></input>
-          </li>
-        ))}
-      </ol>
-      <div>
-        <button onClick={() => uploadRef.current?.click()}>Upload Flag</button>
+        <input
+          className={styles.editable}
+          id="team-name"
+          type="text"
+          value={team.name}
+          onChange={(v) => {
+            const value = (v.target as HTMLInputElement).value;
+            if (value.length < 3 || value.length > 16) {
+              return;
+            }
+            setTeam((t) => ({ ...t, name: value }));
+          }}
+        />
+      <section>
+      <h3> Worms </h3>
+        <ol>
+          {team.worms.map((wormName, i) => (
+            <li key={i}>
+              <input
+                minLength={3}
+                maxLength={16}
+                onChange={(v) => {
+                  const value = (v.target as HTMLInputElement).value;
+                  if (value.length < 3 || value.length > 16) {
+                    return;
+                  }
+                  team.worms[i] = value;
+                  setTeam((t) => ({ ...t, worms: t.worms }));
+                }}
+                type="text"
+                value={wormName}
+              ></input>
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section>
+        <h3> Flag </h3>
+        
+        <button onClick={() => uploadRef.current?.click()}>{tempBlobUrl ? <img onClick={() => uploadRef.current?.click()} src={tempBlobUrl}></img> : <p>Upload Flag</p>}</button>
         <input
           ref={uploadRef}
           hidden
@@ -142,13 +148,15 @@ export function TeamEditor({
           type="file"
           accept="image/jpeg,image/png,image/webp"
         />
-        {tempBlobUrl ? <img src={tempBlobUrl}></img> : <p>No flag set</p>}
-      </div>
+      </section>
+      <section>
+        <button onClick={onDeleteTeam}>Delete Team</button>
+      </section>
     </section>
   );
 }
 
-export default function TeamEditorMenu({ onGoBack }: Props) {
+export default function TeamEditorMenu({ client }: Props) {
   const [localTeams, setLocalTeams] = useLocalStorageState<StoredTeam[]>(
     WORMGINE_STORAGE_KEY_TEAMS,
     {
@@ -189,8 +197,6 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
     [],
   );
 
-  let content;
-
   if (localTeams.length) {
     const onTeamChanged = useCallback(
       (t: StoredTeam) => {
@@ -202,11 +208,9 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
       [selectedTeam],
     );
 
-    content = (
+    return (
       <>
-        <label for="team-selector">Selected Team </label>
         <select
-          id="team-selector"
           value={selectedTeam}
           onChange={onTeamSelected}
         >
@@ -216,26 +220,18 @@ export default function TeamEditorMenu({ onGoBack }: Props) {
             </option>
           ))}
         </select>
-        <TeamEditor team={localTeams[selectedTeam]} onChange={onTeamChanged} />
         <button disabled={localTeams.length > MAX_TEAMS} onClick={onCreateTeam}>
-          Create Team
+          Add new team
         </button>
-        <button onClick={onDeleteTeam}>Delete Team</button>
+        <TeamEditor onDeleteTeam={onDeleteTeam} team={localTeams[selectedTeam]} onChange={onTeamChanged} />
       </>
     );
   } else {
-    content = (
+    return (
       <>
         <p>You haven't created any teams yet.</p>
         <button onClick={onCreateTeam}>Create Team</button>
       </>
     );
   }
-  return (
-    <main className={menuStyles.menu}>
-      <h1>Team Editor</h1>
-      {content}
-      <button onClick={onGoBack}>Back</button>
-    </main>
-  );
 }

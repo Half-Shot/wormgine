@@ -1,5 +1,4 @@
 import useLocalStorageState from "use-local-storage-state";
-import menuStyles from "../menu.module.css";
 import { useCallback } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import {
@@ -8,11 +7,7 @@ import {
   WORMGINE_STORAGE_KEY_SETTINGS,
 } from "../../../settings";
 
-interface Props {
-  onGoBack: () => void;
-}
-
-export default function SettingsMenu({ onGoBack }: Props) {
+export default function SettingsMenu() {
   const [settings, setSettings] = useLocalStorageState<GameSettings>(
     WORMGINE_STORAGE_KEY_SETTINGS,
     {
@@ -32,23 +27,19 @@ export default function SettingsMenu({ onGoBack }: Props) {
   );
 
   return (
-    <main className={menuStyles.menu}>
-      <h1>Settings</h1>
-      <section>
-        <h2>General</h2>
-        <label for="sound-effect-meter">Sound Effect Volume:</label>
-        <input
-          id="sound-effect-meter"
-          type="range"
-          style={{ width: "200px" }}
-          onChange={onVolumeSet}
-          value={settings.soundEffectVolume * 100}
-          step={5}
-          min={0}
-          max={100}
-        />
-      </section>
-      <button onClick={onGoBack}>Back</button>
-    </main>
+    <section>
+      <h2>General</h2>
+      <label for="sound-effect-meter">Sound Effect Volume:</label>
+      <input
+        id="sound-effect-meter"
+        type="range"
+        style={{ width: "200px" }}
+        onChange={onVolumeSet}
+        value={settings.soundEffectVolume * 100}
+        step={5}
+        min={0}
+        max={100}
+      />
+    </section>
   );
 }
