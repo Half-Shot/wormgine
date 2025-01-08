@@ -50,10 +50,14 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>Settings</button>
+          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>
+            Settings
+          </button>
         </li>
         <li>
-          <button disabled>Online Play</button>
+          <button onClick={() => setCurrentMenu(GameMenu.AccountMenu)}>
+            Online Play
+          </button>
         </li>
         <li>
           <button>Developer Tools</button>
@@ -93,7 +97,7 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
       <AccountMenu
         client={client}
         reloadClient={reloadClient}
-        setCurrentMenu={setCurrentMenu}
+        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
       />
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
@@ -104,11 +108,7 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
       />
     );
   } else if (currentMenu === GameMenu.Settings) {
-    return (
-      <SettingsMenu
-        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
-      />
-    );
+    return <SettingsMenu onGoBack={() => setCurrentMenu(GameMenu.MainMenu)} />;
   } else if (currentMenu === GameMenu.OverlayTest) {
     return <OverlayTest />;
   }

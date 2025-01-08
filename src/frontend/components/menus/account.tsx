@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from "preact/hooks";
 import { NetClientConfig, NetGameClient } from "../../../net/client";
-import { GameMenu } from "./types";
+import menuStyles from "../menu.module.css";
 import config from "../config";
 import styles from "./account.module.css";
 
 interface Props {
   client: NetGameClient | undefined;
-  setCurrentMenu: (menu: GameMenu) => void;
+  onGoBack: () => void;
   reloadClient: () => void;
 }
 
@@ -63,11 +63,7 @@ function LoggedInView({ client }: { client: NetGameClient }) {
   );
 }
 
-export default function AccountMenu({
-  client,
-  setCurrentMenu,
-  reloadClient,
-}: Props) {
+export default function AccountMenu({ client, onGoBack, reloadClient }: Props) {
   const [loginInProgress, setLoginInProgress] = useState(false);
   const [error, setError] = useState<string>();
   const onSubmit = useCallback(
@@ -139,9 +135,9 @@ export default function AccountMenu({
   }
 
   return (
-    <main className="menu">
+    <main className={menuStyles.menu}>
       <h1>Wormgine Account</h1>
-      <button onClick={() => setCurrentMenu(GameMenu.MainMenu)}>Go Back</button>
+      <button onClick={() => onGoBack()}>Go Back</button>
       {content}
     </main>
   );
