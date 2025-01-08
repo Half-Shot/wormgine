@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import { NetGameClient, NetGameInstance } from "../net/client";
-import { GameStage } from "../net/models";
-import { TeamGroup } from "../logic/teams";
-import Logger from "../log";
+import { NetGameClient, NetGameInstance } from "../../net/client";
+import { GameStage } from "../../net/models";
+import { TeamGroup } from "../../logic/teams";
+import Logger from "../../log";
 
 const logger = new Logger("Lobby");
 

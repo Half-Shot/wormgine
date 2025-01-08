@@ -1,11 +1,12 @@
 import { useCallback, useState } from "preact/hooks";
 import { ChangelogModal } from "./changelog";
 import styles from "./menu.module.css";
-import { NetGameClient } from "../net/client";
+import { NetGameClient } from "../../net/client";
 import { GameMenu } from "./menus/types";
 import AccountMenu from "./menus/account";
 import { OverlayTest } from "./menus/overlaytest";
-import type { AssetData } from "../assets/manifest";
+import type { AssetData } from "../../assets/manifest";
+import TeamEditorMenu from "./menus/team-editor";
 
 interface Props {
   onNewGame: (scenario: string, level?: keyof AssetData) => void;
@@ -37,14 +38,14 @@ function mainMenu(
       <ul className={styles.levelPicker}>
         <li>
           <button onClick={() => onStartNewGame("tiledMap", "levels_testing")}>
-            Skrimish
+            Skirmish
           </button>
         </li>
         <li>
           <button disabled>Missions</button>
         </li>
         <li>
-          <button>Team Editor</button>
+          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)}>Team Editor</button>
         </li>
         <li>
           <button disabled>Settings</button>
@@ -100,10 +101,9 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
     return (
-      <AccountMenu
+      <TeamEditorMenu
         client={client}
-        reloadClient={reloadClient}
-        setCurrentMenu={setCurrentMenu}
+        onGoBack={() => setCurrentMenu(GameMenu.MainMenu)}
       />
     );
   } else if (currentMenu === GameMenu.OverlayTest) {

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "preact/hooks";
-import { NetClientConfig, NetGameClient } from "../../net/client";
+import { NetClientConfig, NetGameClient } from "../../../net/client";
 import { GameMenu } from "./types";
 import config from "../config";
 import styles from "./account.module.css";

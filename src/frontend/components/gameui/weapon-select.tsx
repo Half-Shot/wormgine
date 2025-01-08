@@ -1,10 +1,10 @@
 import { FunctionalComponent } from "preact";
-import { IWeaponCode, IWeaponDefiniton } from "../../weapons/weapon";
+import { IWeaponCode, IWeaponDefiniton } from "../../../weapons/weapon";
 import styles from "./weapon-select.module.css";
-import { pointOnRadius } from "../../utils";
+import { pointOnRadius } from "../../../utils";
 import { useAnimate } from "framer-motion";
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { AmmoCount } from "../../interop/gamechannel";
+import { AmmoCount } from "../../../interop/gamechannel";
 
 const ANIMATION_DURATION = 0.075;
 
