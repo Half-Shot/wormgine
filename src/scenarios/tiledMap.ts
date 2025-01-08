@@ -64,17 +64,17 @@ export default async function runScenario(game: Game) {
   // Hack!
   const [topLocalTeam] = getLocalTeams();
   if (topLocalTeam) {
-    const team = level.teams[0] = {
+    const team = (level.teams[0] = {
       ...level.teams[0],
       name: topLocalTeam.name,
-      worms: level.teams[0].worms.map((w,i) => ({
+      worms: level.teams[0].worms.map((w, i) => ({
         ...w,
-        name: topLocalTeam.worms[i]
+        name: topLocalTeam.worms[i],
       })),
       flag: topLocalTeam.flagb64,
-    }
+    });
     if (team.flag) {
-      Assets.add({alias: `team-flag-${team.name}`, src: team.flag});
+      Assets.add({ alias: `team-flag-${team.name}`, src: team.flag });
       await Assets.load(`team-flag-${team.name}`);
     }
   }

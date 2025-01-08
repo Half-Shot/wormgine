@@ -21,7 +21,6 @@ const lastCommit = localStorage.getItem("wormgine_last_commit");
 function mainMenu(
   onStartNewGame: (scenario: string, level?: keyof AssetData) => void,
   setCurrentMenu: (menu: GameMenu) => void,
-  clientReady?: boolean,
 ) {
   return (
     <main className={styles.menu}>
@@ -45,7 +44,9 @@ function mainMenu(
           <button disabled>Missions</button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)}>Team Editor</button>
+          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)}>
+            Team Editor
+          </button>
         </li>
         <li>
           <button disabled>Settings</button>
