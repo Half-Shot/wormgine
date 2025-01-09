@@ -1,0 +1,44 @@
+.teamBox {
+  display: flex;
+
+  li {
+    list-style: none;
+  }
+
+  .localTeams {
+    width: 33%;
+  }
+}
+
+.wormCount {
+  ul {
+    margin: none;
+    padding: 0;
+  }
+  li {
+    display: inline;
+    list-style: none;
+  }
+}
+
+.teamEntry {
+  button {
+    border: 1px solid white;
+    background: none;
+  }
+  button > img {
+    width: auto;
+    height: 2.5em;
+  }
+}
+
+.teamColor {
+  display: inline-block;
+  height: 2.5em;
+  width: 2.5em;
+  border: 1px solid white;
+}
+
+section {
+  margin-bottom: 2em;
+}

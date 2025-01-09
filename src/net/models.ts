@@ -1,6 +1,7 @@
 import { InputKind } from "../input";
 import { GameRules } from "../logic/gamestate";
-import { Team } from "../logic/teams";
+import { Team, TeamGroup } from "../logic/teams";
+import { StoredTeam } from "../settings";
 
 /**
  * Matrix will need this as an integer, so this will be encoded as an integer
@@ -17,6 +18,12 @@ export enum GameStage {
   Lobby = "lobby",
   InProgress = "in_progress",
   Finished = "completed",
+}
+
+export interface ProposedTeam extends StoredTeam {
+  playerUserId: string;
+  group: TeamGroup;
+  wormCount: number;
 }
 
 export const GameStageEventType = "uk.half-shot.uk.wormgine.game_stage";
@@ -78,9 +85,17 @@ export interface GameConfigEvent {
   type: typeof GameConfigEventType;
   content: {
     rules: GameRules;
-    teams: Team[];
     // Need to decide on some config.
   };
+}
+
+export const GameProposedTeamEventType =
+  "uk.half-shot.uk.wormgine.proposed_team";
+
+export interface GameProposedTeamEvent {
+  state_key: "";
+  type: typeof GameProposedTeamEventType;
+  content: ProposedTeam | {};
 }
 
 export interface ClientReadyEvent {

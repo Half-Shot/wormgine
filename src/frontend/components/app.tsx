@@ -2,11 +2,17 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
 import { assetLoadPercentage, assetsAreReady } from "../../assets";
-import { NetGameClient, NetGameInstance } from "../../net/client";
-import { Lobby } from "./lobby";
+import {
+  ClientState,
+  NetClientConfig,
+  NetGameClient,
+  NetGameInstance,
+} from "../../net/client";
 import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
+import { map, of } from "rxjs";
+import { getClientConfigHook } from "../../settings";
 
 interface LoadGameProps {
   scenario: string;
@@ -18,10 +24,9 @@ export function App() {
   const [gameState, setGameState] = useState<LoadGameProps>();
   const assetProgress = useObservableEagerState(assetLoadPercentage);
   const assetsLoaded = useObservableEagerState(assetsAreReady);
-  const [showLobby, setShowLobby] = useState(false);
   const [client, setClient] = useState<NetGameClient>();
-  const [clientReady, setClientReady] = useState(client?.ready);
-  const [clientShouldReload, setClientShouldReload] = useState(true);
+  const [clientConfig, setClientConfig, { removeItem: removeClientConfig }] =
+    getClientConfigHook();
   const gameReactChannel = new GameReactChannel();
 
   const [lobbyGameRoomId, setLobbyGameRoomId] = useState<string>();
@@ -43,53 +48,28 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!clientShouldReload) {
+    if (!clientConfig) {
       return;
     }
-    if (client) {
-      return;
-    }
-    setClientShouldReload(false);
-    // Load client.
-    const configStr = localStorage.getItem("wormgine_client_config");
-    if (configStr) {
-      const client = new NetGameClient(JSON.parse(configStr));
-      client.once("sync", () => {
-        setClientReady(true);
-      });
-      setClient(client);
-      client.start();
-    }
-  }, [clientShouldReload]);
+    const client = new NetGameClient(clientConfig);
+    setClient(client);
+    void client.start();
+
+    return () => client.stop();
+  }, [clientConfig]);
 
   gameReactChannel.on("goToMenu", () => {
     // TODO: Show a win screen!
     setGameState(undefined);
   });
 
-  useEffect(() => {
-    if (client && lobbyGameRoomId && clientReady && !gameState) {
-      // Now we can load into the game.
-      setShowLobby(true);
-    }
-  });
-
   const onNewGame = useCallback(
-    (scenario: string, level?: keyof AssetData) => {
-      if (scenario === "lobbyGame") {
-        // TODO: Bit of a hack
-        setShowLobby(true);
-      } else {
-        setGameState({ scenario, level });
-      }
-    },
-    [setGameState],
-  );
-
-  const onLobbyGameStarted = useCallback(
-    (instance: NetGameInstance) => {
-      setGameState({ scenario: "netGame", gameInstance: instance });
-      setShowLobby(false);
+    (
+      scenario: string,
+      gameInstance: NetGameInstance | undefined,
+      level?: keyof AssetData,
+    ) => {
+      setGameState({ scenario, level, gameInstance });
     },
     [setGameState],
   );
@@ -103,21 +83,6 @@ export function App() {
       </main>
     );
   }
-
-  if (lobbyGameRoomId && !clientReady) {
-    return <main>Waiting for client to be ready.</main>;
-  }
-
-  if (showLobby) {
-    return (
-      <Lobby
-        client={client}
-        gameRoomId={lobbyGameRoomId}
-        onOpenIngame={onLobbyGameStarted}
-      />
-    );
-  }
-
   if (gameState) {
     return (
       <IngameView
@@ -129,10 +94,22 @@ export function App() {
     );
   }
 
+  const setConfig = useCallback(
+    (v: NetClientConfig | null) => {
+      if (v) {
+        setClientConfig(v);
+      } else {
+        removeClientConfig();
+      }
+    },
+    [setClientConfig],
+  );
+
   return (
     <Menu
       onNewGame={onNewGame}
-      reloadClient={() => setClientShouldReload(true)}
+      setClientConfig={setConfig}
+      lobbyGameRoomId={lobbyGameRoomId}
       client={client}
     />
   );

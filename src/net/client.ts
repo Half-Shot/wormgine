@@ -8,6 +8,9 @@ import {
   PlayerAckEventType,
   GameStateEventType,
   FullGameStateEvent,
+  ProposedTeam,
+  GameProposedTeamEventType,
+  GameProposedTeamEvent,
 } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
@@ -15,14 +18,22 @@ import {
   ClientEvent,
   createClient,
   MatrixClient,
+  MatrixError,
   MemoryStore,
   Preset,
   Room,
   RoomEvent,
+  RoomStateEvent,
+  SyncState,
   Visibility,
 } from "matrix-js-sdk";
-import { Team } from "../logic/teams";
+import { Team, TeamGroup, WormIdentity } from "../logic/teams";
 import { GameRules } from "../logic/gamestate";
+import { BehaviorSubject, map, Observable, tap } from "rxjs";
+import Logger from "../log";
+import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
+
+const logger = new Logger("NetClient");
 
 export interface NetClientConfig {
   baseUrl: string;
@@ -33,60 +44,182 @@ interface NetGameConfiguration {
   myUserId: string;
   hostUserId: string;
   members: Record<string, string>;
-  teams: Team[];
+  // state_key ->
+  teams: Record<string, ProposedTeam>;
   stage: GameStage;
   rules: GameRules;
 }
 
+export enum ClientState {
+  NotAuthenticated,
+  Connecting,
+  Connected,
+  AuthenticationError,
+  OfflineError,
+  UnknownError,
+}
+
 export class NetGameInstance {
-  private _members: Record<string, string>;
+  private readonly _stage: BehaviorSubject<GameStage>;
+  public readonly stage: Observable<GameStage>
+  private readonly _members: BehaviorSubject<Record<string, string>>;
+  public members: Observable<Record<string, string>>;
+  private readonly _proposedTeams: BehaviorSubject<
+    Record<string, ProposedTeam>
+  >;
+  public readonly proposedTeams: Observable<ProposedTeam[]>;;
+  private readonly _rules: BehaviorSubject<GameRules>;
+  public readonly rules: Observable<GameRules>
   public readonly hostUserId: string;
   public readonly isHost: boolean;
-  private _stage: GameStage;
   private room: Room;
-  private rules: GameRules;
-  private teams: Team[];
 
-  public get members() {
-    return { ...this._members };
-  }
-
-  public get stage() {
-    return this._stage;
+  public get myUserId() {
+    return this.client.userId;
   }
 
   constructor(
-    private readonly roomId: string,
+    public readonly roomId: string,
     private readonly client: NetGameClient,
     initialConfiguration: NetGameConfiguration,
   ) {
     this.hostUserId = initialConfiguration.hostUserId;
     this.isHost =
       initialConfiguration.hostUserId === initialConfiguration.myUserId;
-    // TODO: Auto update on new members
-    this._members = initialConfiguration.members;
-    this._stage = initialConfiguration.stage;
+    this._members = new BehaviorSubject<Record<string, string>>(
+      initialConfiguration.members,
+    );
+    this._stage = new BehaviorSubject(initialConfiguration.stage);
+    this.stage = this._stage.asObservable();
     this.room = this.client.client.getRoom(roomId)!;
-    this.rules = initialConfiguration.rules;
-    this.teams = initialConfiguration.teams;
+    this._rules = new BehaviorSubject(initialConfiguration.rules);
+    this.rules = this._rules.asObservable();
+    this._proposedTeams = new BehaviorSubject(initialConfiguration.teams);
+    this.proposedTeams = this._proposedTeams.pipe(map((v) => Object.values(v)));
+    this.members = this._members.asObservable();
     if (!this.room) {
       throw Error("Room not found");
     }
+
+    this.client.client.on(RoomStateEvent.Events, (event, state) => {
+      if (state.roomId !== this.roomId) {
+        return;
+      }
+      const stateKey = event.getStateKey();
+      const type = event.getType();
+      console.log("Updating proposed teams");
+      if (stateKey && type === GameProposedTeamEventType) {
+        const content = event.getContent() as ProposedTeam;
+        if (Object.keys(content).length > 0) {
+          this._proposedTeams.next({
+            ...this._proposedTeams.value,
+            [stateKey]: content,
+          });
+        } else {
+          this._proposedTeams.next(
+            Object.fromEntries(
+              Object.entries(this._proposedTeams.value).filter(
+                ([sk]) => sk !== stateKey,
+              ),
+            ),
+          );
+        }
+      } else if (stateKey === "" && type === GameStageEventType) {
+        const content = event.getContent() as GameStageEvent["content"];
+        this._stage.next(content.stage);
+      } else if (stateKey === "" && type === GameConfigEventType) {
+        const content = event.getContent() as GameConfigEvent["content"];
+        this._rules.next(content.rules);
+      }
+    });
+
+    this.client.client.on(RoomStateEvent.Members, (_e, _s, member) => {
+      if (member.roomId !== this.roomId) {
+        return;
+      }
+      if (member.membership === "join") {
+        this._members.next({
+          ...this._members.value,
+          [member.userId]: member.name,
+        });
+      } else {
+        this._members.next(
+          Object.fromEntries(
+            Object.entries(this._members.value).filter(
+              ([u]) => u !== member.userId,
+            ),
+          ),
+        );
+      }
+    });
   }
 
-  public async updateGameConfig() {
+  public async updateGameConfig(newRules: GameRules) {
     await this.client.client.sendStateEvent(this.roomId, GameConfigEventType, {
-      teams: this.teams,
-      rules: this.rules,
+      rules: newRules,
     } satisfies GameConfigEvent["content"]);
   }
 
+  public async addProposedTeam(
+    proposedTeam: StoredTeam,
+    wormCount: number,
+    teamGroup: TeamGroup = TeamGroup.Red,
+  ) {
+    console.log("Bumping proposed team to ", teamGroup);
+    await this.client.client.sendStateEvent(
+      this.roomId,
+      GameProposedTeamEventType,
+      {
+        ...proposedTeam,
+        group: teamGroup,
+        wormCount,
+        playerUserId: this.client.userId,
+        // TODO: What should the proper stateKey be?
+      },
+      `${this.client.userId.slice(1)}/${proposedTeam.name}`,
+    );
+  }
+
+  public async removeProposedTeam(proposedTeam: ProposedTeam) {
+    await this.client.client.sendStateEvent(
+      this.roomId,
+      GameProposedTeamEventType,
+      {},
+      `${proposedTeam.playerUserId.slice(1)}/${proposedTeam.name}`,
+    );
+  }
+
   public async startGame() {
+    const teams: Team[] = Object.values(this._proposedTeams.value).map(v => ({
+      name: v.name,
+      flag: v.flagb64,
+      group: v.group,
+      playerUserId: v.playerUserId,
+      // Needs to come from rules.
+      ammo: this._rules.value.ammoSchema,
+      worms: v.worms.map(w => ({
+        name: w,
+        health: this._rules.value.wormHealth,
+        maxHealth: this._rules.value.wormHealth,
+        uuid: globalThis.crypto.randomUUID(),
+      } satisfies WormIdentity)),
+    }));
+    // Initial full state of the game.
+    await this.client.client.sendStateEvent(this.roomId, GameStateEventType, {
+      teams,
+      ents: [],
+      iteration: 0,
+      bitmap_hash: "",
+    } satisfies FullGameStateEvent["content"]);
     await this.client.client.sendStateEvent(this.roomId, GameStageEventType, {
       stage: GameStage.InProgress,
     } satisfies GameStageEvent["content"]);
   }
 
+  public async exitGame() {
+    // TODO: Perform any cleanup
+    await this.client.client.leave(this.roomId);
+  }
   public async sendAck() {
     await this.client.client.sendEvent(this.roomId, PlayerAckEventType, {
       ack: true,
@@ -109,6 +242,24 @@ const WormgineRoomType = "uk.half-shot.wormgine.v1";
 
 export class NetGameClient extends EventEmitter {
   public readonly client: MatrixClient;
+  private readonly clientState = new BehaviorSubject<ClientState>(
+    ClientState.NotAuthenticated,
+  );
+  private myUserId!: string;
+
+  public get userId() {
+    return this.myUserId;
+  }
+
+  public static getConfig(): NetClientConfig | null {
+    // TODO: Validate
+    const configStr = localStorage.getItem(WORMGINE_STORAGE_KEY_CLIENT_CONFIG);
+    return configStr && JSON.parse(configStr);
+  }
+
+  public static clearConfig() {
+    localStorage.removeItem(WORMGINE_STORAGE_KEY_CLIENT_CONFIG);
+  }
 
   public static async register(
     homeserverUrl: string,
@@ -145,19 +296,53 @@ export class NetGameClient extends EventEmitter {
       fetchFn: (input, init) => globalThis.fetch(input, init),
       store: new MemoryStore({ localStorage: window.localStorage }),
     });
+    this.clientState.subscribe((s) =>
+      logger.debug("Client state became", ClientState[s]),
+    );
   }
 
-  public get ready() {
-    return this.client.isInitialSyncComplete();
+  public get state() {
+    return this.clientState.pipe();
+  }
+
+  public stop() {
+    this.client.stopClient();
   }
 
   public async start() {
-    const whoami = await this.client.whoami();
-    this.client.credentials.userId = whoami.user_id;
-    this.client.deviceId = whoami.device_id ?? null;
-    this.client.addListener(ClientEvent.Sync, () => {
-      this.emit("sync");
+    logger.info("Starting netgame client");
+    try {
+      const whoami = await this.client.whoami();
+      this.client.credentials.userId = whoami.user_id;
+      this.client.deviceId = whoami.device_id ?? null;
+      this.myUserId = whoami.user_id;
+      logger.info(`Authenticated as ${whoami.user_id}`);
+    } catch (ex) {
+      logger.error(`Failed to authenticate`, ex);
+      if (ex instanceof MatrixError) {
+        if (ex.errcode === "M_UNKNOWN_TOKEN") {
+          this.clientState.next(ClientState.AuthenticationError);
+        } else {
+          this.clientState.next(ClientState.UnknownError);
+        }
+      } else {
+        this.clientState.next(ClientState.UnknownError);
+      }
+      throw ex;
+    }
+    this.client.addListener(ClientEvent.Sync, (state) => {
+      if (state === SyncState.Prepared) {
+        this.clientState.next(ClientState.Connected);
+      } else if (state === SyncState.Error) {
+        this.clientState.next(ClientState.UnknownError);
+      } else {
+        logger.debug("Unknown sync state", state);
+      }
     });
+    this.client.addListener(ClientEvent.SyncUnexpectedError, (err) => {
+      console.log("err", err);
+    });
+    this.clientState.next(ClientState.Connecting);
     await this.client.startClient();
   }
 
@@ -175,6 +360,16 @@ export class NetGameClient extends EventEmitter {
         visibility: Visibility.Private,
         creation_content: {
           type: WormgineRoomType,
+        },
+        power_level_content_override: {
+          events: {
+            [GameProposedTeamEventType]: 20,
+            [GameConfigEventType]: 100,
+            [GameStageEventType]: 100,
+          },
+          // TODO: Forbid lots of other changes.
+          state_default: 20,
+          users_default: 20,
         },
         initial_state: [
           {
@@ -225,7 +420,15 @@ export class NetGameClient extends EventEmitter {
           .map((m) => [m.state_key, m.content.displayname ?? m.state_key]),
       ),
       stage: gameStage,
-      teams: configEvent.content.teams,
+      teams: Object.fromEntries(
+        stateEvents
+          .filter(
+            (m) =>
+              m.type === GameProposedTeamEventType &&
+              Object.keys(m.content).length > 0,
+          )
+          .map((m) => [m.state_key, m.content as ProposedTeam]),
+      ),
       rules: configEvent.content.rules,
     });
   }

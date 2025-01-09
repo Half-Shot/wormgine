@@ -1,5 +1,9 @@
+import useLocalStorageState from "use-local-storage-state";
+import { NetClientConfig } from "./net/client";
+
 export const WORMGINE_STORAGE_KEY_TEAMS = "wormgine.teams";
 export const WORMGINE_STORAGE_KEY_SETTINGS = "wormgine.settings";
+export const WORMGINE_STORAGE_KEY_CLIENT_CONFIG = "wormgine.client_config";
 
 export interface StoredTeam {
   name: string;
@@ -15,6 +19,12 @@ export interface GameSettings {
 const DEFAULT_SETTINGS: GameSettings = {
   soundEffectVolume: 0.1,
 };
+
+export function getClientConfigHook() {
+  return useLocalStorageState<NetClientConfig>(
+    WORMGINE_STORAGE_KEY_CLIENT_CONFIG,
+  );
+}
 
 export function getGameSettings(): GameSettings {
   const item = localStorage.getItem(WORMGINE_STORAGE_KEY_SETTINGS);

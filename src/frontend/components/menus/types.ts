@@ -4,4 +4,5 @@ export enum GameMenu {
   TeamEditor,
   OverlayTest,
   Settings,
+  Lobby,
 }

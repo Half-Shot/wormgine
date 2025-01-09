@@ -4,11 +4,14 @@ import type { StateRecordWormGameState } from "../state/model";
 import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
+import { IWeaponCode } from "../weapons/weapon";
 
 export interface GameRules {
   roundDurationMs?: number;
   winWhenOneGroupRemains?: boolean;
   winWhenAllObjectsOfTypeDestroyed?: EntityType;
+  wormHealth: number,
+  ammoSchema: Record<IWeaponCode | string, number>;
 }
 
 const logger = new Logger("GameState");
@@ -81,7 +84,7 @@ export class GameState {
   constructor(
     teams: Team[],
     private readonly world: GameWorld,
-    private readonly rules: GameRules = { winWhenOneGroupRemains: false },
+    private readonly rules: GameRules,
   ) {
     if (teams.length < 1) {
       throw Error("Must have at least one team");

@@ -56,7 +56,7 @@ export function TeamEditor({
 }: {
   team: StoredTeam;
   onChange: (team: StoredTeam) => void;
-  onDeleteTeam: () => void,
+  onDeleteTeam: () => void;
 }) {
   const [team, setTeam] = useState(initialTeam);
   const [tempBlobUrl, setTempBlobUrl] = useState<string | null>(null);
@@ -101,21 +101,21 @@ export function TeamEditor({
 
   return (
     <section className={styles.teamEditor}>
-        <input
-          className={styles.editable}
-          id="team-name"
-          type="text"
-          value={team.name}
-          onChange={(v) => {
-            const value = (v.target as HTMLInputElement).value;
-            if (value.length < 3 || value.length > 16) {
-              return;
-            }
-            setTeam((t) => ({ ...t, name: value }));
-          }}
-        />
+      <input
+        className={styles.editable}
+        id="team-name"
+        type="text"
+        value={team.name}
+        onChange={(v) => {
+          const value = (v.target as HTMLInputElement).value;
+          if (value.length < 3 || value.length > 16) {
+            return;
+          }
+          setTeam((t) => ({ ...t, name: value }));
+        }}
+      />
       <section>
-      <h3> Worms </h3>
+        <h3> Worms </h3>
         <ol>
           {team.worms.map((wormName, i) => (
             <li key={i}>
@@ -139,8 +139,17 @@ export function TeamEditor({
       </section>
       <section>
         <h3> Flag </h3>
-        
-        <button onClick={() => uploadRef.current?.click()}>{tempBlobUrl ? <img onClick={() => uploadRef.current?.click()} src={tempBlobUrl}></img> : <p>Upload Flag</p>}</button>
+
+        <button onClick={() => uploadRef.current?.click()}>
+          {tempBlobUrl ? (
+            <img
+              onClick={() => uploadRef.current?.click()}
+              src={tempBlobUrl}
+            ></img>
+          ) : (
+            <p>Upload Flag</p>
+          )}
+        </button>
         <input
           ref={uploadRef}
           hidden
@@ -210,10 +219,7 @@ export default function TeamEditorMenu({ client }: Props) {
 
     return (
       <>
-        <select
-          value={selectedTeam}
-          onChange={onTeamSelected}
-        >
+        <select value={selectedTeam} onChange={onTeamSelected}>
           {localTeams.map((t, i) => (
             <option key={t.name} value={i}>
               {t.name}
@@ -223,7 +229,11 @@ export default function TeamEditorMenu({ client }: Props) {
         <button disabled={localTeams.length > MAX_TEAMS} onClick={onCreateTeam}>
           Add new team
         </button>
-        <TeamEditor onDeleteTeam={onDeleteTeam} team={localTeams[selectedTeam]} onChange={onTeamChanged} />
+        <TeamEditor
+          onDeleteTeam={onDeleteTeam}
+          team={localTeams[selectedTeam]}
+          onChange={onTeamChanged}
+        />
       </>
     );
   } else {

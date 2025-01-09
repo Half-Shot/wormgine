@@ -1,7 +1,11 @@
-import { useCallback, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import { ChangelogModal } from "./changelog";
 import styles from "./menu.module.css";
-import { NetGameClient } from "../../net/client";
+import {
+  NetClientConfig,
+  NetGameClient,
+  NetGameInstance,
+} from "../../net/client";
 import { GameMenu } from "./menus/types";
 import OnlinePlayMenu from "./menus/online-play";
 import { OverlayTest } from "./menus/overlaytest";
@@ -9,11 +13,17 @@ import type { AssetData } from "../../assets/manifest";
 import TeamEditorMenu from "./menus/team-editor";
 import SettingsMenu from "./menus/settings";
 import MenuHeader from "./atoms/menu-header";
+import { Lobby } from "./menus/lobby";
 
 interface Props {
-  onNewGame: (scenario: string, level?: keyof AssetData) => void;
-  reloadClient: () => void;
+  onNewGame: (
+    scenario: string,
+    gameInstance: NetGameInstance | undefined,
+    level?: keyof AssetData,
+  ) => void;
+  setClientConfig: (config: NetClientConfig | null) => void;
   client?: NetGameClient;
+  lobbyGameRoomId?: string;
 }
 
 const buildNumber = import.meta.env.VITE_BUILD_NUMBER;
@@ -21,7 +31,11 @@ const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
 const lastCommit = localStorage.getItem("wormgine_last_commit");
 
 function mainMenu(
-  onStartNewGame: (scenario: string, level?: keyof AssetData) => void,
+  onStartNewGame: (
+    scenario: string,
+    gameInstance: NetGameInstance | undefined,
+    level?: keyof AssetData,
+  ) => void,
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
   return (
@@ -38,7 +52,11 @@ function mainMenu(
       </p>
       <ul className={styles.levelPicker}>
         <li>
-          <button onClick={() => onStartNewGame("tiledMap", "levels_testing")}>
+          <button
+            onClick={() =>
+              onStartNewGame("tiledMap", undefined, "levels_testing")
+            }
+          >
             Skirmish
           </button>
         </li>
@@ -80,13 +98,31 @@ function mainMenu(
   );
 }
 
-export function Menu({ onNewGame, client, reloadClient }: Props) {
+export function Menu({
+  onNewGame,
+  client,
+  setClientConfig,
+  lobbyGameRoomId,
+}: Props) {
+  const [currentLobbyId, setLobbyId] = useState(lobbyGameRoomId);
   const [currentMenu, setCurrentMenu] = useState(GameMenu.MainMenu);
 
+  useEffect(() => {
+    if (currentLobbyId) {
+      setCurrentMenu(GameMenu.Lobby);
+    } else {
+      setCurrentMenu((m) => (m === GameMenu.Lobby ? GameMenu.MainMenu : m));
+    }
+  }, [currentLobbyId]);
+
   const onStartNewGame = useCallback(
-    (scenario: string, level?: keyof AssetData) => {
+    (
+      scenario: string,
+      gameInstance: NetGameInstance | undefined,
+      level?: keyof AssetData,
+    ) => {
       localStorage.setItem("wormgine_last_commit", buildCommit);
-      onNewGame(scenario, level);
+      onNewGame(scenario, gameInstance, level);
     },
     [onNewGame],
   );
@@ -99,7 +135,11 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
     return (
       <menu className={styles.menu}>
         <MenuHeader onGoBack={goBack}>Online Play</MenuHeader>
-        <OnlinePlayMenu client={client} reloadClient={reloadClient} />
+        <OnlinePlayMenu
+          onCreateLobby={(roomId) => setLobbyId(roomId)}
+          client={client}
+          setClientConfig={setClientConfig}
+        />
       </menu>
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
@@ -116,13 +156,34 @@ export function Menu({ onNewGame, client, reloadClient }: Props) {
         <SettingsMenu />
       </menu>
     );
-    return;
   } else if (currentMenu === GameMenu.OverlayTest) {
     <menu className={styles.menu}>
       <MenuHeader onGoBack={goBack}>Overlay Test</MenuHeader>
       <OverlayTest />
     </menu>;
-  }
+  } else if (currentMenu === GameMenu.Lobby) {
+    const onOpenIngame = (gameInstance: NetGameInstance) => {
+      onNewGame("netGame", gameInstance);
+    };
+    if (!currentLobbyId) {
+      throw Error("Current Lobby ID must be set!");
+    }
 
-  return null;
+    if (!client) {
+      return <p>Waiting for network connection...</p>;
+    }
+    // TODO: Go back needs to exit game?
+    return (
+      <menu className={styles.menu}>
+        <MenuHeader onGoBack={goBack}>Lobby</MenuHeader>
+        <Lobby
+          client={client}
+          onOpenIngame={onOpenIngame}
+          exitToMenu={() => setLobbyId(undefined)}
+          gameRoomId={currentLobbyId}
+        />
+      </menu>
+    );
+  }
+  throw Error(`Unknown menu! ${GameMenu[currentMenu]}`);
 }
