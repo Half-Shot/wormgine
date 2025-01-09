@@ -99,9 +99,12 @@ export function ActiveLobby({
     [proposedTeams, storedLocalTeams],
   );
 
+  // @ts-ignore
+  const nextTeamGroup: TeamGroup = TeamGroup[useMemo(() => Object.values(TeamGroup).find(v => !proposedTeams.some(t => t.group === v)) as string ?? TeamGroup.Red, [proposedTeams])];
+
   const addTeam = useCallback(
     (_evt: MouseEvent, team: StoredTeam) => {
-      gameInstance.addProposedTeam(team, MAX_WORMS).catch((ex) => {
+      gameInstance.addProposedTeam(team, MAX_WORMS, nextTeamGroup).catch((ex) => {
         logger.warning("Failed to add team", team, ex);
         setError("Failed to add team");
       });
@@ -119,13 +122,14 @@ export function ActiveLobby({
     [gameInstance],
   );
 
-
   const viableToStart = useMemo(() =>
-    gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 &&
-      proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
+    gameInstance.isHost &&
+    members.length >= 2 &&
+    proposedTeams.length >= 2 &&
+      Object.keys(proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
         ...v,
       [o.group]: (v[o.group] ?? 0) + 1
-    }), { })
+    }), { })).length >= 2
   , [gameInstance, members, proposedTeams]);
 
   const lobbyLink = `${window.location.origin}${window.location.pathname}?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
@@ -187,20 +191,16 @@ export function ActiveLobby({
                 }
                 const onRemoveTeam = () => removeTeam(t);
                 const incrementWormCount = () => {
-                  const newWormCount =
+                  const wormCount =
                     t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
-                  gameInstance.addProposedTeam(t, newWormCount, t.group);
+                  gameInstance.updateProposedTeam(t, { wormCount });
                 };
                 const changeTeamColor = () => {
-                  let newGroup = t.group + 1;
-                  if (TeamGroup[newGroup] === undefined) {
-                    newGroup = TeamGroup.Red;
+                  let teamGroup = t.group + 1;
+                  if (TeamGroup[teamGroup] === undefined) {
+                    teamGroup = TeamGroup.Red;
                   }
-                  gameInstance.addProposedTeam(
-                    t,
-                    t.wormCount,
-                    newGroup as TeamGroup,
-                  );
+                  gameInstance.updateProposedTeam(t, { teamGroup });
                 };
                 return (
                   <li key={t.name}>

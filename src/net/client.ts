@@ -168,9 +168,9 @@ export class NetGameInstance {
   }
 
   public async addProposedTeam(
-    proposedTeam: StoredTeam | ProposedTeam,
+    proposedTeam: StoredTeam,
     wormCount: number,
-    teamGroup: TeamGroup = TeamGroup.Red,
+    teamGroup: TeamGroup,
   ) {
     await this.client.client.sendStateEvent(
       this.roomId,
@@ -179,13 +179,27 @@ export class NetGameInstance {
         ...proposedTeam,
         group: teamGroup,
         wormCount,
-        playerUserId:
-          "playerUserId" in proposedTeam
-            ? proposedTeam.playerUserId
-            : this.client.userId,
+        playerUserId: this.client.userId,
         // TODO: What should the proper stateKey be?
       },
       `${this.client.userId.slice(1)}/${proposedTeam.name}`,
+    );
+  }
+  
+
+  public async updateProposedTeam(
+    proposedTeam: ProposedTeam,
+    updates: { wormCount?: number, teamGroup?: TeamGroup},
+  ) {
+    await this.client.client.sendStateEvent(
+      this.roomId,
+      GameProposedTeamEventType,
+      {
+        ...proposedTeam,
+        ...(updates.teamGroup !== undefined && { group: updates.teamGroup }),
+        ...(updates.wormCount !== undefined && { wormCount: updates.wormCount })
+      },
+      `${proposedTeam.playerUserId.slice(1)}/${proposedTeam.name}`,
     );
   }
 
