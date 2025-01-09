@@ -119,15 +119,14 @@ export function ActiveLobby({
     [gameInstance],
   );
 
-  const viableToStart = true;
 
-  // const viableToStart = useMemo(() =>
-  //   gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 &&
-  //     proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
-  //       ...v,
-  //     [o.group]: (v[o.group] ?? 0) + 1
-  //   }), { })
-  // , [gameInstance, members, proposedTeams]);
+  const viableToStart = useMemo(() =>
+    gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 &&
+      proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
+        ...v,
+      [o.group]: (v[o.group] ?? 0) + 1
+    }), { })
+  , [gameInstance, members, proposedTeams]);
 
   const lobbyLink = `${window.location.origin}${window.location.pathname}?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
   return (
