@@ -17,6 +17,7 @@ import { TextStateReplay } from "../state/player";
 import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { EntityType } from "../entities/type";
 import { getDefinitionForCode } from "../weapons";
+import { DefaultWeaponSchema } from "../weapons/schema";
 
 export default async function runScenario(game: Game) {
   const parent = game.viewport;
@@ -38,6 +39,8 @@ export default async function runScenario(game: Game) {
   const gameState = new GameState(initialData.gameState.teams, world, {
     // TODO: Rules.
     winWhenOneGroupRemains: true,
+    wormHealth: 100,
+    ammoSchema: DefaultWeaponSchema,
   });
 
   // TODO: Background

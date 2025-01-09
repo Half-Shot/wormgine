@@ -1,13 +1,8 @@
 import useLocalStorageState from "use-local-storage-state";
-import { NetGameClient } from "../../../net/client";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import styles from "./team-editor.module.css";
 import { StoredTeam, WORMGINE_STORAGE_KEY_TEAMS } from "../../../settings";
-
-interface Props {
-  client?: NetGameClient;
-}
 
 const MAX_WORM_NAMES = 8;
 const MAX_TEAMS = 32;
@@ -165,7 +160,7 @@ export function TeamEditor({
   );
 }
 
-export default function TeamEditorMenu({ client }: Props) {
+export default function TeamEditorMenu() {
   const [localTeams, setLocalTeams] = useLocalStorageState<StoredTeam[]>(
     WORMGINE_STORAGE_KEY_TEAMS,
     {

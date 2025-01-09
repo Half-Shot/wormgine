@@ -26,7 +26,7 @@ import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { logger } from "matrix-js-sdk/lib/logger";
 import { getDefinitionForCode } from "../weapons";
 
-const log = new Logger('scenario');
+const log = new Logger("scenario");
 
 export default async function runScenario(game: Game) {
   if (!game.level) {
@@ -106,22 +106,22 @@ export default async function runScenario(game: Game) {
   let endOfGameFadeOut: number | null = null;
   let currentWorm: Worm | undefined;
 
-  function applyEntityData() {
-    console.log("Applying entity state data");
-    for (const ent of player.latestEntityData) {
-      const existingEnt = world.entities.get(ent.uuid);
-      if (!existingEnt) {
-        throw new Error(
-          `Ent ${ent.uuid} ${ent.type} was not found during entity sync`,
-        );
-      } else if (existingEnt instanceof PhysicsEntity === false) {
-        throw new Error(
-          `Ent ${ent.uuid} ${ent.type} was unexpectedly not a PhysicsEntity`,
-        );
-      }
-      existingEnt.loadState(ent);
-    }
-  }
+  // function applyEntityData() {
+  //   console.log("Applying entity state data");
+  //   for (const ent of player.latestEntityData) {
+  //     const existingEnt = world.entities.get(ent.uuid);
+  //     if (!existingEnt) {
+  //       throw new Error(
+  //         `Ent ${ent.uuid} ${ent.type} was not found during entity sync`,
+  //       );
+  //     } else if (existingEnt instanceof PhysicsEntity === false) {
+  //       throw new Error(
+  //         `Ent ${ent.uuid} ${ent.type} was unexpectedly not a PhysicsEntity`,
+  //       );
+  //     }
+  //     existingEnt.loadState(ent);
+  //   }
+  // }
 
   const assets = getAssets();
   const level = await scenarioParser(game.level, assets.data, assets.textures);
@@ -154,7 +154,12 @@ export default async function runScenario(game: Game) {
       gameInstance.writeAction(data);
     },
   });
-  const gameState = new GameState(initialTeams, world, gameInstance.rules, gameInstance.isHost ? stateRecorder : undefined);
+  const gameState = new GameState(
+    initialTeams,
+    world,
+    gameInstance.rules,
+    gameInstance.isHost ? stateRecorder : undefined,
+  );
 
   const bg = await world.addEntity(
     Background.create(
@@ -219,7 +224,10 @@ export default async function runScenario(game: Game) {
   ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
-      log.info(`Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`, spawnPositions); 
+      log.info(
+        `Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`,
+        spawnPositions,
+      );
       const nextLocationIdx = spawnPositions.findIndex(
         (v) => v && v.teamGroup === wormInstance.team.group,
       );
@@ -258,22 +266,24 @@ export default async function runScenario(game: Game) {
         //   applyEntityData();
         //   return res;
         // },
-        wormInstance.team.playerUserId === myUserId ?
-        Worm.create(
-          parent,
-          world,
-          pos,
-          wormInstance,
-          fireFn,
-          overlay.toaster,
-          stateRecorder,
-        ) : RemoteWorm.create(
-          parent,
-          world,
-          pos,
-          wormInstance,
-          fireFn,
-          overlay.toaster)
+        wormInstance.team.playerUserId === myUserId
+          ? Worm.create(
+              parent,
+              world,
+              pos,
+              wormInstance,
+              fireFn,
+              overlay.toaster,
+              stateRecorder,
+            )
+          : RemoteWorm.create(
+              parent,
+              world,
+              pos,
+              wormInstance,
+              fireFn,
+              overlay.toaster,
+            ),
       );
       delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
@@ -297,7 +307,9 @@ export default async function runScenario(game: Game) {
     if (!currentWorm) {
       return;
     }
-    const newWep = currentWorm.wormIdent.team.availableWeapons.find(([w]) => w.code === code);
+    const newWep = currentWorm.wormIdent.team.availableWeapons.find(
+      ([w]) => w.code === code,
+    );
     if (!newWep) {
       throw Error("Selected weapon is not owned by worm");
     }
@@ -309,7 +321,6 @@ export default async function runScenario(game: Game) {
       gameState.setTimer(5000);
     }
   }
-
 
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);

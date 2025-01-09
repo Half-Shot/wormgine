@@ -7,7 +7,7 @@ import { FireFn, Worm } from "./worm";
 import { StateWormAction } from "../../state/model";
 import Logger from "../../log";
 import { InnerWormState } from "./wormState";
-import Controller, { InputKind } from "../../input";
+import { InputKind } from "../../input";
 
 const logger = new Logger("RemoteWorm");
 

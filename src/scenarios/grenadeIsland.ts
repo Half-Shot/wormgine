@@ -15,6 +15,7 @@ import { Firework } from "../entities/phys/firework";
 import { Worm } from "../entities/playable/worm";
 import { DefaultTextStyle } from "../mixins/styles";
 import { IWeaponCode } from "../weapons/weapon";
+import { DefaultWeaponSchema } from "../weapons/schema";
 
 const weapons = ["grenade", "mine", "firework"];
 
@@ -74,6 +75,11 @@ export default async function runScenario(game: Game) {
       },
     ],
     world,
+    {
+      wormHealth: 100,
+      winWhenOneGroupRemains: true,
+      ammoSchema: DefaultWeaponSchema,
+    },
   );
 
   new GameStateOverlay(

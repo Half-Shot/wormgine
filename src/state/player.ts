@@ -11,7 +11,6 @@ import {
   StateRecordWormGameState,
   StateRecordWormSelectWeapon,
 } from "./model";
-import { RunningNetGameInstance } from "../net/client";
 import { GameActionEvent } from "../net/models";
 import Logger from "../log";
 
@@ -26,7 +25,7 @@ interface EventTypes {
   gameState: [StateRecordWormGameState["data"]];
 }
 
-const log = new Logger('StateReplay');
+const log = new Logger("StateReplay");
 
 export class StateReplay extends EventEmitter<EventTypes> {
   protected lastActionTs = -1;
@@ -92,7 +91,7 @@ export class StateReplay extends EventEmitter<EventTypes> {
     this.lastActionTs = ts;
 
     log.info(`> ${data.ts} ${data.kind} ${data.index} ${data.data}`);
-    
+
     switch (data.kind) {
       case StateRecordKind.EntitySync:
         // TODO: Apply deltas somehow.
@@ -146,13 +145,13 @@ export class TextStateReplay extends StateReplay {
 }
 
 export class MatrixStateReplay extends StateReplay {
+  private prevPromise = Promise.resolve();
   constructor() {
     super();
   }
 
   public async handleEvent(content: GameActionEvent["content"]) {
-    let prevPromise = Promise.resolve();
-    prevPromise = prevPromise.finally(() =>
+    this.prevPromise = this.prevPromise.finally(() =>
       this.parseData(content.action).catch((ex) => {
         console.error("Failed to process line", ex);
       }),

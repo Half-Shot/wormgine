@@ -2,6 +2,7 @@ import type { Game } from "../game";
 import { GameState } from "../logic/gamestate";
 import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
+import { DefaultWeaponSchema } from "../weapons/schema";
 import { IWeaponCode } from "../weapons/weapon";
 
 export default async function runScenario(game: Game) {
@@ -103,6 +104,8 @@ export default async function runScenario(game: Game) {
     world,
     {
       winWhenOneGroupRemains: true,
+      wormHealth: 100,
+      ammoSchema: DefaultWeaponSchema,
     },
   );
 

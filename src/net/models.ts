@@ -38,10 +38,10 @@ export interface GameStageEvent {
 
 export const GameActionEventType = "uk.half-shot.wormgine.game_action";
 export interface GameActionEvent {
-  type: typeof GameActionEventType,
+  type: typeof GameActionEventType;
   content: {
-    action: StateRecordLine<unknown>,
-  }
+    action: StateRecordLine<unknown>;
+  };
 }
 
 export const GameStateEventType = "uk.half-shot.wormgine.game_state";
@@ -104,11 +104,10 @@ export const GameProposedTeamEventType =
 export interface GameProposedTeamEvent {
   state_key: "";
   type: typeof GameProposedTeamEventType;
-  content: ProposedTeam | {};
+  content: ProposedTeam | Record<string, never>;
 }
 
-export const GameClientReadyEventType =
-  "uk.half-shot.uk.wormgine.ready";
+export const GameClientReadyEventType = "uk.half-shot.uk.wormgine.ready";
 export interface GameClientReadyEvent {
   type: typeof GameClientReadyEventType;
   // Need to decide on some config.

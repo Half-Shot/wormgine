@@ -4,7 +4,6 @@ import styles from "./menu.module.css";
 import {
   NetClientConfig,
   NetGameClient,
-  NetGameInstance,
   RunningNetGameInstance,
 } from "../../net/client";
 import { GameMenu } from "./menus/types";
@@ -147,7 +146,7 @@ export function Menu({
     return (
       <menu className={styles.menu}>
         <MenuHeader onGoBack={goBack}>Team Editor</MenuHeader>
-        <TeamEditorMenu client={client} />
+        <TeamEditorMenu />
       </menu>
     );
   } else if (currentMenu === GameMenu.Settings) {

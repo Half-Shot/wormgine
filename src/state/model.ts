@@ -86,7 +86,6 @@ export type StateRecordWormGameState = StateRecordLine<{
     playerUserId: string | null;
     ammo: Team["ammo"];
   }[];
-  nextTeam: string;
   iteration: number;
   wind: number;
 }>;

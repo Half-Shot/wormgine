@@ -11,7 +11,7 @@ export interface GameRules {
   roundDurationMs?: number;
   winWhenOneGroupRemains?: boolean;
   winWhenAllObjectsOfTypeDestroyed?: EntityType;
-  wormHealth: number,
+  wormHealth: number;
   ammoSchema: Record<IWeaponCode | string, number>;
 }
 
@@ -275,7 +275,6 @@ export class GameState {
     this.recorder.recordGameState({
       iteration: iteration,
       wind: this.currentWind,
-      nextTeam: this.activeTeam?.name!,
       teams: teams.map((t) => ({
         name: t.name,
         group: t.group,

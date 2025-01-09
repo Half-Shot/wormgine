@@ -184,6 +184,8 @@ export function OnlinePlayWithClient({
       // Client was logged out.
       NetGameClient.clearConfig();
       setClientConfig(null);
+      return null;
+      break;
     default:
       return (
         <div>

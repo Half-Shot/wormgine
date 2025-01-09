@@ -11,7 +11,6 @@ import {
   ProposedTeam,
   GameProposedTeamEventType,
   GameActionEventType,
-  GameClientReadyEvent,
   GameClientReadyEventType,
 } from "./models";
 import { EventEmitter } from "pixi.js";
@@ -63,7 +62,7 @@ export enum ClientState {
 }
 export class NetGameInstance {
   private readonly _stage: BehaviorSubject<GameStage>;
-  public readonly stage: Observable<GameStage>
+  public readonly stage: Observable<GameStage>;
   private readonly _members: BehaviorSubject<Record<string, string>>;
   public members: Observable<Record<string, string>>;
   private readonly _proposedTeams: BehaviorSubject<
@@ -72,7 +71,7 @@ export class NetGameInstance {
   public readonly proposedTeams: Observable<ProposedTeam[]>;
   private readonly _rules: BehaviorSubject<GameRules>;
   public readonly proposedRules: Observable<GameRules>;
-  
+
   public readonly hostUserId: string;
   public readonly isHost: boolean;
 
@@ -112,7 +111,11 @@ export class NetGameInstance {
       }
       const stateKey = event.getStateKey();
       const type = event.getType();
-      if (stateKey && type === GameProposedTeamEventType && this._stage.value === GameStage.Lobby) {
+      if (
+        stateKey &&
+        type === GameProposedTeamEventType &&
+        this._stage.value === GameStage.Lobby
+      ) {
         const content = event.getContent() as ProposedTeam;
         if (Object.keys(content).length > 0) {
           this._proposedTeams.next({
@@ -165,7 +168,7 @@ export class NetGameInstance {
   }
 
   public async addProposedTeam(
-    proposedTeam: StoredTeam|ProposedTeam,
+    proposedTeam: StoredTeam | ProposedTeam,
     wormCount: number,
     teamGroup: TeamGroup = TeamGroup.Red,
   ) {
@@ -176,7 +179,10 @@ export class NetGameInstance {
         ...proposedTeam,
         group: teamGroup,
         wormCount,
-        playerUserId: "playerUserId" in proposedTeam ? proposedTeam.playerUserId : this.client.userId,
+        playerUserId:
+          "playerUserId" in proposedTeam
+            ? proposedTeam.playerUserId
+            : this.client.userId,
         // TODO: What should the proper stateKey be?
       },
       `${this.client.userId.slice(1)}/${proposedTeam.name}`,
@@ -193,19 +199,22 @@ export class NetGameInstance {
   }
 
   public async startGame() {
-    const teams: Team[] = Object.values(this._proposedTeams.value).map(v => ({
+    const teams: Team[] = Object.values(this._proposedTeams.value).map((v) => ({
       name: v.name,
       flag: v.flagb64,
       group: v.group,
       playerUserId: v.playerUserId,
       // Needs to come from rules.
       ammo: this._rules.value.ammoSchema,
-      worms: v.worms.slice(0, v.wormCount).map(w => ({
-        name: w,
-        health: this._rules.value.wormHealth,
-        maxHealth: this._rules.value.wormHealth,
-        uuid: globalThis.crypto.randomUUID(),
-      } satisfies WormIdentity)),
+      worms: v.worms.slice(0, v.wormCount).map(
+        (w) =>
+          ({
+            name: w,
+            health: this._rules.value.wormHealth,
+            maxHealth: this._rules.value.wormHealth,
+            uuid: globalThis.crypto.randomUUID(),
+          }) satisfies WormIdentity,
+      ),
     }));
     // Initial full state of the game.
     await this.client.client.sendStateEvent(this.roomId, GameStateEventType, {
@@ -390,16 +399,16 @@ export class NetGameClient extends EventEmitter {
     let stateEvents;
     try {
       stateEvents = await this.client.roomState(roomId);
-    } catch (ex) {
+    } catch {
       // TODO: Timeout.
-      await new Promise<void>((r) => room.on(RoomEvent.MyMembership, () => r()));
+      await new Promise<void>((r) =>
+        room.on(RoomEvent.MyMembership, () => r()),
+      );
       stateEvents = await this.client.roomState(roomId);
     }
-    
+
     const createEvent = stateEvents.find((s) => s.type === "m.room.create");
-    const stageEvent = stateEvents.find(
-      (s) => s.type === GameStageEventType,
-    );
+    const stageEvent = stateEvents.find((s) => s.type === GameStageEventType);
     const configEvent = stateEvents.find(
       (s) => s.type === GameConfigEventType,
     ) as unknown as GameConfigEvent;
@@ -445,13 +454,17 @@ export class NetGameClient extends EventEmitter {
       if (!fullStateEvent) {
         throw Error("In progress game had no state");
       }
-      return new RunningNetGameInstance(room, this, initialConfig, fullStateEvent["content"]);
+      return new RunningNetGameInstance(
+        room,
+        this,
+        initialConfig,
+        fullStateEvent["content"],
+      );
     }
 
     return new NetGameInstance(room, this, initialConfig);
   }
 }
-
 
 export class RunningNetGameInstance extends NetGameInstance {
   private readonly _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
@@ -466,8 +479,13 @@ export class RunningNetGameInstance extends NetGameInstance {
     return this.initialConfig.rules;
   }
 
-  constructor(room: Room, client: NetGameClient, private readonly initialConfig: NetGameConfiguration, currentState: FullGameStateEvent["content"]) {
-    super(room, client, initialConfig)
+  constructor(
+    room: Room,
+    client: NetGameClient,
+    private readonly initialConfig: NetGameConfiguration,
+    currentState: FullGameStateEvent["content"],
+  ) {
+    super(room, client, initialConfig);
     this._gameState = new BehaviorSubject(currentState);
     this.gameState = this._gameState.asObservable();
     client.client.on(RoomStateEvent.Events, (event, state) => {
@@ -493,17 +511,27 @@ export class RunningNetGameInstance extends NetGameInstance {
   }
 
   writeAction(data: StateRecordLine<unknown>) {
-    return this.client.client.sendEvent(this.roomId, GameActionEventType, { action: data });
+    return this.client.client.sendEvent(this.roomId, GameActionEventType, {
+      action: data,
+    });
   }
 
   async ready() {
-    return this.client.client.sendEvent(this.roomId, GameClientReadyEventType, { });
+    return this.client.client.sendEvent(
+      this.roomId,
+      GameClientReadyEventType,
+      {},
+    );
   }
 
   async allClientsReady() {
     const setOfReady = new Set<string>([
       this.myUserId,
-      ...this.room.getLiveTimeline().getEvents().filter(e => e.getType() === GameClientReadyEventType).map(e => e.getSender()) as string[],
+      ...(this.room
+        .getLiveTimeline()
+        .getEvents()
+        .filter((e) => e.getType() === GameClientReadyEventType)
+        .map((e) => e.getSender()) as string[]),
     ]);
 
     const expectedCount = Object.values(this.initialConfig.members).length;
@@ -520,4 +548,3 @@ export class RunningNetGameInstance extends NetGameInstance {
     });
   }
 }
-

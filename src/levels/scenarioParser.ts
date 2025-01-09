@@ -15,6 +15,7 @@ import {
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { Team, TeamGroup, WormIdentity } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
+import { DefaultWeaponSchema } from "../weapons/schema";
 
 export const COMPATIBLE_TILED_VERSION = "1.11";
 const logger = new Logger("scenarioParser");
@@ -125,6 +126,8 @@ function determineRules(rules?: TiledGameRulesProperties): GameRules {
     logger.warning("No rules in level, assuming deathmatch");
     return {
       winWhenOneGroupRemains: true,
+      wormHealth: 100,
+      ammoSchema: DefaultWeaponSchema,
     };
   }
   rules["wormgine.end_condition"] ??= "Deathmatch";
@@ -135,10 +138,14 @@ function determineRules(rules?: TiledGameRulesProperties): GameRules {
       winWhenAllObjectsOfTypeDestroyed: Object.entries(EntityType).find(
         ([_k, v]) => v === obj,
       )?.[1],
+      wormHealth: 100,
+      ammoSchema: DefaultWeaponSchema,
     };
   } else if (rules["wormgine.end_condition"] === "Deathmatch") {
     return {
       winWhenOneGroupRemains: true,
+      wormHealth: 100,
+      ammoSchema: DefaultWeaponSchema,
     };
   }
   throw Error("Misconfigured rules object");

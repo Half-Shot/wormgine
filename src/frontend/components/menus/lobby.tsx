@@ -79,7 +79,13 @@ export function ActiveLobby({
   const [error, setError] = useState<string>();
 
   const membersMap = useObservableEagerState(gameInstance.members);
-  const members = useMemo(() => Object.entries(membersMap).sort(([uA], [uB]) => [uA, uB].sort().indexOf(uA)), [membersMap]);
+  const members = useMemo(
+    () =>
+      Object.entries(membersMap).sort(([uA], [uB]) =>
+        [uA, uB].sort().indexOf(uA),
+      ),
+    [membersMap],
+  );
   const proposedTeams = useObservableEagerState(gameInstance.proposedTeams);
   const [storedLocalTeams] = useLocalStorageState<StoredTeam[]>(
     WORMGINE_STORAGE_KEY_TEAMS,
@@ -115,8 +121,8 @@ export function ActiveLobby({
 
   const viableToStart = true;
 
-  // const viableToStart = useMemo(() => 
-  //   gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 && 
+  // const viableToStart = useMemo(() =>
+  //   gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 &&
   //     proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
   //       ...v,
   //     [o.group]: (v[o.group] ?? 0) + 1
@@ -182,7 +188,8 @@ export function ActiveLobby({
                 }
                 const onRemoveTeam = () => removeTeam(t);
                 const incrementWormCount = () => {
-                  const newWormCount = t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
+                  const newWormCount =
+                    t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
                   gameInstance.addProposedTeam(t, newWormCount, t.group);
                 };
                 const changeTeamColor = () => {
@@ -216,10 +223,7 @@ export function ActiveLobby({
       </section>
 
       <section>
-        <button
-          onClick={() => onOpenIngame()}
-          disabled={!viableToStart}
-        >
+        <button onClick={() => onOpenIngame()} disabled={!viableToStart}>
           Start Game
         </button>
         <button onClick={() => exitToMenu()} disabled={gameInstance.isHost}>
@@ -235,7 +239,6 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
   const [gameInstance, setGameInstance] = useState<NetGameInstance>();
 
   const clientState = useObservableEagerState(client.state);
-
 
   useEffect(() => {
     if (!gameInstance) {
@@ -256,7 +259,7 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
       }
     });
     return () => s.unsubscribe();
-  }, [gameInstance])
+  }, [gameInstance]);
 
   useEffect(() => {
     if (clientState !== ClientState.Connected) {

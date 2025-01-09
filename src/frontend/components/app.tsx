@@ -5,7 +5,6 @@ import { assetLoadPercentage, assetsAreReady } from "../../assets";
 import {
   NetClientConfig,
   NetGameClient,
-  NetGameInstance,
   RunningNetGameInstance,
 } from "../../net/client";
 import { GameReactChannel } from "../../interop/gamechannel";

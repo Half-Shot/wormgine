@@ -84,7 +84,7 @@ export default async function runScenario(game: Game) {
   const recordedGameplayKey = `wormgine_recorded_${new Date().toISOString()}`;
   let recordedState = "";
 
-  const stateRecorder = new StateRecorder(world, gameState, {
+  const stateRecorder = new StateRecorder(world, {
     async writeLine(data) {
       recordedState += `${JSON.stringify(data)}|`;
       localStorage.setItem(recordedGameplayKey, recordedState);
@@ -260,7 +260,6 @@ export default async function runScenario(game: Game) {
     if (endOfRoundWaitDuration === null) {
       stateRecorder.syncEntityState();
       const nextState = gameState.advanceRound();
-      stateRecorder.recordGameStare();
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {
           overlay.toaster.pushToast(
@@ -300,6 +299,4 @@ export default async function runScenario(game: Game) {
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
 
   game.pixiApp.ticker.add(roundHandlerFn);
-  stateRecorder.recordGameStare();
-  stateRecorder.syncEntityState();
 }

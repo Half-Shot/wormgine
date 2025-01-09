@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import styles from "./ingame-view.module.css";
 import { Game } from "../../game";
-import { NetGameInstance, RunningNetGameInstance } from "../../net/client";
+import { RunningNetGameInstance } from "../../net/client";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
 
