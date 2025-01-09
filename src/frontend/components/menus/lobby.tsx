@@ -3,6 +3,7 @@ import {
   ClientState,
   NetGameClient,
   NetGameInstance,
+  RunningNetGameInstance,
 } from "../../../net/client";
 import { GameStage, ProposedTeam } from "../../../net/models";
 import Logger from "../../../log";
@@ -14,9 +15,11 @@ import { TeamGroup } from "../../../logic/teams";
 
 const logger = new Logger("Lobby");
 
+const MAX_WORMS = 1;
+
 interface Props {
   client: NetGameClient;
-  onOpenIngame: (gameInstance: NetGameInstance) => void;
+  onOpenIngame: (gameInstance: RunningNetGameInstance) => void;
   exitToMenu: () => void;
   gameRoomId: string;
 }
@@ -70,7 +73,7 @@ export function ActiveLobby({
   exitToMenu,
 }: {
   gameInstance: NetGameInstance;
-  onOpenIngame: (gameInstance: NetGameInstance) => void;
+  onOpenIngame: () => void;
   exitToMenu: () => void;
 }) {
   const [error, setError] = useState<string>();
@@ -92,7 +95,7 @@ export function ActiveLobby({
 
   const addTeam = useCallback(
     (_evt: MouseEvent, team: StoredTeam) => {
-      gameInstance.addProposedTeam(team, 3).catch((ex) => {
+      gameInstance.addProposedTeam(team, MAX_WORMS).catch((ex) => {
         logger.warning("Failed to add team", team, ex);
         setError("Failed to add team");
       });
@@ -110,13 +113,15 @@ export function ActiveLobby({
     [gameInstance],
   );
 
-  const viableToStart = useMemo(() => 
-    gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 && 
-      proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
-        ...v,
-      [o.group]: (v[o.group] ?? 0) + 1
-    }), { })
-  , [gameInstance, members, proposedTeams]);
+  const viableToStart = true;
+
+  // const viableToStart = useMemo(() => 
+  //   gameInstance.isHost && members.length >= 2 && proposedTeams.length >= 2 && 
+  //     proposedTeams.reduce<Partial<Record<TeamGroup, number>>>((v, o) => ({
+  //       ...v,
+  //     [o.group]: (v[o.group] ?? 0) + 1
+  //   }), { })
+  // , [gameInstance, members, proposedTeams]);
 
   const lobbyLink = `${window.location.origin}${window.location.pathname}?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
   return (
@@ -177,11 +182,10 @@ export function ActiveLobby({
                 }
                 const onRemoveTeam = () => removeTeam(t);
                 const incrementWormCount = () => {
-                  const newWormCount = t.wormCount >= 8 ? 1 : t.wormCount + 1;
+                  const newWormCount = t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
                   gameInstance.addProposedTeam(t, newWormCount, t.group);
                 };
                 const changeTeamColor = () => {
-                  console.log("tgroup is", t.group);
                   let newGroup = t.group + 1;
                   if (TeamGroup[newGroup] === undefined) {
                     newGroup = TeamGroup.Red;
@@ -213,7 +217,7 @@ export function ActiveLobby({
 
       <section>
         <button
-          onClick={() => onOpenIngame(gameInstance)}
+          onClick={() => onOpenIngame()}
           disabled={!viableToStart}
         >
           Start Game
@@ -239,11 +243,20 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
     }
     const s = gameInstance.stage.subscribe((v) => {
       if (v === GameStage.InProgress) {
-        onOpenIngame(gameInstance);
+        logger.info("Game is in progress");
+        if (gameInstance instanceof RunningNetGameInstance) {
+          logger.debug("Using existing game instance");
+          onOpenIngame(gameInstance);
+        } else {
+          // Inefficient
+          client.joinGameRoom(gameInstance.roomId).then((running) => {
+            onOpenIngame(running as RunningNetGameInstance);
+          });
+        }
       }
     });
     return () => s.unsubscribe();
-  })
+  }, [gameInstance])
 
   useEffect(() => {
     if (clientState !== ClientState.Connected) {
@@ -274,7 +287,7 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
       logger.error("Failed to start game", ex);
       setError("Failed to start game!");
     }
-  }, [onOpenIngame, gameInstance]);
+  }, [gameInstance]);
 
   const exitLobby = useCallback(async () => {
     if (!gameInstance) {

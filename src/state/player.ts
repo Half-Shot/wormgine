@@ -11,7 +11,9 @@ import {
   StateRecordWormGameState,
   StateRecordWormSelectWeapon,
 } from "./model";
-import { NetGameInstance } from "../net/client";
+import { RunningNetGameInstance } from "../net/client";
+import { GameActionEvent } from "../net/models";
+import Logger from "../log";
 
 interface EventTypes {
   started: void;
@@ -23,6 +25,8 @@ interface EventTypes {
   wormSelectWeapon: [StateRecordWormSelectWeapon["data"]];
   gameState: [StateRecordWormGameState["data"]];
 }
+
+const log = new Logger('StateReplay');
 
 export class StateReplay extends EventEmitter<EventTypes> {
   protected lastActionTs = -1;
@@ -86,6 +90,9 @@ export class StateReplay extends EventEmitter<EventTypes> {
 
     await new Promise((r) => setTimeout(r, waitFor));
     this.lastActionTs = ts;
+
+    log.info(`> ${data.ts} ${data.kind} ${data.index} ${data.data}`);
+    
     switch (data.kind) {
       case StateRecordKind.EntitySync:
         // TODO: Apply deltas somehow.
@@ -139,21 +146,16 @@ export class TextStateReplay extends StateReplay {
 }
 
 export class MatrixStateReplay extends StateReplay {
-  constructor(private gameInst: NetGameInstance) {
+  constructor() {
     super();
   }
 
-  public async play() {
-    if (this.hostStartTs != -1) {
-      throw Error("Already playing");
-    }
+  public async handleEvent(content: GameActionEvent["content"]) {
     let prevPromise = Promise.resolve();
-    this.gameInst.subscribeToGameState((data) => {
-      prevPromise = prevPromise.finally(() =>
-        this.parseData(data).catch((ex) => {
-          console.error("Failed to process line", ex);
-        }),
-      );
-    });
+    prevPromise = prevPromise.finally(() =>
+      this.parseData(content.action).catch((ex) => {
+        console.error("Failed to process line", ex);
+      }),
+    );
   }
 }

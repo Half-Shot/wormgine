@@ -220,7 +220,7 @@ export class Worm extends PlayableEntity {
     }
   }
 
-  onWormSelected() {
+  onWormSelected(bindInput = true) {
     this.toaster?.pushToast(
       templateRandomText(TurnStartText, {
         WormName: this.wormIdent.name,
@@ -233,8 +233,10 @@ export class Worm extends PlayableEntity {
     this.state.transition(InnerWormState.Idle);
     this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
     this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
-    Controller.on("inputBegin", this.onInputBegin);
-    Controller.on("inputEnd", this.onInputEnd);
+    if (bindInput) {
+      Controller.on("inputBegin", this.onInputBegin);
+      Controller.on("inputEnd", this.onInputEnd);
+    }
   }
 
   onEndOfTurn() {
@@ -383,6 +385,7 @@ export class Worm extends PlayableEntity {
   setMoveDirection(direction: InputKind.MoveLeft | InputKind.MoveRight) {
     // We can only change direction if we are idle.
     if (!this.state.canMove) {
+      logger.info("Can't move!");
       // Falling, can't move
       return;
     }

@@ -5,9 +5,9 @@ import { Coordinate } from "../../utils";
 import { GameWorld } from "../../world";
 import { FireFn, Worm } from "./worm";
 import { StateWormAction } from "../../state/model";
-import { InputKind } from "../../input";
 import Logger from "../../log";
 import { InnerWormState } from "./wormState";
+import Controller, { InputKind } from "../../input";
 
 const logger = new Logger("RemoteWorm");
 
@@ -104,5 +104,9 @@ export class RemoteWorm extends Worm {
   replayAim(_dir: "up" | "down", aim: number) {
     // TODO: Needs animation.
     this.fireAngle = aim;
+  }
+
+  onWormSelected(): void {
+    super.onWormSelected(false);
   }
 }

@@ -8,7 +8,7 @@ import { readAssetsForEntities } from "./entities";
 import { Team } from "./logic/teams";
 import { readAssetsForWeapons } from "./weapons";
 import { WindDial } from "./overlays/windDial";
-import { NetGameInstance } from "./net/client";
+import { RunningNetGameInstance } from "./net/client";
 import { GameReactChannel } from "./interop/gamechannel";
 import staticController from "./input";
 import { sound } from "@pixi/sound";
@@ -36,7 +36,7 @@ export class Game {
     scenario: string,
     gameReactChannel: GameReactChannel,
     level?: string,
-    netGameInstance?: NetGameInstance,
+    netGameInstance?: RunningNetGameInstance,
   ): Promise<Game> {
     await RAPIER.init();
     const pixiApp = new Application();
@@ -55,7 +55,7 @@ export class Game {
     private readonly scenario: string,
     public readonly gameReactChannel: GameReactChannel,
     public readonly level?: string,
-    public readonly netGameInstance?: NetGameInstance,
+    public readonly netGameInstance?: RunningNetGameInstance,
   ) {
     // TODO: Set a sensible static width/height and have the canvas pan it.
     this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });

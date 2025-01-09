@@ -1,12 +1,11 @@
-import { Assets, Ticker, Text } from "pixi.js";
+import { Assets, Ticker } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { Worm } from "../entities/playable/worm";
+import { FireFn, Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
 import { GameState } from "../logic/gamestate";
-import { TeamGroup } from "../logic/teams";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import {
   GameDrawText,
@@ -14,68 +13,148 @@ import {
   templateRandomText,
 } from "../text/toasts";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
-import { DefaultTextStyle } from "../mixins/styles";
-import { WeaponBazooka, WeaponGrenade, WeaponShotgun } from "../weapons";
 import staticController, { InputKind } from "../input";
-import { IWeaponCode } from "../weapons/weapon";
 import { StateRecorder } from "../state/recorder";
+import { CameraLockPriority, ViewportCamera } from "../camera";
+import { getAssets } from "../assets";
+import { scenarioParser } from "../levels/scenarioParser";
+import { WeaponTarget } from "../entities/phys/target";
+import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
+import { InnerWormState } from "../entities/playable/wormState";
+import Logger from "../log";
+import { RemoteWorm } from "../entities/playable/remoteWorm";
+import { logger } from "matrix-js-sdk/lib/logger";
+import { getDefinitionForCode } from "../weapons";
 
-const weapons = [WeaponBazooka, WeaponGrenade, WeaponShotgun];
+const log = new Logger('scenario');
 
 export default async function runScenario(game: Game) {
+  if (!game.level) {
+    throw Error("Level required!");
+  }
+  if (!game.netGameInstance) {
+    throw Error("Network required!");
+  }
+  const gameInstance = game.netGameInstance;
   const parent = game.viewport;
   const world = game.world;
-  const { worldWidth, worldHeight } = game.viewport;
+  const { worldWidth } = game.viewport;
 
-  const terrain = BitmapTerrain.create(game.world, Assets.get("testingGround"));
+  const player = gameInstance.player;
+  player.on("started", () => {
+    logger.info("started playback");
+  });
 
-  const gameState = new GameState(
-    [
-      {
-        name: "The Prawns",
-        group: TeamGroup.Red,
-        worms: [
-          {
-            name: "Shrimp",
-            maxHealth: 100,
-            health: 100,
-          },
-        ],
-        playerUserId: null,
-        ammo: {
-          [IWeaponCode.Bazooka]: 999,
-        },
-      },
-      {
-        name: "The Whales",
-        group: TeamGroup.Blue,
-        worms: [
-          {
-            name: "Welsh boy",
-            maxHealth: 100,
-            health: 100,
-          },
-        ],
-        playerUserId: null,
-        ammo: {
-          [IWeaponCode.Bazooka]: 999,
-        },
-      },
-    ],
-    world,
-    {
-      winWhenOneGroupRemains: true,
-    },
+  const wormInstances = new Map<string, Worm>();
+
+  player.on("wormAction", (wormAction) => {
+    const wormInst = wormInstances.get(wormAction.id);
+    if (!wormInst) {
+      throw Error("Worm not found");
+    }
+    if (wormInst instanceof RemoteWorm === false) {
+      return;
+    }
+    wormInst.replayWormAction(wormAction.action);
+  });
+
+  player.on("wormSelectWeapon", (wormWeapon) => {
+    const wormInst = wormInstances.get(wormWeapon.id);
+    if (!wormInst) {
+      throw Error("Worm not found");
+    }
+    if (wormInst instanceof RemoteWorm === false) {
+      return;
+    }
+    wormInst.selectWeapon(getDefinitionForCode(wormWeapon.weapon));
+  });
+
+  player.on("wormActionAim", ({ id, dir, angle }) => {
+    const wormInst = wormInstances.get(id);
+    if (!wormInst) {
+      throw Error("Worm not found");
+    }
+    if (wormInst instanceof RemoteWorm === false) {
+      return;
+    }
+    wormInst.replayAim(dir, parseFloat(angle));
+  });
+
+  player.on("wormActionMove", ({ id, action, cycles }) => {
+    const wormInst = wormInstances.get(id);
+    if (!wormInst) {
+      throw Error("Worm not found");
+    }
+    if (wormInst instanceof RemoteWorm === false) {
+      return;
+    }
+    wormInst.replayMovement(action, cycles);
+  });
+
+  player.on("wormActionFire", ({ id, duration }) => {
+    const wormInst = wormInstances.get(id);
+    if (!wormInst) {
+      throw Error("Worm not found");
+    }
+    if (wormInst instanceof RemoteWorm === false) {
+      return;
+    }
+    wormInst.replayFire(duration);
+  });
+
+  let endOfRoundWaitDuration: number | null = null;
+  let endOfGameFadeOut: number | null = null;
+  let currentWorm: Worm | undefined;
+
+  function applyEntityData() {
+    console.log("Applying entity state data");
+    for (const ent of player.latestEntityData) {
+      const existingEnt = world.entities.get(ent.uuid);
+      if (!existingEnt) {
+        throw new Error(
+          `Ent ${ent.uuid} ${ent.type} was not found during entity sync`,
+        );
+      } else if (existingEnt instanceof PhysicsEntity === false) {
+        throw new Error(
+          `Ent ${ent.uuid} ${ent.type} was unexpectedly not a PhysicsEntity`,
+        );
+      }
+      existingEnt.loadState(ent);
+    }
+  }
+
+  const assets = getAssets();
+  const level = await scenarioParser(game.level, assets.data, assets.textures);
+  const bitmapPosition = Coordinate.fromScreen(
+    level.terrain.x,
+    level.terrain.y,
+  );
+  const terrain = BitmapTerrain.create(
+    game.world,
+    level.terrain.bitmap,
+    bitmapPosition,
+    level.terrain.destructible,
   );
 
-  const stateRecorder = new StateRecorder(world, gameState, {
-    async writeLine(_data) {
-      if (game.netGameInstance) {
-        throw Error("Unimpleted, fix data structure");
-        //game.netGameInstance.sendGameState(data);
-      }
+  const initialTeams = gameInstance.gameStateImmediate.teams;
+
+  for (const team of gameInstance.gameStateImmediate.teams) {
+    if (team.flag) {
+      Assets.add({ alias: `team-flag-${team.name}`, src: team.flag });
+      await Assets.load(`team-flag-${team.name}`);
+    }
+  }
+
+  const myUserId = gameInstance.myUserId;
+
+  const stateLogger = new Logger("StateRecorder");
+  const stateRecorder = new StateRecorder(world, {
+    async writeLine(data) {
+      stateLogger.debug("Writing state", data);
+      gameInstance.writeAction(data);
     },
   });
+  const gameState = new GameState(initialTeams, world, gameInstance.rules, gameInstance.isHost ? stateRecorder : undefined);
 
   const bg = await world.addEntity(
     Background.create(
@@ -88,8 +167,7 @@ export default async function runScenario(game: Game) {
     ),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
-  await world.addEntity(terrain);
-  bg.addToWorld(game.pixiApp.stage, parent);
+  world.addEntity(terrain);
   terrain.addToWorld(parent);
 
   const overlay = new GameStateOverlay(
@@ -101,75 +179,140 @@ export default async function runScenario(game: Game) {
     game.viewport.screenHeight,
   );
 
+  const waterLevel = parseFloat(
+    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? "0",
+  );
+
   const water = world.addEntity(
     new Water(
       MetersValue.fromPixels(worldWidth * 4),
-      MetersValue.fromPixels(worldHeight),
+      MetersValue.fromPixels(waterLevel),
       world,
     ),
   );
   water.addToWorld(parent, world);
 
-  const wormInstances = new Map<string, Worm>();
+  const camera = new ViewportCamera(game.viewport, world, water.waterHeight);
+  camera.snapToPosition(
+    bitmapPosition.toScreenPoint(),
+    CameraLockPriority.SuggestedLockNonLocal,
+    false,
+  );
 
-  let i = 300;
+  for (const levelObject of level.objects) {
+    if (levelObject.type === "wormgine.target") {
+      const t = new WeaponTarget(
+        world,
+        Coordinate.fromScreen(
+          parseFloat(levelObject.tra.x),
+          parseFloat(levelObject.tra.y),
+        ),
+        parent,
+      );
+      world.addEntity(t);
+      parent.addChild(t.sprite);
+    }
+  }
+
+  const spawnPositions = level.objects.filter(
+    (v) => v.type === "wormgine.worm_spawn",
+  ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
-      i += 200;
+      log.info(`Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`, spawnPositions); 
+      const nextLocationIdx = spawnPositions.findIndex(
+        (v) => v && v.teamGroup === wormInstance.team.group,
+      );
+      if (nextLocationIdx === -1) {
+        throw Error("No location to spawn worm");
+      }
+      const nextLocation = spawnPositions[nextLocationIdx];
+      const pos = Coordinate.fromScreen(
+        parseFloat(nextLocation.tra.x),
+        parseFloat(nextLocation.tra.y),
+      );
+      const fireFn: FireFn = async (worm, definition, opts) => {
+        const newProjectile = definition.fireFn(parent, world, worm, opts);
+        if (newProjectile instanceof PhysicsEntity) {
+          newProjectile.cameraLockPriority =
+            CameraLockPriority.LockIfNotLocalPlayer;
+          world.addEntity(newProjectile);
+        }
+        stateRecorder.syncEntityState();
+        const res = await newProjectile.onFireResult;
+        return res;
+      };
       const wormEnt = world.addEntity(
-        await Worm.create(
+        // TODO: For remote worms:
+        //           async (worm, definition, opts) => {
+        //   const newProjectile = definition.fireFn(parent, world, worm, opts);
+        //   if (newProjectile instanceof PhysicsEntity) {
+        //     parent.follow(newProjectile.sprite);
+        //     world.addEntity(newProjectile);
+        //   }
+        //   applyEntityData();
+        //   const res = await newProjectile.onFireResult;
+        //   if (newProjectile instanceof PhysicsEntity) {
+        //     parent.follow(worm.sprite);
+        //   }
+        //   applyEntityData();
+        //   return res;
+        // },
+        wormInstance.team.playerUserId === myUserId ?
+        Worm.create(
           parent,
           world,
-          Coordinate.fromScreen(400 + i, 105),
+          pos,
           wormInstance,
-          async (worm, definition, opts) => {
-            const newProjectile = definition.fireFn(parent, world, worm, opts);
-            if (newProjectile instanceof PhysicsEntity) {
-              parent.follow(newProjectile.sprite);
-              world.addEntity(newProjectile);
-            }
-            stateRecorder.syncEntityState();
-            const res = await newProjectile.onFireResult;
-            if (newProjectile instanceof PhysicsEntity) {
-              parent.follow(worm.sprite);
-            }
-            return res;
-          },
+          fireFn,
           overlay.toaster,
           stateRecorder,
-        ),
+        ) : RemoteWorm.create(
+          parent,
+          world,
+          pos,
+          wormInstance,
+          fireFn,
+          overlay.toaster)
       );
+      delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
 
-  let endOfRoundWaitDuration: number | null = null;
-  let endOfGameFadeOut: number | null = null;
-  let currentWorm: Worm | undefined;
-
-  let selectedWeaponIndex = 0;
-  const weaponText = new Text({
-    text: `Selected Weapon (press S to switch): no-worm-selected`,
-    style: DefaultTextStyle,
-  });
-  weaponText.position.set(20, 50);
-
   staticController.on("inputEnd", (kind: InputKind) => {
-    if (kind !== InputKind.DebugSwitchWeapon) {
+    if (!currentWorm?.currentState.canFire) {
       return;
     }
-    selectedWeaponIndex++;
-    if (selectedWeaponIndex === weapons.length) {
-      selectedWeaponIndex = 0;
+    if (kind === InputKind.WeaponMenu) {
+      game.gameReactChannel.openWeaponMenu(
+        currentWorm.wormIdent.team.availableWeapons,
+      );
+    } else if (kind === InputKind.PickTarget) {
+      game.gameReactChannel.closeWeaponMenu();
     }
+  });
 
+  game.gameReactChannel.on("weaponSelected", (code) => {
     if (!currentWorm) {
       return;
     }
-    currentWorm.selectWeapon(weapons[selectedWeaponIndex]);
+    const newWep = currentWorm.wormIdent.team.availableWeapons.find(([w]) => w.code === code);
+    if (!newWep) {
+      throw Error("Selected weapon is not owned by worm");
+    }
+    currentWorm.selectWeapon(newWep[0]);
   });
 
+  function transitionHandler(prev: InnerWormState, next: InnerWormState) {
+    if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
+      gameState.setTimer(5000);
+    }
+  }
+
+
   const roundHandlerFn = (dt: Ticker) => {
+    gameState.update(dt);
     if (endOfGameFadeOut !== null) {
       endOfGameFadeOut -= dt.deltaMS;
       if (endOfGameFadeOut < 0) {
@@ -179,13 +322,30 @@ export default async function runScenario(game: Game) {
       return;
     }
     if (currentWorm && currentWorm.currentState.active) {
-      return;
+      if (!gameState.isPreRound) {
+        if (gameState.paused && currentWorm.currentState.timerShouldRun) {
+          gameState.unpauseTimer();
+        } else if (
+          !gameState.paused &&
+          !currentWorm.currentState.timerShouldRun
+        ) {
+          gameState.pauseTimer();
+        }
+      }
+      if (gameState.isPreRound && currentWorm.hasPerformedAction) {
+        gameState.playerMoved();
+        return;
+      } else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
+        currentWorm?.onEndOfTurn();
+        currentWorm = undefined;
+        endOfRoundWaitDuration = null;
+      } else {
+        return;
+      }
     }
     if (endOfRoundWaitDuration === null) {
       stateRecorder.syncEntityState();
       const nextState = gameState.advanceRound();
-      stateRecorder.recordGameStare();
-      console.log("advancing round", nextState);
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {
           overlay.toaster.pushToast(
@@ -201,6 +361,7 @@ export default async function runScenario(game: Game) {
         endOfGameFadeOut = 8000;
       } else {
         currentWorm?.onEndOfTurn();
+        currentWorm?.currentState.off("transition", transitionHandler);
         currentWorm = wormInstances.get(nextState.nextWorm.uuid);
         // Turn just ended.
         endOfRoundWaitDuration = 5000;
@@ -213,15 +374,67 @@ export default async function runScenario(game: Game) {
       }
       world.setWind(gameState.currentWind);
       currentWorm.onWormSelected();
-      game.viewport.follow(currentWorm.sprite);
+      currentWorm.currentState.on("transition", transitionHandler);
+      gameState.beginRound();
       endOfRoundWaitDuration = null;
       return;
     }
     endOfRoundWaitDuration -= dt.deltaMS;
   };
 
-  game.pixiApp.ticker.add(roundHandlerFn);
-  game.pixiApp.stage.addChild(weaponText);
-  stateRecorder.recordGameStare();
-  stateRecorder.syncEntityState();
+  game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
+
+  if (gameInstance.isHost) {
+    await gameInstance.allClientsReady();
+    log.info("All clients are ready! Beginning round");
+    game.pixiApp.ticker.add(roundHandlerFn);
+  } else {
+    await gameInstance.ready();
+    log.info("Marked as ready");
+    game.pixiApp.ticker.add((dt) => {
+      gameState.update(dt);
+
+      if (endOfRoundWaitDuration === null) {
+        return;
+      }
+
+      if (endOfRoundWaitDuration <= 0) {
+        if (!currentWorm) {
+          throw Error("Expected next worm");
+        }
+        world.setWind(gameState.currentWind);
+        currentWorm.onWormSelected();
+        currentWorm.currentState.on("transition", transitionHandler);
+        gameState.beginRound();
+        endOfRoundWaitDuration = null;
+        return;
+      }
+      endOfRoundWaitDuration -= dt.deltaMS;
+    });
+    player.on("gameState", (dataUpdate) => {
+      const nextState = gameState.applyGameStateUpdate(dataUpdate);
+      logger.info("New game state", dataUpdate, nextState);
+      if ("winningTeams" in nextState) {
+        if (nextState.winningTeams.length) {
+          overlay.toaster.pushToast(
+            templateRandomText(TeamWinnerText, {
+              TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
+            }),
+            8000,
+          );
+        } else {
+          // Draw
+          overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
+        }
+        endOfGameFadeOut = 8000;
+      } else {
+        currentWorm?.onEndOfTurn();
+        currentWorm?.currentState.off("transition", transitionHandler);
+        currentWorm = wormInstances.get(nextState.nextWorm.uuid);
+        // Turn just ended.
+        endOfRoundWaitDuration = 5000;
+      }
+      return;
+    });
+  }
 }

@@ -2,6 +2,7 @@ import { InputKind } from "../input";
 import { GameRules } from "../logic/gamestate";
 import { Team, TeamGroup } from "../logic/teams";
 import { StoredTeam } from "../settings";
+import { StateRecordLine } from "../state/model";
 
 /**
  * Matrix will need this as an integer, so this will be encoded as an integer
@@ -33,6 +34,14 @@ export interface GameStageEvent {
   content: {
     stage: GameStage;
   };
+}
+
+export const GameActionEventType = "uk.half-shot.wormgine.game_action";
+export interface GameActionEvent {
+  type: typeof GameActionEventType,
+  content: {
+    action: StateRecordLine<unknown>,
+  }
 }
 
 export const GameStateEventType = "uk.half-shot.wormgine.game_state";
@@ -98,8 +107,10 @@ export interface GameProposedTeamEvent {
   content: ProposedTeam | {};
 }
 
-export interface ClientReadyEvent {
-  type: "uk.half-shot.uk.wormgine.ready";
+export const GameClientReadyEventType =
+  "uk.half-shot.uk.wormgine.ready";
+export interface GameClientReadyEvent {
+  type: typeof GameClientReadyEventType;
   // Need to decide on some config.
   content: Record<string, never>;
 }

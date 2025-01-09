@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import styles from "./ingame-view.module.css";
 import { Game } from "../../game";
-import { NetGameInstance } from "../../net/client";
+import { NetGameInstance, RunningNetGameInstance } from "../../net/client";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
 
@@ -14,7 +14,7 @@ export function IngameView({
   scenario: string;
   level?: string;
   gameReactChannel: GameReactChannel;
-  gameInstance?: NetGameInstance;
+  gameInstance?: RunningNetGameInstance;
 }) {
   const [fatalError, setFatalError] = useState<Error>();
   const [game, setGame] = useState<Game>();

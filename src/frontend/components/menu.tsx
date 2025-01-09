@@ -5,6 +5,7 @@ import {
   NetClientConfig,
   NetGameClient,
   NetGameInstance,
+  RunningNetGameInstance,
 } from "../../net/client";
 import { GameMenu } from "./menus/types";
 import OnlinePlayMenu from "./menus/online-play";
@@ -18,7 +19,7 @@ import { Lobby } from "./menus/lobby";
 interface Props {
   onNewGame: (
     scenario: string,
-    gameInstance: NetGameInstance | undefined,
+    gameInstance: RunningNetGameInstance | undefined,
     level?: keyof AssetData,
   ) => void;
   setClientConfig: (config: NetClientConfig | null) => void;
@@ -33,7 +34,7 @@ const lastCommit = localStorage.getItem("wormgine_last_commit");
 function mainMenu(
   onStartNewGame: (
     scenario: string,
-    gameInstance: NetGameInstance | undefined,
+    gameInstance: RunningNetGameInstance | undefined,
     level?: keyof AssetData,
   ) => void,
   setCurrentMenu: (menu: GameMenu) => void,
@@ -118,7 +119,7 @@ export function Menu({
   const onStartNewGame = useCallback(
     (
       scenario: string,
-      gameInstance: NetGameInstance | undefined,
+      gameInstance: RunningNetGameInstance | undefined,
       level?: keyof AssetData,
     ) => {
       localStorage.setItem("wormgine_last_commit", buildCommit);
@@ -162,8 +163,9 @@ export function Menu({
       <OverlayTest />
     </menu>;
   } else if (currentMenu === GameMenu.Lobby) {
-    const onOpenIngame = (gameInstance: NetGameInstance) => {
-      onNewGame("netGame", gameInstance);
+    const onOpenIngame = (gameInstance: RunningNetGameInstance) => {
+      // TODO: Hardcoded level.
+      onNewGame("netGame", gameInstance, "levels_testing");
     };
     if (!currentLobbyId) {
       throw Error("Current Lobby ID must be set!");

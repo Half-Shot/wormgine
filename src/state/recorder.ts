@@ -1,10 +1,10 @@
-import { GameState } from "../logic/gamestate";
 import { IWeaponCode } from "../weapons/weapon";
 import { GameWorld } from "../world";
 import {
   StateRecordEntitySync,
   StateRecordHeader,
   StateRecordKind,
+  StateRecordLine,
   StateRecordWormAction,
   StateRecordWormActionAim,
   StateRecordWormActionFire,
@@ -15,7 +15,7 @@ import {
 } from "./model";
 
 interface StateRecorderStore {
-  writeLine(data: Record<string, unknown>): Promise<void>;
+  writeLine(data: StateRecordLine<unknown>): Promise<void>;
 }
 
 function hashCode(str: string) {
@@ -34,7 +34,6 @@ export class StateRecorder {
   private entHashes = new Map<string, number>(); // uuid -> hash
   constructor(
     private readonly gameWorld: GameWorld,
-    private readonly gameState: GameState,
     private readonly store: StateRecorderStore,
   ) {
     this.store.writeLine({
@@ -134,28 +133,10 @@ export class StateRecorder {
       ts: performance.now().toString(),
     } satisfies StateRecordWormSelectWeapon);
   }
-
-  public recordGameStare() {
-    const iteration = this.gameState.iteration;
-    const teams = this.gameState.getTeams();
+  public recordGameState(data: StateRecordWormGameState["data"]) {
     this.store.writeLine({
       index: this.recordIndex++,
-      data: {
-        iteration: iteration,
-        wind: this.gameState.currentWind,
-        teams: teams.map((t) => ({
-          name: t.name,
-          group: t.group,
-          playerUserId: t.playerUserId,
-          worms: t.worms.map((w) => ({
-            uuid: w.uuid,
-            name: w.name,
-            health: w.health,
-            maxHealth: w.maxHealth,
-          })),
-          ammo: t.ammo,
-        })),
-      },
+      data: data,
       kind: StateRecordKind.GameState,
       ts: performance.now().toString(),
     } satisfies StateRecordWormGameState);

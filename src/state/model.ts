@@ -12,14 +12,14 @@ export interface RecordedEntityState {
 }
 
 export enum StateRecordKind {
-  Header,
-  EntitySync,
-  WormAction,
-  WormActionMove,
-  WormActionAim,
-  WormActionFire,
-  WormSelectWeapon,
-  GameState,
+  Header = "header",
+  EntitySync = "ent_sync",
+  WormAction = "worm_action",
+  WormActionMove = "worm_action_move",
+  WormActionAim = "worm_action_aim",
+  WormActionFire = "worm_action_fire",
+  WormSelectWeapon = "worm_action_sel_wep",
+  GameState = "game_state",
 }
 
 export interface StateRecordLine<T> {
@@ -86,6 +86,7 @@ export type StateRecordWormGameState = StateRecordLine<{
     playerUserId: string | null;
     ammo: Team["ammo"];
   }[];
+  nextTeam: string;
   iteration: number;
   wind: number;
 }>;

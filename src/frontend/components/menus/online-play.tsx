@@ -34,7 +34,7 @@ function LoggedInView({
     client
       .createGameRoom({
         rules: {
-          winWhenOneGroupRemains: true,
+          winWhenOneGroupRemains: false,
           wormHealth: 100,
           ammoSchema: DefaultWeaponSchema,
         },

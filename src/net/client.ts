@@ -10,7 +10,9 @@ import {
   FullGameStateEvent,
   ProposedTeam,
   GameProposedTeamEventType,
-  GameProposedTeamEvent,
+  GameActionEventType,
+  GameClientReadyEvent,
+  GameClientReadyEventType,
 } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
@@ -29,9 +31,10 @@ import {
 } from "matrix-js-sdk";
 import { Team, TeamGroup, WormIdentity } from "../logic/teams";
 import { GameRules } from "../logic/gamestate";
-import { BehaviorSubject, map, Observable, tap } from "rxjs";
+import { BehaviorSubject, map, Observable } from "rxjs";
 import Logger from "../log";
 import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
+import { MatrixStateReplay } from "../state/player";
 
 const logger = new Logger("NetClient");
 
@@ -58,7 +61,6 @@ export enum ClientState {
   OfflineError,
   UnknownError,
 }
-
 export class NetGameInstance {
   private readonly _stage: BehaviorSubject<GameStage>;
   public readonly stage: Observable<GameStage>
@@ -67,20 +69,24 @@ export class NetGameInstance {
   private readonly _proposedTeams: BehaviorSubject<
     Record<string, ProposedTeam>
   >;
-  public readonly proposedTeams: Observable<ProposedTeam[]>;;
+  public readonly proposedTeams: Observable<ProposedTeam[]>;
   private readonly _rules: BehaviorSubject<GameRules>;
-  public readonly rules: Observable<GameRules>
+  public readonly proposedRules: Observable<GameRules>;
+  
   public readonly hostUserId: string;
   public readonly isHost: boolean;
-  private room: Room;
 
   public get myUserId() {
     return this.client.userId;
   }
 
+  public get roomId() {
+    return this.room.roomId;
+  }
+
   constructor(
-    public readonly roomId: string,
-    private readonly client: NetGameClient,
+    protected readonly room: Room,
+    protected readonly client: NetGameClient,
     initialConfiguration: NetGameConfiguration,
   ) {
     this.hostUserId = initialConfiguration.hostUserId;
@@ -91,9 +97,8 @@ export class NetGameInstance {
     );
     this._stage = new BehaviorSubject(initialConfiguration.stage);
     this.stage = this._stage.asObservable();
-    this.room = this.client.client.getRoom(roomId)!;
     this._rules = new BehaviorSubject(initialConfiguration.rules);
-    this.rules = this._rules.asObservable();
+    this.proposedRules = this._rules.asObservable();
     this._proposedTeams = new BehaviorSubject(initialConfiguration.teams);
     this.proposedTeams = this._proposedTeams.pipe(map((v) => Object.values(v)));
     this.members = this._members.asObservable();
@@ -107,8 +112,7 @@ export class NetGameInstance {
       }
       const stateKey = event.getStateKey();
       const type = event.getType();
-      console.log("Updating proposed teams");
-      if (stateKey && type === GameProposedTeamEventType) {
+      if (stateKey && type === GameProposedTeamEventType && this._stage.value === GameStage.Lobby) {
         const content = event.getContent() as ProposedTeam;
         if (Object.keys(content).length > 0) {
           this._proposedTeams.next({
@@ -161,11 +165,10 @@ export class NetGameInstance {
   }
 
   public async addProposedTeam(
-    proposedTeam: StoredTeam,
+    proposedTeam: StoredTeam|ProposedTeam,
     wormCount: number,
     teamGroup: TeamGroup = TeamGroup.Red,
   ) {
-    console.log("Bumping proposed team to ", teamGroup);
     await this.client.client.sendStateEvent(
       this.roomId,
       GameProposedTeamEventType,
@@ -173,7 +176,7 @@ export class NetGameInstance {
         ...proposedTeam,
         group: teamGroup,
         wormCount,
-        playerUserId: this.client.userId,
+        playerUserId: "playerUserId" in proposedTeam ? proposedTeam.playerUserId : this.client.userId,
         // TODO: What should the proper stateKey be?
       },
       `${this.client.userId.slice(1)}/${proposedTeam.name}`,
@@ -197,7 +200,7 @@ export class NetGameInstance {
       playerUserId: v.playerUserId,
       // Needs to come from rules.
       ammo: this._rules.value.ammoSchema,
-      worms: v.worms.map(w => ({
+      worms: v.worms.slice(0, v.wormCount).map(w => ({
         name: w,
         health: this._rules.value.wormHealth,
         maxHealth: this._rules.value.wormHealth,
@@ -228,13 +231,6 @@ export class NetGameInstance {
 
   public async sendGameState(data: FullGameStateEvent["content"]) {
     await this.client.client.sendEvent(this.roomId, GameStateEventType, data);
-  }
-
-  public subscribeToGameState(_fn: (data: StateRecordLine<unknown>) => void) {
-    throw Error("Not implemented");
-    this.room.on(RoomEvent.TimelineRefresh, (_room, timelineSet) => {
-      console.log(timelineSet.getLiveTimeline().getEvents());
-    });
   }
 }
 
@@ -389,14 +385,23 @@ export class NetGameClient extends EventEmitter {
 
   public async joinGameRoom(roomId: string): Promise<NetGameInstance> {
     // TODO: Check game room is a real game room.
-    await this.client.joinRoom(roomId);
-    const stateEvents = await this.client.roomState(roomId);
+    const room = await this.client.joinRoom(roomId);
+    // XXX: Synapse tends to lie and say the room doesn't exist.
+    let stateEvents;
+    try {
+      stateEvents = await this.client.roomState(roomId);
+    } catch (ex) {
+      // TODO: Timeout.
+      await new Promise<void>((r) => room.on(RoomEvent.MyMembership, () => r()));
+      stateEvents = await this.client.roomState(roomId);
+    }
+    
     const createEvent = stateEvents.find((s) => s.type === "m.room.create");
     const stageEvent = stateEvents.find(
-      (s) => s.type === "uk.half-shot.uk.wormgine.game_stage",
+      (s) => s.type === GameStageEventType,
     );
     const configEvent = stateEvents.find(
-      (s) => s.type === "uk.half-shot.uk.wormgine.game_config",
+      (s) => s.type === GameConfigEventType,
     ) as unknown as GameConfigEvent;
     if (createEvent?.content.type !== WormgineRoomType) {
       throw Error("Room is not a wormgine room");
@@ -406,7 +411,8 @@ export class NetGameClient extends EventEmitter {
     if (!gameStage) {
       throw Error("Unknown game stage, cannot continue");
     }
-    return new NetGameInstance(roomId, this, {
+
+    const initialConfig = {
       // Should be forced in start()
       myUserId: this.client.getUserId()!,
       hostUserId: createEvent.sender,
@@ -430,6 +436,88 @@ export class NetGameClient extends EventEmitter {
           .map((m) => [m.state_key, m.content as ProposedTeam]),
       ),
       rules: configEvent.content.rules,
+    };
+
+    if (gameStage === GameStage.InProgress) {
+      const fullStateEvent = stateEvents.find(
+        (s) => s.type === GameStateEventType,
+      ) as unknown as FullGameStateEvent;
+      if (!fullStateEvent) {
+        throw Error("In progress game had no state");
+      }
+      return new RunningNetGameInstance(room, this, initialConfig, fullStateEvent["content"]);
+    }
+
+    return new NetGameInstance(room, this, initialConfig);
+  }
+}
+
+
+export class RunningNetGameInstance extends NetGameInstance {
+  private readonly _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
+  public readonly gameState: Observable<FullGameStateEvent["content"]>;
+  public readonly player: MatrixStateReplay;
+
+  public get gameStateImmediate() {
+    return this._gameState.value;
+  }
+
+  public get rules() {
+    return this.initialConfig.rules;
+  }
+
+  constructor(room: Room, client: NetGameClient, private readonly initialConfig: NetGameConfiguration, currentState: FullGameStateEvent["content"]) {
+    super(room, client, initialConfig)
+    this._gameState = new BehaviorSubject(currentState);
+    this.gameState = this._gameState.asObservable();
+    client.client.on(RoomStateEvent.Events, (event, state) => {
+      if (state.roomId !== this.roomId) {
+        return;
+      }
+      const stateKey = event.getStateKey();
+      const type = event.getType();
+      if (stateKey && type === GameStateEventType) {
+        const content = event.getContent() as FullGameStateEvent["content"];
+        this._gameState.next(content);
+      }
+    });
+    this.player = new MatrixStateReplay();
+    client.client.on(RoomEvent.Timeline, (event, r) => {
+      if (r?.roomId !== this.roomId) {
+        return;
+      }
+      if (event.getType() === GameActionEventType && !event.isState()) {
+        this.player.handleEvent(event.getContent());
+      }
+    });
+  }
+
+  writeAction(data: StateRecordLine<unknown>) {
+    return this.client.client.sendEvent(this.roomId, GameActionEventType, { action: data });
+  }
+
+  async ready() {
+    return this.client.client.sendEvent(this.roomId, GameClientReadyEventType, { });
+  }
+
+  async allClientsReady() {
+    const setOfReady = new Set<string>([
+      this.myUserId,
+      ...this.room.getLiveTimeline().getEvents().filter(e => e.getType() === GameClientReadyEventType).map(e => e.getSender()) as string[],
+    ]);
+
+    const expectedCount = Object.values(this.initialConfig.members).length;
+
+    await new Promise<void>((resolve) => {
+      this.room.on(RoomEvent.Timeline, (event) => {
+        if (event.getType() === GameClientReadyEventType && !event.isState()) {
+          setOfReady.add(event.getSender()!);
+        }
+        if (setOfReady.size === expectedCount) {
+          resolve();
+        }
+      });
     });
   }
 }
+

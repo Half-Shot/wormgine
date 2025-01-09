@@ -5,6 +5,7 @@ import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
+import { StateRecorder } from "../state/recorder";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -85,6 +86,7 @@ export class GameState {
     teams: Team[],
     private readonly world: GameWorld,
     private readonly rules: GameRules,
+    private readonly recorder?: StateRecorder,
   ) {
     if (teams.length < 1) {
       throw Error("Must have at least one team");
@@ -200,6 +202,7 @@ export class GameState {
       this.remainingRoundTimeMs = 5000;
       this.roundState = RoundState.WaitingToBegin;
 
+      this.recordGameStare();
       return {
         nextTeam: this.currentTeam,
         // Team *should* have at least one healthy worm.
@@ -239,11 +242,13 @@ export class GameState {
       this.stateIteration++;
       if (this.rules.winWhenOneGroupRemains) {
         // All remaining teams are part of the same group
+        this.recordGameStare();
         return {
           winningTeams: this.getActiveTeams(),
         };
       } else if (this.currentTeam.health === 0) {
         // This is a draw
+        this.recordGameStare();
         return {
           winningTeams: [],
         };
@@ -253,11 +258,36 @@ export class GameState {
     // 5 seconds preround
     this.remainingRoundTimeMs = 0;
     this.roundState = RoundState.WaitingToBegin;
-
+    this.recordGameStare();
     return {
       nextTeam: this.currentTeam,
       // We should have already validated that this team has healthy worms.
       nextWorm: this.currentTeam.popNextWorm(),
     };
+  }
+
+  private recordGameStare() {
+    if (!this.recorder) {
+      return;
+    }
+    const iteration = this.iteration;
+    const teams = this.getTeams();
+    this.recorder.recordGameState({
+      iteration: iteration,
+      wind: this.currentWind,
+      nextTeam: this.activeTeam?.name!,
+      teams: teams.map((t) => ({
+        name: t.name,
+        group: t.group,
+        playerUserId: t.playerUserId,
+        worms: t.worms.map((w) => ({
+          uuid: w.uuid,
+          name: w.name,
+          health: w.health,
+          maxHealth: w.maxHealth,
+        })),
+        ammo: t.ammo,
+      })),
+    });
   }
 }

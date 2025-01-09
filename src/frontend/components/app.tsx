@@ -3,21 +3,20 @@ import { IngameView } from "./ingame-view";
 import { Menu } from "./menu";
 import { assetLoadPercentage, assetsAreReady } from "../../assets";
 import {
-  ClientState,
   NetClientConfig,
   NetGameClient,
   NetGameInstance,
+  RunningNetGameInstance,
 } from "../../net/client";
 import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
-import { map, of } from "rxjs";
 import { getClientConfigHook } from "../../settings";
 
 interface LoadGameProps {
   scenario: string;
   level?: string;
-  gameInstance?: NetGameInstance;
+  gameInstance?: RunningNetGameInstance;
 }
 
 export function App() {
@@ -66,7 +65,7 @@ export function App() {
   const onNewGame = useCallback(
     (
       scenario: string,
-      gameInstance: NetGameInstance | undefined,
+      gameInstance: RunningNetGameInstance | undefined,
       level?: keyof AssetData,
     ) => {
       setGameState({ scenario, level, gameInstance });
