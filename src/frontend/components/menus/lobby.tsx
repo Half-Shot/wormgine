@@ -15,7 +15,7 @@ import { TeamGroup } from "../../../logic/teams";
 
 const logger = new Logger("Lobby");
 
-const MAX_WORMS = 1;
+const MAX_WORMS = 8;
 
 interface Props {
   client: NetGameClient;
@@ -41,30 +41,128 @@ export function TeamEntry({
   const backgroundColor = `var(--team-${TeamGroup[team.group].toLocaleLowerCase()}-fg)`;
   return (
     <div style={{ color }} className={styles.teamEntry}>
+    <button className={styles.removeTeam} onClick={onRemoveTeam}>
+      X
+    </button>
+    <button
+      className={styles.wormCount}
+      onClick={incrementWormCount}
+      disabled={!incrementWormCount}
+    >
+      <ul>
+        {Array.from({ length: team.wormCount }).map(() => (
+          <li>o</li>
+        ))}
+      </ul>
+    </button>
       <button
         onClick={changeTeamColor}
         disabled={!changeTeamColor}
         style={{ color, backgroundColor }}
         className={styles.teamColor}
       />
-      <button onClick={onRemoveTeam} disabled={!onRemoveTeam}>
-        <span>{playerName}</span>
-        <img src={team.flagb64} />
-        <span>{team.name}</span>
-      </button>
-      <button
-        className={styles.wormCount}
-        onClick={incrementWormCount}
-        disabled={!incrementWormCount}
-      >
-        <ul>
-          {Array.from({ length: team.wormCount }).map(() => (
-            <li>o</li>
-          ))}
-        </ul>
-      </button>
+      <span>{team.name}</span>
+      <span className={styles.playerName}>({playerName})</span>
     </div>
   );
+}
+
+export function TeamPicker({ gameInstance, proposedTeams }: { gameInstance: NetGameInstance, proposedTeams: ProposedTeam[] }) {
+  const membersMap = useObservableEagerState(gameInstance.members);
+  // @ts-ignore
+  const nextTeamGroup: TeamGroup = TeamGroup[useMemo(() => Object.values(TeamGroup).find(v => !proposedTeams.some(t => t.group === v)) as string ?? TeamGroup.Red, [proposedTeams])];
+  const [storedLocalTeams] = useLocalStorageState<StoredTeam[]>(
+    WORMGINE_STORAGE_KEY_TEAMS,
+    { defaultValue: [] },
+  );
+  const localTeams = useMemo(
+    () =>
+      storedLocalTeams.filter(
+        (t) => !proposedTeams.some((o) => o.name === t.name),
+      ),
+    [proposedTeams, storedLocalTeams],
+  );
+
+  const addTeam = useCallback(
+    (_evt: MouseEvent, team: StoredTeam) => {
+      gameInstance.addProposedTeam(team, MAX_WORMS, nextTeamGroup).catch((ex) => {
+        logger.warning("Failed to add team", team, ex);
+      });
+    },
+    [gameInstance],
+  );
+
+  const removeTeam = useCallback(
+    (team: ProposedTeam) => {
+      gameInstance.removeProposedTeam(team).catch((ex) => {
+        logger.warning("Failed to add team", team, ex);
+      });
+    },
+    [gameInstance],
+  );
+
+
+  return <section>
+  <h2>Teams</h2>
+  <div className={styles.teamBox}>
+    <div className={styles.localTeams}>
+      <h3>Your teams</h3>
+      <ol>
+        {localTeams.length > 0 ? (
+          localTeams.map((t) => (
+            <li key={t.name}>
+              <button className={styles.teamButton}  onClick={(evt) => addTeam(evt, t)}>{t.name}</button>
+            </li>
+          ))
+        ) : (storedLocalTeams.length === 0 ? <p> You have no teams </p> : null)}
+      </ol>
+    </div>
+    <div>
+      <h3>In-play</h3>
+      <ol>
+      {proposedTeams.map((t) => {
+          const canAlter =
+            gameInstance.isHost ||
+            t.playerUserId === gameInstance.myUserId;
+          if (!canAlter) {
+            return (
+              <li key={t.name}>
+                <TeamEntry
+                  team={t}
+                  playerName={membersMap[t.playerUserId]}
+                ></TeamEntry>
+              </li>
+            );
+          }
+          const onRemoveTeam = () => removeTeam(t);
+          const incrementWormCount = () => {
+            const wormCount =
+              t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
+            gameInstance.updateProposedTeam(t, { wormCount });
+          };
+          const changeTeamColor = () => {
+            let teamGroup = t.group + 1;
+            if (TeamGroup[teamGroup] === undefined) {
+              teamGroup = TeamGroup.Red;
+            }
+            gameInstance.updateProposedTeam(t, { teamGroup });
+          };
+          return (
+            <li key={t.name}>
+              <TeamEntry
+                onRemoveTeam={onRemoveTeam}
+                incrementWormCount={incrementWormCount}
+                changeTeamColor={changeTeamColor}
+                team={t}
+                playerName={membersMap[t.playerUserId]}
+              ></TeamEntry>
+            </li>
+          );
+        })}
+        </ol>
+    </div>
+  </div>
+</section>;
 }
 
 export function ActiveLobby({
@@ -87,40 +185,6 @@ export function ActiveLobby({
     [membersMap],
   );
   const proposedTeams = useObservableEagerState(gameInstance.proposedTeams);
-  const [storedLocalTeams] = useLocalStorageState<StoredTeam[]>(
-    WORMGINE_STORAGE_KEY_TEAMS,
-    { defaultValue: [] },
-  );
-  const localTeams = useMemo(
-    () =>
-      storedLocalTeams.filter(
-        (t) => !proposedTeams.some((o) => o.name === t.name),
-      ),
-    [proposedTeams, storedLocalTeams],
-  );
-
-  // @ts-ignore
-  const nextTeamGroup: TeamGroup = TeamGroup[useMemo(() => Object.values(TeamGroup).find(v => !proposedTeams.some(t => t.group === v)) as string ?? TeamGroup.Red, [proposedTeams])];
-
-  const addTeam = useCallback(
-    (_evt: MouseEvent, team: StoredTeam) => {
-      gameInstance.addProposedTeam(team, MAX_WORMS, nextTeamGroup).catch((ex) => {
-        logger.warning("Failed to add team", team, ex);
-        setError("Failed to add team");
-      });
-    },
-    [gameInstance],
-  );
-
-  const removeTeam = useCallback(
-    (team: ProposedTeam) => {
-      gameInstance.removeProposedTeam(team).catch((ex) => {
-        logger.warning("Failed to add team", team, ex);
-        setError("Failed to add team");
-      });
-    },
-    [gameInstance],
-  );
 
   const viableToStart = useMemo(() =>
     gameInstance.isHost &&
@@ -157,69 +221,7 @@ export function ActiveLobby({
         </ul>
       </section>
 
-      <section>
-        <h2>Teams</h2>
-        <div className={styles.teamBox}>
-          <div className={styles.localTeams}>
-            <h3>Your teams</h3>
-            {localTeams.length > 0 ? (
-              localTeams.map((t) => (
-                <li key={t.name}>
-                  <button onClick={(evt) => addTeam(evt, t)}>{t.name}</button>
-                </li>
-              ))
-            ) : (
-              <p> You have no teams </p>
-            )}
-          </div>
-          <div>
-            <h3>In-play</h3>
-            {proposedTeams.length > 0 ? (
-              proposedTeams.map((t) => {
-                const canAlter =
-                  gameInstance.isHost ||
-                  t.playerUserId === gameInstance.myUserId;
-                if (!canAlter) {
-                  return (
-                    <li key={t.name}>
-                      <TeamEntry
-                        team={t}
-                        playerName={membersMap[t.playerUserId]}
-                      ></TeamEntry>
-                    </li>
-                  );
-                }
-                const onRemoveTeam = () => removeTeam(t);
-                const incrementWormCount = () => {
-                  const wormCount =
-                    t.wormCount >= MAX_WORMS ? 1 : t.wormCount + 1;
-                  gameInstance.updateProposedTeam(t, { wormCount });
-                };
-                const changeTeamColor = () => {
-                  let teamGroup = t.group + 1;
-                  if (TeamGroup[teamGroup] === undefined) {
-                    teamGroup = TeamGroup.Red;
-                  }
-                  gameInstance.updateProposedTeam(t, { teamGroup });
-                };
-                return (
-                  <li key={t.name}>
-                    <TeamEntry
-                      onRemoveTeam={onRemoveTeam}
-                      incrementWormCount={incrementWormCount}
-                      changeTeamColor={changeTeamColor}
-                      team={t}
-                      playerName={membersMap[t.playerUserId]}
-                    ></TeamEntry>
-                  </li>
-                );
-              })
-            ) : (
-              <p> You have no teams </p>
-            )}
-          </div>
-        </div>
-      </section>
+      <TeamPicker gameInstance={gameInstance} proposedTeams={proposedTeams}/>
 
       <section>
         <button onClick={() => onOpenIngame()} disabled={!viableToStart}>

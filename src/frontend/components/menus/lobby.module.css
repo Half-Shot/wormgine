@@ -1,34 +1,75 @@
 .teamBox {
   display: flex;
+  min-height: 30vh;
+  border: 2px solid var(--subheading);
 
   li {
     list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  ol,
+  ul {
+    margin: 0;
+    padding: 0;
   }
 
   .localTeams {
-    width: 33%;
+    width: 40%;
+    border-right: 2px solid var(--subheading);
   }
+
+  h3 {
+    color: var(--subheading);
+  }
+
+  > * {
+    margin-left: 20px;
+  }
+}
+
+.teamButton {
+  font-weight: 600;
 }
 
 .wormCount {
   ul {
     margin: none;
     padding: 0;
+    width: 4.6em;
   }
   li {
     display: inline;
     list-style: none;
+    float: left;
   }
 }
-
 .teamEntry {
+  padding: 0.5em;
+  display: flex;
+  gap: 0.5em;
+  > * {
+    display: block;
+  }
   button {
     border: 1px solid white;
     background: none;
   }
-  button > img {
-    width: auto;
-    height: 2.5em;
+
+  > span {
+    margin-top: auto;
+    height: fit-content;
+    margin-bottom: auto;
+  }
+
+  .playerName {
+    color: var(--subheading);
+  }
+
+  .removeTeam {
+    /* TODO: Rethink this colour reuse. */
+    background: var(--team-red-bg);
   }
 }
 
