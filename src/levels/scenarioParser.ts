@@ -37,13 +37,13 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
     const wp: WormSpawnRecordedState = {
       type: "wormgine.worm_spawn",
       tra: {
-        x: object.x.toString(),
-        y: object.y.toString(),
+        x: object.x,
+        y: object.y,
       },
-      rot: "",
+      rot: 0,
       vel: {
-        x: "0",
-        y: "0",
+        x: 0,
+        y: 0,
       },
       teamGroup:
         TeamGroup[
@@ -56,13 +56,13 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
     return {
       type: "wormgine.water",
       tra: {
-        x: "0",
-        y: object.y.toString(),
+        x: 0,
+        y: object.y,
       },
-      rot: "",
+      rot: 0,
       vel: {
-        x: "0",
-        y: "0",
+        x: 0,
+        y: 0,
       },
     };
   }
@@ -70,26 +70,26 @@ function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
     return {
       type: "wormgine.target",
       tra: {
-        x: object.x.toString(),
-        y: object.y.toString(),
+        x: object.x,
+        y: object.y,
       },
-      rot: "",
+      rot: 0,
       vel: {
-        x: "0",
-        y: "0",
+        x: 0,
+        y: 0,
       },
     };
   }
   return {
     type: "wormgine.unknown",
     tra: {
-      x: object.x.toString(),
-      y: object.y.toString(),
+      x: object.x,
+      y: object.y,
     },
-    rot: "",
+    rot: 0,
     vel: {
-      x: "0",
-      y: "0",
+      x: 0,
+      y: 0,
     },
   };
 }
@@ -117,6 +117,7 @@ function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
       playerUserId: null,
       group: TeamGroup[tiledTeam["wormgine.team_group"]],
       ammo,
+      uuid: crypto.randomUUID(),
     };
   });
 }
