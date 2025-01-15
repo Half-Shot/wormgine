@@ -45,21 +45,16 @@ async function scaleFile(
 }
 
 export function TeamEditor({
-  team: initialTeam,
+  team,
   onChange,
   onDeleteTeam,
 }: {
   team: StoredTeam;
-  onChange: (team: StoredTeam) => void;
+  onChange: (team: Partial<StoredTeam>) => void;
   onDeleteTeam: () => void;
 }) {
-  const [team, setTeam] = useState(initialTeam);
   const [tempBlobUrl, setTempBlobUrl] = useState<string | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    onChange(team);
-  }, [team, onChange]);
 
   useEffect(() => {
     if (!tempBlobUrl && team.flagb64) {
@@ -70,7 +65,7 @@ export function TeamEditor({
         URL.revokeObjectURL(tempBlobUrl);
       }
     };
-  }, [tempBlobUrl]);
+  }, [team, tempBlobUrl]);
 
   const onFlagUpload: JSX.GenericEventHandler<HTMLInputElement> = useCallback(
     (evt) => {
@@ -83,7 +78,7 @@ export function TeamEditor({
           setTempBlobUrl(URL.createObjectURL(blob));
           const f = new FileReader();
           f.addEventListener("load", () => {
-            setTeam((t) => ({ ...t, flagb64: f.result as string }));
+            onChange({ flagb64: f.result as string });
           });
           f.readAsDataURL(blob);
         })
@@ -106,7 +101,7 @@ export function TeamEditor({
           if (value.length < 3 || value.length > 16) {
             return;
           }
-          setTeam((t) => ({ ...t, name: value }));
+          onChange({ name: value });
         }}
       />
       <section>
@@ -123,7 +118,7 @@ export function TeamEditor({
                     return;
                   }
                   team.worms[i] = value;
-                  setTeam((t) => ({ ...t, worms: t.worms }));
+                  onChange({ worms: team.worms });
                 }}
                 type="text"
                 value={wormName}
@@ -169,6 +164,23 @@ export default function TeamEditorMenu() {
   );
   const [selectedTeam, setSelectedTeam] = useState(localTeams[0] ? 0 : -1);
 
+  useEffect(() => {
+    let modified = false;
+    localTeams.forEach((t) => {
+      if (!t.lastModified) {
+        t.lastModified = Date.now();
+        modified = true;
+      }
+      if (!t.uuid) {
+        t.uuid = crypto.randomUUID();
+        modified = true;
+      }
+    });
+    if (modified) {
+      setLocalTeams([...localTeams]);
+    }
+  }, [localTeams]);
+
   const onCreateTeam = useCallback(() => {
     let newTeamName = "New Team";
     let newTeamNameIdx = 1;
@@ -176,16 +188,27 @@ export default function TeamEditorMenu() {
       newTeamName = `New Team #${++newTeamNameIdx}`;
     }
     const teamLength = localTeams.length;
+    const newTeam = {
+      name: newTeamName,
+      worms: Array.from({ length: MAX_WORM_NAMES }).map(
+        (_, i) => `Worm #${i + 1}`,
+      ),
+      lastModified: Date.now(),
+      uuid: crypto.randomUUID(),
+    } satisfies StoredTeam;
     setLocalTeams((t: StoredTeam[]) => [
       ...t,
+      newTeam,
+    ]);
+    console.log(
       {
         name: newTeamName,
         worms: Array.from({ length: MAX_WORM_NAMES }).map(
           (_, i) => `Worm #${i + 1}`,
         ),
-        synced: false,
-      },
-    ]);
+        lastModified: Date.now(),
+        uuid: crypto.randomUUID(),
+      } satisfies StoredTeam);
     setSelectedTeam(teamLength);
   }, [localTeams]);
 
@@ -201,37 +224,21 @@ export default function TeamEditorMenu() {
     [],
   );
 
-  if (localTeams.length) {
-    const onTeamChanged = useCallback(
-      (t: StoredTeam) => {
-        setLocalTeams((existing: StoredTeam[]) => {
-          existing[selectedTeam] = t;
-          return existing;
-        });
-      },
-      [selectedTeam],
-    );
+  const onTeamChanged = useCallback(
+    (changes: Partial<StoredTeam>) => {
+      setLocalTeams((existing: StoredTeam[]) => {
+        existing[selectedTeam] = {
+          ...existing[selectedTeam],
+          ...changes,
+          lastModified: Date.now(),
+        };
+        return existing;
+      });
+    },
+    [selectedTeam],
+  );
 
-    return (
-      <>
-        <select value={selectedTeam} onChange={onTeamSelected}>
-          {localTeams.map((t, i) => (
-            <option key={t.name} value={i}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <button disabled={localTeams.length > MAX_TEAMS} onClick={onCreateTeam}>
-          Add new team
-        </button>
-        <TeamEditor
-          onDeleteTeam={onDeleteTeam}
-          team={localTeams[selectedTeam]}
-          onChange={onTeamChanged}
-        />
-      </>
-    );
-  } else {
+  if (!localTeams.length) {
     return (
       <>
         <p>You haven't created any teams yet.</p>
@@ -239,4 +246,24 @@ export default function TeamEditorMenu() {
       </>
     );
   }
+
+  return (
+    <>
+      <select value={selectedTeam} onChange={onTeamSelected}>
+        {localTeams.map((t, i) => (
+          <option key={t.uuid} value={i}>
+            {t.name}
+          </option>
+        ))}
+      </select>
+      <button disabled={localTeams.length >= MAX_TEAMS} onClick={onCreateTeam}>
+        Add new team
+      </button>
+      <TeamEditor
+        onDeleteTeam={onDeleteTeam}
+        team={localTeams[selectedTeam]}
+        onChange={onTeamChanged}
+      />
+    </>
+  );
 }

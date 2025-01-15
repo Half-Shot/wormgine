@@ -24,6 +24,7 @@ export interface Team {
   group: TeamGroup;
   worms: WormIdentity[];
   flag?: string;
+  uuid: string;
   // For net games only
   playerUserId: string | null;
   ammo: Record<IWeaponCode | string, number>;
@@ -78,6 +79,10 @@ export class InternalTeam implements Team {
 
   get name() {
     return this.team.name;
+  }
+
+  get uuid() {
+    return this.team.uuid;
   }
 
   get playerUserId() {

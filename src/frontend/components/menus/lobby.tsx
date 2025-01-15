@@ -110,7 +110,7 @@ export function TeamPicker({ gameInstance, proposedTeams }: { gameInstance: NetG
       <ol>
         {localTeams.length > 0 ? (
           localTeams.map((t) => (
-            <li key={t.name}>
+            <li key={t.uuid}>
               <button className={styles.teamButton}  onClick={(evt) => addTeam(evt, t)}>{t.name}</button>
             </li>
           ))
@@ -126,7 +126,7 @@ export function TeamPicker({ gameInstance, proposedTeams }: { gameInstance: NetG
             t.playerUserId === gameInstance.myUserId;
           if (!canAlter) {
             return (
-              <li key={t.name}>
+              <li key={t.uuid}>
                 <TeamEntry
                   team={t}
                   playerName={membersMap[t.playerUserId]}
