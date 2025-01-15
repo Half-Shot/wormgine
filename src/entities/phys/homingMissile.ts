@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
-import { TimedExplosive } from "./timedExplosive";
+import { TimedExplosive, TimedExplosiveRecordedState } from "./timedExplosive";
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";
 import {
   ActiveEvents,
@@ -21,6 +21,15 @@ const logger = new Logger("HomingMissile");
 const ACTIVATION_TIME_MS = 65;
 const ADJUSTMENT_TIME_MS = 6;
 const forceMult = new Vector2(7, 7);
+
+export interface HomingMissileRecordedState extends TimedExplosiveRecordedState {
+  target: {
+    x: number;
+    y: number;
+  }
+  hasActivated: boolean;
+}
+
 
 /**
  * Homing missile that attempts to hit a point target.
@@ -81,7 +90,7 @@ export class HomingMissile extends TimedExplosive {
     world: GameWorld,
     parent: Container,
     initialForce: Vector2,
-    private readonly target: Coordinate,
+    private target: Coordinate,
     owner?: WormInstance,
   ) {
     const sprite = new Sprite(HomingMissile.textureInactive);
@@ -179,7 +188,28 @@ export class HomingMissile extends TimedExplosive {
   recordState() {
     return {
       ...super.recordState(),
+      target: {
+        x: this.target.worldX,
+        y: this.target.worldY,
+      },
+      hasActivated: this.hasActivated,
       type: EntityType.HomingMissile,
     };
+  }
+
+  loadState(d: HomingMissileRecordedState): void {
+    if (!this.hasActivated) {
+      this.hasActivated = d.hasActivated;
+    }
+    const newTarget = Coordinate.fromWorld(d.target.x, d.target.y);
+    if (this.target.hash() !== newTarget.hash()) {
+      logger.info("Missle course adjusted by network sync");
+      this.target = newTarget;
+      const { position } = this.sprite;
+      this.forcePath = HomingMissile.getMissilePath(
+        Coordinate.fromScreen(position.x, position.y),
+        newTarget,
+      );
+    }
   }
 }

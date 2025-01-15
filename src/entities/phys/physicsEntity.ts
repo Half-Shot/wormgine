@@ -142,18 +142,18 @@ export abstract class PhysicsEntity<
     return {
       type: -1,
       tra: {
-        x: translation.x.toString(),
-        y: translation.y.toString(),
+        x: translation.x,
+        y: translation.y,
       },
-      rot: rotation.toString(),
+      rot: rotation,
       vel: {
-        x: linvel.x.toString(),
-        y: linvel.y.toString(),
+        x: linvel.x,
+        y: linvel.y,
       },
     } as T;
   }
 
-  loadState(_d: T): void {
+  loadState(_d: RecordedEntityState): void {
     // TODO: Load the state from above.
   }
 }
