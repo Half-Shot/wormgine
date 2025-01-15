@@ -34,6 +34,7 @@ import { BehaviorSubject, map, Observable } from "rxjs";
 import Logger from "../log";
 import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
 import { MatrixStateReplay } from "../state/player";
+import { toNetObject, toNetworkFloat } from "./netfloat";
 
 const logger = new Logger("NetClient");
 
@@ -180,9 +181,8 @@ export class NetGameInstance {
         group: teamGroup,
         wormCount,
         playerUserId: this.client.userId,
-        // TODO: What should the proper stateKey be?
       },
-      `${this.client.userId.slice(1)}/${proposedTeam.name}`,
+      proposedTeam.uuid,
     );
   }
   
@@ -199,7 +199,7 @@ export class NetGameInstance {
         ...(updates.teamGroup !== undefined && { group: updates.teamGroup }),
         ...(updates.wormCount !== undefined && { wormCount: updates.wormCount })
       },
-      `${proposedTeam.playerUserId.slice(1)}/${proposedTeam.name}`,
+      proposedTeam.uuid,
     );
   }
 
@@ -208,7 +208,7 @@ export class NetGameInstance {
       this.roomId,
       GameProposedTeamEventType,
       {},
-      `${proposedTeam.playerUserId.slice(1)}/${proposedTeam.name}`,
+      proposedTeam.uuid,
     );
   }
 
@@ -218,6 +218,7 @@ export class NetGameInstance {
       flag: v.flagb64,
       group: v.group,
       playerUserId: v.playerUserId,
+      uuid: v.uuid,
       // Needs to come from rules.
       ammo: this._rules.value.ammoSchema,
       worms: v.worms.slice(0, v.wormCount).map(
@@ -359,7 +360,7 @@ export class NetGameClient extends EventEmitter {
       }
     });
     this.client.addListener(ClientEvent.SyncUnexpectedError, (err) => {
-      console.log("err", err);
+      logger.error("Unexpected sync error", err);
     });
     this.clientState.next(ClientState.Connecting);
     await this.client.startClient();
@@ -481,6 +482,7 @@ export class NetGameClient extends EventEmitter {
 }
 
 export class RunningNetGameInstance extends NetGameInstance {
+
   private readonly _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
   public readonly gameState: Observable<FullGameStateEvent["content"]>;
   public readonly player: MatrixStateReplay;
@@ -524,9 +526,15 @@ export class RunningNetGameInstance extends NetGameInstance {
     });
   }
 
-  writeAction(data: StateRecordLine<unknown>) {
+  writeAction(act: StateRecordLine) {
+    const packet: Record<keyof typeof act, unknown> = {
+        ts: toNetworkFloat(act.ts),
+        kind: act.kind,
+        index: act.index,
+        data: toNetObject(act.data),
+    };
     return this.client.client.sendEvent(this.roomId, GameActionEventType, {
-      action: data,
+      action: packet
     });
   }
 
@@ -540,7 +548,6 @@ export class RunningNetGameInstance extends NetGameInstance {
 
   async allClientsReady() {
     const setOfReady = new Set<string>([
-      this.myUserId,
       ...(this.room
         .getLiveTimeline()
         .getEvents()
@@ -549,6 +556,10 @@ export class RunningNetGameInstance extends NetGameInstance {
     ]);
 
     const expectedCount = Object.values(this.initialConfig.members).length;
+
+    if (setOfReady.size === expectedCount) {
+      return;
+    }
 
     await new Promise<void>((resolve) => {
       this.room.on(RoomEvent.Timeline, (event) => {

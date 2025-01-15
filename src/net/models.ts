@@ -2,16 +2,9 @@ import { InputKind } from "../input";
 import { GameRules } from "../logic/gamestate";
 import { Team, TeamGroup } from "../logic/teams";
 import { StoredTeam } from "../settings";
-import { StateRecordLine } from "../state/model";
-
-/**
- * Matrix will need this as an integer, so this will be encoded as an integer
- * and multiplied.
- */
-type EncodedFloatingPointNumber = number;
 
 export interface EntityDescriptor {
-  pos: { x: EncodedFloatingPointNumber; y: EncodedFloatingPointNumber };
+  pos: { x: number; y: number; }
   rot: number;
 }
 
@@ -40,7 +33,7 @@ export const GameActionEventType = "uk.half-shot.wormgine.game_action";
 export interface GameActionEvent {
   type: typeof GameActionEventType;
   content: {
-    action: StateRecordLine<unknown>;
+    action: Record<string, unknown>;
   };
 }
 

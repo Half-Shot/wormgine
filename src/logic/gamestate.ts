@@ -1,11 +1,9 @@
-import { Ticker } from "pixi.js";
 import { InternalTeam, Team, WormInstance } from "./teams";
 import type { StateRecordWormGameState } from "../state/model";
 import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
-import { StateRecorder } from "../state/recorder";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -17,12 +15,12 @@ export interface GameRules {
 
 const logger = new Logger("GameState");
 
-enum RoundState {
-  WaitingToBegin,
-  Preround,
-  Playing,
-  Paused,
-  Finished,
+export enum RoundState {
+  WaitingToBegin = "waiting_to_begin",
+  Preround = "preround",
+  Playing = "playing",
+  Paused = "paused",
+  Finished = "finished",
 }
 
 export class GameState {
@@ -44,21 +42,21 @@ export class GameState {
     );
   }
 
-  private currentTeam?: InternalTeam;
-  private readonly teams: InternalTeam[];
-  private nextTeamStack: InternalTeam[];
+  protected currentTeam?: InternalTeam;
+  protected readonly teams: Map<string, InternalTeam>;
+  protected nextTeamStack: InternalTeam[];
 
   /**
    * Wind strength. Integer between -10 and 10.
    */
-  private wind = 0;
+  protected wind = 0;
 
   private readonly roundDurationMs: number;
-  private remainingRoundTimeMs = 0;
+  protected remainingRoundTimeMs = 0;
 
   private stateIteration = 0;
 
-  private roundState: RoundState = RoundState.Finished;
+  protected roundState: RoundState = RoundState.Finished;
 
   public iterateRound() {
     const prev = this.stateIteration;
@@ -86,18 +84,15 @@ export class GameState {
     teams: Team[],
     private readonly world: GameWorld,
     private readonly rules: GameRules,
-    private readonly recorder?: StateRecorder,
   ) {
     if (teams.length < 1) {
       throw Error("Must have at least one team");
     }
-    this.teams = teams.map(
+    this.teams = new Map(teams.map(
       (team) =>
-        new InternalTeam(team, () => {
-          this.iterateRound();
-        }),
-    );
-    this.nextTeamStack = [...this.teams];
+        [team.uuid, new InternalTeam(team)],
+    ));
+    this.nextTeamStack = [...this.teams.values()];
     this.roundDurationMs = rules.roundDurationMs ?? 45000;
   }
 
@@ -113,18 +108,14 @@ export class GameState {
 
   public setTimer(milliseconds: number) {
     this.remainingRoundTimeMs = milliseconds;
-  }
-
-  public getTeamByIndex(index: number) {
-    return this.teams[index];
-  }
+  }s
 
   public getTeams() {
-    return this.teams;
+    return [...this.teams.values()];
   }
 
   public getActiveTeams() {
-    return this.teams.filter((t) => t.worms.some((w) => w.health > 0));
+    return this.getTeams().filter((t) => t.health > 0);
   }
 
   public get iteration(): number {
@@ -135,7 +126,12 @@ export class GameState {
     return this.roundState === RoundState.Paused;
   }
 
-  public update(ticker: Ticker) {
+  public markAsFinished() {
+    this.roundState = RoundState.Finished;
+    this.recordGameStare();
+  }
+
+  public update(ticker: { deltaMS: number}) {
     if (
       this.roundState === RoundState.Finished ||
       this.roundState === RoundState.Paused ||
@@ -143,54 +139,42 @@ export class GameState {
     ) {
       return;
     }
+    this.remainingRoundTimeMs = Math.max(
+      0,
+      this.remainingRoundTimeMs - ticker.deltaMS,
+    );
     if (this.remainingRoundTimeMs) {
-      this.remainingRoundTimeMs = Math.max(
-        0,
-        this.remainingRoundTimeMs - ticker.deltaMS,
-      );
       return;
     }
     if (this.isPreRound) {
       this.playerMoved();
     } else {
       this.roundState = RoundState.Finished;
+      this.recordGameStare();
     }
-  }
-
-  public applyGameStateUpdate(stateUpdate: StateRecordWormGameState["data"]) {
-    // TODO: Is this order garunteed?
-    let index = -1;
-    for (const teamData of stateUpdate.teams) {
-      index++;
-      const teamWormSet = this.teams[index].worms;
-      for (const wormData of teamData.worms) {
-        const foundWorm = teamWormSet.find((w) => w.uuid === wormData.uuid);
-        if (foundWorm) {
-          foundWorm.health = wormData.health;
-        }
-      }
-    }
-    const data = this.advanceRound();
-    this.wind = stateUpdate.wind;
-    return data;
   }
 
   public playerMoved() {
     this.roundState = RoundState.Playing;
     this.remainingRoundTimeMs = this.roundDurationMs;
+    this.recordGameStare();
   }
 
   public beginRound() {
     if (this.roundState !== RoundState.WaitingToBegin) {
-      throw Error("Expected to be waiting to begin");
+      throw Error(`Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState}`);
     }
     this.roundState = RoundState.Preround;
     this.remainingRoundTimeMs = 5000;
+    this.recordGameStare();
   }
 
   public advanceRound():
     | { nextTeam: InternalTeam; nextWorm: WormInstance }
     | { winningTeams: InternalTeam[] } {
+    if (this.roundState !== RoundState.Finished) {
+      throw Error(`Expected round to be Finished for advanceRound(), but got ${this.roundState}`);
+    }
     logger.debug("Advancing round");
     this.wind = Math.ceil(Math.random() * 20 - 11);
     if (!this.currentTeam) {
@@ -199,7 +183,6 @@ export class GameState {
 
       // 5 seconds preround
       this.stateIteration++;
-      this.remainingRoundTimeMs = 5000;
       this.roundState = RoundState.WaitingToBegin;
 
       this.recordGameStare();
@@ -266,27 +249,7 @@ export class GameState {
     };
   }
 
-  private recordGameStare() {
-    if (!this.recorder) {
-      return;
-    }
-    const iteration = this.iteration;
-    const teams = this.getTeams();
-    this.recorder.recordGameState({
-      iteration: iteration,
-      wind: this.currentWind,
-      teams: teams.map((t) => ({
-        name: t.name,
-        group: t.group,
-        playerUserId: t.playerUserId,
-        worms: t.worms.map((w) => ({
-          uuid: w.uuid,
-          name: w.name,
-          health: w.health,
-          maxHealth: w.maxHealth,
-        })),
-        ammo: t.ammo,
-      })),
-    });
+  protected recordGameStare() {
+    return;
   }
 }
