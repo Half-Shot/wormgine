@@ -1,15 +1,19 @@
+import { RoundState } from "../logic/gamestate";
 import { Team, TeamGroup } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
+
 
 export interface RecordedEntityState {
   type: number | string;
   // Translation
-  tra: { x: string; y: string };
+  tra: { x: number; y: number };
   // Rotation
-  rot: string;
+  rot: number;
   // Linear velocity
-  vel: { x: string; y: string };
+  vel: { x: number; y: number };
 }
+
+
 
 export enum StateRecordKind {
   Header = "header",
@@ -22,11 +26,11 @@ export enum StateRecordKind {
   GameState = "game_state",
 }
 
-export interface StateRecordLine<T> {
+export interface StateRecordLine<T extends object = Record<string, unknown>> {
   index: number;
   kind: StateRecordKind;
   data: T;
-  ts: string;
+  ts: number;
 }
 
 export type StateRecordHeader = StateRecordLine<{ version: number }>;
@@ -74,16 +78,15 @@ export type StateRecordWormSelectWeapon = StateRecordLine<{
 }>;
 
 export type StateRecordWormGameState = StateRecordLine<{
+  round_state: RoundState,
   teams: {
-    group: TeamGroup;
-    name: string;
+    uuid: string;
     worms: {
       uuid: string;
       name: string;
       health: number;
       maxHealth: number;
     }[];
-    playerUserId: string | null;
     ammo: Team["ammo"];
   }[];
   iteration: number;
