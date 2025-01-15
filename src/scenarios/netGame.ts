@@ -25,6 +25,7 @@ import Logger from "../log";
 import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { logger } from "matrix-js-sdk/lib/logger";
 import { getDefinitionForCode } from "../weapons";
+import { NetGameState } from "../net/netGameState";
 
 const log = new Logger("scenario");
 
@@ -148,17 +149,18 @@ export default async function runScenario(game: Game) {
   const myUserId = gameInstance.myUserId;
 
   const stateLogger = new Logger("StateRecorder");
-  const stateRecorder = new StateRecorder(world, {
+  const stateRecorder = new StateRecorder({
     async writeLine(data) {
       stateLogger.debug("Writing state", data);
       gameInstance.writeAction(data);
     },
   });
-  const gameState = new GameState(
+  const gameState = new NetGameState(
     initialTeams,
     world,
     gameInstance.rules,
-    gameInstance.isHost ? stateRecorder : undefined,
+    stateRecorder,
+    gameInstance.myUserId,
   );
 
   const bg = await world.addEntity(
@@ -184,9 +186,7 @@ export default async function runScenario(game: Game) {
     game.viewport.screenHeight,
   );
 
-  const waterLevel = parseFloat(
-    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? "0",
-  );
+  const waterLevel = level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
   const water = world.addEntity(
     new Water(
@@ -209,8 +209,8 @@ export default async function runScenario(game: Game) {
       const t = new WeaponTarget(
         world,
         Coordinate.fromScreen(
-          parseFloat(levelObject.tra.x),
-          parseFloat(levelObject.tra.y),
+          levelObject.tra.x,
+          levelObject.tra.y,
         ),
         parent,
       );
@@ -236,8 +236,8 @@ export default async function runScenario(game: Game) {
       }
       const nextLocation = spawnPositions[nextLocationIdx];
       const pos = Coordinate.fromScreen(
-        parseFloat(nextLocation.tra.x),
-        parseFloat(nextLocation.tra.y),
+        nextLocation.tra.x,
+        nextLocation.tra.y,
       );
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
@@ -246,7 +246,7 @@ export default async function runScenario(game: Game) {
             CameraLockPriority.LockIfNotLocalPlayer;
           world.addEntity(newProjectile);
         }
-        stateRecorder.syncEntityState();
+        stateRecorder.syncEntityState(world);
         const res = await newProjectile.onFireResult;
         return res;
       };
@@ -355,7 +355,7 @@ export default async function runScenario(game: Game) {
       }
     }
     if (endOfRoundWaitDuration === null) {
-      stateRecorder.syncEntityState();
+      stateRecorder.syncEntityState(world);
       const nextState = gameState.advanceRound();
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {

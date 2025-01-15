@@ -52,9 +52,11 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "dummy",
       },
       {
         name: "The Invisible Duo",
+        uuid: "invisible",
         group: TeamGroup.Red,
         worms: [
           {
@@ -118,12 +120,14 @@ export default async function runScenario(game: Game) {
   //     world.addEntity(newProjectile);
   // }));
 
+  const [dummyteam, playerteam] = gameState.getActiveTeams();
+
   const dummy = world.addEntity(
     TestDummy.create(
       parent,
       world,
       Coordinate.fromScreen(650, 620),
-      gameState.getTeamByIndex(0).worms[0],
+      dummyteam.worms[0],
     ),
   );
   world.addEntity(
@@ -131,7 +135,7 @@ export default async function runScenario(game: Game) {
       parent,
       world,
       Coordinate.fromScreen(1500, 300),
-      gameState.getTeamByIndex(0).worms[1],
+      dummyteam.worms[1],
     ),
   );
   world.addEntity(
@@ -139,7 +143,7 @@ export default async function runScenario(game: Game) {
       parent,
       world,
       Coordinate.fromScreen(1012, 678),
-      gameState.getTeamByIndex(0).worms[2],
+      dummyteam.worms[2],
     ),
   );
   world.addEntity(
@@ -147,7 +151,7 @@ export default async function runScenario(game: Game) {
       parent,
       world,
       Coordinate.fromScreen(600, 550),
-      gameState.getTeamByIndex(1).worms[0],
+      playerteam.worms[0],
       async () => {
         return [];
       },

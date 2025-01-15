@@ -131,10 +131,7 @@ export default async function runScenario(game: Game) {
         await RemoteWorm.create(
           parent,
           world,
-          new Coordinate(
-            parseFloat(existingEntData.tra.x),
-            parseFloat(existingEntData.tra.y),
-          ),
+          new Coordinate(existingEntData.tra.x, existingEntData.tra.y),
           wormInstance,
           async (worm, definition, opts) => {
             const newProjectile = definition.fireFn(parent, world, worm, opts);
