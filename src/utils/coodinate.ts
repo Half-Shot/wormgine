@@ -24,7 +24,6 @@ export class MetersValue {
     return `{${this.value}m, ${this.value}px}`;
   }
 }
-
 export class Coordinate {
   static fromScreen(screenX: number, screenY: number) {
     return new Coordinate(
@@ -77,5 +76,10 @@ export class Coordinate {
 
   public toString() {
     return `Coodinate {wx: ${this.worldX} wy:${this.worldY}} {sx: ${this.screenX}, sy: ${this.screenY}}`;
+  }
+
+  public hash() {
+    // Cloes enough approximation.
+    return this.worldX + (this.worldY * 575);
   }
 }
