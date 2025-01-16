@@ -9,6 +9,7 @@ export interface WormIdentity {
 import { IWeaponCode, IWeaponDefiniton } from "../weapons/weapon";
 import { WormInstance } from "./worminstance";
 import { getDefinitionForCode } from "../weapons";
+import { BehaviorSubject, combineLatest, first, map } from "rxjs";
 
 export enum TeamGroup {
   Red,
@@ -52,7 +53,7 @@ export function teamGroupToColorSet(group: TeamGroup): {
   }
 }
 
-export class InternalTeam implements Team {
+export class TeamInstance {
   public readonly worms: WormInstance[];
   private nextWormStack: WormInstance[];
   public readonly ammo: Team["ammo"];
@@ -66,15 +67,25 @@ export class InternalTeam implements Team {
       ]);
   }
 
-  constructor(
-    private readonly team: Team,
-    onHealthChange: () => void,
-  ) {
-    this.worms = team.worms.map(
-      (w) => new WormInstance(w, this, onHealthChange),
-    );
+  // XXX: Stopgap until we can rxjs more things.
+  private healthSubject = new BehaviorSubject<number>(0);
+  public readonly health$ = this.healthSubject.asObservable();
+  public readonly maxHealth$ = this.healthSubject.pipe(first((v) => v !== 0));
+
+  /**
+   * @deprecated Stopgap, use health.
+   */
+  public get health() {
+    return this.healthSubject.value;
+  }
+
+  constructor(private readonly team: Team) {
+    this.worms = team.worms.map((w) => new WormInstance(w, this));
     this.nextWormStack = [...this.worms];
     this.ammo = { ...team.ammo };
+    combineLatest(this.worms.map((w) => w.health$))
+      .pipe(map<number[], number>((v) => v.reduce((p, c) => p + c)))
+      .subscribe((v) => this.healthSubject.next(v));
   }
 
   get name() {
@@ -95,14 +106,6 @@ export class InternalTeam implements Team {
 
   get flag() {
     return this.team.flag;
-  }
-
-  get health() {
-    return this.worms.map((w) => w.health).reduce((a, b) => a + b);
-  }
-
-  get maxHealth() {
-    return this.worms.map((w) => w.maxHealth).reduce((a, b) => a + b);
   }
 
   public popNextWorm(): WormInstance {

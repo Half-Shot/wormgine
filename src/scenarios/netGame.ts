@@ -5,7 +5,6 @@ import type { Game } from "../game";
 import { Water } from "../entities/water";
 import { FireFn, Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
-import { GameState } from "../logic/gamestate";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
 import {
   GameDrawText,
@@ -186,7 +185,8 @@ export default async function runScenario(game: Game) {
     game.viewport.screenHeight,
   );
 
-  const waterLevel = level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
+  const waterLevel =
+    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
   const water = world.addEntity(
     new Water(
@@ -208,10 +208,7 @@ export default async function runScenario(game: Game) {
     if (levelObject.type === "wormgine.target") {
       const t = new WeaponTarget(
         world,
-        Coordinate.fromScreen(
-          levelObject.tra.x,
-          levelObject.tra.y,
-        ),
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
         parent,
       );
       world.addEntity(t);
@@ -235,10 +232,7 @@ export default async function runScenario(game: Game) {
         throw Error("No location to spawn worm");
       }
       const nextLocation = spawnPositions[nextLocationIdx];
-      const pos = Coordinate.fromScreen(
-        nextLocation.tra.x,
-        nextLocation.tra.y,
-      );
+      const pos = Coordinate.fromScreen(nextLocation.tra.x, nextLocation.tra.y);
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
         if (newProjectile instanceof PhysicsEntity) {
@@ -422,30 +416,30 @@ export default async function runScenario(game: Game) {
       }
       endOfRoundWaitDuration -= dt.deltaMS;
     });
-    player.on("gameState", (dataUpdate) => {
-      const nextState = gameState.applyGameStateUpdate(dataUpdate);
-      logger.info("New game state", dataUpdate, nextState);
-      if ("winningTeams" in nextState) {
-        if (nextState.winningTeams.length) {
-          overlay.toaster.pushToast(
-            templateRandomText(TeamWinnerText, {
-              TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
-            }),
-            8000,
-          );
-        } else {
-          // Draw
-          overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
-        }
-        endOfGameFadeOut = 8000;
-      } else {
-        currentWorm?.onEndOfTurn();
-        currentWorm?.currentState.off("transition", transitionHandler);
-        currentWorm = wormInstances.get(nextState.nextWorm.uuid);
-        // Turn just ended.
-        endOfRoundWaitDuration = 5000;
-      }
-      return;
-    });
+    // player.on("gameState", (dataUpdate) => {
+    //   const nextState = gameState.applyGameStateUpdate(dataUpdate);
+    //   logger.info("New game state", dataUpdate, nextState);
+    //   if ("winningTeams" in nextState) {
+    //     if (nextState.winningTeams.length) {
+    //       overlay.toaster.pushToast(
+    //         templateRandomText(TeamWinnerText, {
+    //           TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
+    //         }),
+    //         8000,
+    //       );
+    //     } else {
+    //       // Draw
+    //       overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
+    //     }
+    //     endOfGameFadeOut = 8000;
+    //   } else {
+    //     currentWorm?.onEndOfTurn();
+    //     currentWorm?.currentState.off("transition", transitionHandler);
+    //     currentWorm = wormInstances.get(nextState.nextWorm.uuid);
+    //     // Turn just ended.
+    //     endOfRoundWaitDuration = 5000;
+    //   }
+    //   return;
+    // });
   }
 }

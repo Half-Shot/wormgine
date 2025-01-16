@@ -7,17 +7,15 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { GameState } from "../logic/gamestate";
-import {
-  applyGenericBoxStyle,
-  DefaultTextStyle,
-  LargeTextStyle,
-} from "../mixins/styles";
+import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../consts";
 import Logger from "../log";
+import { combineLatest, first, map } from "rxjs";
+import { RoundTimer } from "./roundTimer";
 
 const logger = new Logger("GameStateOverlay");
 
@@ -25,18 +23,17 @@ const TEAM_HEALTH_WIDTH_PX = 204;
 
 export class GameStateOverlay {
   public readonly physicsSamples: number[] = [];
-  private readonly roundTimer: Text;
   private readonly tickerFn: (dt: Ticker) => void;
   private readonly gfx: Graphics;
   private previousStateIteration = -1;
   private visibleTeamHealth: Record<string, number> = {};
   private healthChangeTensionTimer: number | null = null;
-  private readonly largestHealthPool: number;
+  private largestHealthPool = 0;
 
   public readonly toaster: Toaster;
   private readonly winddial: WindDial;
+  private readonly roundTimer: RoundTimer;
   private readonly bottomOfScreenY;
-  private readonly roundTimerWidth;
   private readonly teamFlagTextures: Record<string, Texture> = {};
 
   constructor(
@@ -47,14 +44,6 @@ export class GameStateOverlay {
     private readonly screenWidth: number,
     private readonly screenHeight: number,
   ) {
-    this.roundTimer = new Text({
-      text: "00",
-      style: {
-        ...LargeTextStyle,
-        align: "center",
-      },
-    });
-    this.roundTimerWidth = this.roundTimer.width;
     this.bottomOfScreenY = (this.screenHeight / 10) * 8.75;
 
     this.toaster = new Toaster(screenWidth, screenHeight);
@@ -63,29 +52,36 @@ export class GameStateOverlay {
       this.bottomOfScreenY,
       this.gameWorld,
     );
-
-    this.roundTimer.position.set(
+    this.roundTimer = new RoundTimer(
       this.screenWidth / 30 + 14,
       this.bottomOfScreenY + 12,
+      this.gameState.remainingRoundTimeSeconds$,
+      this.gameState.currentTeam$.pipe(
+        map((t) => t && teamGroupToColorSet(t.group)),
+      ),
     );
+
     this.gfx = new Graphics();
     this.stage.addChild(this.toaster.container);
     this.stage.addChild(this.gfx);
-    this.stage.addChild(this.roundTimer);
+    this.stage.addChild(this.roundTimer.container);
     this.stage.addChild(this.winddial.container);
     this.tickerFn = this.update.bind(this);
     this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
-    this.largestHealthPool = this.gameState
-      .getTeams()
-      .reduceRight((value, team) => Math.max(value, team.maxHealth), 0);
+    combineLatest(this.gameState.getTeams().map((t) => t.maxHealth$))
+      .pipe(
+        map((v) => v.reduce((v1, v2) => Math.max(v1, v2))),
+        first(),
+      )
+      .subscribe((s) => {
+        this.largestHealthPool = s;
+      });
     this.gameState.getActiveTeams().forEach((t) => {
-      this.visibleTeamHealth[t.name] = t.health;
       if (t.flag) {
         this.teamFlagTextures[t.name] = Texture.from(
           `team-flag-${t.name}`,
           true,
         );
-        console.log(this.teamFlagTextures);
       }
     });
   }
@@ -101,11 +97,6 @@ export class GameStateOverlay {
     const shouldChangeTeamHealth =
       this.healthChangeTensionTimer !== null &&
       this.healthChangeTensionTimer <= 0;
-
-    this.roundTimer.text =
-      this.gameState.remainingRoundTime === 0
-        ? "--"
-        : Math.ceil(this.gameState.remainingRoundTime / 1000);
 
     if (
       this.previousStateIteration === this.gameState.iteration &&
@@ -135,23 +126,6 @@ export class GameStateOverlay {
 
     // Remove any previous text.
     this.gfx.removeChildren(0, this.gfx.children.length);
-    const currentTeamColors =
-      !this.gameState.paused && this.gameState.activeTeam
-        ? teamGroupToColorSet(this.gameState.activeTeam?.group)
-        : { fg: 0xaaaaaa };
-
-    // Round timer
-    applyGenericBoxStyle(this.gfx, currentTeamColors.fg)
-      .roundRect(
-        this.roundTimer.x - 8,
-        this.roundTimer.y + 8,
-        this.roundTimerWidth + 16,
-        this.roundTimer.height,
-        4,
-      )
-      .stroke()
-      .fill();
-
     // For each team:
     // TODO: Sort by health and group
     // TODO: Evenly space.
@@ -162,15 +136,20 @@ export class GameStateOverlay {
       this.bottomOfScreenY -
       (teamSeperationHeight * (activeTeams.length - 2)) / 2;
     for (const team of activeTeams) {
+      console.log(team.name, team.health);
+      if (this.visibleTeamHealth[team.uuid] === undefined) {
+        this.visibleTeamHealth[team.uuid] = team.health;
+      }
       if (
-        this.visibleTeamHealth[team.name] > team.health &&
+        this.visibleTeamHealth[team.uuid] > team.health &&
         shouldChangeTeamHealth
       ) {
-        this.visibleTeamHealth[team.name] -= 1;
+        this.visibleTeamHealth[team.uuid] -= 1;
         allHealthAccurate = false;
       }
       const teamHealthPercentage =
-        this.visibleTeamHealth[team.name] / this.largestHealthPool;
+        this.visibleTeamHealth[team.uuid] / this.largestHealthPool;
+
       const { bg, fg } = teamGroupToColorSet(team.group);
       const nameTag = new Text({
         text: team.name,

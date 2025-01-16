@@ -12,6 +12,7 @@ import { PIXELS_PER_METER } from "../world";
 import { Viewport } from "pixi-viewport";
 import { debugData } from "../movementController";
 import { DefaultTextStyle } from "../mixins/styles";
+import { RunningNetGameInstance } from "../net/client";
 
 const PHYSICS_SAMPLES = 60;
 const FRAME_SAMPLES = 60;
@@ -33,6 +34,7 @@ export class GameDebugOverlay {
     private readonly ticker: Ticker,
     private readonly stage: Container,
     private readonly viewport: Viewport,
+    private readonly gameInstance?: RunningNetGameInstance,
   ) {
     this.text = new Text({
       text: "",

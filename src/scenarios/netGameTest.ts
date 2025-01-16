@@ -1,30 +1,17 @@
-import { Assets, Ticker } from "pixi.js";
+import { Assets } from "pixi.js";
 import { Background } from "../entities/background";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import type { Game } from "../game";
 import { Water } from "../entities/water";
-import { FireFn, Worm } from "../entities/playable/worm";
 import { Coordinate, MetersValue } from "../utils/coodinate";
-import { GameState } from "../logic/gamestate";
 import { GameStateOverlay } from "../overlays/gameStateOverlay";
-import {
-  GameDrawText,
-  TeamWinnerText,
-  templateRandomText,
-} from "../text/toasts";
-import { PhysicsEntity } from "../entities/phys/physicsEntity";
-import staticController, { InputKind } from "../input";
 import { StateRecorder } from "../state/recorder";
 import { CameraLockPriority, ViewportCamera } from "../camera";
 import { getAssets } from "../assets";
 import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
-import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
-import { InnerWormState } from "../entities/playable/wormState";
 import Logger from "../log";
-import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { logger } from "matrix-js-sdk/lib/logger";
-import { getDefinitionForCode } from "../weapons";
 import { NetGameState } from "../net/netGameState";
 
 const log = new Logger("scenario");
@@ -97,7 +84,7 @@ export default async function runScenario(game: Game) {
   world.addEntity(terrain);
   terrain.addToWorld(parent);
 
-  const overlay = new GameStateOverlay(
+  new GameStateOverlay(
     game.pixiApp.ticker,
     game.pixiApp.stage,
     gameState,
@@ -106,7 +93,8 @@ export default async function runScenario(game: Game) {
     game.viewport.screenHeight,
   );
 
-  const waterLevel = level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
+  const waterLevel =
+    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
   const water = world.addEntity(
     new Water(
@@ -128,19 +116,16 @@ export default async function runScenario(game: Game) {
     if (levelObject.type === "wormgine.target") {
       const t = new WeaponTarget(
         world,
-        Coordinate.fromScreen(
-          levelObject.tra.x,
-          levelObject.tra.y,
-        ),
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
         parent,
       );
       world.addEntity(t);
       parent.addChild(t.sprite);
     }
   }
-  
-  player.on('gameState', (s) => {
-    log.info('New game state recieved:', s.iteration);
+
+  player.on("gameState", (s) => {
+    log.info("New game state recieved:", s.iteration);
     gameState.applyGameStateUpdate(s);
   });
 
@@ -164,7 +149,7 @@ export default async function runScenario(game: Game) {
       gameState.markAsFinished();
       gameState.advanceRound();
       gameState.beginRound();
-    }, 3000);  
+    }, 3000);
   }
 
   log.info("Game can now begin");

@@ -36,7 +36,9 @@ export interface TimedExplosiveRecordedState extends RecordedEntityState {
  * Any projectile type that can explode after a set timer. Implementing classes
  * must include their own timer.
  */
-export abstract class TimedExplosive<T extends TimedExplosiveRecordedState = TimedExplosiveRecordedState>
+export abstract class TimedExplosive<
+    T extends TimedExplosiveRecordedState = TimedExplosiveRecordedState,
+  >
   extends PhysicsEntity<T>
   implements IWeaponEntity
 {

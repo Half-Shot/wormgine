@@ -50,6 +50,7 @@ import { CameraLockPriority } from "../../camera";
 import { OnDamageOpts } from "../entity";
 import Logger from "../../log";
 import { WormState, InnerWormState } from "./wormState";
+import { filter, first } from "rxjs";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -204,6 +205,21 @@ export class Worm extends PlayableEntity {
     });
     this.targettingGfx = new Graphics({ visible: false });
     this.updateTargettingGfx();
+    this.wormIdent.health$
+      .pipe(
+        filter((v) => v === 0),
+        first(),
+      )
+      .subscribe(() => {
+        // Generic death
+        this.toaster?.pushToast(
+          templateRandomText(WormDeathGeneric, {
+            WormName: this.wormIdent.name,
+            TeamName: this.wormIdent.team.name,
+          }),
+          3000,
+        );
+      });
   }
 
   public selectWeapon(weapon: IWeaponDefiniton) {
@@ -715,7 +731,7 @@ export class Worm extends PlayableEntity {
         //this.body.setGravityScale(0, false);
         if (this.impactVelocity > Worm.minImpactForDamage) {
           const damage = this.impactVelocity * Worm.impactDamageMultiplier;
-          this.health -= damage;
+          this.wormIdent.setHealth(this.wormIdent.health - damage);
           this.state.transition(InnerWormState.Inactive);
           this.turnEndedReason = EndTurnReason.FallDamage;
         }
@@ -767,15 +783,6 @@ export class Worm extends PlayableEntity {
         3000,
       );
       // Sinking death
-    } else if (this.health === 0) {
-      // Generic death
-      this.toaster?.pushToast(
-        templateRandomText(WormDeathGeneric, {
-          WormName: this.wormIdent.name,
-          TeamName: this.wormIdent.team.name,
-        }),
-        3000,
-      );
     }
   }
 }

@@ -1,9 +1,9 @@
-import { InternalTeam, Team, WormInstance } from "./teams";
-import type { StateRecordWormGameState } from "../state/model";
+import { TeamInstance, Team, WormInstance } from "./teams";
 import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
+import { BehaviorSubject, distinctUntilChanged, map, skip } from "rxjs";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -13,8 +13,6 @@ export interface GameRules {
   ammoSchema: Record<IWeaponCode | string, number>;
 }
 
-const logger = new Logger("GameState");
-
 export enum RoundState {
   WaitingToBegin = "waiting_to_begin",
   Preround = "preround",
@@ -22,6 +20,10 @@ export enum RoundState {
   Paused = "paused",
   Finished = "finished",
 }
+
+const PREROUND_TIMER_MS = 5000;
+
+const logger = new Logger("GameState");
 
 export class GameState {
   static getTeamMaxHealth(team: Team) {
@@ -42,9 +44,12 @@ export class GameState {
     );
   }
 
-  protected currentTeam?: InternalTeam;
-  protected readonly teams: Map<string, InternalTeam>;
-  protected nextTeamStack: InternalTeam[];
+  protected currentTeam = new BehaviorSubject<TeamInstance | undefined>(
+    undefined,
+  );
+  public readonly currentTeam$ = this.currentTeam.asObservable();
+  protected readonly teams: Map<string, TeamInstance>;
+  protected nextTeamStack: TeamInstance[];
 
   /**
    * Wind strength. Integer between -10 and 10.
@@ -52,11 +57,16 @@ export class GameState {
   protected wind = 0;
 
   private readonly roundDurationMs: number;
-  protected remainingRoundTimeMs = 0;
+  protected remainingRoundTimeMs = new BehaviorSubject<number>(0);
+  public readonly remainingRoundTimeSeconds$ = this.remainingRoundTimeMs.pipe(
+    map((v) => Math.ceil(v / 1000)),
+    distinctUntilChanged(),
+  );
 
   private stateIteration = 0;
 
-  protected roundState: RoundState = RoundState.Finished;
+  protected roundState = new BehaviorSubject<RoundState>(RoundState.Finished);
+  public readonly roundState$ = this.roundState.asObservable();
 
   public iterateRound() {
     const prev = this.stateIteration;
@@ -69,15 +79,19 @@ export class GameState {
   }
 
   get remainingRoundTime() {
-    return this.remainingRoundTimeMs;
+    return this.remainingRoundTimeMs.value;
   }
 
   get isPreRound() {
-    return this.roundState === RoundState.Preround;
+    return this.roundState.value === RoundState.Preround;
   }
 
+  /**
+   * Use `this.currentTeam`
+   * @deprecated
+   */
   get activeTeam() {
-    return this.currentTeam;
+    return this.currentTeam.value;
   }
 
   constructor(
@@ -88,27 +102,35 @@ export class GameState {
     if (teams.length < 1) {
       throw Error("Must have at least one team");
     }
-    this.teams = new Map(teams.map(
-      (team) =>
-        [team.uuid, new InternalTeam(team)],
-    ));
+    this.teams = new Map(
+      teams.map((team) => {
+        const iTeam = new TeamInstance(team);
+        // N.B. Skip the first health update.
+        iTeam.health$.pipe(skip(1)).subscribe(() => this.iterateRound());
+        return [team.uuid, iTeam];
+      }),
+    );
+    if (this.teams.size !== teams.length) {
+      throw Error("Team had duplicate uuid, cannot start");
+    }
     this.nextTeamStack = [...this.teams.values()];
     this.roundDurationMs = rules.roundDurationMs ?? 45000;
   }
 
   public pauseTimer() {
-    this.roundState = RoundState.Paused;
+    this.roundState.next(RoundState.Paused);
     this.iterateRound();
   }
 
   public unpauseTimer() {
-    this.roundState = RoundState.Playing;
+    this.roundState.next(RoundState.Playing);
     this.iterateRound();
   }
 
   public setTimer(milliseconds: number) {
-    this.remainingRoundTimeMs = milliseconds;
-  }s
+    logger.debug("setTimer", milliseconds);
+    this.remainingRoundTimeMs.next(milliseconds);
+  }
 
   public getTeams() {
     return [...this.teams.values()];
@@ -122,77 +144,87 @@ export class GameState {
     return this.stateIteration;
   }
 
+  /**
+   * @deprecated Use `this.roundState$`
+   */
   public get paused() {
-    return this.roundState === RoundState.Paused;
+    return this.roundState.value === RoundState.Paused;
   }
 
   public markAsFinished() {
-    this.roundState = RoundState.Finished;
+    this.roundState.next(RoundState.Finished);
     this.recordGameStare();
   }
 
-  public update(ticker: { deltaMS: number}) {
+  public update(ticker: { deltaMS: number }) {
+    const roundState = this.roundState.value;
+    let remainingRoundTimeMs = this.remainingRoundTimeMs.value;
     if (
-      this.roundState === RoundState.Finished ||
-      this.roundState === RoundState.Paused ||
-      this.roundState === RoundState.WaitingToBegin
+      roundState === RoundState.Finished ||
+      roundState === RoundState.Paused ||
+      roundState === RoundState.WaitingToBegin
     ) {
       return;
     }
-    this.remainingRoundTimeMs = Math.max(
-      0,
-      this.remainingRoundTimeMs - ticker.deltaMS,
-    );
-    if (this.remainingRoundTimeMs) {
+
+    remainingRoundTimeMs = Math.max(0, remainingRoundTimeMs - ticker.deltaMS);
+    this.remainingRoundTimeMs.next(remainingRoundTimeMs);
+    if (remainingRoundTimeMs) {
       return;
     }
-    if (this.isPreRound) {
+    if (roundState === RoundState.Preround) {
       this.playerMoved();
     } else {
-      this.roundState = RoundState.Finished;
+      this.roundState.next(RoundState.Finished);
       this.recordGameStare();
     }
   }
 
   public playerMoved() {
-    this.roundState = RoundState.Playing;
-    this.remainingRoundTimeMs = this.roundDurationMs;
+    this.roundState.next(RoundState.Playing);
+    logger.debug("playerMoved", this.roundDurationMs);
+    this.remainingRoundTimeMs.next(this.roundDurationMs);
     this.recordGameStare();
   }
 
   public beginRound() {
-    if (this.roundState !== RoundState.WaitingToBegin) {
-      throw Error(`Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState}`);
+    if (this.roundState.value !== RoundState.WaitingToBegin) {
+      throw Error(
+        `Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState}`,
+      );
     }
-    this.roundState = RoundState.Preround;
-    this.remainingRoundTimeMs = 5000;
+    this.roundState.next(RoundState.Preround);
+    logger.debug("beginRound", PREROUND_TIMER_MS);
+    this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
     this.recordGameStare();
   }
 
   public advanceRound():
-    | { nextTeam: InternalTeam; nextWorm: WormInstance }
-    | { winningTeams: InternalTeam[] } {
-    if (this.roundState !== RoundState.Finished) {
-      throw Error(`Expected round to be Finished for advanceRound(), but got ${this.roundState}`);
+    | { nextTeam: TeamInstance; nextWorm: WormInstance }
+    | { winningTeams: TeamInstance[] } {
+    if (this.roundState.value !== RoundState.Finished) {
+      throw Error(
+        `Expected round to be Finished for advanceRound(), but got ${this.roundState}`,
+      );
     }
     logger.debug("Advancing round");
     this.wind = Math.ceil(Math.random() * 20 - 11);
-    if (!this.currentTeam) {
+    if (!this.currentTeam.value) {
       const [firstTeam] = this.nextTeamStack.splice(0, 1);
-      this.currentTeam = firstTeam;
+      this.currentTeam.next(firstTeam);
 
       // 5 seconds preround
       this.stateIteration++;
-      this.roundState = RoundState.WaitingToBegin;
+      this.roundState.next(RoundState.WaitingToBegin);
 
       this.recordGameStare();
       return {
-        nextTeam: this.currentTeam,
+        nextTeam: firstTeam,
         // Team *should* have at least one healthy worm.
-        nextWorm: this.currentTeam.popNextWorm(),
+        nextWorm: firstTeam.popNextWorm(),
       };
     }
-    const previousTeam = this.currentTeam;
+    const previousTeam = this.currentTeam.value;
     this.nextTeamStack.push(previousTeam);
 
     for (let index = 0; index < this.nextTeamStack.length; index++) {
@@ -200,9 +232,9 @@ export class GameState {
       if (nextTeam.group === previousTeam.group) {
         continue;
       }
-      if (nextTeam.worms.some((w) => w.health > 0)) {
+      if (nextTeam.health > 0) {
         this.nextTeamStack.splice(index, 1);
-        this.currentTeam = nextTeam;
+        this.currentTeam.next(nextTeam);
       }
     }
     if (this.rules.winWhenAllObjectsOfTypeDestroyed) {
@@ -212,7 +244,7 @@ export class GameState {
       if (!hasEntityRemaining) {
         logger.debug("Game stopped because type of entity no longer exists");
         return {
-          winningTeams: [this.currentTeam],
+          winningTeams: [previousTeam],
         };
       } else {
         logger.debug(
@@ -221,7 +253,7 @@ export class GameState {
       }
     }
     // We wrapped around.
-    if (this.currentTeam === previousTeam) {
+    if (this.currentTeam.value === previousTeam) {
       this.stateIteration++;
       if (this.rules.winWhenOneGroupRemains) {
         // All remaining teams are part of the same group
@@ -229,7 +261,7 @@ export class GameState {
         return {
           winningTeams: this.getActiveTeams(),
         };
-      } else if (this.currentTeam.health === 0) {
+      } else if (previousTeam.health === 0) {
         // This is a draw
         this.recordGameStare();
         return {
@@ -239,13 +271,13 @@ export class GameState {
     }
     this.stateIteration++;
     // 5 seconds preround
-    this.remainingRoundTimeMs = 0;
-    this.roundState = RoundState.WaitingToBegin;
+    this.remainingRoundTimeMs.next(0);
+    this.roundState.next(RoundState.WaitingToBegin);
     this.recordGameStare();
     return {
-      nextTeam: this.currentTeam,
+      nextTeam: this.currentTeam.value,
       // We should have already validated that this team has healthy worms.
-      nextWorm: this.currentTeam.popNextWorm(),
+      nextWorm: this.currentTeam.value.popNextWorm(),
     };
   }
 

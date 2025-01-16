@@ -9,7 +9,8 @@ export interface StoredTeam {
   name: string;
   worms: string[];
   flagb64?: string;
-  synced: boolean | null;
+  lastModified: number;
+  uuid: string;
 }
 
 export interface GameSettings {

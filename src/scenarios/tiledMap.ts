@@ -114,7 +114,8 @@ export default async function runScenario(game: Game) {
     game.viewport.screenHeight,
   );
 
-  const waterLevel = level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
+  const waterLevel =
+    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
   const water = world.addEntity(
     new Water(
@@ -136,10 +137,7 @@ export default async function runScenario(game: Game) {
     if (levelObject.type === "wormgine.target") {
       const t = new WeaponTarget(
         world,
-        Coordinate.fromScreen(
-          levelObject.tra.x,
-          levelObject.tra.y,
-        ),
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
         parent,
       );
       world.addEntity(t);
@@ -164,10 +162,7 @@ export default async function runScenario(game: Game) {
         await Worm.create(
           parent,
           world,
-          Coordinate.fromScreen(
-            nextLocation.tra.x,
-            nextLocation.tra.y,
-          ),
+          Coordinate.fromScreen(nextLocation.tra.x, nextLocation.tra.y),
           wormInstance,
           async (worm, definition, opts) => {
             const newProjectile = definition.fireFn(parent, world, worm, opts);

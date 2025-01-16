@@ -13,6 +13,7 @@ import {
 } from "./model";
 import { GameActionEvent } from "../net/models";
 import Logger from "../log";
+import { fromNetObject } from "../net/netfloat";
 
 interface EventTypes {
   started: void;
@@ -71,9 +72,13 @@ export class StateReplay extends EventEmitter<EventTypes> {
     return [...(this._latestEntityData ?? [])];
   }
 
-  protected async parseData(data: StateRecordLine<unknown>): Promise<void> {
-    const ts = parseFloat(data.ts);
-    if (data.kind === StateRecordKind.Header) {
+  protected async parseData({
+    ts,
+    kind,
+    index,
+    data,
+  }: StateRecordLine): Promise<void> {
+    if (kind === StateRecordKind.Header) {
       this.emit("started");
       this.lastActionTs = ts;
       this.hostStartTs = ts;
@@ -90,36 +95,55 @@ export class StateReplay extends EventEmitter<EventTypes> {
     await new Promise((r) => setTimeout(r, waitFor));
     this.lastActionTs = ts;
 
-    log.info(`> ${data.ts} ${data.kind} ${data.index} ${data.data}`);
+    log.info(`> ${ts} ${kind} ${index} ${data}`);
 
-    switch (data.kind) {
+    const processedData = data as unknown;
+
+    switch (kind) {
       case StateRecordKind.EntitySync:
         // TODO: Apply deltas somehow.
-        this._latestEntityData = (data as StateRecordEntitySync).data.entities;
-        this.emit("entitySync", (data as StateRecordEntitySync).data.entities);
+        this._latestEntityData = (
+          processedData as StateRecordEntitySync
+        ).data.entities;
+        this.emit(
+          "entitySync",
+          (processedData as StateRecordEntitySync).data.entities,
+        );
         break;
       case StateRecordKind.WormAction: {
-        const actionData = data as StateRecordWormAction;
+        const actionData = processedData as StateRecordWormAction;
         this.emit("wormAction", actionData.data);
         break;
       }
       case StateRecordKind.WormActionAim:
-        this.emit("wormActionAim", (data as StateRecordWormActionAim).data);
+        this.emit(
+          "wormActionAim",
+          processedData as StateRecordWormActionAim["data"],
+        );
         break;
       case StateRecordKind.WormActionMove:
-        this.emit("wormActionMove", (data as StateRecordWormActionMove).data);
+        this.emit(
+          "wormActionMove",
+          processedData as StateRecordWormActionMove["data"],
+        );
         break;
       case StateRecordKind.WormActionFire:
-        this.emit("wormActionFire", (data as StateRecordWormActionFire).data);
+        this.emit(
+          "wormActionFire",
+          processedData as StateRecordWormActionFire["data"],
+        );
         break;
       case StateRecordKind.WormSelectWeapon:
         this.emit(
           "wormSelectWeapon",
-          (data as StateRecordWormSelectWeapon).data,
+          (processedData as StateRecordWormSelectWeapon).data,
         );
         break;
       case StateRecordKind.GameState:
-        this.emit("gameState", (data as StateRecordWormGameState).data);
+        this.emit(
+          "gameState",
+          processedData as StateRecordWormGameState["data"],
+        );
         break;
       default:
         throw Error("Unknown state action, possibly older format!");
@@ -127,7 +151,7 @@ export class StateReplay extends EventEmitter<EventTypes> {
   }
 }
 export class TextStateReplay extends StateReplay {
-  private stateLines: StateRecordLine<unknown>[];
+  private stateLines: StateRecordLine[];
 
   constructor(state: string[]) {
     super();
@@ -152,9 +176,11 @@ export class MatrixStateReplay extends StateReplay {
 
   public async handleEvent(content: GameActionEvent["content"]) {
     this.prevPromise = this.prevPromise.finally(() =>
-      this.parseData(content.action).catch((ex) => {
-        console.error("Failed to process line", ex);
-      }),
+      this.parseData(fromNetObject(content.action) as StateRecordLine).catch(
+        (ex) => {
+          console.error("Failed to process line", ex);
+        },
+      ),
     );
   }
 }

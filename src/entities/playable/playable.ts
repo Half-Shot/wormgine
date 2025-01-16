@@ -17,9 +17,7 @@ import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../../consts";
-import Logger from "../../log";
-
-const logger = new Logger("Playable");
+import { first, skip, Subscription } from "rxjs";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -44,24 +42,14 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
   protected healthTextBox: Graphics;
 
   private visibleHealth: number;
+  private healthTarget: number;
   private healthChangeTensionTimer: number | null = null;
 
   get position() {
     return this.physObject.body.translation();
   }
 
-  get health() {
-    return this.wormIdent.health;
-  }
-
-  set health(v: number) {
-    this.wormIdent.health = v;
-    logger.info(
-      `Worm (${this.wormIdent.uuid}, ${this.wormIdent.name}) health adjusted`,
-    );
-    // Potentially further delay until the player has stopped moving.
-    this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
-  }
+  private readonly healthSub: Subscription;
 
   constructor(
     sprite: Sprite,
@@ -82,15 +70,28 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
         align: "center",
       },
     });
+    this.visibleHealth = -1;
+    this.healthTarget = -1;
     this.healthText = new Text({
-      text: this.health,
+      text: this.visibleHealth,
       style: {
         ...DefaultTextStyle,
         fill: fg,
         align: "center",
       },
     });
-    this.visibleHealth = this.health;
+
+    this.wormIdent.health$.pipe(first()).subscribe((h) => {
+      this.healthTarget = h;
+      this.visibleHealth = h;
+      this.healthText.text = h;
+    });
+
+    this.healthSub = this.wormIdent.health$.pipe(skip(1)).subscribe((h) => {
+      this.healthTarget = h;
+      // TODO: Potentially further delay until the player has stopped moving.
+      this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
+    });
 
     this.nameText.position.set(0, -5);
     this.healthTextBox = new Graphics();
@@ -174,12 +175,12 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
 
     // If the timer is null, decrease the rendered health if nessacery.
     if (this.healthChangeTensionTimer === null) {
-      if (this.visibleHealth > this.health) {
+      if (this.visibleHealth > this.healthTarget) {
         this.onHealthTensionTimerExpired(true);
         this.visibleHealth--;
         this.healthText.text = this.visibleHealth;
         this.setHealthTextPosition();
-        if (this.visibleHealth <= this.health) {
+        if (this.visibleHealth <= this.healthTarget) {
           this.onHealthTensionTimerExpired(false);
         }
       }
@@ -213,7 +214,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
   ): boolean {
     if (super.onCollision(otherEnt, contactPoint)) {
       if (this.isSinking) {
-        this.wormIdent.health = 0;
+        this.wormIdent.setHealth(0);
         this.healthTextBox.destroy();
         this.physObject.body.setRotation(DEG_TO_RAD * 180, false);
       }
@@ -235,7 +236,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
       opts.maxDamage ?? 100,
       Math.round((forceMag / 20) * this.opts.damageMultiplier),
     );
-    this.health = Math.max(0, this.health - damage);
+    this.wormIdent.setHealth(this.wormIdent.health - damage);
     const force = mult(
       sub(point, bodyTranslation),
       new Vector2(-forceMag, -forceMag),
@@ -251,6 +252,7 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
   }
 
   public destroy(): void {
+    this.healthSub.unsubscribe();
     super.destroy();
     if (!this.healthTextBox.destroyed) {
       this.healthTextBox.destroy();

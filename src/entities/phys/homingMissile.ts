@@ -22,14 +22,14 @@ const ACTIVATION_TIME_MS = 65;
 const ADJUSTMENT_TIME_MS = 6;
 const forceMult = new Vector2(7, 7);
 
-export interface HomingMissileRecordedState extends TimedExplosiveRecordedState {
+export interface HomingMissileRecordedState
+  extends TimedExplosiveRecordedState {
   target: {
     x: number;
     y: number;
-  }
+  };
   hasActivated: boolean;
 }
-
 
 /**
  * Homing missile that attempts to hit a point target.

@@ -185,11 +185,10 @@ export class NetGameInstance {
       proposedTeam.uuid,
     );
   }
-  
 
   public async updateProposedTeam(
     proposedTeam: ProposedTeam,
-    updates: { wormCount?: number, teamGroup?: TeamGroup},
+    updates: { wormCount?: number; teamGroup?: TeamGroup },
   ) {
     await this.client.client.sendStateEvent(
       this.roomId,
@@ -197,7 +196,9 @@ export class NetGameInstance {
       {
         ...proposedTeam,
         ...(updates.teamGroup !== undefined && { group: updates.teamGroup }),
-        ...(updates.wormCount !== undefined && { wormCount: updates.wormCount })
+        ...(updates.wormCount !== undefined && {
+          wormCount: updates.wormCount,
+        }),
       },
       proposedTeam.uuid,
     );
@@ -482,7 +483,6 @@ export class NetGameClient extends EventEmitter {
 }
 
 export class RunningNetGameInstance extends NetGameInstance {
-
   private readonly _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
   public readonly gameState: Observable<FullGameStateEvent["content"]>;
   public readonly player: MatrixStateReplay;
@@ -528,13 +528,13 @@ export class RunningNetGameInstance extends NetGameInstance {
 
   writeAction(act: StateRecordLine) {
     const packet: Record<keyof typeof act, unknown> = {
-        ts: toNetworkFloat(act.ts),
-        kind: act.kind,
-        index: act.index,
-        data: toNetObject(act.data),
+      ts: toNetworkFloat(act.ts),
+      kind: act.kind,
+      index: act.index,
+      data: toNetObject(act.data),
     };
     return this.client.client.sendEvent(this.roomId, GameActionEventType, {
-      action: packet
+      action: packet,
     });
   }
 

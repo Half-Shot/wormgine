@@ -1,5 +1,6 @@
+import { BehaviorSubject, distinct, Observable } from "rxjs";
 import Logger from "../log";
-import { InternalTeam } from "./teams";
+import { TeamInstance } from "./teams";
 
 const logger = new Logger("WormInstance");
 
@@ -15,12 +16,30 @@ export interface WormIdentity {
  */
 export class WormInstance {
   public readonly uuid;
+
+  private readonly healthSubject: BehaviorSubject<number>;
+  public readonly health$: Observable<number>;
+
+  /**
+   * @deprecated Use `this.health`.
+   */
+  public get health(): number {
+    return this.healthSubject.value;
+  }
+
   constructor(
     private readonly identity: WormIdentity,
-    public readonly team: InternalTeam,
-    private readonly onHealthUpdated: () => void,
+    public readonly team: TeamInstance,
   ) {
+    this.identity = { ...identity };
     this.uuid = identity.uuid ?? globalThis.crypto.randomUUID();
+    this.healthSubject = new BehaviorSubject(this.identity.health);
+    this.health$ = this.healthSubject.pipe(distinct());
+    this.health$.subscribe((health) => {
+      logger.debug(
+        `Worm (${this.uuid}, ${this.name}) health updated ${health}`,
+      );
+    });
   }
 
   get name() {
@@ -31,13 +50,7 @@ export class WormInstance {
     return this.identity.maxHealth;
   }
 
-  get health() {
-    return this.identity.health;
-  }
-
-  set health(health: number) {
-    logger.debug(`Worm (${this.uuid}, ${this.name}) health updated ${health}`);
-    this.identity.health = health;
-    this.onHealthUpdated();
+  setHealth(health: number) {
+    this.healthSubject.next(health);
   }
 }

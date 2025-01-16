@@ -4,7 +4,7 @@ import { Team, TeamGroup } from "../logic/teams";
 import { StoredTeam } from "../settings";
 
 export interface EntityDescriptor {
-  pos: { x: number; y: number; }
+  pos: { x: number; y: number };
   rot: number;
 }
 

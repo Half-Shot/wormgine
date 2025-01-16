@@ -1,7 +1,7 @@
 import { UPDATE_PRIORITY, Sprite, Point } from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
-import { BodyWireframe } from "../../mixins/bodyWireframe.";
+import { BodyWireframe } from "../../mixins/bodyWireframe";
 import globalFlags, { DebugLevel } from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
@@ -10,6 +10,7 @@ import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
+import { BehaviorSubject, distinct, Observable } from "rxjs";
 
 /**
  * Abstract class for any physical object in the world. The
@@ -49,6 +50,9 @@ export abstract class PhysicsEntity<
     return this.physObject.body;
   }
 
+  private readonly bodyMoving: BehaviorSubject<boolean>;
+  public readonly bodyMoving$: Observable<boolean>;
+
   constructor(
     public readonly sprite: Sprite,
     protected physObject: RapierPhysicsObject,
@@ -61,6 +65,8 @@ export abstract class PhysicsEntity<
     globalFlags.on("toggleDebugView", (level: DebugLevel) => {
       this.wireframe.enabled = level >= DebugLevel.BasicOverlay;
     });
+    this.bodyMoving = new BehaviorSubject(false);
+    this.bodyMoving$ = this.bodyMoving.pipe(distinct());
   }
 
   destroy(): void {
@@ -73,6 +79,7 @@ export abstract class PhysicsEntity<
   }
 
   update(dt: number): void {
+    this.bodyMoving.next(this.body.isMoving());
     const pos = this.physObject.body.translation();
     const rotation = this.physObject.body.rotation() + this.rotationOffset;
     this.sprite.updateTransform({

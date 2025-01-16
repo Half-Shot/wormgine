@@ -112,6 +112,7 @@ export class Game {
       this.pixiApp.ticker,
       this.pixiApp.stage,
       this.viewport,
+      undefined,
     );
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
 

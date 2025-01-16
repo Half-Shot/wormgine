@@ -80,6 +80,6 @@ export class Coordinate {
 
   public hash() {
     // Cloes enough approximation.
-    return this.worldX + (this.worldY * 575);
+    return this.worldX + this.worldY * 575;
   }
 }

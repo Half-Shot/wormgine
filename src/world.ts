@@ -19,6 +19,7 @@ import type { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { RecordedEntityState } from "./state/model";
 import Logger from "./log";
 import globalFlags from "./flags";
+import { BehaviorSubject } from "rxjs";
 
 const logger = new Logger("World");
 
@@ -62,10 +63,15 @@ export class GameWorld {
   public readonly bodyEntityMap = new Map<number, IPhysicalEntity>();
   public readonly entities = new Map<string, IGameEntity>();
   private readonly eventQueue = new EventQueue(true);
-  private _wind = 0;
 
+  private readonly windSubject = new BehaviorSubject(0);
+  public readonly wind$ = this.windSubject.asObservable();
+
+  /**
+   * @deprecated Use `this.wind$`
+   */
   get wind() {
-    return this._wind;
+    return this.windSubject.value;
   }
 
   constructor(
@@ -74,7 +80,7 @@ export class GameWorld {
   ) {}
 
   public setWind(windSpeed: number) {
-    this._wind = windSpeed;
+    this.windSubject.next(windSpeed);
   }
 
   public areEntitiesMoving() {

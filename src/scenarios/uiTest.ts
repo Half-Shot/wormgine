@@ -24,6 +24,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "red",
       },
       {
         name: "The Whales",
@@ -39,6 +40,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "blue",
       },
       {
         name: "Purple Rain",
@@ -54,6 +56,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "purple",
       },
       {
         name: "The Yellow Raincoats",
@@ -69,6 +72,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "yellow",
       },
       {
         name: "The Onion Enjoyers",
@@ -84,6 +88,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "green",
       },
       {
         name: "Creamy Orange Grease Gang",
@@ -99,6 +104,7 @@ export default async function runScenario(game: Game) {
         ammo: {
           [IWeaponCode.Bazooka]: 999,
         },
+        uuid: "orange",
       },
     ],
     world,

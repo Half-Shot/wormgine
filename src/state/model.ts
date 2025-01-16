@@ -1,7 +1,6 @@
 import { RoundState } from "../logic/gamestate";
-import { Team, TeamGroup } from "../logic/teams";
+import { Team } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
-
 
 export interface RecordedEntityState {
   type: number | string;
@@ -12,8 +11,6 @@ export interface RecordedEntityState {
   // Linear velocity
   vel: { x: number; y: number };
 }
-
-
 
 export enum StateRecordKind {
   Header = "header",
@@ -78,7 +75,7 @@ export type StateRecordWormSelectWeapon = StateRecordLine<{
 }>;
 
 export type StateRecordWormGameState = StateRecordLine<{
-  round_state: RoundState,
+  round_state: RoundState;
   teams: {
     uuid: string;
     worms: {

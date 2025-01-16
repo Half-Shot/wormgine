@@ -89,7 +89,9 @@ function LoggedInView({
         <p>
           You are logged in as <strong>{displayname}</strong>
         </p>
-        {authenticatedAvatarBlob && <img className={styles.avatar} src={authenticatedAvatarBlob}></img>}
+        {authenticatedAvatarBlob && (
+          <img className={styles.avatar} src={authenticatedAvatarBlob}></img>
+        )}
       </section>
       <section>
         <p>

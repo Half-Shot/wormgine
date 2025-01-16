@@ -25,9 +25,7 @@ export class BazookaShell extends TimedExplosive {
     BazookaShell.create(
       parent,
       gameWorld,
-      Coordinate.fromWorld(
-        new Vector2(state.tra.x, state.tra.y),
-      ),
+      Coordinate.fromWorld(new Vector2(state.tra.x, state.tra.y)),
       new Vector2(0, 0),
     );
   }

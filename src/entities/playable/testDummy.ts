@@ -1,4 +1,4 @@
-import { Sprite, Texture, UPDATE_PRIORITY } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 import { AssetPack } from "../../assets";
 import {
   collisionGroupBitmask,
@@ -16,6 +16,7 @@ import { WormInstance } from "../../logic/teams";
 import { PlayableEntity } from "./playable";
 import { Viewport } from "pixi-viewport";
 import { EntityType } from "../type";
+import { combineLatest, Subscription } from "rxjs";
 
 /**
  * Test dummy entity that may be associated with a worm identity. These
@@ -43,7 +44,8 @@ export class TestDummy extends PlayableEntity {
   private static texture_damage_3: Texture;
   private static texture_damage_blush_3: Texture;
 
-  priority = UPDATE_PRIORITY.LOW;
+  private readonly textureSub: Subscription;
+
   private static readonly collisionBitmask = collisionGroupBitmask(
     [CollisionGroups.WorldObjects],
     [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
@@ -87,40 +89,38 @@ export class TestDummy extends PlayableEntity {
       explosionRadius: new MetersValue(3),
       damageMultiplier: 250,
     });
-  }
-
-  private getTexture() {
-    const isBlush = this.health < 100 && this.physObject.body.isMoving();
-
-    if (this.health >= 80) {
-      return isBlush ? TestDummy.texture_blush : TestDummy.texture_normal;
-    } else if (this.health >= 60) {
-      return isBlush
-        ? TestDummy.texture_damage_blush_1
-        : TestDummy.texture_damage_1;
-    } else if (this.health >= 25) {
-      return isBlush
-        ? TestDummy.texture_damage_blush_2
-        : TestDummy.texture_damage_2;
-    } else {
-      return isBlush
-        ? TestDummy.texture_damage_blush_3
-        : TestDummy.texture_damage_3;
-    }
-  }
-
-  public update(dt: number): void {
-    const expectedTexture = this.getTexture();
-    if (this.sprite.texture !== expectedTexture) {
-      this.sprite.texture = expectedTexture;
-    }
-    super.update(dt);
+    this.textureSub = combineLatest([
+      this.bodyMoving$,
+      this.wormIdent.health$,
+    ]).subscribe(([moving, health]) => {
+      const isBlush = health < 100 && moving;
+      let expectedTexture;
+      if (health >= 80) {
+        expectedTexture = isBlush
+          ? TestDummy.texture_blush
+          : TestDummy.texture_normal;
+      } else if (health >= 60) {
+        expectedTexture = isBlush
+          ? TestDummy.texture_damage_blush_1
+          : TestDummy.texture_damage_1;
+      } else if (health >= 25) {
+        expectedTexture = isBlush
+          ? TestDummy.texture_damage_blush_2
+          : TestDummy.texture_damage_2;
+      } else {
+        expectedTexture = isBlush
+          ? TestDummy.texture_damage_blush_3
+          : TestDummy.texture_damage_3;
+      }
+      if (this.sprite.texture !== expectedTexture) {
+        this.sprite.texture = expectedTexture;
+      }
+    });
   }
 
   public destroy(): void {
     super.destroy();
-    this.parent.plugins.remove("follow");
-    this.parent.snap(800, 0);
+    this.textureSub.unsubscribe();
   }
 
   public recordState() {
