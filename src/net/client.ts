@@ -107,11 +107,13 @@ export class NetGameInstance {
     }
 
     this.client.client.on(RoomStateEvent.Events, (event, state) => {
+      logger.debug("Got room events", event, state);
       if (state.roomId !== this.roomId) {
         return;
       }
       const stateKey = event.getStateKey();
       const type = event.getType();
+      logger.debug("Proposing things", stateKey, type, this._stage.value);
       if (
         stateKey &&
         type === GameProposedTeamEventType &&
