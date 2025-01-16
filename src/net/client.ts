@@ -282,19 +282,6 @@ export class NetGameClient extends EventEmitter {
     localStorage.removeItem(WORMGINE_STORAGE_KEY_CLIENT_CONFIG);
   }
 
-  public static async register(
-    homeserverUrl: string,
-    name: string,
-    password: string,
-  ) {
-    const client = createClient({
-      baseUrl: homeserverUrl,
-      fetchFn: (input, init) => globalThis.fetch(input, init),
-    });
-    return await client.register(name, password, null, {
-      type: "m.login.password",
-    });
-  }
   public static async login(
     homeserverUrl: string,
     username: string,
@@ -307,6 +294,65 @@ export class NetGameClient extends EventEmitter {
     });
     const response = await client.loginWithPassword(username, password);
     return { accessToken: response.access_token };
+  }
+
+  public static async register(
+    homeserverUrl: string,
+    registrationToken: string,
+    username: string,
+    password: string,
+  ): Promise<{ accessToken: string }> {
+    const client = createClient({
+      baseUrl: homeserverUrl,
+      fetchFn: (input, init) => globalThis.fetch(input, init),
+      store: new MemoryStore({ localStorage: window.localStorage }),
+    });
+    const params: { session: string; flows: { stages: string[] }[] } =
+      await client.registerRequest({}).catch((ex) => ex.data);
+    if (
+      !params.flows.some((s) => s.stages[0] === "m.login.registration_token")
+    ) {
+      throw Error(
+        "Cannot register on this host. Registration token support is not enabled",
+      );
+    }
+    try {
+      const response = await client.register(
+        username,
+        password,
+        params.session,
+        {
+          type: "m.login.registration_token",
+          token: registrationToken,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      );
+      if (!response.access_token) {
+        throw Error("Unexpected response");
+      }
+      return { accessToken: response.access_token };
+    } catch (ex) {
+      if (
+        (ex as MatrixError).data.completed?.includes(
+          "m.login.registration_token",
+        )
+      ) {
+        const response = await client.register(
+          username,
+          password,
+          params.session,
+          {
+            type: "m.login.dummy",
+          },
+        );
+        if (!response.access_token) {
+          throw Error("Unexpected response");
+        }
+        return { accessToken: response.access_token };
+      } else {
+        throw ex;
+      }
+    }
   }
 
   constructor(config: NetClientConfig) {

@@ -9,6 +9,7 @@ import styles from "./online-play.module.css";
 import { useObservableEagerState } from "observable-hooks";
 import Logger from "../../../log";
 import { DefaultWeaponSchema } from "../../../weapons/schema";
+import { getLocalTeamsHook } from "../../../settings";
 
 interface Props {
   client: NetGameClient | undefined;
@@ -29,6 +30,7 @@ function LoggedInView({
 }) {
   const [displayname, setDisplayName] = useState<string>();
   const [authenticatedAvatarBlob, setAvatarBlobUrl] = useState<string>();
+  const [localTeams] = getLocalTeamsHook();
 
   const createGameCallback = useCallback(() => {
     client
@@ -98,9 +100,84 @@ function LoggedInView({
           You may press the button below to create a lobby. To join a lobby, use
           a URL provided by the host.
         </p>
-        <button onClick={createGameCallback}>Create Lobby</button>
+        <p>
+          {localTeams?.length === 0 ? (
+            <strong>
+              You must have at least one local team before you can create a
+              lobby.
+            </strong>
+          ) : null}
+        </p>
+        <button onClick={createGameCallback} disabled={!localTeams?.length}>
+          Create Lobby
+        </button>
       </section>
     </>
+  );
+}
+
+function RegistrationForm({
+  setClientConfig,
+  onBack,
+}: {
+  setClientConfig: Props["setClientConfig"];
+  onBack: () => void;
+}) {
+  const [loginInProgress, setLoginInProgress] = useState(false);
+  const [error, setError] = useState<string>();
+  const onSubmit = useCallback(
+    async (e: SubmitEvent) => {
+      e.preventDefault();
+      if (!config.defaultHomeserver || !config.registrationToken) {
+        return;
+      }
+      try {
+        setLoginInProgress(true);
+        const target = e.target as HTMLFormElement;
+        const username = (
+          target.elements.namedItem("username") as HTMLInputElement
+        ).value;
+        const password = (
+          target.elements.namedItem("password") as HTMLInputElement
+        ).value;
+        const { accessToken } = await NetGameClient.register(
+          config.defaultHomeserver,
+          config.registrationToken,
+          username,
+          password,
+        );
+        setClientConfig({
+          accessToken,
+          baseUrl: config.defaultHomeserver,
+        });
+      } catch (ex) {
+        setError((ex as Error).toString());
+      } finally {
+        setLoginInProgress(false);
+      }
+    },
+    [setClientConfig],
+  );
+
+  return (
+    <section>
+      <p>
+        You may log into an existing account below by specifying a username and
+        password. Future versions will allow you to create an account / login to
+        other servers.
+      </p>
+      {error && (
+        <p>
+          Error: <span>{error}</span>
+        </p>
+      )}
+      <form disabled={loginInProgress} onSubmit={onSubmit}>
+        <input type="text" placeholder="username" id="username"></input>
+        <input type="password" placeholder="password" id="password"></input>
+        <button type="submit">Register</button>
+      </form>
+      <button onClick={onBack}>Back to login</button>
+    </section>
   );
 }
 
@@ -110,6 +187,7 @@ function LoginForm({
   setClientConfig: Props["setClientConfig"];
 }) {
   const [loginInProgress, setLoginInProgress] = useState(false);
+  const [showRegForm, setShowRegForm] = useState(false);
   const [error, setError] = useState<string>();
   const onSubmit = useCallback(
     async (e: SubmitEvent) => {
@@ -144,6 +222,15 @@ function LoginForm({
     [setClientConfig],
   );
 
+  if (showRegForm) {
+    return (
+      <RegistrationForm
+        setClientConfig={setClientConfig}
+        onBack={() => setShowRegForm(false)}
+      ></RegistrationForm>
+    );
+  }
+
   return (
     <section>
       <p>
@@ -161,6 +248,11 @@ function LoginForm({
         <input type="password" placeholder="password" id="password"></input>
         <button type="submit">Login</button>
       </form>
+      {config.registrationToken && (
+        <button onClick={() => setShowRegForm(true)}>
+          Register new account
+        </button>
+      )}
     </section>
   );
 }

@@ -39,6 +39,10 @@ export function getGameSettings(): GameSettings {
   };
 }
 
+export function getLocalTeamsHook() {
+  return useLocalStorageState<StoredTeam[]>(WORMGINE_STORAGE_KEY_TEAMS);
+}
+
 export function getLocalTeams(): StoredTeam[] {
   const item = localStorage.getItem(WORMGINE_STORAGE_KEY_TEAMS);
   if (!item) {
