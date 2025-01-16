@@ -4,7 +4,7 @@ name: Deploy static content to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ['main']
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -17,7 +17,7 @@ permissions:
 
 # Allow one concurrent deployment
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
@@ -34,12 +34,12 @@ jobs:
         run: |
           echo "VITE_BUILD_NUMBER=$((GITHUB_RUN_NUMBER))" >> $GITHUB_ENV
           echo "VITE_BUILD_COMMIT=$GITHUB_SHA" >> $GITHUB_ENV
-          echo "VITE_DEFAULT_HOMESERVER=https://chaotic.half-shot.uk" >> $GITHUB_ENV
+          echo "VITE_DEFAULT_HOMESERVER=https://kcore.half-shot.uk" >> $GITHUB_ENV
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.node-version'
-          cache: 'yarn'
+          node-version-file: ".node-version"
+          cache: "yarn"
       - name: Install dependencies
         run: yarn
       - name: Build
@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist repository
-          path: './dist'
+          path: "./dist"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
