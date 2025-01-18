@@ -3,10 +3,16 @@ import { StateRecorder } from "../state/recorder";
 import { GameWorld } from "../world";
 import { Team } from "../logic/teams";
 import { StateRecordWormGameState } from "../state/model";
+import { combineLatest, map } from "rxjs";
+import Logger from "../log";
 
+
+const log = new Logger("NetGameState");
 export class NetGameState extends GameState {
-  get clientActive() {
-    return this.activeTeam?.playerUserId === this.myUserId;
+  protected clientActive$ = this.currentTeam$.pipe(map(t => t?.playerUserId === this.myUserId));
+
+  get shouldControlState(): boolean {
+    return this.currentTeam.value?.playerUserId === this.myUserId;
   }
 
   get peekNextTeam() {
@@ -34,6 +40,11 @@ export class NetGameState extends GameState {
     private readonly myUserId: string,
   ) {
     super(teams, world, rules);
+    combineLatest([this.roundState$]).subscribe(([state]) => {
+      if (this.shouldControlState) {
+        this.recordGameState(state);
+      }
+    });
   }
 
   protected networkSelectNextTeam() {
@@ -57,7 +68,13 @@ export class NetGameState extends GameState {
     }
   }
 
-  public applyGameStateUpdate(stateUpdate: StateRecordWormGameState["data"]) {
+  public applyGameStateUpdate(stateUpdate: StateRecordWormGameState["data"]): ReturnType<typeof this.advanceRound>|null {
+    // if (this.iteration >= stateUpdate.iteration) {
+    //   log.debug("Ignoring iteration because it's stale", this.iteration, stateUpdate.iteration);
+    //   // Skip
+    //   return;
+    // }
+    log.debug("Applying round state", stateUpdate.round_state);
     for (const teamData of stateUpdate.teams) {
       const teamWormSet = this.teams.get(teamData.uuid)?.worms;
       if (!teamWormSet) {
@@ -76,22 +93,25 @@ export class NetGameState extends GameState {
     ) {
       this.remainingRoundTimeMs.next(5000);
     }
-    this.roundState.next(stateUpdate.round_state);
-    this.wind = stateUpdate.wind;
-    if (this.roundState.value === RoundState.WaitingToBegin) {
-      this.networkSelectNextTeam();
+    if (stateUpdate.round_state === RoundState.WaitingToBegin) {
+      const result = this.advanceRound();
+      this.wind = stateUpdate.wind;
+      return result;
+    } else if (stateUpdate.round_state === RoundState.Playing) {
+      this.playerMoved();
+    } else {
+      // TODO?
+      this.roundState.next(stateUpdate.round_state);
     }
+    return null;
   }
 
-  protected recordGameStare() {
-    if (!this.clientActive) {
-      console.log("Not active client");
-      return;
-    }
+  protected recordGameState(roundState: RoundState) {
+    log.debug("Recording round state", roundState);
     const iteration = this.iteration;
     const teams = this.getTeams();
     this.recorder.recordGameState({
-      round_state: this.roundState.value,
+      round_state: roundState,
       iteration: iteration,
       wind: this.currentWind,
       teams: teams.map((t) => ({
@@ -105,5 +125,36 @@ export class NetGameState extends GameState {
         ammo: t.ammo,
       })),
     });
+  }
+
+  public update(ticker: { deltaMS: number }) {
+    const roundState = this.roundState.value;
+    let remainingRoundTimeMs = this.remainingRoundTimeMs.value;
+    if (
+      roundState === RoundState.Finished ||
+      roundState === RoundState.Paused ||
+      roundState === RoundState.WaitingToBegin
+    ) {
+      return;
+    }
+
+    remainingRoundTimeMs = Math.max(0, remainingRoundTimeMs - ticker.deltaMS);
+    this.remainingRoundTimeMs.next(remainingRoundTimeMs);
+    if (remainingRoundTimeMs) {
+      return;
+    }
+
+    if (!this.shouldControlState) {
+      // Waiting for other client to make the move.
+      return;
+    } else {
+
+    }
+
+    if (roundState === RoundState.Preround) {
+      this.playerMoved();
+    } else {
+      this.roundState.next(RoundState.Finished);
+    }
   }
 }

@@ -568,8 +568,9 @@ export class RunningNetGameInstance extends NetGameInstance {
       if (r?.roomId !== this.roomId) {
         return;
       }
-      if (event.getType() === GameActionEventType && !event.isState()) {
-        this.player.handleEvent(event.getContent());
+      // Filter our won events out.
+      if (event.getType() === GameActionEventType && !event.isState() && event.getSender() !== this.myUserId) {
+        void this.player.handleEvent(event.getContent());
       }
     });
   }
@@ -604,7 +605,7 @@ export class RunningNetGameInstance extends NetGameInstance {
     ]);
 
     const expectedCount = Object.values(this.initialConfig.members).length;
-
+    logger.info("Ready check", expectedCount, setOfReady);
     if (setOfReady.size === expectedCount) {
       return;
     }
@@ -614,6 +615,7 @@ export class RunningNetGameInstance extends NetGameInstance {
         if (event.getType() === GameClientReadyEventType && !event.isState()) {
           setOfReady.add(event.getSender()!);
         }
+        logger.info("Ready check", expectedCount, setOfReady);
         if (setOfReady.size === expectedCount) {
           resolve();
         }

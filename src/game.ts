@@ -15,6 +15,7 @@ import { sound } from "@pixi/sound";
 import Logger from "./log";
 import { CriticalGameError } from "./errors";
 import { getGameSettings } from "./settings";
+import { NetGameWorld } from "./net/netGameWorld";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -70,7 +71,7 @@ export class Game {
       // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
       events: this.pixiApp.renderer.events,
     });
-    this.world = new GameWorld(this.rapierWorld, this.pixiApp.ticker);
+    this.world = netGameInstance ? new NetGameWorld(this.rapierWorld, this.pixiApp.ticker, netGameInstance) : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
     this.viewport.zoom(8);

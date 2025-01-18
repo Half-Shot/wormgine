@@ -44,22 +44,23 @@ export class StateRecorder {
   }
 
   public syncEntityState(gameWorld: GameWorld) {
-    const stateToSend = [];
-    for (const entState of gameWorld.collectEntityState()) {
-      const newHash = hashCode(JSON.stringify(entState));
-      if (this.entHashes.get(entState.uuid) !== newHash) {
-        stateToSend.push(entState);
-      }
-      this.entHashes.set(entState.uuid, newHash);
-    }
-    this.store.writeLine({
-      index: ++this.recordIndex,
-      data: {
-        entities: stateToSend,
-      },
-      kind: StateRecordKind.EntitySync,
-      ts: performance.now(),
-    } satisfies StateRecordEntitySync);
+    console.log('Stubbed syncEntityState');
+    // const stateToSend = [];
+    // for (const entState of gameWorld.collectEntityState()) {
+    //   const newHash = hashCode(JSON.stringify(entState));
+    //   if (this.entHashes.get(entState.uuid) !== newHash) {
+    //     stateToSend.push(entState);
+    //   }
+    //   this.entHashes.set(entState.uuid, newHash);
+    // }
+    // this.store.writeLine({
+    //   index: ++this.recordIndex,
+    //   data: {
+    //     entities: stateToSend,
+    //   },
+    //   kind: StateRecordKind.EntitySync,
+    //   ts: performance.now(),
+    // } satisfies StateRecordEntitySync);
   }
 
   public recordWormAction(worm: string, action: StateWormAction) {
@@ -133,6 +134,7 @@ export class StateRecorder {
     } satisfies StateRecordWormSelectWeapon);
   }
   public recordGameState(data: StateRecordWormGameState["data"]) {
+    console.log("Recording game state", data.round_state);
     this.store.writeLine({
       index: ++this.recordIndex,
       data: data,

@@ -33,7 +33,6 @@ export class RoundTimer {
     this.container.addChild(text);
 
     this.roundTimeRemaining.subscribe((timeSeconds) => {
-      console.log("Timer time", timeSeconds);
       text.text = timeSeconds === 0 ? "--" : timeSeconds;
     });
 

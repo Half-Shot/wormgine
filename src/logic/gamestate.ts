@@ -3,7 +3,7 @@ import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
-import { BehaviorSubject, distinctUntilChanged, map, skip } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged, map, skip, tap } from "rxjs";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -47,7 +47,11 @@ export class GameState {
   protected currentTeam = new BehaviorSubject<TeamInstance | undefined>(
     undefined,
   );
+  protected currentWorm = new BehaviorSubject<WormInstance | undefined>(
+    undefined,
+  );
   public readonly currentTeam$ = this.currentTeam.asObservable();
+  public readonly currentWorm$ = this.currentWorm.asObservable();
   protected readonly teams: Map<string, TeamInstance>;
   protected nextTeamStack: TeamInstance[];
 
@@ -115,6 +119,8 @@ export class GameState {
     }
     this.nextTeamStack = [...this.teams.values()];
     this.roundDurationMs = rules.roundDurationMs ?? 45000;
+    this.roundState.subscribe((s) => logger.info(`Round state changed => ${s}`));
+    this.currentTeam.subscribe((s) => logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`));
   }
 
   public pauseTimer() {
@@ -153,7 +159,6 @@ export class GameState {
 
   public markAsFinished() {
     this.roundState.next(RoundState.Finished);
-    this.recordGameStare();
   }
 
   public update(ticker: { deltaMS: number }) {
@@ -176,7 +181,6 @@ export class GameState {
       this.playerMoved();
     } else {
       this.roundState.next(RoundState.Finished);
-      this.recordGameStare();
     }
   }
 
@@ -184,19 +188,17 @@ export class GameState {
     this.roundState.next(RoundState.Playing);
     logger.debug("playerMoved", this.roundDurationMs);
     this.remainingRoundTimeMs.next(this.roundDurationMs);
-    this.recordGameStare();
   }
 
   public beginRound() {
     if (this.roundState.value !== RoundState.WaitingToBegin) {
       throw Error(
-        `Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState}`,
+        `Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState.value}`,
       );
     }
     this.roundState.next(RoundState.Preround);
     logger.debug("beginRound", PREROUND_TIMER_MS);
     this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
-    this.recordGameStare();
   }
 
   public advanceRound():
@@ -204,7 +206,7 @@ export class GameState {
     | { winningTeams: TeamInstance[] } {
     if (this.roundState.value !== RoundState.Finished) {
       throw Error(
-        `Expected round to be Finished for advanceRound(), but got ${this.roundState}`,
+        `Expected round to be Finished for advanceRound(), but got ${this.roundState.value}`,
       );
     }
     logger.debug("Advancing round");
@@ -215,13 +217,13 @@ export class GameState {
 
       // 5 seconds preround
       this.stateIteration++;
+      const nextWorm = firstTeam.popNextWorm();
       this.roundState.next(RoundState.WaitingToBegin);
-
-      this.recordGameStare();
+      this.currentWorm.next(nextWorm);
       return {
         nextTeam: firstTeam,
         // Team *should* have at least one healthy worm.
-        nextWorm: firstTeam.popNextWorm(),
+        nextWorm: nextWorm,
       };
     }
     const previousTeam = this.currentTeam.value;
@@ -256,14 +258,10 @@ export class GameState {
     if (this.currentTeam.value === previousTeam) {
       this.stateIteration++;
       if (this.rules.winWhenOneGroupRemains) {
-        // All remaining teams are part of the same group
-        this.recordGameStare();
         return {
           winningTeams: this.getActiveTeams(),
         };
       } else if (previousTeam.health === 0) {
-        // This is a draw
-        this.recordGameStare();
         return {
           winningTeams: [],
         };
@@ -271,17 +269,14 @@ export class GameState {
     }
     this.stateIteration++;
     // 5 seconds preround
-    this.remainingRoundTimeMs.next(0);
+    this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
+    const nextWorm = this.currentTeam.value.popNextWorm();
     this.roundState.next(RoundState.WaitingToBegin);
-    this.recordGameStare();
+    this.currentWorm.next(nextWorm);
     return {
       nextTeam: this.currentTeam.value,
       // We should have already validated that this team has healthy worms.
-      nextWorm: this.currentTeam.value.popNextWorm(),
+      nextWorm: nextWorm,
     };
-  }
-
-  protected recordGameStare() {
-    return;
   }
 }

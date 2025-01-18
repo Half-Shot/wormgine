@@ -13,6 +13,7 @@ import { WeaponTarget } from "../entities/phys/target";
 import Logger from "../log";
 import { logger } from "matrix-js-sdk/lib/logger";
 import { NetGameState } from "../net/netGameState";
+import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 
 const log = new Logger("scenario");
 
@@ -96,6 +97,8 @@ export default async function runScenario(game: Game) {
   const waterLevel =
     level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
+  const wormSpawn = level.objects.find((v) => v.type === "wormgine.worm_spawn") as WormSpawnRecordedState|undefined;
+
   const water = world.addEntity(
     new Water(
       MetersValue.fromPixels(worldWidth * 4),
@@ -142,14 +145,6 @@ export default async function runScenario(game: Game) {
   } else if (!gameHasStarted) {
     await gameInstance.ready();
     log.info("Marked as ready");
-  }
-
-  if (gameInstance.isHost) {
-    setInterval(() => {
-      gameState.markAsFinished();
-      gameState.advanceRound();
-      gameState.beginRound();
-    }, 3000);
   }
 
   log.info("Game can now begin");

@@ -51,6 +51,6 @@ export class WormInstance {
   }
 
   setHealth(health: number) {
-    this.healthSubject.next(health);
+    this.healthSubject.next(Math.ceil(health));
   }
 }

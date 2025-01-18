@@ -25,6 +25,9 @@ import { RemoteWorm } from "../entities/playable/remoteWorm";
 import { logger } from "matrix-js-sdk/lib/logger";
 import { getDefinitionForCode } from "../weapons";
 import { NetGameState } from "../net/netGameState";
+import { NetGameWorld } from "../net/netGameWorld";
+import { combineLatest, filter } from "rxjs";
+import { RoundState } from "../logic/gamestate";
 
 const log = new Logger("scenario");
 
@@ -37,7 +40,7 @@ export default async function runScenario(game: Game) {
   }
   const gameInstance = game.netGameInstance;
   const parent = game.viewport;
-  const world = game.world;
+  const world = game.world as NetGameWorld;
   const { worldWidth } = game.viewport;
 
   const player = gameInstance.player;
@@ -102,9 +105,6 @@ export default async function runScenario(game: Game) {
     wormInst.replayFire(duration);
   });
 
-  let endOfRoundWaitDuration: number | null = null;
-  let endOfGameFadeOut: number | null = null;
-  let currentWorm: Worm | undefined;
 
   // function applyEntityData() {
   //   console.log("Applying entity state data");
@@ -284,6 +284,9 @@ export default async function runScenario(game: Game) {
     }
   }
 
+  let endOfGameFadeOut: number | null = null;
+  let currentWorm: Worm | undefined;
+
   staticController.on("inputEnd", (kind: InputKind) => {
     if (!currentWorm?.currentState.canFire) {
       return;
@@ -318,37 +321,62 @@ export default async function runScenario(game: Game) {
 
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);
-    if (endOfGameFadeOut !== null) {
-      endOfGameFadeOut -= dt.deltaMS;
-      if (endOfGameFadeOut < 0) {
-        game.pixiApp.ticker.remove(roundHandlerFn);
-        game.goToMenu(gameState.getActiveTeams());
+    if (gameState.isPreRound && currentWorm?.hasPerformedAction && currentWorm instanceof RemoteWorm === false) {
+      gameState.playerMoved();
+    }
+  };
+
+  player.on("gameState", (s) => {
+    log.info("New game state recieved:", s.iteration);
+    gameState.applyGameStateUpdate(s);
+  });
+
+  if (gameInstance.isHost) {
+    await gameInstance.ready();
+    await gameInstance.allClientsReady();
+    log.info("All clients are ready! Beginning round");
+  } else {
+    await gameInstance.ready();
+    log.info("Marked as ready");
+  }
+
+  combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$]).pipe(filter(([state, seconds]) => 
+    state === RoundState.Finished && seconds === 0)).subscribe(() => {
+      if (currentWorm) {
+        log.info("Timer ran out");
+        currentWorm?.onEndOfTurn();
+        currentWorm?.currentState.off("transition", transitionHandler);
       }
+  });
+
+  combineLatest([gameState.roundState$, gameState.currentWorm$]).pipe(filter(([roundState, worm]) => {
+    if (roundState === RoundState.WaitingToBegin && !worm) {
+      return false;
+    }
+    return true;
+  })).subscribe(([roundState, worm]) => {
+    log.info("Round state sub fired for", roundState, worm);
+    if (worm === undefined && RoundState.Finished && gameInstance.isHost) {
+      log.info("Starting first round as worm was undefined");
+      gameState.advanceRound();
       return;
     }
-    if (currentWorm && currentWorm.currentState.active) {
-      if (!gameState.isPreRound) {
-        if (gameState.paused && currentWorm.currentState.timerShouldRun) {
-          gameState.unpauseTimer();
-        } else if (
-          !gameState.paused &&
-          !currentWorm.currentState.timerShouldRun
-        ) {
-          gameState.pauseTimer();
-        }
+    if (roundState === RoundState.WaitingToBegin) {
+      log.debug("Round state worm diff", worm?.uuid, currentWorm?.wormIdent.uuid);
+      if (!worm) {
+        throw Error('No worm in WaitingToBegin')
       }
-      if (gameState.isPreRound && currentWorm.hasPerformedAction) {
-        gameState.playerMoved();
-        return;
-      } else if (!gameState.isPreRound && gameState.remainingRoundTime <= 0) {
-        currentWorm?.onEndOfTurn();
-        currentWorm = undefined;
-        endOfRoundWaitDuration = null;
-      } else {
+      if (worm?.uuid === currentWorm?.wormIdent.uuid) {
+        // New worm hasn't appeared yet.
         return;
       }
-    }
-    if (endOfRoundWaitDuration === null) {
+      currentWorm = wormInstances.get(worm.uuid);
+      log.info("Setting next worm", worm.uuid, currentWorm);
+      currentWorm?.onWormSelected(true);
+      currentWorm?.currentState.on("transition", transitionHandler);
+      gameState.beginRound();
+      return;
+    } else if (roundState === RoundState.Finished) {
       stateRecorder.syncEntityState(world);
       const nextState = gameState.advanceRound();
       if ("winningTeams" in nextState) {
@@ -364,82 +392,10 @@ export default async function runScenario(game: Game) {
           overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
         }
         endOfGameFadeOut = 8000;
-      } else {
-        currentWorm?.onEndOfTurn();
-        currentWorm?.currentState.off("transition", transitionHandler);
-        currentWorm = wormInstances.get(nextState.nextWorm.uuid);
-        // Turn just ended.
-        endOfRoundWaitDuration = 5000;
       }
-      return;
     }
-    if (endOfRoundWaitDuration <= 0) {
-      if (!currentWorm) {
-        throw Error("Expected next worm");
-      }
-      world.setWind(gameState.currentWind);
-      currentWorm.onWormSelected();
-      currentWorm.currentState.on("transition", transitionHandler);
-      gameState.beginRound();
-      endOfRoundWaitDuration = null;
-      return;
-    }
-    endOfRoundWaitDuration -= dt.deltaMS;
-  };
+  });
 
+  game.pixiApp.ticker.add((dt) => roundHandlerFn(dt));
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
-
-  if (gameInstance.isHost) {
-    await gameInstance.allClientsReady();
-    log.info("All clients are ready! Beginning round");
-    game.pixiApp.ticker.add(roundHandlerFn);
-  } else {
-    await gameInstance.ready();
-    log.info("Marked as ready");
-    game.pixiApp.ticker.add((dt) => {
-      gameState.update(dt);
-
-      if (endOfRoundWaitDuration === null) {
-        return;
-      }
-
-      if (endOfRoundWaitDuration <= 0) {
-        if (!currentWorm) {
-          throw Error("Expected next worm");
-        }
-        world.setWind(gameState.currentWind);
-        currentWorm.onWormSelected();
-        currentWorm.currentState.on("transition", transitionHandler);
-        gameState.beginRound();
-        endOfRoundWaitDuration = null;
-        return;
-      }
-      endOfRoundWaitDuration -= dt.deltaMS;
-    });
-    // player.on("gameState", (dataUpdate) => {
-    //   const nextState = gameState.applyGameStateUpdate(dataUpdate);
-    //   logger.info("New game state", dataUpdate, nextState);
-    //   if ("winningTeams" in nextState) {
-    //     if (nextState.winningTeams.length) {
-    //       overlay.toaster.pushToast(
-    //         templateRandomText(TeamWinnerText, {
-    //           TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
-    //         }),
-    //         8000,
-    //       );
-    //     } else {
-    //       // Draw
-    //       overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
-    //     }
-    //     endOfGameFadeOut = 8000;
-    //   } else {
-    //     currentWorm?.onEndOfTurn();
-    //     currentWorm?.currentState.off("transition", transitionHandler);
-    //     currentWorm = wormInstances.get(nextState.nextWorm.uuid);
-    //     // Turn just ended.
-    //     endOfRoundWaitDuration = 5000;
-    //   }
-    //   return;
-    // });
-  }
 }

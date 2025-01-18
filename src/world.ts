@@ -75,8 +75,8 @@ export class GameWorld {
   }
 
   constructor(
-    public readonly rapierWorld: World,
-    public readonly ticker: Ticker,
+    private readonly rapierWorld: World,
+    protected readonly ticker: Ticker,
   ) {}
 
   public setWind(windSpeed: number) {
@@ -307,18 +307,5 @@ export class GameWorld {
       };
     }
     return null;
-  }
-
-  public collectEntityState() {
-    const state: (RecordedEntityState & { uuid: string })[] = [];
-    for (const [uuid, ent] of this.entities.entries()) {
-      if ("recordState" in ent) {
-        state.push({
-          uuid,
-          ...(ent as PhysicsEntity).recordState(),
-        });
-      }
-    }
-    return state;
   }
 }
