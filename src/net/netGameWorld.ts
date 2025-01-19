@@ -25,7 +25,7 @@ export class NetGameWorld extends GameWorld {
   ) {
     super(rapierWorld, ticker);
     instance.gameState.subscribe(s => {
-        logger.info("Game state update");
+        logger.info("Remote state update", s.iteration);
         if (this.broadcasting) {
             return;
         }

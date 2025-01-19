@@ -38,21 +38,13 @@ export interface GameActionEvent {
   };
 }
 
-export const GameStateEventType = "uk.half-shot.wormgine.game_state";
-export interface FullGameStateEvent {
-  type: typeof GameStateEventType;
+export const GameStateIncrementalEventType = "uk.half-shot.wormgine.game_state";
+
+export interface GameStateIncrementalEvent {
+  type: typeof GameStateIncrementalEventType;
   content: {
-    teams?: Team[];
     iteration: number;
     ents: (RecordedEntityState & { uuid: string })[];
-  };
-}
-
-export interface GameControlEvent {
-  type: typeof GameStateEventType;
-  content: {
-    input: InputKind;
-    entity: number; // ?
   };
 }
 
@@ -87,6 +79,7 @@ export interface GameConfigEvent {
   type: typeof GameConfigEventType;
   content: {
     rules: GameRules;
+    teams: Team[];
     // Need to decide on some config.
   };
 }

@@ -28,4 +28,40 @@ describe('Netfloat', () => {
             }
         });
     });
+    test('test parsing object arrays', () => {
+        expect(
+            fromNetObject(toNetObject({
+                a: [{
+                    b: 1.2345
+                }]
+            }))
+        ).toEqual({
+            a: [{
+                b: 1.2345
+            }]
+        });
+    });
+    test('test parsing multiple values', () => {
+        expect(
+            fromNetObject(toNetObject({
+                a: {
+                    b: 1.2345,
+                    c: 4.5123
+                },
+                d: {
+                    e: 5.123,
+                    f: 231.12
+                }
+            }))
+        ).toEqual({
+            a: {
+                b: 1.2345,
+                c: 4.5123
+            },
+            d: {
+                e: 5.123,
+                f: 231.12
+            }
+        });
+    });
 });

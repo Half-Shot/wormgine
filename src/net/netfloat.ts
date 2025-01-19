@@ -35,7 +35,7 @@ export function toNetObject(
   );
 }
 
-export function fromNetObject(o: Record<string, unknown>): unknown {
+export function fromNetObject(o: unknown): unknown {
   function isNF(v: unknown): v is NetworkFloat {
     return (
       (v !== null && typeof v === "object" && "nf" in v && v.nf === true) ||
@@ -43,16 +43,21 @@ export function fromNetObject(o: Record<string, unknown>): unknown {
     );
   }
 
+  if (typeof o !== "object" || o === null) {
+    return o;
+  }
+
+  if (Array.isArray(o)) {
+    return o.map(o => fromNetObject(o));
+  }
+
+  if (isNF(o)) {
+    return fromNetworkFloat(o);
+  }
+
   return Object.fromEntries(
     Object.entries(o).map<[string, unknown | NetworkFloat]>(([key, v]) => {
-      if (isNF(v)) {
-        return [key, fromNetworkFloat(v)];
-      } else if (Array.isArray(v)) {
-        return [key, v.map((v2) => (isNF(v2) ? fromNetworkFloat(v2) : v2))];
-      } else if (typeof v === "object") {
-        return [key, fromNetObject(v as Record<string, unknown>)];
-      }
-      return [key, v];
+      return [key, fromNetObject(v)];
     }),
   );
 }

@@ -6,12 +6,12 @@ import {
   GameStageEventType,
   GameConfigEventType,
   PlayerAckEventType,
-  GameStateEventType,
-  FullGameStateEvent,
   ProposedTeam,
   GameProposedTeamEventType,
   GameActionEventType,
   GameClientReadyEventType,
+  GameStateIncrementalEventType,
+  GameStateIncrementalEvent,
 } from "./models";
 import { EventEmitter } from "pixi.js";
 import { StateRecordLine } from "../state/model";
@@ -164,9 +164,28 @@ export class NetGameInstance {
     });
   }
 
-  public async updateGameConfig(newRules: GameRules) {
+  public async updateGameConfig() {
+    const teams: Team[] = Object.values(this._proposedTeams.value).map((v) => ({
+      name: v.name,
+      flag: v.flagb64,
+      group: v.group,
+      playerUserId: v.playerUserId,
+      uuid: v.uuid,
+      // Needs to come from rules.
+      ammo: this._rules.value.ammoSchema,
+      worms: v.worms.slice(0, v.wormCount).map(
+        (w) =>
+          ({
+            name: w,
+            health: this._rules.value.wormHealth,
+            maxHealth: this._rules.value.wormHealth,
+            uuid: globalThis.crypto.randomUUID(),
+          }) satisfies WormIdentity,
+      ),
+    }));
     await this.client.client.sendStateEvent(this.roomId, GameConfigEventType, {
-      rules: newRules,
+      rules: this._rules.value,
+      teams,
     } satisfies GameConfigEvent["content"]);
   }
 
@@ -216,30 +235,7 @@ export class NetGameInstance {
   }
 
   public async startGame() {
-    const teams: Team[] = Object.values(this._proposedTeams.value).map((v) => ({
-      name: v.name,
-      flag: v.flagb64,
-      group: v.group,
-      playerUserId: v.playerUserId,
-      uuid: v.uuid,
-      // Needs to come from rules.
-      ammo: this._rules.value.ammoSchema,
-      worms: v.worms.slice(0, v.wormCount).map(
-        (w) =>
-          ({
-            name: w,
-            health: this._rules.value.wormHealth,
-            maxHealth: this._rules.value.wormHealth,
-            uuid: globalThis.crypto.randomUUID(),
-          }) satisfies WormIdentity,
-      ),
-    }));
-    // Initial full state of the game.
-    await this.client.client.sendStateEvent(this.roomId, GameStateEventType, {
-      teams,
-      ents: [],
-      iteration: 0,
-    } satisfies FullGameStateEvent["content"]);
+    this.updateGameConfig();
     await this.client.client.sendStateEvent(this.roomId, GameStageEventType, {
       stage: GameStage.InProgress,
     } satisfies GameStageEvent["content"]);
@@ -255,8 +251,8 @@ export class NetGameInstance {
     } satisfies PlayerAckEvent["content"]);
   }
 
-  public async sendGameState(data: FullGameStateEvent["content"]) {
-    await this.client.client.sendEvent(this.roomId, GameStateEventType, data);
+  public async sendGameState(data: GameStateIncrementalEvent["content"]) {
+    await this.client.client.sendEvent(this.roomId, GameStateIncrementalEventType, data);
   }
 }
 
@@ -511,17 +507,17 @@ export class NetGameClient extends EventEmitter {
     };
 
     if (gameStage === GameStage.InProgress) {
-      const fullStateEvent = stateEvents.find(
-        (s) => s.type === GameStateEventType,
-      ) as unknown as FullGameStateEvent;
-      if (!fullStateEvent) {
+      const configEvent = stateEvents.find(
+        (s) => s.type === GameConfigEventType,
+      ) as unknown as GameConfigEvent;
+      if (!configEvent) {
         throw Error("In progress game had no state");
       }
       return new RunningNetGameInstance(
         room,
         this,
         initialConfig,
-        fullStateEvent["content"],
+        configEvent["content"],
       );
     }
 
@@ -530,12 +526,14 @@ export class NetGameClient extends EventEmitter {
 }
 
 export class RunningNetGameInstance extends NetGameInstance {
-  private readonly  _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
-  public readonly gameState: Observable<FullGameStateEvent["content"]>;
+  private readonly  _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
+  public readonly gameConfig: Observable<GameConfigEvent["content"]>;
+  private readonly  _gameState: BehaviorSubject<GameStateIncrementalEvent["content"]>;
+  public readonly gameState: Observable<GameStateIncrementalEvent["content"]>;
   public readonly player: MatrixStateReplay;
 
-  public get gameStateImmediate() {
-    return this._gameState.value;
+  public get gameConfigImmediate() {
+    return this._gameConfig.value;
   }
 
   public get rules() {
@@ -546,40 +544,36 @@ export class RunningNetGameInstance extends NetGameInstance {
     room: Room,
     client: NetGameClient,
     private readonly initialConfig: NetGameConfiguration,
-    currentState: FullGameStateEvent["content"],
+    currentState: GameConfigEvent["content"],
   ) {
     super(room, client, initialConfig);
-    this._gameState = new BehaviorSubject(currentState);
+    this._gameConfig = new BehaviorSubject(currentState);
+    this.gameConfig = this._gameConfig.asObservable();
+    this._gameState = new BehaviorSubject({ iteration: 0, ents: [] as GameStateIncrementalEvent["content"]["ents"]});
     this.gameState = this._gameState.asObservable();
-    client.client.on(RoomStateEvent.Events, (event, state) => {
-      if (state.roomId !== this.roomId) {
-        return;
-      }
+    this.player = new MatrixStateReplay();
+    room.on(RoomStateEvent.Events, (event) => {
       const stateKey = event.getStateKey();
       const type = event.getType();
-      if (stateKey && type === GameStateEventType && event.getSender() !== this.myUserId) {
-        logger.info("Got new gme ")
-        const content = fromNetObject(event.getContent() as FullGameStateEvent["content"]);
-        this._gameState.next(content as FullGameStateEvent["content"]);
-      }
-      if (type === GameStateEventType && event.getSender() !== this.myUserId) {
-        logger.info("Got new gme ")
-        const content = fromNetObject(event.getContent() as FullGameStateEvent["content"]);
-        this._gameState.next(content as FullGameStateEvent["content"]);
+      if (stateKey && type === GameConfigEventType && event.getSender() !== this.myUserId) {
+        const content = fromNetObject(event.getContent() as GameConfigEvent["content"]);
+        this._gameConfig.next(content as GameConfigEvent["content"]);
       }
     });
-    this.player = new MatrixStateReplay();
-    client.client.on(RoomEvent.Timeline, (event, r) => {
-      if (r?.roomId !== this.roomId) {
-        return;
-      }
+    room.on(RoomEvent.Timeline, (event) => {
+      const type = event.getType();
       // Filter our won events out.
       if (
-        event.getType() === GameActionEventType &&
+        type === GameActionEventType &&
         !event.isState() &&
         event.getSender() !== this.myUserId
       ) {
         void this.player.handleEvent(event.getContent());
+      }
+      if (type === GameStateIncrementalEventType && event.getSender() !== this.myUserId) {
+        const content = fromNetObject(event.getContent() as GameStateIncrementalEvent["content"]);
+        logger.info("Got new incremental event", content)
+        this._gameState.next(content as GameStateIncrementalEvent["content"]);
       }
     });
   }

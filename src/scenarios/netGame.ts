@@ -120,7 +120,7 @@ export default async function runScenario(game: Game) {
 
   
 
-  const initialTeams = gameInstance.gameStateImmediate.teams!;
+  const initialTeams = gameInstance.gameConfigImmediate.teams!;
 
   for (const team of initialTeams) {
     if (team.flag) {
@@ -229,21 +229,6 @@ export default async function runScenario(game: Game) {
         return res;
       };
       const wormEnt = world.addEntity(
-        // TODO: For remote worms:
-        //           async (worm, definition, opts) => {
-        //   const newProjectile = definition.fireFn(parent, world, worm, opts);
-        //   if (newProjectile instanceof PhysicsEntity) {
-        //     parent.follow(newProjectile.sprite);
-        //     world.addEntity(newProjectile);
-        //   }
-        //   applyEntityData();
-        //   const res = await newProjectile.onFireResult;
-        //   if (newProjectile instanceof PhysicsEntity) {
-        //     parent.follow(worm.sprite);
-        //   }
-        //   applyEntityData();
-        //   return res;
-        // },
         wormInstance.team.playerUserId === myUserId
           ? Worm.create(
               parent,
@@ -262,6 +247,7 @@ export default async function runScenario(game: Game) {
               fireFn,
               overlay.toaster,
             ),
+            wormInstance.uuid,
       );
       delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);

@@ -20,6 +20,8 @@ import {
   GameActionEventType,
   GameClientReadyEvent,
   GameClientReadyEventType,
+  GameStateIncrementalEvent,
+  GameStateIncrementalEventType,
 } from "../net/models";
 
 // Extend Matrix JS SDK types via Typescript declaration merging to support unspecced event fields and types
@@ -32,7 +34,7 @@ declare module "matrix-js-sdk" {
   }
   export interface TimelineEvents {
     [PlayerAckEventType]: PlayerAckEvent["content"];
-    [GameStateEventType]: FullGameStateEvent["content"];
+    [GameStateIncrementalEventType]: GameStateIncrementalEvent["content"];
     [GameActionEventType]: GameActionEvent["content"];
     [GameClientReadyEventType]: GameClientReadyEvent["content"];
   }

@@ -47,9 +47,9 @@ export default async function runScenario(game: Game) {
     level.terrain.destructible,
   );
 
-  const initialTeams = gameInstance.gameStateImmediate.teams;
+  const initialTeams = gameInstance.gameConfigImmediate.teams;
 
-  for (const team of gameInstance.gameStateImmediate.teams) {
+  for (const team of gameInstance.gameConfigImmediate.teams) {
     if (team.flag) {
       Assets.add({ alias: `team-flag-${team.name}`, src: team.flag });
       await Assets.load(`team-flag-${team.name}`);
@@ -137,7 +137,7 @@ export default async function runScenario(game: Game) {
   await gameInstance.ready();
   await gameInstance.allClientsReady();
 
-  const gameHasStarted = gameInstance.gameStateImmediate.iteration > 0;
+  const gameHasStarted = gameInstance.gameConfigImmediate.iteration > 0;
 
   if (gameInstance.isHost && !gameHasStarted) {
     await stateRecorder.writeHeader();

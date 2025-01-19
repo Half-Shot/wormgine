@@ -11,6 +11,10 @@ import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
 import { BehaviorSubject, distinct, Observable } from "rxjs";
+import Logger from "../../log";
+
+
+const log = new Logger('PhysicsEntity');
 
 /**
  * Abstract class for any physical object in the world. The
@@ -143,15 +147,17 @@ export abstract class PhysicsEntity<
   }
 
   applyState(state: T): void {
+    log.debug("Applying state", state);
     this.body.setTranslation(state.tra, true);
-    this.body.setLinvel(state.vel, true);
-    this.body.setRotation(state.rot, true);
+    // this.body.setLinvel(state.vel, true);
+    // this.body.setRotation(state.rot, true);
   }
 
   recordState(): T {
     const translation = this.body.translation();
     const rotation = this.body.rotation();
     const linvel = this.body.linvel();
+    log.debug("Recording state", translation, rotation, linvel);
     return {
       type: -1,
       tra: {
