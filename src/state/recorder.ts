@@ -44,7 +44,7 @@ export class StateRecorder {
   }
 
   public syncEntityState(gameWorld: GameWorld) {
-    console.log('Stubbed syncEntityState');
+    console.log("Stubbed syncEntityState");
     // const stateToSend = [];
     // for (const entState of gameWorld.collectEntityState()) {
     //   const newHash = hashCode(JSON.stringify(entState));

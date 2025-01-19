@@ -97,7 +97,9 @@ export default async function runScenario(game: Game) {
   const waterLevel =
     level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
 
-  const wormSpawn = level.objects.find((v) => v.type === "wormgine.worm_spawn") as WormSpawnRecordedState|undefined;
+  const wormSpawn = level.objects.find(
+    (v) => v.type === "wormgine.worm_spawn",
+  ) as WormSpawnRecordedState | undefined;
 
   const water = world.addEntity(
     new Water(

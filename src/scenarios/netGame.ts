@@ -105,24 +105,6 @@ export default async function runScenario(game: Game) {
     wormInst.replayFire(duration);
   });
 
-
-  // function applyEntityData() {
-  //   console.log("Applying entity state data");
-  //   for (const ent of player.latestEntityData) {
-  //     const existingEnt = world.entities.get(ent.uuid);
-  //     if (!existingEnt) {
-  //       throw new Error(
-  //         `Ent ${ent.uuid} ${ent.type} was not found during entity sync`,
-  //       );
-  //     } else if (existingEnt instanceof PhysicsEntity === false) {
-  //       throw new Error(
-  //         `Ent ${ent.uuid} ${ent.type} was unexpectedly not a PhysicsEntity`,
-  //       );
-  //     }
-  //     existingEnt.loadState(ent);
-  //   }
-  // }
-
   const assets = getAssets();
   const level = await scenarioParser(game.level, assets.data, assets.textures);
   const bitmapPosition = Coordinate.fromScreen(
@@ -321,7 +303,11 @@ export default async function runScenario(game: Game) {
 
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);
-    if (gameState.isPreRound && currentWorm?.hasPerformedAction && currentWorm instanceof RemoteWorm === false) {
+    if (
+      gameState.isPreRound &&
+      currentWorm?.hasPerformedAction &&
+      currentWorm instanceof RemoteWorm === false
+    ) {
       gameState.playerMoved();
     }
   };
@@ -340,61 +326,74 @@ export default async function runScenario(game: Game) {
     log.info("Marked as ready");
   }
 
-  combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$]).pipe(filter(([state, seconds]) => 
-    state === RoundState.Finished && seconds === 0)).subscribe(() => {
+  combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])
+    .pipe(
+      filter(
+        ([state, seconds]) => state === RoundState.Finished && seconds === 0,
+      ),
+    )
+    .subscribe(() => {
       if (currentWorm) {
         log.info("Timer ran out");
         currentWorm?.onEndOfTurn();
         currentWorm?.currentState.off("transition", transitionHandler);
       }
-  });
+    });
 
-  combineLatest([gameState.roundState$, gameState.currentWorm$]).pipe(filter(([roundState, worm]) => {
-    if (roundState === RoundState.WaitingToBegin && !worm) {
-      return false;
-    }
-    return true;
-  })).subscribe(([roundState, worm]) => {
-    log.info("Round state sub fired for", roundState, worm);
-    if (worm === undefined && RoundState.Finished && gameInstance.isHost) {
-      log.info("Starting first round as worm was undefined");
-      gameState.advanceRound();
-      return;
-    }
-    if (roundState === RoundState.WaitingToBegin) {
-      log.debug("Round state worm diff", worm?.uuid, currentWorm?.wormIdent.uuid);
-      if (!worm) {
-        throw Error('No worm in WaitingToBegin')
-      }
-      if (worm?.uuid === currentWorm?.wormIdent.uuid) {
-        // New worm hasn't appeared yet.
+  combineLatest([gameState.roundState$, gameState.currentWorm$])
+    .pipe(
+      filter(([roundState, worm]) => {
+        if (roundState === RoundState.WaitingToBegin && !worm) {
+          return false;
+        }
+        return true;
+      }),
+    )
+    .subscribe(([roundState, worm]) => {
+      log.info("Round state sub fired for", roundState, worm);
+      if (worm === undefined && RoundState.Finished && gameInstance.isHost) {
+        log.info("Starting first round as worm was undefined");
+        gameState.advanceRound();
         return;
       }
-      currentWorm = wormInstances.get(worm.uuid);
-      log.info("Setting next worm", worm.uuid, currentWorm);
-      currentWorm?.onWormSelected(true);
-      currentWorm?.currentState.on("transition", transitionHandler);
-      gameState.beginRound();
-      return;
-    } else if (roundState === RoundState.Finished) {
-      stateRecorder.syncEntityState(world);
-      const nextState = gameState.advanceRound();
-      if ("winningTeams" in nextState) {
-        if (nextState.winningTeams.length) {
-          overlay.toaster.pushToast(
-            templateRandomText(TeamWinnerText, {
-              TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
-            }),
-            8000,
-          );
-        } else {
-          // Draw
-          overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
+      if (roundState === RoundState.WaitingToBegin) {
+        log.debug(
+          "Round state worm diff",
+          worm?.uuid,
+          currentWorm?.wormIdent.uuid,
+        );
+        if (!worm) {
+          throw Error("No worm in WaitingToBegin");
         }
-        endOfGameFadeOut = 8000;
+        if (worm?.uuid === currentWorm?.wormIdent.uuid) {
+          // New worm hasn't appeared yet.
+          return;
+        }
+        currentWorm = wormInstances.get(worm.uuid);
+        log.info("Setting next worm", worm.uuid, currentWorm);
+        currentWorm?.onWormSelected(true);
+        currentWorm?.currentState.on("transition", transitionHandler);
+        gameState.beginRound();
+        return;
+      } else if (roundState === RoundState.Finished) {
+        stateRecorder.syncEntityState(world);
+        const nextState = gameState.advanceRound();
+        if ("winningTeams" in nextState) {
+          if (nextState.winningTeams.length) {
+            overlay.toaster.pushToast(
+              templateRandomText(TeamWinnerText, {
+                TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
+              }),
+              8000,
+            );
+          } else {
+            // Draw
+            overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
+          }
+          endOfGameFadeOut = 8000;
+        }
       }
-    }
-  });
+    });
 
   game.pixiApp.ticker.add((dt) => roundHandlerFn(dt));
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));

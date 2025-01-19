@@ -119,8 +119,12 @@ export class GameState {
     }
     this.nextTeamStack = [...this.teams.values()];
     this.roundDurationMs = rules.roundDurationMs ?? 45000;
-    this.roundState.subscribe((s) => logger.info(`Round state changed => ${s}`));
-    this.currentTeam.subscribe((s) => logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`));
+    this.roundState.subscribe((s) =>
+      logger.info(`Round state changed => ${s}`),
+    );
+    this.currentTeam.subscribe((s) =>
+      logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`),
+    );
   }
 
   public pauseTimer() {

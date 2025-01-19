@@ -71,7 +71,9 @@ export class Game {
       // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
       events: this.pixiApp.renderer.events,
     });
-    this.world = netGameInstance ? new NetGameWorld(this.rapierWorld, this.pixiApp.ticker, netGameInstance) : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
+    this.world = netGameInstance
+      ? new NetGameWorld(this.rapierWorld, this.pixiApp.ticker, netGameInstance)
+      : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
     this.viewport.zoom(8);

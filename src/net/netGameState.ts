@@ -6,10 +6,11 @@ import { StateRecordWormGameState } from "../state/model";
 import { combineLatest, map } from "rxjs";
 import Logger from "../log";
 
-
 const log = new Logger("NetGameState");
 export class NetGameState extends GameState {
-  protected clientActive$ = this.currentTeam$.pipe(map(t => t?.playerUserId === this.myUserId));
+  protected clientActive$ = this.currentTeam$.pipe(
+    map((t) => t?.playerUserId === this.myUserId),
+  );
 
   get shouldControlState(): boolean {
     return this.currentTeam.value?.playerUserId === this.myUserId;
@@ -68,7 +69,9 @@ export class NetGameState extends GameState {
     }
   }
 
-  public applyGameStateUpdate(stateUpdate: StateRecordWormGameState["data"]): ReturnType<typeof this.advanceRound>|null {
+  public applyGameStateUpdate(
+    stateUpdate: StateRecordWormGameState["data"],
+  ): ReturnType<typeof this.advanceRound> | null {
     // if (this.iteration >= stateUpdate.iteration) {
     //   log.debug("Ignoring iteration because it's stale", this.iteration, stateUpdate.iteration);
     //   // Skip
@@ -148,7 +151,6 @@ export class NetGameState extends GameState {
       // Waiting for other client to make the move.
       return;
     } else {
-
     }
 
     if (roundState === RoundState.Preround) {

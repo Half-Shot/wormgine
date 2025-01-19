@@ -569,7 +569,11 @@ export class RunningNetGameInstance extends NetGameInstance {
         return;
       }
       // Filter our won events out.
-      if (event.getType() === GameActionEventType && !event.isState() && event.getSender() !== this.myUserId) {
+      if (
+        event.getType() === GameActionEventType &&
+        !event.isState() &&
+        event.getSender() !== this.myUserId
+      ) {
         void this.player.handleEvent(event.getContent());
       }
     });
