@@ -75,7 +75,7 @@ export class GameWorld {
   }
 
   constructor(
-    private readonly rapierWorld: World,
+    public readonly rapierWorld: World,
     protected readonly ticker: Ticker,
   ) {}
 
