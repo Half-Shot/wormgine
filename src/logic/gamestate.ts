@@ -3,7 +3,7 @@ import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
-import { BehaviorSubject, distinctUntilChanged, map, skip, tap } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged, map, skip } from "rxjs";
 
 export interface GameRules {
   roundDurationMs?: number;

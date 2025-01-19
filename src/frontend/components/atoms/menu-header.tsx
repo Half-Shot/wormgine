@@ -15,9 +15,10 @@ export default function MenuHeader({
 }) {
   return (
     <header style={menuStyle}>
-      <Button 
+      <Button
         style={{ height: "3em", marginTop: "auto", marginBottom: "auto" }}
-        onClick={onGoBack}>
+        onClick={onGoBack}
+      >
         Back
       </Button>
       <h1>{children}</h1>

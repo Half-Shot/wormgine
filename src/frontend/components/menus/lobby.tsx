@@ -271,7 +271,6 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
 
   const clientState = useObservableEagerState(client.state);
 
-
   useEffect(() => {
     globalThis.location.hash = `#?gameRoomId=${encodeURIComponent(gameRoomId)}`;
   }, []);

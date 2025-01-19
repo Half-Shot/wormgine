@@ -13,8 +13,7 @@ import { CameraLockPriority } from "../../camera";
 import { BehaviorSubject, distinct, Observable } from "rxjs";
 import Logger from "../../log";
 
-
-const log = new Logger('PhysicsEntity');
+const log = new Logger("PhysicsEntity");
 
 /**
  * Abstract class for any physical object in the world. The

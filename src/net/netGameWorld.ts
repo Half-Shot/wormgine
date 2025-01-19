@@ -1,12 +1,10 @@
 import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { GameWorld } from "../world";
 import RAPIER from "@dimforge/rapier2d-compat";
-import { RecordedEntityState } from "../state/model";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import Logger from "../log";
 import { RunningNetGameInstance } from "./client";
-import { toNetObject } from "./netfloat";
-import { IPhysicalEntity } from "../entities/entity";
+import { NetObject, toNetObject } from "./netfloat";
 
 const TICK_EVERY_MS = 350;
 
@@ -24,25 +22,27 @@ export class NetGameWorld extends GameWorld {
     private readonly instance: RunningNetGameInstance,
   ) {
     super(rapierWorld, ticker);
-    instance.gameState.subscribe(s => {
-        logger.info("Remote state update", s.iteration);
-        if (this.broadcasting) {
-            return;
+    instance.gameState.subscribe((s) => {
+      logger.info("Remote state update", s.iteration);
+      if (this.broadcasting) {
+        return;
+      }
+      s.ents.forEach((e) => {
+        const ent = this.entities.get(e.uuid);
+        if (!ent) {
+          logger.warning(
+            `Could not find entity ${e.uuid} but got state update`,
+          );
+          return;
         }
-        s.ents.forEach(e => {
-            const ent = this.entities.get(e.uuid);
-            if (!ent) {
-                logger.warning(`Could not find entity ${e.uuid} but got state update`);
-                return;
-            }
-            (ent as PhysicsEntity).applyState(e);
-        });
-    })
+        (ent as PhysicsEntity).applyState(e);
+      });
+    });
   }
 
   public setBroadcasting(isBroadcasting: boolean) {
     if (this.broadcasting === isBroadcasting) {
-        return;
+      return;
     }
     if (isBroadcasting) {
       logger.info("Enabled broadcasting from this client");
@@ -55,7 +55,7 @@ export class NetGameWorld extends GameWorld {
   }
 
   public collectEntityState() {
-    const state: (RecordedEntityState & { uuid: string })[] = [];
+    const state: NetObject[] = [];
     for (const [uuid, ent] of this.entities.entries()) {
       if ("recordState" in ent === false) {
         // Not recordable.
@@ -70,7 +70,7 @@ export class NetGameWorld extends GameWorld {
       this.entStateHash.set(uuid, hashData);
       state.push({
         uuid,
-        ...toNetObject(data as any) as any,
+        ...toNetObject(data),
       });
     }
     return state;
@@ -91,11 +91,13 @@ export class NetGameWorld extends GameWorld {
       return;
     }
     logger.info(`Found ${collectedState.length} entity updates to send`);
-    this.instance.sendGameState({
+    this.instance
+      .sendGameState({
         iteration: ++this.iteration,
         ents: collectedState,
-    }).catch((ex) => {
-        logger.warning("Failed to send game state");
-    })
+      })
+      .catch((ex) => {
+        logger.warning("Failed to send game state", ex);
+      });
   };
 }

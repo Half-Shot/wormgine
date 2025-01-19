@@ -171,7 +171,6 @@ export default async function runScenario(game: Game) {
                 CameraLockPriority.LockIfNotLocalPlayer;
               world.addEntity(newProjectile);
             }
-            stateRecorder.syncEntityState(world);
             const res = await newProjectile.onFireResult;
             return res;
           },
@@ -251,7 +250,6 @@ export default async function runScenario(game: Game) {
       }
     }
     if (endOfRoundWaitDuration === null) {
-      stateRecorder.syncEntityState(world);
       const nextState = gameState.advanceRound();
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {

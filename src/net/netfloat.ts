@@ -11,9 +11,17 @@ export function fromNetworkFloat(v: NetworkFloat): number {
   return Number(v.e);
 }
 
-export function toNetObject(
-  o: Record<string, unknown>,
-): Record<string, unknown> {
+/**
+ * Type that should never be used directly.
+ */
+export type NetObject = Record<string, unknown>;
+
+/**
+ *
+ * @param o
+ * @returns Not exactly T.
+ */
+export function toNetObject<T extends object>(o: T): NetObject {
   return Object.fromEntries(
     Object.entries(o).map<[string, unknown]>(([key, v]) => {
       if (typeof v === "number" && !Number.isInteger(v)) {
@@ -48,7 +56,7 @@ export function fromNetObject(o: unknown): unknown {
   }
 
   if (Array.isArray(o)) {
-    return o.map(o => fromNetObject(o));
+    return o.map((o) => fromNetObject(o));
   }
 
   if (isNF(o)) {

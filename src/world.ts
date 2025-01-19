@@ -15,8 +15,6 @@ import {
 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./utils/coodinate";
 import { add, mult } from "./utils";
-import type { PhysicsEntity } from "./entities/phys/physicsEntity";
-import { RecordedEntityState } from "./state/model";
 import Logger from "./log";
 import globalFlags from "./flags";
 import { BehaviorSubject } from "rxjs";

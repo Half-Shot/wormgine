@@ -118,8 +118,6 @@ export default async function runScenario(game: Game) {
     level.terrain.destructible,
   );
 
-  
-
   const initialTeams = gameInstance.gameConfigImmediate.teams!;
 
   for (const team of initialTeams) {
@@ -224,7 +222,6 @@ export default async function runScenario(game: Game) {
             CameraLockPriority.LockIfNotLocalPlayer;
           world.addEntity(newProjectile);
         }
-        stateRecorder.syncEntityState(world);
         const res = await newProjectile.onFireResult;
         return res;
       };
@@ -247,14 +244,13 @@ export default async function runScenario(game: Game) {
               fireFn,
               overlay.toaster,
             ),
-            wormInstance.uuid,
+        wormInstance.uuid,
       );
       delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
 
-  let endOfGameFadeOut: number | null = null;
   let currentWorm: Worm | undefined;
 
   staticController.on("inputEnd", (kind: InputKind) => {
@@ -338,13 +334,20 @@ export default async function runScenario(game: Game) {
       }),
     )
     .subscribe(([roundState, worm]) => {
-      if (worm?.team.playerUserId === gameInstance.myUserId && roundState === RoundState.Preround) {
+      if (
+        worm?.team.playerUserId === gameInstance.myUserId &&
+        roundState === RoundState.Preround
+      ) {
         world.setBroadcasting(true);
       } else if (roundState === RoundState.Finished) {
         world.setBroadcasting(false);
       }
       log.info("Round state sub fired for", roundState, worm);
-      if (worm === undefined && roundState === RoundState.Finished && gameInstance.isHost) {
+      if (
+        worm === undefined &&
+        roundState === RoundState.Finished &&
+        gameInstance.isHost
+      ) {
         log.info("Starting first round as worm was undefined");
         gameState.advanceRound();
         return;
@@ -369,7 +372,6 @@ export default async function runScenario(game: Game) {
         gameState.beginRound();
         return;
       } else if (roundState === RoundState.Finished) {
-        stateRecorder.syncEntityState(world);
         const nextState = gameState.advanceRound();
         if ("winningTeams" in nextState) {
           if (nextState.winningTeams.length) {
@@ -383,7 +385,6 @@ export default async function runScenario(game: Game) {
             // Draw
             overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
           }
-          endOfGameFadeOut = 8000;
         }
       }
     });

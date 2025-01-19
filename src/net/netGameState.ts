@@ -150,7 +150,6 @@ export class NetGameState extends GameState {
     if (!this.shouldControlState) {
       // Waiting for other client to make the move.
       return;
-    } else {
     }
 
     if (roundState === RoundState.Preround) {

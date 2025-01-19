@@ -1,8 +1,7 @@
-import { InputKind } from "../input";
 import { GameRules } from "../logic/gamestate";
 import { Team, TeamGroup } from "../logic/teams";
 import { StoredTeam } from "../settings";
-import { RecordedEntityState } from "../state/model";
+import { NetObject } from "./netfloat";
 
 export interface EntityDescriptor {
   pos: { x: number; y: number };
@@ -44,7 +43,7 @@ export interface GameStateIncrementalEvent {
   type: typeof GameStateIncrementalEventType;
   content: {
     iteration: number;
-    ents: (RecordedEntityState & { uuid: string })[];
+    ents: NetObject[];
   };
 }
 

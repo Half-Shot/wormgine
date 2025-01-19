@@ -87,14 +87,6 @@ export class StateReplay extends EventEmitter<EventTypes> {
     } else if (!this.lastActionTs) {
       throw Error("Missing header");
     }
-    // Calculate the number of ms to delay since the start of the game.
-    const elapsedRelativeTimeForState = ts - this.hostStartTs;
-    // // and substract the local runtime. (e.g. if the relative time is 10s and we are 5s along, wait 5s)
-    // const waitFor = elapsedRelativeTimeForState - this.elapsedRelativeLocalTime;
-
-    // await new Promise((r) => setTimeout(r, waitFor));
-    this.lastActionTs = ts;
-
     log.info(`> ${ts} ${kind} ${index} ${data}`);
 
     const processedData = data as unknown;

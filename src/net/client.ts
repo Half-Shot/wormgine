@@ -14,7 +14,7 @@ import {
   GameStateIncrementalEvent,
 } from "./models";
 import { EventEmitter } from "pixi.js";
-import { StateRecordLine } from "../state/model";
+import { RecordedEntityState, StateRecordLine } from "../state/model";
 import {
   ClientEvent,
   createClient,
@@ -69,7 +69,7 @@ export class NetGameInstance {
   private readonly _proposedTeams: BehaviorSubject<
     Record<string, ProposedTeam>
   >;
-  public readonly  proposedTeams: Observable<ProposedTeam[]>;
+  public readonly proposedTeams: Observable<ProposedTeam[]>;
   private readonly _rules: BehaviorSubject<GameRules>;
   public readonly proposedRules: Observable<GameRules>;
 
@@ -252,7 +252,11 @@ export class NetGameInstance {
   }
 
   public async sendGameState(data: GameStateIncrementalEvent["content"]) {
-    await this.client.client.sendEvent(this.roomId, GameStateIncrementalEventType, data);
+    await this.client.client.sendEvent(
+      this.roomId,
+      GameStateIncrementalEventType,
+      data,
+    );
   }
 }
 
@@ -525,15 +529,23 @@ export class NetGameClient extends EventEmitter {
   }
 }
 
+type DecodedGameState = {
+  iteration: number;
+  ents: (RecordedEntityState & { uuid: string })[];
+};
+
 export class RunningNetGameInstance extends NetGameInstance {
-  private readonly  _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
+  private readonly _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
   public readonly gameConfig: Observable<GameConfigEvent["content"]>;
-  private readonly  _gameState: BehaviorSubject<GameStateIncrementalEvent["content"]>;
-  public readonly gameState: Observable<GameStateIncrementalEvent["content"]>;
+  private readonly _gameState: BehaviorSubject<DecodedGameState>;
+  public readonly gameState: Observable<DecodedGameState>;
   public readonly player: MatrixStateReplay;
 
   public get gameConfigImmediate() {
     return this._gameConfig.value;
+  }
+  public get gameHasStarted() {
+    return this._gameState.value.iteration > 0;
   }
 
   public get rules() {
@@ -549,14 +561,23 @@ export class RunningNetGameInstance extends NetGameInstance {
     super(room, client, initialConfig);
     this._gameConfig = new BehaviorSubject(currentState);
     this.gameConfig = this._gameConfig.asObservable();
-    this._gameState = new BehaviorSubject({ iteration: 0, ents: [] as GameStateIncrementalEvent["content"]["ents"]});
+    this._gameState = new BehaviorSubject({
+      iteration: 0,
+      ents: [] as DecodedGameState["ents"],
+    });
     this.gameState = this._gameState.asObservable();
     this.player = new MatrixStateReplay();
     room.on(RoomStateEvent.Events, (event) => {
       const stateKey = event.getStateKey();
       const type = event.getType();
-      if (stateKey && type === GameConfigEventType && event.getSender() !== this.myUserId) {
-        const content = fromNetObject(event.getContent() as GameConfigEvent["content"]);
+      if (
+        stateKey &&
+        type === GameConfigEventType &&
+        event.getSender() !== this.myUserId
+      ) {
+        const content = fromNetObject(
+          event.getContent() as GameConfigEvent["content"],
+        );
         this._gameConfig.next(content as GameConfigEvent["content"]);
       }
     });
@@ -570,10 +591,18 @@ export class RunningNetGameInstance extends NetGameInstance {
       ) {
         void this.player.handleEvent(event.getContent());
       }
-      if (type === GameStateIncrementalEventType && event.getSender() !== this.myUserId) {
-        const content = fromNetObject(event.getContent() as GameStateIncrementalEvent["content"]);
-        logger.info("Got new incremental event", content)
-        this._gameState.next(content as GameStateIncrementalEvent["content"]);
+      if (
+        type === GameStateIncrementalEventType &&
+        event.getSender() !== this.myUserId
+      ) {
+        const content = fromNetObject(
+          event.getContent() as GameStateIncrementalEvent["content"],
+        ) as {
+          iteration: number;
+          ents: (RecordedEntityState & { uuid: string })[];
+        };
+        logger.info("Got new incremental event", content);
+        this._gameState.next(content);
       }
     });
   }

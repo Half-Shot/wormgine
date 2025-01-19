@@ -131,7 +131,10 @@ export function TeamEditor({
       <section>
         <h3> Flag </h3>
 
-        <button className={styles.flagUpload} onClick={() => uploadRef.current?.click()}>
+        <button
+          className={styles.flagUpload}
+          onClick={() => uploadRef.current?.click()}
+        >
           {tempBlobUrl ? (
             <img
               onClick={() => uploadRef.current?.click()}
@@ -254,7 +257,7 @@ export default function TeamEditorMenu() {
         ))}
       </select>
       <Button disabled={localTeams.length >= MAX_TEAMS} onClick={onCreateTeam}>
-      Add new team
+        Add new team
       </Button>
       <TeamEditor
         onDeleteTeam={onDeleteTeam}
