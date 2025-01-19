@@ -15,7 +15,8 @@ import { TeamGroup } from "../../../logic/teams";
 
 const logger = new Logger("Lobby");
 
-const MAX_WORMS = 8;
+const MAX_WORMS = 1;
+const MIN_PLAYERS = 1;
 
 interface Props {
   client: NetGameClient;
@@ -211,7 +212,7 @@ export function ActiveLobby({
   const viableToStart = useMemo(
     () =>
       gameInstance.isHost &&
-      members.length >= 1 &&
+      members.length >= MIN_PLAYERS &&
       proposedTeams.length >= 2 &&
       Object.keys(
         proposedTeams.reduce<Partial<Record<TeamGroup, number>>>(
@@ -225,7 +226,8 @@ export function ActiveLobby({
     [gameInstance, members, proposedTeams],
   );
 
-  const lobbyLink = `${window.location.origin}${window.location.pathname}?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
+  const lobbyLink = `${window.location.origin}${window.location.pathname}#?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
+
   return (
     <>
       <p>This area is the staging area for a new networked game.</p>
@@ -268,6 +270,11 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
   const [gameInstance, setGameInstance] = useState<NetGameInstance>();
 
   const clientState = useObservableEagerState(client.state);
+
+
+  useEffect(() => {
+    globalThis.location.hash = `#?gameRoomId=${encodeURIComponent(gameRoomId)}`;
+  }, []);
 
   useEffect(() => {
     if (!gameInstance) {

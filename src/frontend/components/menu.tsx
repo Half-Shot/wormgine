@@ -69,13 +69,13 @@ function mainMenu(
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>
-            Settings
+          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)}>
+            Online Play
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)}>
-            Online Play
+          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>
+            Settings
           </button>
         </li>
         <li>

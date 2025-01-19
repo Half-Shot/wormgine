@@ -4,6 +4,13 @@
   background: none;
   border: none;
   margin: 0.25em 0em 0em;
+  color: var(--text);
+}
+
+.flagUpload {
+  background: none;
+  border: 2px solid var(--text);
+  border-radius: 0;
 }
 
 .teamEditor {

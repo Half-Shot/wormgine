@@ -1,4 +1,5 @@
 import { ComponentChildren, JSX } from "preact";
+import Button from "./button";
 
 const menuStyle: JSX.CSSProperties = {
   display: "flex",
@@ -14,12 +15,11 @@ export default function MenuHeader({
 }) {
   return (
     <header style={menuStyle}>
-      <button
+      <Button 
         style={{ height: "3em", marginTop: "auto", marginBottom: "auto" }}
-        onClick={onGoBack}
-      >
+        onClick={onGoBack}>
         Back
-      </button>
+      </Button>
       <h1>{children}</h1>
     </header>
   );

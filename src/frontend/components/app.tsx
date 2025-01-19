@@ -30,13 +30,12 @@ export function App() {
   const [lobbyGameRoomId, setLobbyGameRoomId] = useState<string>();
 
   useEffect(() => {
-    const parameters = new URLSearchParams(window.location.search);
+    const parameters = new URLSearchParams(window.location.hash.slice(1));
     const gId = parameters.get("gameRoomId");
     const preStateConfig = parameters.get("stateConfig");
     if (gId) {
       setLobbyGameRoomId(gId);
-    }
-    if (preStateConfig) {
+    } else if (preStateConfig) {
       const [scenario, level] = preStateConfig.split(";");
       setGameState({
         scenario,

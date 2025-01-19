@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import styles from "./team-editor.module.css";
 import { StoredTeam, WORMGINE_STORAGE_KEY_TEAMS } from "../../../settings";
+import Button from "../atoms/button";
 
 const MAX_WORM_NAMES = 8;
 const MAX_TEAMS = 32;
@@ -130,7 +131,7 @@ export function TeamEditor({
       <section>
         <h3> Flag </h3>
 
-        <button onClick={() => uploadRef.current?.click()}>
+        <button className={styles.flagUpload} onClick={() => uploadRef.current?.click()}>
           {tempBlobUrl ? (
             <img
               onClick={() => uploadRef.current?.click()}
@@ -148,9 +149,9 @@ export function TeamEditor({
           accept="image/jpeg,image/png,image/webp"
         />
       </section>
-      <section>
-        <button onClick={onDeleteTeam}>Delete Team</button>
-      </section>
+      <Button kind="error" onClick={onDeleteTeam}>
+        Delete Team
+      </Button>
     </section>
   );
 }
@@ -252,9 +253,9 @@ export default function TeamEditorMenu() {
           </option>
         ))}
       </select>
-      <button disabled={localTeams.length >= MAX_TEAMS} onClick={onCreateTeam}>
-        Add new team
-      </button>
+      <Button disabled={localTeams.length >= MAX_TEAMS} onClick={onCreateTeam}>
+      Add new team
+      </Button>
       <TeamEditor
         onDeleteTeam={onDeleteTeam}
         team={localTeams[selectedTeam]}
