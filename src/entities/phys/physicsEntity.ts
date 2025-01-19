@@ -142,6 +142,12 @@ export abstract class PhysicsEntity<
     this.physObject.body.applyImpulse(force, true);
   }
 
+  applyState(state: T): void {
+    this.body.setTranslation(state.tra, true);
+    this.body.setLinvel(state.vel, true);
+    this.body.setRotation(state.rot, true);
+  }
+
   recordState(): T {
     const translation = this.body.translation();
     const rotation = this.body.rotation();

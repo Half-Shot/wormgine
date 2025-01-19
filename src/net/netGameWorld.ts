@@ -5,8 +5,10 @@ import { RecordedEntityState } from "../state/model";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import Logger from "../log";
 import { RunningNetGameInstance } from "./client";
+import { toNetObject } from "./netfloat";
+import { IPhysicalEntity } from "../entities/entity";
 
-const TICK_EVERY_MS = 200;
+const TICK_EVERY_MS = 350;
 
 const logger = new Logger("NetGameWorld");
 
@@ -14,6 +16,7 @@ export class NetGameWorld extends GameWorld {
   private broadcasting = false;
   private msSinceLastTick = 0;
   private entStateHash = new Map<string, string>();
+  private iteration = 0;
 
   constructor(
     rapierWorld: RAPIER.World,
@@ -21,17 +24,34 @@ export class NetGameWorld extends GameWorld {
     private readonly instance: RunningNetGameInstance,
   ) {
     super(rapierWorld, ticker);
+    instance.gameState.subscribe(s => {
+        logger.info("Game state update");
+        if (this.broadcasting) {
+            return;
+        }
+        s.ents.forEach(e => {
+            const ent = this.entities.get(e.uuid);
+            if (!ent) {
+                logger.warning(`Could not find entity ${e.uuid} but got state update`);
+                return;
+            }
+            (ent as PhysicsEntity).applyState(e);
+        });
+    })
   }
 
   public setBroadcasting(isBroadcasting: boolean) {
-    this.broadcasting = isBroadcasting;
-    if (this.broadcasting) {
+    if (this.broadcasting === isBroadcasting) {
+        return;
+    }
+    if (isBroadcasting) {
       logger.info("Enabled broadcasting from this client");
       this.ticker.add(this.onTick, undefined, UPDATE_PRIORITY.HIGH);
     } else {
       logger.info("Disabled broadcasting from this client");
       this.ticker.remove(this.onTick);
     }
+    this.broadcasting = isBroadcasting;
   }
 
   public collectEntityState() {
@@ -39,18 +59,18 @@ export class NetGameWorld extends GameWorld {
     for (const [uuid, ent] of this.entities.entries()) {
       if ("recordState" in ent === false) {
         // Not recordable.
-        break;
+        continue;
       }
       const data = (ent as PhysicsEntity).recordState();
       const hashData = JSON.stringify(data);
       if (this.entStateHash.get(uuid) === hashData) {
         // No updates - skip.
-        break;
+        continue;
       }
       this.entStateHash.set(uuid, hashData);
       state.push({
         uuid,
-        ...data,
+        ...toNetObject(data as any) as any,
       });
     }
     return state;
@@ -63,6 +83,7 @@ export class NetGameWorld extends GameWorld {
     }
     this.msSinceLastTick -= TICK_EVERY_MS;
 
+    logger.debug("Tick!");
     // Fetch all entities and look for state changes.
     const collectedState = this.collectEntityState();
     if (collectedState.length === 0) {
@@ -70,5 +91,11 @@ export class NetGameWorld extends GameWorld {
       return;
     }
     logger.info(`Found ${collectedState.length} entity updates to send`);
+    this.instance.sendGameState({
+        iteration: ++this.iteration,
+        ents: collectedState,
+    }).catch((ex) => {
+        logger.warning("Failed to send game state");
+    })
   };
 }

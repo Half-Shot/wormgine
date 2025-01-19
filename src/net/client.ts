@@ -34,7 +34,7 @@ import { BehaviorSubject, map, Observable } from "rxjs";
 import Logger from "../log";
 import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
 import { MatrixStateReplay } from "../state/player";
-import { toNetObject, toNetworkFloat } from "./netfloat";
+import { fromNetObject, toNetObject, toNetworkFloat } from "./netfloat";
 
 const logger = new Logger("NetClient");
 
@@ -69,7 +69,7 @@ export class NetGameInstance {
   private readonly _proposedTeams: BehaviorSubject<
     Record<string, ProposedTeam>
   >;
-  public readonly proposedTeams: Observable<ProposedTeam[]>;
+  public readonly  proposedTeams: Observable<ProposedTeam[]>;
   private readonly _rules: BehaviorSubject<GameRules>;
   public readonly proposedRules: Observable<GameRules>;
 
@@ -239,7 +239,6 @@ export class NetGameInstance {
       teams,
       ents: [],
       iteration: 0,
-      bitmap_hash: "",
     } satisfies FullGameStateEvent["content"]);
     await this.client.client.sendStateEvent(this.roomId, GameStageEventType, {
       stage: GameStage.InProgress,
@@ -531,7 +530,7 @@ export class NetGameClient extends EventEmitter {
 }
 
 export class RunningNetGameInstance extends NetGameInstance {
-  private readonly _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
+  private readonly  _gameState: BehaviorSubject<FullGameStateEvent["content"]>;
   public readonly gameState: Observable<FullGameStateEvent["content"]>;
   public readonly player: MatrixStateReplay;
 
@@ -558,9 +557,15 @@ export class RunningNetGameInstance extends NetGameInstance {
       }
       const stateKey = event.getStateKey();
       const type = event.getType();
-      if (stateKey && type === GameStateEventType) {
-        const content = event.getContent() as FullGameStateEvent["content"];
-        this._gameState.next(content);
+      if (stateKey && type === GameStateEventType && event.getSender() !== this.myUserId) {
+        logger.info("Got new gme ")
+        const content = fromNetObject(event.getContent() as FullGameStateEvent["content"]);
+        this._gameState.next(content as FullGameStateEvent["content"]);
+      }
+      if (type === GameStateEventType && event.getSender() !== this.myUserId) {
+        logger.info("Got new gme ")
+        const content = fromNetObject(event.getContent() as FullGameStateEvent["content"]);
+        this._gameState.next(content as FullGameStateEvent["content"]);
       }
     });
     this.player = new MatrixStateReplay();

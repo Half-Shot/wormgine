@@ -2,6 +2,7 @@ import { InputKind } from "../input";
 import { GameRules } from "../logic/gamestate";
 import { Team, TeamGroup } from "../logic/teams";
 import { StoredTeam } from "../settings";
+import { RecordedEntityState } from "../state/model";
 
 export interface EntityDescriptor {
   pos: { x: number; y: number };
@@ -41,10 +42,9 @@ export const GameStateEventType = "uk.half-shot.wormgine.game_state";
 export interface FullGameStateEvent {
   type: typeof GameStateEventType;
   content: {
+    teams?: Team[];
     iteration: number;
-    bitmap_hash: string;
-    ents: EntityDescriptor[];
-    teams: Team[];
+    ents: (RecordedEntityState & { uuid: string })[];
   };
 }
 

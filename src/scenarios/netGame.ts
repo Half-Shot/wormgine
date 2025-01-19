@@ -83,16 +83,16 @@ export default async function runScenario(game: Game) {
     wormInst.replayAim(dir, parseFloat(angle));
   });
 
-  player.on("wormActionMove", ({ id, action, cycles }) => {
-    const wormInst = wormInstances.get(id);
-    if (!wormInst) {
-      throw Error("Worm not found");
-    }
-    if (wormInst instanceof RemoteWorm === false) {
-      return;
-    }
-    wormInst.replayMovement(action, cycles);
-  });
+  // player.on("wormActionMove", ({ id, action, cycles }) => {
+  //   const wormInst = wormInstances.get(id);
+  //   if (!wormInst) {
+  //     throw Error("Worm not found");
+  //   }
+  //   if (wormInst instanceof RemoteWorm === false) {
+  //     return;
+  //   }
+  //   wormInst.replayMovement(action, cycles);
+  // });
 
   player.on("wormActionFire", ({ id, duration }) => {
     const wormInst = wormInstances.get(id);
@@ -118,9 +118,11 @@ export default async function runScenario(game: Game) {
     level.terrain.destructible,
   );
 
-  const initialTeams = gameInstance.gameStateImmediate.teams;
+  
 
-  for (const team of gameInstance.gameStateImmediate.teams) {
+  const initialTeams = gameInstance.gameStateImmediate.teams!;
+
+  for (const team of initialTeams) {
     if (team.flag) {
       Assets.add({ alias: `team-flag-${team.name}`, src: team.flag });
       await Assets.load(`team-flag-${team.name}`);
@@ -350,8 +352,13 @@ export default async function runScenario(game: Game) {
       }),
     )
     .subscribe(([roundState, worm]) => {
+      if (worm?.team.playerUserId === gameInstance.myUserId && roundState === RoundState.Preround) {
+        world.setBroadcasting(true);
+      } else if (roundState === RoundState.Finished) {
+        world.setBroadcasting(false);
+      }
       log.info("Round state sub fired for", roundState, worm);
-      if (worm === undefined && RoundState.Finished && gameInstance.isHost) {
+      if (worm === undefined && roundState === RoundState.Finished && gameInstance.isHost) {
         log.info("Starting first round as worm was undefined");
         gameState.advanceRound();
         return;

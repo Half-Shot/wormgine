@@ -164,7 +164,7 @@ export function Menu({
   } else if (currentMenu === GameMenu.Lobby) {
     const onOpenIngame = (gameInstance: RunningNetGameInstance) => {
       // TODO: Hardcoded level.
-      onNewGame("netGameTest", gameInstance, "levels_testing");
+      onNewGame("netGame", gameInstance, "levels_testing");
     };
     if (!currentLobbyId) {
       throw Error("Current Lobby ID must be set!");

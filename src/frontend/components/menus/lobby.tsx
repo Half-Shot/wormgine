@@ -211,7 +211,7 @@ export function ActiveLobby({
   const viableToStart = useMemo(
     () =>
       gameInstance.isHost &&
-      members.length >= 2 &&
+      members.length >= 1 &&
       proposedTeams.length >= 2 &&
       Object.keys(
         proposedTeams.reduce<Partial<Record<TeamGroup, number>>>(
