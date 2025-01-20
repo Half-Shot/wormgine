@@ -111,10 +111,10 @@ export class Firework extends TimedExplosive {
     this.gfx = new Graphics();
   }
 
-  update(dt: number): void {
+  update(dt: number, dMs: number) {
     if (!this.sprite.destroyed) {
       this.body.setRotation(angleForVector(this.body.linvel()), false);
-      super.update(dt);
+      super.update(dt, dMs);
     }
 
     this.gfx.clear();

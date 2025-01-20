@@ -6,7 +6,6 @@ import {
   StateRecordWormAction,
   StateRecordWormActionAim,
   StateRecordWormActionFire,
-  StateRecordWormActionMove,
   StateRecordWormGameState,
   StateRecordWormSelectWeapon,
   StateWormAction,
@@ -40,26 +39,6 @@ export class StateRecorder {
       kind: StateRecordKind.WormAction,
       ts: performance.now(),
     } satisfies StateRecordWormAction);
-  }
-
-  public recordWormMove(
-    worm: string,
-    direction: "left" | "right",
-    cycles: number,
-  ) {
-    this.store.writeLine({
-      index: ++this.recordIndex,
-      data: {
-        id: worm,
-        cycles,
-        action:
-          direction === "left"
-            ? StateWormAction.MoveLeft
-            : StateWormAction.MoveRight,
-      },
-      kind: StateRecordKind.WormActionMove,
-      ts: performance.now(),
-    } satisfies StateRecordWormActionMove);
   }
 
   public recordWormAim(worm: string, direction: "up" | "down", angle: number) {

@@ -101,8 +101,8 @@ export class Grenade extends TimedExplosive {
     this.body.setLinvel(initialForce, true);
   }
 
-  update(dt: number): void {
-    super.update(dt);
+  update(dt: number, dMs: number) {
+    super.update(dt, dMs);
     if (this.sprite.destroyed) {
       return;
     }

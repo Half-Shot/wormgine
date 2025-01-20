@@ -96,13 +96,13 @@ export class BazookaShell extends TimedExplosive {
     this.body.addForce({ x: this.gameWorld.wind * 1.25, y: 0 }, false);
   }
 
-  update(dt: number): void {
+  update(dt: number, dMs: number) {
     this.wireframe.setDebugText(
       `${this.body.rotation()} ${Math.round(this.body.linvel().x)} ${Math.round(this.body.linvel().y)}`,
     );
     this.body.setRotation(angleForVector(this.body.linvel()), false);
 
-    super.update(dt);
+    super.update(dt, dMs);
     if (!this.physObject || this.sprite.destroyed) {
       return;
     }

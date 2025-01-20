@@ -34,7 +34,7 @@ export interface HomingMissileRecordedState
 /**
  * Homing missile that attempts to hit a point target.
  */
-export class HomingMissile extends TimedExplosive {
+export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
   public static getMissilePath(
     start: Coordinate,
     target: Coordinate,
@@ -132,8 +132,8 @@ export class HomingMissile extends TimedExplosive {
     logger.debug(`pos: ${position}`, `target: ${target}`);
   }
 
-  update(dt: number): void {
-    super.update(dt);
+  update(dt: number, dMs: number) {
+    super.update(dt, dMs);
     if (!this.physObject || this.sprite.destroyed) {
       return;
     }
@@ -197,7 +197,8 @@ export class HomingMissile extends TimedExplosive {
     };
   }
 
-  loadState(d: HomingMissileRecordedState): void {
+  applyState(d: HomingMissileRecordedState): void {
+    super.applyState(d);
     if (!this.hasActivated) {
       this.hasActivated = d.hasActivated;
     }

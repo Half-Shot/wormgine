@@ -110,8 +110,8 @@ export class Mine extends TimedExplosive {
     sprite.addChild(this.timerText);
   }
 
-  update(dt: number): void {
-    super.update(dt);
+  update(dt: number, dMs: number) {
+    super.update(dt, dMs);
     if (this.sprite.destroyed) {
       return;
     }

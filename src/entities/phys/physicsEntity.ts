@@ -81,7 +81,7 @@ export abstract class PhysicsEntity<
     this.gameWorld.removeEntity(this);
   }
 
-  update(dt: number): void {
+  update(dt: number, dMs: number): void {
     this.bodyMoving.next(this.body.isMoving());
     const pos = this.physObject.body.translation();
     const rotation = this.physObject.body.rotation() + this.rotationOffset;
@@ -169,9 +169,5 @@ export abstract class PhysicsEntity<
         y: linvel.y,
       },
     } as T;
-  }
-
-  loadState(_d: RecordedEntityState): void {
-    // TODO: Load the state from above.
   }
 }

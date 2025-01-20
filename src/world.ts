@@ -158,7 +158,7 @@ export class GameWorld {
         this.entities.delete(entUuid);
         return;
       }
-      entity.update?.(dt.deltaTime);
+      entity.update?.(dt.deltaTime, dt.deltaMS);
     };
     this.ticker.add(
       tickerFn,

@@ -3,11 +3,13 @@ import { WormInstance } from "../../logic/teams";
 import { Toaster } from "../../overlays/toaster";
 import { Coordinate } from "../../utils";
 import { GameWorld } from "../../world";
-import { FireFn, Worm } from "./worm";
-import { StateWormAction } from "../../state/model";
+import { FireFn, Worm, WormRecordedState } from "./worm";
+import { RecordedEntityState, StateWormAction } from "../../state/model";
 import Logger from "../../log";
 import { InnerWormState } from "./wormState";
 import { InputKind } from "../../input";
+import { TweenEngine } from "../../motion/tween";
+import { getDefinitionForCode } from "../../weapons";
 
 const logger = new Logger("RemoteWorm");
 
@@ -39,7 +41,6 @@ export class RemoteWorm extends Worm {
     return ent;
   }
 
-  private movementCyclesLeft = 0;
   private remoteWeaponFiringDuration: number | undefined;
 
   private constructor(
@@ -69,16 +70,7 @@ export class RemoteWorm extends Worm {
     this.remoteWeaponFiringDuration = duration;
   }
 
-  replayMovement(action: StateWormAction, cycles: number) {
-    const inputKind =
-      action === StateWormAction.MoveLeft
-        ? InputKind.MoveLeft
-        : InputKind.MoveRight;
-    this.setMoveDirection(inputKind);
-    this.movementCyclesLeft = cycles;
-  }
-
-  update(dt: number): void {
+  update(dt: number, dMs: number) {
     if (this.state.isFiring) {
       if (
         this.remoteWeaponFiringDuration === undefined ||
@@ -89,16 +81,7 @@ export class RemoteWorm extends Worm {
         this.onEndFireWeapon();
       }
     }
-    super.update(dt);
-    if (
-      this.state.state === InnerWormState.MovingLeft ||
-      this.state.state === InnerWormState.MovingRight
-    ) {
-      this.movementCyclesLeft -= 1;
-      if (this.movementCyclesLeft === 0) {
-        this.state.transition(InnerWormState.Idle);
-      }
-    }
+    super.update(dt, dMs);
   }
 
   replayAim(_dir: "up" | "down", aim: number) {
@@ -109,4 +92,10 @@ export class RemoteWorm extends Worm {
   onWormSelected(): void {
     super.onWormSelected(false);
   }
+
+  applyState(state: WormRecordedState): void {
+    this.motionTween = new TweenEngine(this.body, Worm.movementSpeed, Coordinate.fromWorld(state.tra));
+    this.selectWeapon(getDefinitionForCode(state.weapon));
+  }
+
 }

@@ -12,7 +12,7 @@ export interface IGameEntity {
   priority: UPDATE_PRIORITY;
   destroyed: boolean;
 
-  update?(dt: number): void;
+  update?(dt: number, dMs: number): void;
   destroy(): void;
 }
 

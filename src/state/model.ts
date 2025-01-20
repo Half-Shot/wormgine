@@ -16,7 +16,6 @@ export enum StateRecordKind {
   Header = "header",
   EntitySync = "ent_sync",
   WormAction = "worm_action",
-  WormActionMove = "worm_action_move",
   WormActionAim = "worm_action_aim",
   WormActionFire = "worm_action_fire",
   WormSelectWeapon = "worm_action_sel_wep",
@@ -44,12 +43,6 @@ export enum StateWormAction {
   Jump,
   Backflip,
 }
-
-export type StateRecordWormActionMove = StateRecordLine<{
-  id: string;
-  action: StateWormAction;
-  cycles: number;
-}>;
 
 export type StateRecordWormActionAim = StateRecordLine<{
   id: string;

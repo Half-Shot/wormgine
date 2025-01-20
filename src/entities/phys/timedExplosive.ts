@@ -109,8 +109,8 @@ export abstract class TimedExplosive<
     this.destroy();
   }
 
-  update(dt: number): void {
-    super.update(dt);
+  update(dt: number, dMs: number): void {
+    super.update(dt, dMs);
     if (this.timer !== undefined) {
       if (this.timer > 0) {
         this.timer -= dt;
@@ -148,8 +148,8 @@ export abstract class TimedExplosive<
     };
   }
 
-  loadState(d: TimedExplosiveRecordedState) {
-    super.loadState(d);
+  applyState(d: T) {
+    super.applyState(d);
     this.timer = d.timer;
     this.opts.timerSecs = d.timerSecs;
   }

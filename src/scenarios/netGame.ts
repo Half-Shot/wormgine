@@ -83,17 +83,6 @@ export default async function runScenario(game: Game) {
     wormInst.replayAim(dir, parseFloat(angle));
   });
 
-  // player.on("wormActionMove", ({ id, action, cycles }) => {
-  //   const wormInst = wormInstances.get(id);
-  //   if (!wormInst) {
-  //     throw Error("Worm not found");
-  //   }
-  //   if (wormInst instanceof RemoteWorm === false) {
-  //     return;
-  //   }
-  //   wormInst.replayMovement(action, cycles);
-  // });
-
   player.on("wormActionFire", ({ id, duration }) => {
     const wormInst = wormInstances.get(id);
     if (!wormInst) {

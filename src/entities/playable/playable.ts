@@ -27,14 +27,14 @@ interface Opts {
 // This is clearly not milliseconds, something is odd about our dt.
 const SELF_EXPLODE_MAX_DAMAGE = 25;
 
-interface RecordedState extends RecordedEntityState {
+export interface PlayableRecordedState extends RecordedEntityState {
   wormIdent: string;
 }
 
 /**
  * Entity that can be directly controlled by a player.
  */
-export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
+export abstract class PlayableEntity<T extends PlayableRecordedState> extends PhysicsEntity<T> {
   priority = UPDATE_PRIORITY.LOW;
 
   private nameText: Text;
@@ -128,8 +128,8 @@ export abstract class PlayableEntity extends PhysicsEntity<RecordedState> {
     this.healthText.position.set(healthTextXY[0] + 4, healthTextXY[1] - 4);
   }
 
-  public update(dt: number): void {
-    super.update(dt);
+  public update(dt: number, dMs: number): void {
+    super.update(dt, dMs);
     if (this.destroyed) {
       // TODO: Feels totally unnessacery.
       return;

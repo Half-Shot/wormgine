@@ -1,7 +1,8 @@
 import { Graphics, Point, Sprite, Texture } from "pixi.js";
 import {
   FireOpts,
-  IWeaponDefiniton,
+  IWeaponCode,
+  IWeaponDefiniton as IWeaponDefinition,
   WeaponFireResult,
 } from "../../weapons/weapon";
 import Controller, { InputKind } from "../../input";
@@ -20,7 +21,7 @@ import {
 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
-import { PlayableEntity } from "./playable";
+import { PlayableEntity, PlayableRecordedState } from "./playable";
 import { teamGroupToColorSet, WormInstance } from "../../logic";
 import { calculateMovement } from "../../movementController";
 import { Viewport } from "pixi-viewport";
@@ -51,6 +52,7 @@ import { OnDamageOpts } from "../entity";
 import Logger from "../../log";
 import { WormState, InnerWormState } from "./wormState";
 import { filter, first } from "rxjs";
+import { TweenEngine } from "../../motion/tween";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -70,7 +72,7 @@ const logger = new Logger("Worm");
 
 export type FireFn = (
   worm: Worm,
-  selectedWeapon: IWeaponDefiniton,
+  selectedWeapon: IWeaponDefinition,
   opts: FireOpts,
 ) => Promise<WeaponFireResult[]>;
 
@@ -85,14 +87,24 @@ const DEFAULT_PER_ROUND_STATE: PerRoundState = {
   hasPerformedAction: false,
 };
 
+
+export interface WormRecordedState extends PlayableRecordedState{
+  weapon: IWeaponCode,
+}
+
+
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
-export class Worm extends PlayableEntity {
+export class Worm extends PlayableEntity<WormRecordedState> {
   private static readonly collisionBitmask = collisionGroupBitmask(
     [CollisionGroups.WorldObjects],
     [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
   );
+  protected static readonly movementSpeed: Vector2 = {
+    x: 0.005,
+    y: 0.1,
+  }
 
   public static readAssets(assets: AssetPack) {
     Worm.texture = assets.textures.grenade;
@@ -103,7 +115,7 @@ export class Worm extends PlayableEntity {
   private static minImpactForDamage = 12;
 
   protected fireWeaponDuration = 0;
-  private currentWeapon: IWeaponDefiniton = WeaponBazooka;
+  private currentWeapon: IWeaponDefinition = WeaponBazooka;
   protected state = new WormState(InnerWormState.Inactive);
   private turnEndedReason: EndTurnReason | undefined;
   private impactVelocity = 0;
@@ -112,9 +124,9 @@ export class Worm extends PlayableEntity {
   public fireAngle = 0;
   protected targettingGfx: Graphics;
   private facingRight = true;
-  private movingCycles = 0;
   private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
   private weaponSprite: Sprite;
+  protected motionTween?: TweenEngine;
 
   get itemPlacementPosition() {
     const trans = this.body.translation();
@@ -222,13 +234,12 @@ export class Worm extends PlayableEntity {
       });
   }
 
-  public selectWeapon(weapon: IWeaponDefiniton) {
+  public selectWeapon(weapon: IWeaponDefinition) {
     if (this.perRoundState.shotsTaken > 0) {
       // Worm is already in progress of shooting things.
       return;
     }
     this.currentWeapon = weapon;
-    this.recorder?.recordWormSelectWeapon(this.wormIdent.uuid, weapon.code);
     this.toaster?.pushToast(weapon.name, undefined, undefined, true);
     if (weapon.sprite?.texture) {
       this.weaponSprite.texture = weapon.sprite.texture;
@@ -450,12 +461,6 @@ export class Worm extends PlayableEntity {
         inputDirection === InputKind.MoveRight) ||
       !inputDirection
     ) {
-      this.recorder?.recordWormMove(
-        this.wormIdent.uuid,
-        this.state.state === InnerWormState.MovingLeft ? "left" : "right",
-        this.movingCycles,
-      );
-      this.movingCycles = 0;
       this.state.transition(this.state.statePriorToMotion);
       return;
     }
@@ -463,9 +468,8 @@ export class Worm extends PlayableEntity {
 
   onMove(
     moveState: InnerWormState.MovingLeft | InnerWormState.MovingRight,
-    dt: number,
   ) {
-    const movementMod = 0.1 * dt;
+    const movementMod = 0.33;
     const moveMod = new Vector2(
       moveState === InnerWormState.MovingLeft ? -movementMod : movementMod,
       0,
@@ -476,8 +480,7 @@ export class Worm extends PlayableEntity {
       maxWormStep,
       this.gameWorld,
     );
-    this.movingCycles += 1;
-    this.physObject.body.setTranslation(move, false);
+    this.motionTween = new TweenEngine(this.body, Worm.movementSpeed, Coordinate.fromWorld(move));
   }
 
   onBeginFireWeapon() {
@@ -662,8 +665,8 @@ export class Worm extends PlayableEntity {
     return !!this.weapon.showTargetPicker && !this.perRoundState.weaponTarget;
   }
 
-  update(dt: number): void {
-    super.update(dt);
+  update(dt: number, dMs: number): void {
+    super.update(dt, dMs);
     if (this.sprite.destroyed) {
       return;
     }
@@ -674,6 +677,12 @@ export class Worm extends PlayableEntity {
     if (!this.state.shouldUpdate) {
       // Do nothing.
       return;
+    }
+
+    if (this.motionTween) {
+      if (this.motionTween.update(dMs)) {
+        this.motionTween = undefined;
+      }
     }
 
     const falling = !this.isSinking && this.body.linvel().y > 4;
@@ -752,7 +761,7 @@ export class Worm extends PlayableEntity {
       this.state.state === InnerWormState.MovingLeft ||
       this.state.state === InnerWormState.MovingRight
     ) {
-      this.onMove(this.state.state, dt);
+      this.onMove(this.state.state);
       // TODO: Allow moving aim while firing.
     } else if (
       this.state.state === InnerWormState.AimingUp ||
@@ -767,6 +776,7 @@ export class Worm extends PlayableEntity {
       ...super.recordState(),
       wormIdent: this.wormIdent.uuid,
       type: EntityType.Worm,
+      weapon: this.weapon.code,
     };
   }
 

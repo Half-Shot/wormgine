@@ -7,7 +7,6 @@ import {
   StateRecordWormAction,
   StateRecordWormActionAim,
   StateRecordWormActionFire,
-  StateRecordWormActionMove,
   StateRecordWormGameState,
   StateRecordWormSelectWeapon,
 } from "./model";
@@ -19,7 +18,6 @@ interface EventTypes {
   started: void;
   entitySync: [StateRecordEntitySync["data"]["entities"]];
   wormAction: [StateRecordWormAction["data"]];
-  wormActionMove: [StateRecordWormActionMove["data"]];
   wormActionAim: [StateRecordWormActionAim["data"]];
   wormActionFire: [StateRecordWormActionFire["data"]];
   wormSelectWeapon: [StateRecordWormSelectWeapon["data"]];
@@ -111,12 +109,6 @@ export class StateReplay extends EventEmitter<EventTypes> {
         this.emit(
           "wormActionAim",
           processedData as StateRecordWormActionAim["data"],
-        );
-        break;
-      case StateRecordKind.WormActionMove:
-        this.emit(
-          "wormActionMove",
-          processedData as StateRecordWormActionMove["data"],
         );
         break;
       case StateRecordKind.WormActionFire:
