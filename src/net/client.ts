@@ -2,10 +2,8 @@ import {
   GameStageEvent,
   GameConfigEvent,
   GameStage,
-  PlayerAckEvent,
   GameStageEventType,
   GameConfigEventType,
-  PlayerAckEventType,
   ProposedTeam,
   GameProposedTeamEventType,
   GameActionEventType,
@@ -245,11 +243,6 @@ export class NetGameInstance {
     // TODO: Perform any cleanup
     await this.client.client.leave(this.roomId);
   }
-  public async sendAck() {
-    await this.client.client.sendEvent(this.roomId, PlayerAckEventType, {
-      ack: true,
-    } satisfies PlayerAckEvent["content"]);
-  }
 
   public async sendGameState(data: GameStateIncrementalEvent["content"]) {
     await this.client.client.sendEvent(
@@ -447,7 +440,7 @@ export class NetGameClient extends EventEmitter {
           } satisfies GameStageEvent,
           {
             state_key: "",
-            type: "uk.half-shot.uk.wormgine.game_config",
+            type: "uk.half-shot.wormgine.game_config",
             content: initialConfig,
           } satisfies GameConfigEvent,
         ],
