@@ -5,6 +5,8 @@
         {
          "id":3,
          "image":"testingGround.png",
+         "imageheight":1080,
+         "imagewidth":1920,
          "locked":true,
          "name":"foreground",
          "opacity":1,
@@ -165,6 +167,44 @@
                  "width":33,
                  "x":213.420556310513,
                  "y":-134.445898424984
+                }, 
+                {
+                 "gid":4,
+                 "height":44,
+                 "id":29,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Red"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":607.331151482768,
+                 "y":329.322468608068
+                }, 
+                {
+                 "gid":4,
+                 "height":44,
+                 "id":30,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"wormgine.team_group",
+                         "propertytype":"WormTeamGroup",
+                         "type":"string",
+                         "value":"Blue"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":1223.14734170451,
+                 "y":327.986641731232
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -173,10 +213,10 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":29,
+ "nextobjectid":31,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.0",
+ "tiledversion":"1.11.1",
  "tileheight":16,
  "tilesets":[
         {
