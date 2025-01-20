@@ -48,9 +48,10 @@ function LoggedInView({
       .catch((ex) => {
         // TODO: Bubble up error.
         logger.info("Failed to create game", ex);
-      }).finally(() => {
-        setInProgress(false);
       })
+      .finally(() => {
+        setInProgress(false);
+      });
   }, [client]);
 
   useEffect(() => {
@@ -113,8 +114,11 @@ function LoggedInView({
             </strong>
           ) : null}
         </p>
-        <button onClick={createGameCallback} disabled={!localTeams?.length || gameCreationInProgress}>
-          { gameCreationInProgress ? "Creating Lobby..." : "Create Lobby" } 
+        <button
+          onClick={createGameCallback}
+          disabled={!localTeams?.length || gameCreationInProgress}
+        >
+          {gameCreationInProgress ? "Creating Lobby..." : "Create Lobby"}
         </button>
       </section>
     </>

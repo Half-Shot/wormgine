@@ -529,7 +529,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.state.transition(InnerWormState.InactiveWaiting);
     }
 
-
     this.onFireWeapon(this, this.currentWeapon, opts).then((fireResult) => {
       // Weapon has hit.
       this.turnEndedReason = EndTurnReason.FiredWeapon;
@@ -680,7 +679,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       // Do nothing.
       return;
     }
-
 
     const falling = !this.isSinking && this.body.linvel().y > 4;
 

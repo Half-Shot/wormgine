@@ -113,22 +113,22 @@ export class StateReplay extends EventEmitter<EventTypes> {
           processedData as StateRecordWormActionAim["data"],
         );
         break;
-      case StateRecordKind.WormActionFire:
+      case StateRecordKind.WormActionFire: {
         const fireData = processedData as StateRecordWormActionFire["data"];
-        this.emit(
-          "wormActionFire",
-          { 
-            ...fireData,
-            opts: {
-              ...fireData.opts,
-              target: fireData.opts?.target ? Coordinate.fromWorld(
-                fromNetworkFloat(fireData.opts.target.x),
-                fromNetworkFloat(fireData.opts.target.y),
-              ) : undefined,
-            }
-          }
-        );
+        this.emit("wormActionFire", {
+          ...fireData,
+          opts: {
+            ...fireData.opts,
+            target: fireData.opts?.target
+              ? Coordinate.fromWorld(
+                  fromNetworkFloat(fireData.opts.target.x),
+                  fromNetworkFloat(fireData.opts.target.y),
+                )
+              : undefined,
+          },
+        });
         break;
+      }
       case StateRecordKind.WormSelectWeapon:
         this.emit(
           "wormSelectWeapon",

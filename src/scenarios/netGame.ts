@@ -83,7 +83,6 @@ export default async function runScenario(game: Game) {
     wormInst.replayAim(dir, parseFloat(angle));
   });
 
-
   player.on("wormActionFire", ({ id, opts }) => {
     const wormInst = wormInstances.get(id);
     if (!wormInst) {

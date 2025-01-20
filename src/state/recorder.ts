@@ -1,4 +1,4 @@
-import { toNetObject, toNetworkFloat } from "../net/netfloat";
+import { toNetworkFloat } from "../net/netfloat";
 import { FireOpts, IWeaponCode } from "../weapons/weapon";
 import {
   StateRecordHeader,
@@ -42,7 +42,6 @@ export class StateRecorder {
     } satisfies StateRecordWormAction);
   }
 
-
   public recordWormAim(worm: string, direction: "up" | "down", angle: number) {
     this.store.writeLine({
       index: ++this.recordIndex,
@@ -64,7 +63,12 @@ export class StateRecorder {
         id: worm,
         opts: {
           ...opts,
-          target: opts.target ? { x: toNetworkFloat(opts.target.worldX), y: toNetworkFloat(opts.target.worldY)} : undefined,
+          target: opts.target
+            ? {
+                x: toNetworkFloat(opts.target.worldX),
+                y: toNetworkFloat(opts.target.worldY),
+              }
+            : undefined,
         },
         action: StateWormAction.Fire,
       },
