@@ -15,7 +15,7 @@ import { TeamGroup } from "../../../logic/teams";
 
 const logger = new Logger("Lobby");
 
-const MAX_WORMS = 1;
+const MAX_WORMS = 2;
 const MIN_PLAYERS = 1;
 
 interface Props {
