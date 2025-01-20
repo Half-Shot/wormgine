@@ -87,11 +87,9 @@ const DEFAULT_PER_ROUND_STATE: PerRoundState = {
   hasPerformedAction: false,
 };
 
-
-export interface WormRecordedState extends PlayableRecordedState{
-  weapon: IWeaponCode,
+export interface WormRecordedState extends PlayableRecordedState {
+  weapon: IWeaponCode;
 }
-
 
 /**
  * Physical representation of a worm on the map. May be controlled.
@@ -104,7 +102,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   protected static readonly movementSpeed: Vector2 = {
     x: 0.005,
     y: 0.1,
-  }
+  };
 
   public static readAssets(assets: AssetPack) {
     Worm.texture = assets.textures.grenade;
@@ -466,9 +464,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
   }
 
-  onMove(
-    moveState: InnerWormState.MovingLeft | InnerWormState.MovingRight,
-  ) {
+  onMove(moveState: InnerWormState.MovingLeft | InnerWormState.MovingRight) {
     const movementMod = 0.33;
     const moveMod = new Vector2(
       moveState === InnerWormState.MovingLeft ? -movementMod : movementMod,
@@ -480,7 +476,11 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       maxWormStep,
       this.gameWorld,
     );
-    this.motionTween = new TweenEngine(this.body, Worm.movementSpeed, Coordinate.fromWorld(move));
+    this.motionTween = new TweenEngine(
+      this.body,
+      Worm.movementSpeed,
+      Coordinate.fromWorld(move),
+    );
   }
 
   onBeginFireWeapon() {
@@ -499,14 +499,20 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
   }
 
-  onEndFireWeapon() {
+  onEndFireWeapon(remoteOpts?: FireOpts) {
     if (!this.state.isFiring) {
       return;
     }
     this.wormIdent.team.consumeAmmo(this.weapon.code);
     const maxShots = this.weapon.shots ?? 1;
     const duration = this.fireWeaponDuration;
-    this.recorder?.recordWormFire(this.wormIdent.uuid, duration);
+    const opts = remoteOpts ?? {
+      duration,
+      timer: this.weaponTimerSecs,
+      angle: this.fireAngle,
+      target: this.perRoundState.weaponTarget,
+    };
+    this.recorder?.recordWormFire(this.wormIdent.uuid, opts);
     this.targettingGfx.visible = false;
     this.perRoundState.shotsTaken++;
     // TODO: Need a middle state for while the world is still active.
@@ -523,12 +529,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.state.transition(InnerWormState.InactiveWaiting);
     }
 
-    this.onFireWeapon(this, this.currentWeapon, {
-      duration,
-      timer: this.weaponTimerSecs,
-      angle: this.fireAngle,
-      target: this.perRoundState.weaponTarget,
-    }).then((fireResult) => {
+
+    this.onFireWeapon(this, this.currentWeapon, opts).then((fireResult) => {
       // Weapon has hit.
       this.turnEndedReason = EndTurnReason.FiredWeapon;
       let randomTextSet: string[];
@@ -679,11 +681,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       return;
     }
 
-    if (this.motionTween) {
-      if (this.motionTween.update(dMs)) {
-        this.motionTween = undefined;
-      }
-    }
 
     const falling = !this.isSinking && this.body.linvel().y > 4;
 
@@ -728,6 +725,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
 
     if (this.state.state === InnerWormState.InMotion) {
+      // Clear any tween if we're falling.
+      this.motionTween = undefined;
       this.impactVelocity = Math.max(
         magnitude(this.body.linvel()),
         this.impactVelocity,
@@ -768,6 +767,12 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.state.state === InnerWormState.AimingDown
     ) {
       this.updateAiming();
+    }
+
+    if (this.motionTween) {
+      if (this.motionTween.update(dMs)) {
+        this.motionTween = undefined;
+      }
     }
   }
 

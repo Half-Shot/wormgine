@@ -108,7 +108,7 @@ export class Explosion implements IGameEntity {
     }
   }
 
-  update(dt: number, dMs: number) {
+  update(dt: number) {
     this.timer -= dt;
     const ttl = this.timer / (Ticker.targetFPMS * this.explosionMs);
     const ttlInverse = 1 - ttl;

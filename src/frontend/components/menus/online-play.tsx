@@ -31,8 +31,10 @@ function LoggedInView({
   const [displayname, setDisplayName] = useState<string>();
   const [authenticatedAvatarBlob, setAvatarBlobUrl] = useState<string>();
   const [localTeams] = getLocalTeamsHook();
+  const [gameCreationInProgress, setInProgress] = useState<boolean>();
 
   const createGameCallback = useCallback(() => {
+    setInProgress(true);
     client
       .createGameRoom({
         rules: {
@@ -40,12 +42,15 @@ function LoggedInView({
           wormHealth: 100,
           ammoSchema: DefaultWeaponSchema,
         },
+        teams: [],
       })
       .then((roomId) => onCreateLobby(roomId))
       .catch((ex) => {
         // TODO: Bubble up error.
         logger.info("Failed to create game", ex);
-      });
+      }).finally(() => {
+        setInProgress(false);
+      })
   }, [client]);
 
   useEffect(() => {
@@ -108,8 +113,8 @@ function LoggedInView({
             </strong>
           ) : null}
         </p>
-        <button onClick={createGameCallback} disabled={!localTeams?.length}>
-          Create Lobby
+        <button onClick={createGameCallback} disabled={!localTeams?.length || gameCreationInProgress}>
+          { gameCreationInProgress ? "Creating Lobby..." : "Create Lobby" } 
         </button>
       </section>
     </>

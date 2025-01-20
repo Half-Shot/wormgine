@@ -1,6 +1,8 @@
 import { RoundState } from "../logic/gamestate";
 import { Team } from "../logic/teams";
-import { IWeaponCode } from "../weapons/weapon";
+import { NetworkFloat } from "../net/netfloat";
+import { Coordinate } from "../utils";
+import { FireOpts, IWeaponCode } from "../weapons/weapon";
 
 export interface RecordedEntityState {
   type: number | string;
@@ -54,7 +56,19 @@ export type StateRecordWormActionAim = StateRecordLine<{
 export type StateRecordWormActionFire = StateRecordLine<{
   id: string;
   action: StateWormAction;
-  duration?: number;
+  opts?: {
+      duration?: number;
+      timer?: number;
+      angle?: number;
+      target?: { x: NetworkFloat, y: NetworkFloat}
+  }
+}>;
+
+
+export type StateRecordWormActionFireParsed = StateRecordLine<{
+  id: string;
+  action: StateWormAction;
+  opts: FireOpts;
 }>;
 
 export type StateRecordWormAction = StateRecordLine<{

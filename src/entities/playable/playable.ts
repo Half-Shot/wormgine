@@ -34,7 +34,9 @@ export interface PlayableRecordedState extends RecordedEntityState {
 /**
  * Entity that can be directly controlled by a player.
  */
-export abstract class PlayableEntity<T extends PlayableRecordedState> extends PhysicsEntity<T> {
+export abstract class PlayableEntity<
+  T extends PlayableRecordedState = PlayableRecordedState,
+> extends PhysicsEntity<T> {
   priority = UPDATE_PRIORITY.LOW;
 
   private nameText: Text;

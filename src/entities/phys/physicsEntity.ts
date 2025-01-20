@@ -81,7 +81,7 @@ export abstract class PhysicsEntity<
     this.gameWorld.removeEntity(this);
   }
 
-  update(dt: number, dMs: number): void {
+  update(dt: number, _dMs: number): void {
     this.bodyMoving.next(this.body.isMoving());
     const pos = this.physObject.body.translation();
     const rotation = this.physObject.body.rotation() + this.rotationOffset;

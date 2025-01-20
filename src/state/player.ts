@@ -7,19 +7,21 @@ import {
   StateRecordWormAction,
   StateRecordWormActionAim,
   StateRecordWormActionFire,
+  StateRecordWormActionFireParsed,
   StateRecordWormGameState,
   StateRecordWormSelectWeapon,
 } from "./model";
 import { GameActionEvent } from "../net/models";
 import Logger from "../log";
-import { fromNetObject } from "../net/netfloat";
+import { fromNetObject, fromNetworkFloat } from "../net/netfloat";
+import { Coordinate } from "../utils";
 
 interface EventTypes {
   started: void;
   entitySync: [StateRecordEntitySync["data"]["entities"]];
   wormAction: [StateRecordWormAction["data"]];
   wormActionAim: [StateRecordWormActionAim["data"]];
-  wormActionFire: [StateRecordWormActionFire["data"]];
+  wormActionFire: [StateRecordWormActionFireParsed["data"]];
   wormSelectWeapon: [StateRecordWormSelectWeapon["data"]];
   gameState: [StateRecordWormGameState["data"]];
 }
@@ -112,9 +114,19 @@ export class StateReplay extends EventEmitter<EventTypes> {
         );
         break;
       case StateRecordKind.WormActionFire:
+        const fireData = processedData as StateRecordWormActionFire["data"];
         this.emit(
           "wormActionFire",
-          processedData as StateRecordWormActionFire["data"],
+          { 
+            ...fireData,
+            opts: {
+              ...fireData.opts,
+              target: fireData.opts?.target ? Coordinate.fromWorld(
+                fromNetworkFloat(fireData.opts.target.x),
+                fromNetworkFloat(fireData.opts.target.y),
+              ) : undefined,
+            }
+          }
         );
         break;
       case StateRecordKind.WormSelectWeapon:
