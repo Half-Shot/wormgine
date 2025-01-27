@@ -211,8 +211,6 @@ export default async function runScenario(game: Game) {
             CameraLockPriority.LockIfNotLocalPlayer;
           world.addEntity(newProjectile);
         }
-        const res = await newProjectile.onFireResult;
-        return res;
       };
       const wormEnt = world.addEntity(
         wormInstance.team.playerUserId === myUserId
