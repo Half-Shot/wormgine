@@ -7,5 +7,6 @@ export default {
   rootDir: "spec",
   "moduleNameMapper": {
     '^[@./a-zA-Z0-9$_-]+\\.(png|gif)$': '<rootDir>/test-utils/filemock.ts',
-  }
+  },
+  globalSetup: "./unit/setup.ts"
 };
