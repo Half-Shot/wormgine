@@ -45,9 +45,6 @@ export abstract class TimedExplosive<
   protected timer: number | undefined;
   protected hasExploded = false;
 
-  private fireResultFn!: (fireResult: WeaponFireResult[]) => void;
-  public onFireResult: Promise<WeaponFireResult[]>;
-
   priority = UPDATE_PRIORITY.NORMAL;
 
   constructor(
@@ -64,8 +61,6 @@ export abstract class TimedExplosive<
         ? Ticker.targetFPMS * opts.timerSecs * 1000
         : 0;
     }
-    // TODO: timeout.
-    this.onFireResult = new Promise((r) => (this.fireResultFn = r));
   }
 
   startTimer() {
@@ -101,11 +96,10 @@ export abstract class TimedExplosive<
         shrapnelMin: 15,
         hue: this.opts.explosionHue ?? 0xffffff,
         shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+        maxDamage: this.opts.maxDamage,
       },
       this.physObject.collider,
-      this.opts.ownerWorm,
     );
-    this.fireResultFn(result);
     this.destroy();
   }
 
@@ -125,7 +119,6 @@ export abstract class TimedExplosive<
       if (this.isSinking) {
         this.timer = 0;
         this.physObject.body.setRotation(0.15, false);
-        this.fireResultFn([WeaponFireResult.NoHit]);
       }
       return true;
     }

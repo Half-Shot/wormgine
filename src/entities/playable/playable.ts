@@ -18,6 +18,7 @@ import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../../consts";
 import { first, skip, Subscription } from "rxjs";
+import Logger from "../../log";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -30,6 +31,8 @@ const SELF_EXPLODE_MAX_DAMAGE = 25;
 export interface PlayableRecordedState extends RecordedEntityState {
   wormIdent: string;
 }
+
+const log = new Logger("Playable");
 
 /**
  * Entity that can be directly controlled by a player.
@@ -230,18 +233,18 @@ export abstract class PlayableEntity<
     radius: MetersValue,
     opts: OnDamageOpts,
   ): void {
+    const maxDamage = opts.maxDamage ?? 50;
     // TODO: Animate damage taken.
     const bodyTranslation = this.physObject.body.translation();
-    const forceMag =
-      radius.value / magnitude(sub(point, this.physObject.body.translation()));
-    const damage = Math.min(
-      opts.maxDamage ?? 100,
-      Math.round((forceMag / 20) * this.opts.damageMultiplier),
-    );
+    const distance = Math.max(1, Math.abs(magnitude(sub(point, this.physObject.body.translation()))));
+    const damage = maxDamage / distance;
+    const forceMag = (radius.value * 10) / (1/distance);
+    log.info("onDamage", opts.maxDamage, distance, "=>", damage);
     this.wormIdent.setHealth(this.wormIdent.health - damage);
     const force = mult(
       sub(point, bodyTranslation),
-      new Vector2(-forceMag, -forceMag),
+      // NOTE: Always positive Y axis?
+      new Vector2(-forceMag, Math.abs(forceMag)),
     );
     this.physObject.body.applyImpulse(force, true);
   }
