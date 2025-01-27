@@ -83,10 +83,6 @@ export class Game {
     staticController.bindInput();
   }
 
-  public goToMenu(winningTeams?: Team[]) {
-    this.pixiApp.destroy();
-    this.gameReactChannel.goToMenu(winningTeams);
-  }
 
   public async loadResources() {
     const assetPack = getAssets();

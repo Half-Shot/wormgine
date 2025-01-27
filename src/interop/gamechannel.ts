@@ -4,7 +4,12 @@ import type { Team } from "../logic/teams";
 import type { IWeaponCode, IWeaponDefiniton } from "../weapons/weapon";
 
 interface GoToMenuEvent {
-  winningTeams?: Team[];
+  winDetails?: WinDetails;
+}
+
+interface WinDetails {
+  winningTeams: Team[];
+  teams: Team[];
 }
 
 export type AmmoCount = [IWeaponDefiniton, number][];
@@ -21,8 +26,8 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
     super();
   }
 
-  public goToMenu(winningTeams?: Team[]) {
-    this.emit("goToMenu", { winningTeams });
+  public goToMenu(winDetails?: WinDetails) {
+    this.emit("goToMenu", { winDetails });
   }
 
   public openWeaponMenu(weapons: AmmoCount) {

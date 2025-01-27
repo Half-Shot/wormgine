@@ -313,7 +313,7 @@ export default async function runScenario(game: Game) {
       }
     });
 
-  combineLatest([gameState.roundState$, gameState.currentWorm$])
+  const roundStateSub = combineLatest([gameState.roundState$, gameState.currentWorm$])
     .pipe(
       filter(([roundState, worm]) => {
         if (roundState === RoundState.WaitingToBegin && !worm) {
@@ -370,6 +370,21 @@ export default async function runScenario(game: Game) {
               }),
               8000,
             );
+            game.pixiApp.ticker.remove(roundHandlerFn);
+            roundStateSub.unsubscribe();
+            let endOfGameFadeOut = 8000;
+            game.pixiApp.ticker.add((dt) => {
+              endOfGameFadeOut -= dt.deltaMS;
+              if (endOfGameFadeOut < 0) {
+                game.pixiApp.ticker.remove(roundHandlerFn);
+                game.gameReactChannel.goToMenu(
+                  {
+                    winningTeams: gameState.getActiveTeams(),
+                    teams: gameState.getTeams(),
+                  }
+                );
+              }
+            });
           } else {
             // Draw
             overlay.toaster.pushToast(templateRandomText(GameDrawText), 8000);
@@ -378,6 +393,6 @@ export default async function runScenario(game: Game) {
       }
     });
 
-  game.pixiApp.ticker.add((dt) => roundHandlerFn(dt));
+  game.pixiApp.ticker.add(roundHandlerFn);
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
 }
