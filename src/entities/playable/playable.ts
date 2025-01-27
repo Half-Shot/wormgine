@@ -236,9 +236,12 @@ export abstract class PlayableEntity<
     const maxDamage = opts.maxDamage ?? 50;
     // TODO: Animate damage taken.
     const bodyTranslation = this.physObject.body.translation();
-    const distance = Math.max(1, Math.abs(magnitude(sub(point, this.physObject.body.translation()))));
+    const distance = Math.max(
+      1,
+      Math.abs(magnitude(sub(point, this.physObject.body.translation()))),
+    );
     const damage = maxDamage / distance;
-    const forceMag = (radius.value * 10) / (1/distance);
+    const forceMag = (radius.value * 10) / (1 / distance);
     log.info("onDamage", opts.maxDamage, distance, "=>", damage);
     this.wormIdent.setHealth(this.wormIdent.health - damage);
     const force = mult(

@@ -4,7 +4,16 @@ import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
 import { BehaviorSubject, distinctUntilChanged, map, merge, skip } from "rxjs";
-import { EndTurnTookDamange, FireResultHitEnemy, FireResultHitOwnTeam, FireResultKilledEnemy, FireResultKilledOwnTeam, FireResultKilledSelf, FireResultMiss, templateRandomText } from "../text/toasts";
+import {
+  EndTurnTookDamange,
+  FireResultHitEnemy,
+  FireResultHitOwnTeam,
+  FireResultKilledEnemy,
+  FireResultKilledOwnTeam,
+  FireResultKilledSelf,
+  FireResultMiss,
+  templateRandomText,
+} from "../text/toasts";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -15,10 +24,10 @@ export interface GameRules {
 }
 
 interface RoundDamageDelta {
-  teamsDamaged: Set<string>,
-  teamsKilled: Set<string>,
-  wormsDamaged: Set<string>,
-  wormsKilled: Set<string>,
+  teamsDamaged: Set<string>;
+  teamsKilled: Set<string>;
+  wormsDamaged: Set<string>;
+  wormsKilled: Set<string>;
 }
 
 export enum RoundState {
@@ -125,25 +134,27 @@ export class GameState {
           if (health === 0) {
             this.roundDamageDelta?.teamsKilled.add(team.uuid);
           }
-          this.iterateRound()
+          this.iterateRound();
         });
         return [team.uuid, iTeam];
       }),
     );
-    const obs = [...this.teams.values()].flatMap(t => t.worms.map(w => w.health$.pipe(map(health => ({health, w})))));
-    merge(...obs).subscribe(({health, w}) => {
-        if (!this.roundDamageDelta) {
-          logger.warning("No round damage delta ready!");
-          return;
-        }
-        logger.info("Updating round health delta");
-        if (health === 0) {
-          this.roundDamageDelta.teamsKilled.add(w.team.uuid);
-        } else {
-          this.roundDamageDelta.teamsDamaged.add(w.team.uuid);
-          this.roundDamageDelta.wormsDamaged.add(w.uuid);
-        }
-      });
+    const obs = [...this.teams.values()].flatMap((t) =>
+      t.worms.map((w) => w.health$.pipe(map((health) => ({ health, w })))),
+    );
+    merge(...obs).subscribe(({ health, w }) => {
+      if (!this.roundDamageDelta) {
+        logger.warning("No round damage delta ready!");
+        return;
+      }
+      logger.info("Updating round health delta");
+      if (health === 0) {
+        this.roundDamageDelta.teamsKilled.add(w.team.uuid);
+      } else {
+        this.roundDamageDelta.teamsDamaged.add(w.team.uuid);
+        this.roundDamageDelta.wormsDamaged.add(w.uuid);
+      }
+    });
     if (this.teams.size !== teams.length) {
       throw Error("Team had duplicate uuid, cannot start");
     }
@@ -235,21 +246,20 @@ export class GameState {
     this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
   }
 
-  public getToastForRound(): string|undefined {
+  public getToastForRound(): string | undefined {
     if (!this.roundDamageDelta) {
       return;
     }
-    const ownTeam = this.currentTeam.value?.uuid!;
-    const ownWorm = this.currentWorm.value?.uuid!;
+    if (!this.currentTeam.value || !this.currentWorm.value) {
+      throw Error("Expected team to be current for getToastForRound");
+    }
+    const ownTeam = this.currentTeam.value.uuid;
+    const ownWorm = this.currentWorm.value.uuid;
     // Determine how much damage the worm has done.
     // Weapon has hit.
     let randomTextSet: string[];
-    const {
-      teamsDamaged,
-      teamsKilled,
-      wormsDamaged,
-      wormsKilled,
-    } = this.roundDamageDelta;
+    const { teamsDamaged, teamsKilled, wormsDamaged, wormsKilled } =
+      this.roundDamageDelta;
     if (teamsKilled.has(ownTeam)) {
       randomTextSet = FireResultKilledOwnTeam;
     } else if (wormsKilled.has(ownWorm)) {
@@ -268,14 +278,14 @@ export class GameState {
       randomTextSet = FireResultMiss;
     }
     return templateRandomText(randomTextSet, {
-      WormName: this.currentWorm.value!.name,
-      TeamName: this.currentTeam.value!.name,
+      WormName: this.currentWorm.value.name,
+      TeamName: this.currentTeam.value.name,
     });
   }
 
   public advanceRound():
-    | { nextTeam: TeamInstance; nextWorm: WormInstance, toast?: string }
-    | { winningTeams: TeamInstance[], toast?: string } {
+    | { nextTeam: TeamInstance; nextWorm: WormInstance; toast?: string }
+    | { winningTeams: TeamInstance[]; toast?: string } {
     if (this.roundState.value !== RoundState.Finished) {
       throw Error(
         `Expected round to be Finished for advanceRound(), but got ${this.roundState.value}`,
@@ -292,7 +302,7 @@ export class GameState {
         wormsDamaged: new Set(),
         teamsKilled: new Set(),
         wormsKilled: new Set(),
-      }
+      };
 
       // 5 seconds preround
       this.stateIteration++;
@@ -357,7 +367,7 @@ export class GameState {
       wormsDamaged: new Set(),
       teamsKilled: new Set(),
       wormsKilled: new Set(),
-    }
+    };
     return {
       nextTeam: this.currentTeam.value,
       // We should have already validated that this team has healthy worms.

@@ -221,12 +221,10 @@ export default async function runScenario(game: Game) {
       endOfGameFadeOut -= dt.deltaMS;
       if (endOfGameFadeOut < 0) {
         game.pixiApp.ticker.remove(roundHandlerFn);
-        game.gameReactChannel.goToMenu(
-          {
-            winningTeams: gameState.getActiveTeams(),
-            teams: gameState.getTeams(),
-          }
-        );
+        game.gameReactChannel.goToMenu({
+          winningTeams: gameState.getActiveTeams(),
+          teams: gameState.getTeams(),
+        });
       }
       return;
     }
@@ -259,17 +257,15 @@ export default async function runScenario(game: Game) {
     if (endOfRoundWaitDuration === null) {
       const nextState = gameState.advanceRound();
       if (nextState.toast) {
-        overlay.toaster.pushToast(
-          nextState.toast,
-          3500,
-        );
+        overlay.toaster.pushToast(nextState.toast, 3500);
       }
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {
           camera.snapToPosition(
             bitmapPosition.toScreenPoint(),
             CameraLockPriority.SuggestedLockLocal,
-          true);
+            true,
+          );
           overlay.toaster.pushToast(
             templateRandomText(TeamWinnerText, {
               TeamName: nextState.winningTeams.map((t) => t.name).join(", "),

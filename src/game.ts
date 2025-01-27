@@ -5,7 +5,6 @@ import { GameDebugOverlay } from "./overlays/debugOverlay";
 import { GameWorld } from "./world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { readAssetsForEntities } from "./entities";
-import { Team } from "./logic/teams";
 import { readAssetsForWeapons } from "./weapons";
 import { WindDial } from "./overlays/windDial";
 import { RunningNetGameInstance } from "./net/client";
@@ -82,7 +81,6 @@ export class Game {
     // TODO: Bit of a hack?
     staticController.bindInput();
   }
-
 
   public async loadResources() {
     const assetPack = getAssets();

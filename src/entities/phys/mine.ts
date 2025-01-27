@@ -1,6 +1,6 @@
 import { Container, Sprite, Text, Texture, Ticker } from "pixi.js";
 import { TimedExplosive } from "./timedExplosive";
-import { IPhysicalEntity, OnDamageOpts } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";
 import {
@@ -190,8 +190,11 @@ export class Mine extends TimedExplosive {
   onDamage(point: Vector2, radius: MetersValue): void {
     // TODO: Animate damage taken.
     const bodyTranslation = this.physObject.body.translation();
-    const distance = Math.max(1, Math.abs(magnitude(sub(point, this.physObject.body.translation()))));
-    const forceMag = (radius.value * 10) / (1/distance);
+    const distance = Math.max(
+      1,
+      Math.abs(magnitude(sub(point, this.physObject.body.translation()))),
+    );
+    const forceMag = (radius.value * 10) / (1 / distance);
     const force = mult(
       sub(point, bodyTranslation),
       // NOTE: Always positive Y axis?

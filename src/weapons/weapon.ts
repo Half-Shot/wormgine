@@ -1,4 +1,4 @@
-import { IWeaponEntity } from "../entities/entity";
+import { IPhysicalEntity } from "../entities/entity";
 import { Container, PointData, Texture } from "pixi.js";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
@@ -102,6 +102,6 @@ export interface IWeaponDefiniton {
     world: GameWorld,
     worm: Worm,
     opts: FireOpts,
-  ) => IWeaponEntity;
+  ) => IPhysicalEntity | void;
   loadAssets?: (assetPack: AssetPack) => void;
 }

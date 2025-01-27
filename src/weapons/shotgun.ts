@@ -1,10 +1,5 @@
 import { Container, Point } from "pixi.js";
-import {
-  FireOpts,
-  IWeaponCode,
-  IWeaponDefiniton,
-  WeaponFireResult,
-} from "./weapon";
+import { FireOpts, IWeaponCode, IWeaponDefiniton } from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import { Coordinate, MetersValue } from "../utils";
@@ -47,7 +42,7 @@ const WeaponShotgun: IWeaponDefiniton = {
       worm.collider,
     );
     if (hit) {
-      const result = handleDamageInRadius(
+      handleDamageInRadius(
         world,
         parent,
         hit.hitLoc.toWorldVector(),
@@ -59,15 +54,8 @@ const WeaponShotgun: IWeaponDefiniton = {
           playSound: false,
         },
         undefined,
-        worm.wormIdent,
       );
-      return {
-        onFireResult: Promise.resolve(result),
-      };
     }
-    return {
-      onFireResult: Promise.resolve([WeaponFireResult.NoHit]),
-    };
   },
 };
 

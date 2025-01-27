@@ -1,6 +1,6 @@
 import { Container, Sprite, Text, Texture, Ticker } from "pixi.js";
 import { TimedExplosive } from "./timedExplosive";
-import { IPhysicalEntity, OnDamageOpts } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";

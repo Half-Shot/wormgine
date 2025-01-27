@@ -1,7 +1,6 @@
 import { Collider, Vector2 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "./coodinate";
 import { GameWorld, PIXELS_PER_METER } from "../world";
-import { WeaponFireResult } from "../weapons/weapon";
 import { Explosion, ExplosionsOptions } from "../entities/explosion";
 import { Container } from "pixi.js";
 import { OnDamageOpts } from "../entities/entity";
@@ -22,9 +21,7 @@ export function handleDamageInRadius(
     radius,
     ignoreCollider,
   );
-  const fireResults = new Set<WeaponFireResult>();
   for (const element of explosionCollidesWith) {
-    console.log("handleDamageInRadius", element);
     element.onDamage?.(point, radius, opts);
   }
   gameWorld.addEntity(

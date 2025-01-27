@@ -5,12 +5,11 @@ import {
   ColorSource,
   Container,
 } from "pixi.js";
-import { IPhysicalEntity, IWeaponEntity } from "../entity";
+import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../../utils/coodinate";
-import { WeaponFireResult } from "../../weapons/weapon";
 import { WormInstance } from "../../logic/teams";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
@@ -37,11 +36,8 @@ export interface TimedExplosiveRecordedState extends RecordedEntityState {
  * must include their own timer.
  */
 export abstract class TimedExplosive<
-    T extends TimedExplosiveRecordedState = TimedExplosiveRecordedState,
-  >
-  extends PhysicsEntity<T>
-  implements IWeaponEntity
-{
+  T extends TimedExplosiveRecordedState = TimedExplosiveRecordedState,
+> extends PhysicsEntity<T> {
   protected timer: number | undefined;
   protected hasExploded = false;
 
@@ -86,7 +82,7 @@ export abstract class TimedExplosive<
     }
     this.hasExploded = true;
     this.timer = undefined;
-    const result = handleDamageInRadius(
+    handleDamageInRadius(
       this.gameWorld,
       this.parent,
       this.body.translation(),

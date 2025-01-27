@@ -3,7 +3,6 @@ import {
   FireOpts,
   IWeaponCode,
   IWeaponDefiniton as IWeaponDefinition,
-  WeaponFireResult,
 } from "../../weapons/weapon";
 import Controller, { InputKind } from "../../input";
 import {
@@ -31,12 +30,6 @@ import {
   EndTurnFallDamage,
   EndTurnTimerElapsed,
   EndTurnTookDamange,
-  FireResultHitEnemy,
-  FireResultHitOwnTeam,
-  FireResultKilledEnemy,
-  FireResultKilledOwnTeam,
-  FireResultKilledSelf,
-  FireResultMiss,
   templateRandomText,
   TurnStartText,
   WeaponTimerText,
