@@ -136,7 +136,6 @@ export class GameStateOverlay {
       this.bottomOfScreenY -
       (teamSeperationHeight * (activeTeams.length - 2)) / 2;
     for (const team of activeTeams) {
-      console.log(team.name, team.health);
       if (this.visibleTeamHealth[team.uuid] === undefined) {
         this.visibleTeamHealth[team.uuid] = team.health;
       }

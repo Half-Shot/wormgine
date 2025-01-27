@@ -48,5 +48,5 @@ export interface IPhysicalEntity extends IGameEntity {
 }
 
 export interface IWeaponEntity {
-  onFireResult: Promise<WeaponFireResult[]>;
+  
 }

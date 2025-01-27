@@ -74,7 +74,7 @@ export type FireFn = (
   worm: Worm,
   selectedWeapon: IWeaponDefinition,
   opts: FireOpts,
-) => Promise<WeaponFireResult[]>;
+) => void;
 
 interface PerRoundState {
   shotsTaken: number;
@@ -492,6 +492,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     radius: MetersValue,
     opts: OnDamageOpts,
   ): void {
+    logger.info("onDamage");
     super.onDamage(point, radius, opts);
     if (this.state.isPlaying) {
       this.state.transition(InnerWormState.Inactive);
@@ -529,39 +530,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.state.transition(InnerWormState.InactiveWaiting);
     }
 
-    this.onFireWeapon(this, this.currentWeapon, opts).then((fireResult) => {
-      // Weapon has hit.
-      this.turnEndedReason = EndTurnReason.FiredWeapon;
-      let randomTextSet: string[];
-      if (fireResult.includes(WeaponFireResult.KilledOwnTeam)) {
-        randomTextSet = FireResultKilledOwnTeam;
-      } else if (fireResult.includes(WeaponFireResult.KilledSelf)) {
-        randomTextSet = FireResultKilledSelf;
-      } else if (fireResult.includes(WeaponFireResult.KilledEnemy)) {
-        randomTextSet = FireResultKilledEnemy;
-      } else if (fireResult.includes(WeaponFireResult.HitEnemy)) {
-        randomTextSet = FireResultHitEnemy;
-      } else if (fireResult.includes(WeaponFireResult.HitOwnTeam)) {
-        randomTextSet = FireResultHitOwnTeam;
-      } else if (fireResult.includes(WeaponFireResult.HitSelf)) {
-        // Not required, will be caught by turn end.
-        // randomTextSet = FireResultHitSelf;
-        return;
-      } else if (fireResult.includes(WeaponFireResult.NoHit)) {
-        randomTextSet = FireResultMiss;
-      } else {
-        // Unknown.
-        return;
-      }
-
-      this.toaster?.pushToast(
-        templateRandomText(randomTextSet, {
-          WormName: this.wormIdent.name,
-          TeamName: this.wormIdent.team.name,
-        }),
-        2000,
-      );
-    });
+    this.onFireWeapon(this, this.currentWeapon, opts);
+    this.turnEndedReason = EndTurnReason.FiredWeapon;
     this.updateTargettingGfx();
   }
 

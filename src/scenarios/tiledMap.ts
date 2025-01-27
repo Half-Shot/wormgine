@@ -171,8 +171,6 @@ export default async function runScenario(game: Game) {
                 CameraLockPriority.LockIfNotLocalPlayer;
               world.addEntity(newProjectile);
             }
-            const res = await newProjectile.onFireResult;
-            return res;
           },
           overlay.toaster,
           stateRecorder,
@@ -223,7 +221,12 @@ export default async function runScenario(game: Game) {
       endOfGameFadeOut -= dt.deltaMS;
       if (endOfGameFadeOut < 0) {
         game.pixiApp.ticker.remove(roundHandlerFn);
-        game.goToMenu(gameState.getActiveTeams());
+        game.gameReactChannel.goToMenu(
+          {
+            winningTeams: gameState.getActiveTeams(),
+            teams: gameState.getTeams(),
+          }
+        );
       }
       return;
     }
@@ -249,10 +252,24 @@ export default async function runScenario(game: Game) {
         return;
       }
     }
+    if (world.areEntitiesMoving()) {
+      // Don't advance while entities are moving.
+      return;
+    }
     if (endOfRoundWaitDuration === null) {
       const nextState = gameState.advanceRound();
+      if (nextState.toast) {
+        overlay.toaster.pushToast(
+          nextState.toast,
+          3500,
+        );
+      }
       if ("winningTeams" in nextState) {
         if (nextState.winningTeams.length) {
+          camera.snapToPosition(
+            bitmapPosition.toScreenPoint(),
+            CameraLockPriority.SuggestedLockLocal,
+          true);
           overlay.toaster.pushToast(
             templateRandomText(TeamWinnerText, {
               TeamName: nextState.winningTeams.map((t) => t.name).join(", "),
@@ -288,6 +305,5 @@ export default async function runScenario(game: Game) {
   };
 
   game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
-
   game.pixiApp.ticker.add(roundHandlerFn);
 }
