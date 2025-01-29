@@ -117,13 +117,14 @@ function mainMenu(
 const variants = {
   enter: (direction: number) => {
     return {
-      x: direction > 0 ? "100vw" : "-100vw",
-      opacity: 1,
+      x: direction > 0 ? "50vw" : "-50vw",
+      opacity: 0,
       transition: { duration: 0.75 }
     };
   },
   center: {
     zIndex: 1,
+    scape: 1,
     x: 0,
     opacity: 1,
     transition: { duration: 0.75 }
@@ -131,8 +132,8 @@ const variants = {
   exit: (direction: number) => {
     return {
       zIndex: 0,
-      x: direction < 0 ? "100vw" : "-100vw",
-      opacity: 1,
+      x: direction < 0 ? "50vw" : "-50vw",
+      opacity: 0,
       transition: { duration: 0.75 }
     };
   }
