@@ -66,7 +66,6 @@ export class RemoteWorm extends Worm {
 
   replayFire(fireOpts: FireOpts) {
     this.onBeginFireWeapon();
-    console.log("fireOpts", fireOpts);
     this.remoteWeaponFireOpts = fireOpts;
   }
 

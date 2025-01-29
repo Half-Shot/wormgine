@@ -85,11 +85,8 @@ export class Game {
   
     this.screenSize$ = merge(
       of({}),
-      fromEvent(globalThis, 'resize').pipe(debounceTime(33))
+      fromEvent(globalThis, 'resize').pipe(debounceTime(5))
     ).pipe(map((v) => ({width: pixiApp.screen.width, height: pixiApp.screen.height})));
-  
-    this.screenSize$.subscribe((v => logger.debug("New screen size", v)))
-    
   }
 
   public async loadResources() {

@@ -201,14 +201,6 @@ export default function TeamEditorMenu() {
       uuid: crypto.randomUUID(),
     } satisfies StoredTeam;
     setLocalTeams((t: StoredTeam[]) => [...t, newTeam]);
-    console.log({
-      name: newTeamName,
-      worms: Array.from({ length: MAX_WORM_NAMES }).map(
-        (_, i) => `Worm #${i + 1}`,
-      ),
-      lastModified: Date.now(),
-      uuid: crypto.randomUUID(),
-    } satisfies StoredTeam);
     setSelectedTeam(teamLength);
   }, [localTeams]);
 

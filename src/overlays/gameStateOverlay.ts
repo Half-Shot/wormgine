@@ -63,9 +63,6 @@ export class GameStateOverlay {
       ),
     );
 
-    screenSize.subscribe(v => {
-      this.gfx.position.set(v.width / 2, (v.height / 10) * 8.75);
-    })
 
     this.gfx = new Graphics();
     this.stage.addChild(this.toaster.container);
@@ -90,6 +87,9 @@ export class GameStateOverlay {
         );
       }
     });
+    screenSize.subscribe(({width, height}) => {
+      this.gfx.position.set(width / 2, (height / 10) * 8.75);
+    })
   }
 
   private update(dt: Ticker) {

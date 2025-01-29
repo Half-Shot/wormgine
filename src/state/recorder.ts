@@ -89,7 +89,6 @@ export class StateRecorder {
     } satisfies StateRecordWormSelectWeapon);
   }
   public recordGameState(data: StateRecordWormGameState["data"]) {
-    console.log("Recording game state", data.round_state);
     this.store.writeLine({
       index: ++this.recordIndex,
       data: data,
