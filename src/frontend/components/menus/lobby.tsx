@@ -25,7 +25,7 @@ const MAX_WORMS = 2;
 const MIN_PLAYERS = 1;
 
 interface Props {
-  client: NetGameClient;
+  client?: NetGameClient;
   onOpenIngame: (gameInstance: IRunningGameInstance) => void;
   exitToMenu: () => void;
   gameRoomId: string;
@@ -288,7 +288,12 @@ function LocalLobby({ onOpenIngame, exitToMenu }: Omit<Props, "client">) {
   );
 }
 
-function NetworkLobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
+function NetworkLobby({
+  client,
+  gameRoomId,
+  onOpenIngame,
+  exitToMenu,
+}: Props & { client: NetGameClient }) {
   const [error, setError] = useState<string>();
   const [gameInstance, setGameInstance] = useState<IGameInstance>();
 
@@ -409,5 +414,8 @@ export function Lobby(props: Props) {
       />
     );
   }
-  return <NetworkLobby {...props} />;
+  if (!props.client) {
+    return <p>Waiting for network connection...</p>;
+  }
+  return <NetworkLobby {...props} client={props.client} />;
 }

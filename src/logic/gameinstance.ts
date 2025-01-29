@@ -73,6 +73,7 @@ export class LocalGameInstance implements IRunningGameInstance {
       ammoSchema: DefaultWeaponSchema,
     } as GameRules);
     this.proposedRules = this._rules.asObservable();
+    // TODO: If the player doesn't have any teams, bake some in for them.
     this._proposedTeams = new BehaviorSubject({});
     this.proposedTeams = this._proposedTeams.pipe(map((v) => Object.values(v)));
   }

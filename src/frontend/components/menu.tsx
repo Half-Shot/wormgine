@@ -202,9 +202,6 @@ export default function Menu({
       throw Error("Current Lobby ID must be set!");
     }
 
-    if (!client) {
-      return <p>Waiting for network connection...</p>;
-    }
     // TODO: Go back needs to exit game?
     menu = (
       <SubMenu key={GameMenu.Lobby}>

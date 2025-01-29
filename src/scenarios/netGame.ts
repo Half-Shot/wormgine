@@ -327,8 +327,10 @@ export default async function runScenario(game: Game) {
         world instanceof NetGameWorld
       ) {
         world.setBroadcasting(true);
-      } else if (roundState === RoundState.Finished &&
-        world instanceof NetGameWorld) {
+      } else if (
+        roundState === RoundState.Finished &&
+        world instanceof NetGameWorld
+      ) {
         world.setBroadcasting(false);
       }
       log.info("Round state sub fired for", roundState, worm);
