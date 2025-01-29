@@ -5,6 +5,7 @@ import {
   Text,
   DEG_TO_RAD,
   Graphics,
+  ViewContainer,
 } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
@@ -57,7 +58,7 @@ export abstract class PlayableEntity<
   private readonly healthSub: Subscription;
 
   constructor(
-    sprite: Sprite,
+    sprite: ViewContainer,
     body: RapierPhysicsObject,
     world: GameWorld,
     protected parent: Viewport,

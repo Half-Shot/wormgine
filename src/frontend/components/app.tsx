@@ -12,6 +12,7 @@ import {
   IRunningGameInstance,
   LocalGameInstance,
 } from "../../logic/gameinstance";
+import { CameraLockPriority } from "../../camera";
 
 interface LoadGameProps {
   scenario: string;
@@ -38,10 +39,12 @@ export function App() {
       setLobbyGameRoomId(gId);
     } else if (preStateConfig) {
       const [scenario, level] = preStateConfig.split(";");
+      const gameInstance = new LocalGameInstance();
+      gameInstance.startGame();
       setGameState({
         scenario,
         level,
-        gameInstance: new LocalGameInstance(),
+        gameInstance,
       });
     }
   }, []);

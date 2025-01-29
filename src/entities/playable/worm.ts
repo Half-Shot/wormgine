@@ -1,4 +1,4 @@
-import { Graphics, Point, Sprite, Texture } from "pixi.js";
+import { AnimatedSprite, Graphics, Point, Sprite, Texture, TilingSprite, UPDATE_PRIORITY, VideoSource } from "pixi.js";
 import {
   FireOpts,
   IWeaponCode,
@@ -84,6 +84,9 @@ export interface WormRecordedState extends PlayableRecordedState {
   weapon: IWeaponCode;
 }
 
+const ANIM_FRAME_RATE = 2;
+const TILES_PER_SHEET = 0;
+
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
@@ -98,12 +101,16 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   };
 
   public static readAssets(assets: AssetPack) {
-    Worm.texture = assets.textures.grenade;
+    Worm.texture = assets.textures.player_koboldStatic;
+    Worm.idleAnim = assets.textures.player_koboldIdle;
   }
 
   private static texture: Texture;
+  private static idleAnim: Texture;
   private static impactDamageMultiplier = 0.75;
   private static minImpactForDamage = 12;
+  private tileCounter = 0;
+  private timeSinceLastAnim = 0;
 
   protected fireWeaponDuration = 0;
   private currentWeapon: IWeaponDefinition = WeaponBazooka;
@@ -184,13 +191,22 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     private readonly toaster?: Toaster,
     private readonly recorder?: StateRecorder,
   ) {
-    const sprite = new Sprite(Worm.texture);
-    sprite.scale.set(0.5, 0.5);
+    console.log(
+      Worm.idleAnim
+    )
+    const sprite = new TilingSprite({
+      texture: Worm.idleAnim,
+      width: 96,
+      height: 144,
+      tileScale: {x: 1, y: 1},
+      tilePosition: {x: 0, y: 0}
+    });
+    sprite.scale.set(0.33,0.33);
     sprite.anchor.set(0.5, 0.5);
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
-        sprite.width / (PIXELS_PER_METER * 2),
-        sprite.height / (PIXELS_PER_METER * 2),
+        (sprite.width*0.33) / (PIXELS_PER_METER * 2),
+        (sprite.height*0.33) / (PIXELS_PER_METER * 2),
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
@@ -201,6 +217,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
     );
+    sprite.tint = teamGroupToColorSet(wormIdent.team.group).fg;
     super(sprite, body, world, parent, wormIdent, {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
@@ -297,7 +314,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   onJump() {
     this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Jump);
     this.state.transition(InnerWormState.InMotion);
-    this.body.applyImpulse({ x: this.facingRight ? 5 : -5, y: -8 }, true);
+    this.body.applyImpulse({ x: this.facingRight ? 8 : -8, y: -15 }, true);
   }
 
   onBackflip() {
@@ -306,7 +323,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.wormIdent.uuid,
       StateWormAction.Backflip,
     );
-    this.body.applyImpulse({ x: this.facingRight ? -3 : 3, y: -13 }, true);
+    this.body.applyImpulse({ x: this.facingRight ? -6 : 6, y: -25 }, true);
   }
 
   onInputBegin = (
@@ -422,6 +439,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         this.fireAngle = Math.PI * 2 - this.fireAngle;
       }
       this.facingRight = !this.facingRight;
+      this.sprite.scale.x = this.facingRight ? 0.33 : -0.33;
     }
 
     this.state.transition(
@@ -633,6 +651,19 @@ export class Worm extends PlayableEntity<WormRecordedState> {
 
   update(dt: number, dMs: number): void {
     super.update(dt, dMs);
+    this.timeSinceLastAnim += dMs;
+    if (this.timeSinceLastAnim > 30) {
+      this.timeSinceLastAnim = 0;
+      this.tileCounter += 1;
+      const tile = (this.sprite as TilingSprite);
+      if (this.tileCounter % 10 === 0) {
+        this.tileCounter = 0;
+        tile.tilePosition.x += 0;
+        tile.tilePosition.y += tile.height;
+      } else {
+        tile.tilePosition.x += tile.width;
+      }
+    }
     if (this.sprite.destroyed) {
       return;
     }

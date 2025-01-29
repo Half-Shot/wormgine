@@ -34,6 +34,7 @@ async function main() {
         const extName = path.extname(element);
         const camelCaseName = (prefix ? prefix + "_" : "") + element.slice(0, -extName.length).split("_").map(camelCaseString).join('');
         switch(extName) {
+            case ".webm":
             case ".png":
                 importTextures += `import ${camelCaseName}Tex from "${root}${element}";\n`
                 interfaceTextures += `    ${camelCaseName}: Texture;\n`
@@ -64,6 +65,9 @@ async function main() {
     }
     for (const element of await readdir(join(assetLocation, "levels"))) {
         parseDirectory("./levels/", element, "levels");
+    }
+    for (const element of await readdir(join(assetLocation, "player"))) {
+        parseDirectory("./player/", element, "player");
     }
     console.log(MANIFEST_TEMPLATE
         .replace("$IMPORT_TEXTURES", importTextures)
