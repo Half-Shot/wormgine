@@ -2,6 +2,7 @@ import { Container, Graphics, Texture, TilingSprite } from "pixi.js";
 import { applyGenericBoxStyle } from "../mixins/styles";
 import { GameWorld, MAX_WIND } from "../world";
 import { AssetTextures } from "../assets/manifest";
+import { Observable } from "rxjs";
 
 /**
  * Displays toast at the top of the screen during gameplay.
@@ -20,14 +21,13 @@ export class WindDial {
   private readonly windY: number;
 
   constructor(
-    x: number,
-    y: number,
+    private readonly position: Observable<{x: number, y: number}>,
     private world: GameWorld,
   ) {
     this.gfx = new Graphics({});
 
-    this.windX = x + 14;
-    this.windY = y + 12;
+    this.windX = 14;
+    this.windY = 12;
     this.windScroller = new TilingSprite({
       texture: WindDial.texture,
       width: 0,
@@ -43,6 +43,9 @@ export class WindDial {
     });
     this.container = new Container({});
     this.container.addChild(this.gfx, this.windScroller);
+    this.position.subscribe((pos) => {
+      this.container.position.set(pos.x, pos.y);
+    })
   }
 
   public update() {

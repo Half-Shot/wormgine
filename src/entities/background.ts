@@ -1,7 +1,7 @@
 import {
   ColorSource,
   Container,
-  Geometry,
+  FillGradient,
   Graphics,
   Mesh,
   Point,
@@ -9,12 +9,12 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
-import { GradientShader } from "../shaders";
 import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
 import { Coordinate } from "../utils";
 import globalFlags from "../flags";
 import { GameWorld } from "../world";
+import { Observable } from "rxjs";
 
 interface RainParticle {
   position: Point;
@@ -32,18 +32,14 @@ const RAINDROP_COUNT = 350;
  */
 export class Background implements IGameEntity {
   static create(
-    viewWidth: number,
-    viewHeight: number,
+    screenSize: Observable<{width: number, height: number}>,
     viewport: Viewport,
-    color: [number, number, number, number],
     terrain: BitmapTerrain,
     world: GameWorld,
   ): Background {
     return new Background(
-      viewWidth,
-      viewHeight,
+      screenSize,
       viewport,
-      color,
       terrain,
       world,
     );
@@ -53,58 +49,41 @@ export class Background implements IGameEntity {
   private rainColor: ColorSource = "rgba(100,100,100,0.33)";
   priority = UPDATE_PRIORITY.LOW;
 
-  private gradientMesh: Mesh<Geometry, Shader>;
+  private gradientMesh: Graphics;
 
   private rainGraphic = new Graphics();
   private rainParticles: RainParticle[] = [];
 
   private constructor(
-    viewWidth: number,
-    viewHeight: number,
+    private readonly screenSize: Observable<{width: number, height: number}>,
     private viewport: Viewport,
-    color: [number, number, number, number],
     private readonly terrain: BitmapTerrain,
     private readonly world: GameWorld,
   ) {
-    const halfViewWidth = viewWidth / 2;
-    const halfViewHeight = viewHeight / 2;
-    const geometry = new Geometry({
-      attributes: {
-        aVertexPosition: [
-          -halfViewWidth,
-          -halfViewHeight, // x, y
-          halfViewWidth,
-          -halfViewHeight, // x, y
-          halfViewWidth,
-          halfViewHeight,
-          -halfViewWidth,
-          halfViewHeight,
-        ], // x, y
-      },
-      indexBuffer: [0, 1, 2, 0, 2, 3],
-    });
-    this.gradientMesh = new Mesh({
-      geometry,
-      shader: new Shader({
-        glProgram: GradientShader,
-        resources: {
-          uniforms: {
-            uStartColor: {
-              value: new Float32Array(color.map((v) => v / 255)),
-              type: "vec4<f32>",
-            },
-          },
-        },
-      }),
+    this.gradientMesh = new Graphics();
+    screenSize.subscribe(({width,height}) => {
+      this.gradientMesh.clear();
+      const halfViewWidth = width / 2;
+      const halfViewHeight = height / 2;
+      const gradient = new FillGradient(0,-halfViewWidth,0,height);
+      gradient.addColorStop(0, 'rgba(3, 0, 51, 0.9)');
+      gradient.addColorStop(1, 'rgba(39, 0, 5, 0.9)');
+      this.gradientMesh.rect(-halfViewWidth, -halfViewHeight, width, height);
+      this.gradientMesh.fill(gradient);
+      this.gradientMesh.position.set(halfViewWidth, halfViewHeight);
+      this.rainGraphic.position.set(0, 0);
+      // Create some rain
+      const rainCount = Math.ceil(RAINDROP_COUNT * (width / 1920));
+      const rainDelta = rainCount - this.rainParticles.length;
+      if (rainDelta > 0) {
+        for (let rainIndex = 0; rainIndex < rainDelta; rainIndex += 1) {
+          this.addRainParticle();
+        }
+      } else {
+        this.rainParticles.splice(0, Math.abs(rainDelta));
+      }
     });
 
-    this.gradientMesh.position.set(halfViewWidth, halfViewHeight);
-    this.rainGraphic.position.set(0, 0);
-    // Create some rain
-    const rainCount = Math.ceil(RAINDROP_COUNT * (viewWidth / 1920));
-    for (let rainIndex = 0; rainIndex < rainCount; rainIndex += 1) {
-      this.addRainParticle();
-    }
   }
 
   addRainParticle() {

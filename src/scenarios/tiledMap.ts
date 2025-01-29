@@ -93,10 +93,8 @@ export default async function runScenario(game: Game) {
 
   const bg = await world.addEntity(
     Background.create(
-      game.viewport.screenWidth,
-      game.viewport.screenHeight,
+      game.screenSize$,
       game.viewport,
-      [20, 21, 50, 35],
       terrain,
       world,
     ),
@@ -110,8 +108,7 @@ export default async function runScenario(game: Game) {
     game.pixiApp.stage,
     gameState,
     world,
-    game.viewport.screenWidth,
-    game.viewport.screenHeight,
+    game.screenSize$,
   );
 
   const waterLevel =

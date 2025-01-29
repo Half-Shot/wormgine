@@ -1,5 +1,6 @@
 import { ColorSource, Graphics, Container, Ticker, Text } from "pixi.js";
 import { DefaultTextStyle, applyGenericBoxStyle } from "../mixins/styles";
+import { Observable } from "rxjs";
 
 interface Toast {
   text: string;
@@ -20,10 +21,8 @@ export class Toaster {
   public readonly container: Container;
 
   constructor(
-    private readonly screenWidth: number,
-    private readonly screenHeight: number,
+      screenSize: Observable<{width: number, height: number}>,
   ) {
-    const topY = this.screenHeight / 20;
     this.container = new Container();
     this.gfx = new Graphics();
     this.text = new Text({
@@ -34,9 +33,12 @@ export class Toaster {
         align: "center",
       },
     });
-    this.text.position.set(this.screenWidth / 2, topY);
     this.text.anchor.set(0.5, 0.5);
     this.container.addChild(this.gfx, this.text);
+    screenSize.subscribe((size) => {
+      const topY = size.height / 20;
+      this.container.position.set(size.width / 2, topY);
+    })
   }
 
   public update(dt: Ticker) {
@@ -51,12 +53,9 @@ export class Toaster {
         this.text.style.fill = newToast.color;
         this.toastTime = newToast.timer;
         this.currentToastIsInterruptable = newToast.interruptable;
-        this.gfx.position.set(
-          this.screenWidth / 2 - this.text.width / 2 - 6,
-          this.screenHeight / 20 - 16,
-        );
+        const totalWidth = this.text.width + 6;
         applyGenericBoxStyle(this.gfx)
-          .roundRect(0, 0, this.text.width + 12, this.text.height, 4)
+          .roundRect(-(totalWidth/2) - 3, -12, totalWidth+6, this.text.height-4, 4)
           .stroke()
           .fill();
       }

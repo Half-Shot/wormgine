@@ -120,8 +120,7 @@ export default async function runScenario(game: Game) {
     game.pixiApp.stage,
     gameState,
     world,
-    game.viewport.screenWidth,
-    game.viewport.screenHeight,
+    game.screenSize$,
   );
 
   let toastCounter = 0;

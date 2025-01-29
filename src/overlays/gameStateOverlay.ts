@@ -14,7 +14,7 @@ import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../consts";
 import Logger from "../log";
-import { combineLatest, first, map } from "rxjs";
+import { combineLatest, first, map, Observable } from "rxjs";
 import { RoundTimer } from "./roundTimer";
 
 const logger = new Logger("GameStateOverlay");
@@ -33,7 +33,6 @@ export class GameStateOverlay {
   public readonly toaster: Toaster;
   private readonly winddial: WindDial;
   private readonly roundTimer: RoundTimer;
-  private readonly bottomOfScreenY;
   private readonly teamFlagTextures: Record<string, Texture> = {};
 
   constructor(
@@ -41,25 +40,32 @@ export class GameStateOverlay {
     private readonly stage: Container,
     private readonly gameState: GameState,
     private readonly gameWorld: GameWorld,
-    private readonly screenWidth: number,
-    private readonly screenHeight: number,
+    private readonly screenSize: Observable<{width: number, height: number}>,
   ) {
-    this.bottomOfScreenY = (this.screenHeight / 10) * 8.75;
+    this.toaster = new Toaster(this.screenSize);
 
-    this.toaster = new Toaster(screenWidth, screenHeight);
     this.winddial = new WindDial(
-      (this.screenWidth / 30) * 26,
-      this.bottomOfScreenY,
+      screenSize.pipe(map(({width, height}) => ({
+        x: (width / 30) * 26,
+        y: (height / 10) * 8.75
+      }))),
       this.gameWorld,
     );
+  
     this.roundTimer = new RoundTimer(
-      this.screenWidth / 30 + 14,
-      this.bottomOfScreenY + 12,
+      screenSize.pipe(map(({width, height}) => ({
+        x: (width / 30),
+        y: (height / 10) * 8.75
+      }))),
       this.gameState.remainingRoundTimeSeconds$,
       this.gameState.currentTeam$.pipe(
         map((t) => t && teamGroupToColorSet(t.group)),
       ),
     );
+
+    screenSize.subscribe(v => {
+      this.gfx.position.set(v.width / 2, (v.height / 10) * 8.75);
+    })
 
     this.gfx = new Graphics();
     this.stage.addChild(this.toaster.container);
@@ -89,7 +95,6 @@ export class GameStateOverlay {
   private update(dt: Ticker) {
     this.toaster.update(dt);
     this.winddial.update();
-    const centerX = this.screenWidth / 2;
     if (this.healthChangeTensionTimer && !this.gameWorld.areEntitiesMoving()) {
       this.healthChangeTensionTimer -= dt.deltaTime;
     }
@@ -132,9 +137,7 @@ export class GameStateOverlay {
     let allHealthAccurate = true;
     const activeTeams = this.gameState.getActiveTeams();
     const teamSeperationHeight = 32;
-    let teamBottomY =
-      this.bottomOfScreenY -
-      (teamSeperationHeight * (activeTeams.length - 2)) / 2;
+    let teamBottomY = -(teamSeperationHeight * (activeTeams.length - 2)) / 2;
     for (const team of activeTeams) {
       if (this.visibleTeamHealth[team.uuid] === undefined) {
         this.visibleTeamHealth[team.uuid] = team.health;
@@ -158,7 +161,7 @@ export class GameStateOverlay {
         },
       });
       const border = team === this.gameState.activeTeam ? 0xffffff : undefined;
-      const nameTagStartX = centerX - nameTag.width - 120;
+      const nameTagStartX = -nameTag.width - 120;
       const flagBoxWidth = 24;
 
       const nameWidth = nameTag.width + 6;
@@ -171,7 +174,7 @@ export class GameStateOverlay {
 
       // Render flag
       if (this.teamFlagTextures[team.name]) {
-        const flagX = centerX - TEAM_HEALTH_WIDTH_PX / 2 - 8;
+        const flagX = -TEAM_HEALTH_WIDTH_PX / 2 - 8;
         const flagY = teamBottomY - 2;
         applyGenericBoxStyle(this.gfx, border)
           .roundRect(flagX, flagY, nameHeight, nameHeight, 4)
@@ -190,7 +193,7 @@ export class GameStateOverlay {
       // Render health box.
       applyGenericBoxStyle(this.gfx, border)
         .roundRect(
-          centerX - TEAM_HEALTH_WIDTH_PX / 2 + flagBoxWidth,
+          -TEAM_HEALTH_WIDTH_PX / 2 + flagBoxWidth,
           teamBottomY - 2,
           TEAM_HEALTH_WIDTH_PX,
           nameHeight,
@@ -209,7 +212,7 @@ export class GameStateOverlay {
         })
         .setFillStyle({ color: bg })
         .roundRect(
-          centerX + flagBoxWidth - 99,
+          flagBoxWidth - 99,
           teamBottomY + 1,
           (TEAM_HEALTH_WIDTH_PX - 4) * teamHealthPercentage - 2,
           nameHeight - 5,

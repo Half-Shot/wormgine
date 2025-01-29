@@ -247,7 +247,7 @@ export abstract class PlayableEntity<
     const force = mult(
       sub(point, bodyTranslation),
       // NOTE: Always positive Y axis?
-      new Vector2(-forceMag, Math.abs(forceMag)),
+      new Vector2(-forceMag, Math.abs(forceMag)* 1.5),
     );
     this.physObject.body.applyImpulse(force, true);
   }

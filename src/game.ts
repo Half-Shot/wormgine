@@ -15,6 +15,7 @@ import Logger from "./log";
 import { CriticalGameError } from "./errors";
 import { getGameSettings } from "./settings";
 import { NetGameWorld } from "./net/netGameWorld";
+import { BehaviorSubject, debounceTime, fromEvent, map, merge, Observable, of, tap } from "rxjs";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -26,6 +27,7 @@ export class Game {
   private readonly rapierWorld: RAPIER.World;
   public readonly world: GameWorld;
   public readonly rapierGfx: Graphics;
+  public readonly screenSize$: Observable<{width: number, height: number}>;
 
   public get pixiRoot() {
     return this.viewport;
@@ -80,6 +82,14 @@ export class Game {
 
     // TODO: Bit of a hack?
     staticController.bindInput();
+  
+    this.screenSize$ = merge(
+      of({}),
+      fromEvent(globalThis, 'resize').pipe(debounceTime(33))
+    ).pipe(map((v) => ({width: pixiApp.screen.width, height: pixiApp.screen.height})));
+  
+    this.screenSize$.subscribe((v => logger.debug("New screen size", v)))
+    
   }
 
   public async loadResources() {

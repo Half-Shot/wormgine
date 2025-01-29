@@ -10,8 +10,7 @@ export class RoundTimer {
   public readonly container: Container;
 
   constructor(
-    x: number,
-    y: number,
+    private readonly position: Observable<{x: number, y: number}>,
     private readonly roundTimeRemaining: Observable<number>,
     private readonly currentTeamColors: Observable<
       { bg: ColorSource; fg: ColorSource } | undefined
@@ -25,10 +24,7 @@ export class RoundTimer {
         align: "center",
       },
     });
-    this.container = new Container({
-      x,
-      y,
-    });
+    this.container = new Container();
     this.container.addChild(this.gfx);
     this.container.addChild(text);
 
@@ -44,5 +40,9 @@ export class RoundTimer {
         .stroke()
         .fill();
     });
+
+    this.position.subscribe((pos) => {
+      this.container.position.set(pos.x, pos.y);
+    })
   }
 }
