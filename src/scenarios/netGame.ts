@@ -41,7 +41,7 @@ export default async function runScenario(game: Game) {
   }
   const gameInstance = game.netGameInstance;
   const parent = game.viewport;
-  const world = game.world as NetGameWorld;
+  const world = game.world;
   const { worldWidth } = game.viewport;
   const wormInstances = new Map<string, Worm>();
 
@@ -323,10 +323,12 @@ export default async function runScenario(game: Game) {
     .subscribe(([roundState, worm]) => {
       if (
         worm?.team.playerUserId === gameInstance.myUserId &&
-        roundState === RoundState.Preround
+        roundState === RoundState.Preround &&
+        world instanceof NetGameWorld
       ) {
         world.setBroadcasting(true);
-      } else if (roundState === RoundState.Finished) {
+      } else if (roundState === RoundState.Finished &&
+        world instanceof NetGameWorld) {
         world.setBroadcasting(false);
       }
       log.info("Round state sub fired for", roundState, worm);
