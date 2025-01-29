@@ -42,12 +42,9 @@ export function getGameSettings(): GameSettings {
 }
 
 export function useGameSettingsHook() {
-  return useLocalStorageState<GameSettings>(
-    WORMGINE_STORAGE_KEY_SETTINGS,
-    {
-      defaultValue: getGameSettings(),
-    },
-  );
+  return useLocalStorageState<GameSettings>(WORMGINE_STORAGE_KEY_SETTINGS, {
+    defaultValue: getGameSettings(),
+  });
 }
 
 export function getLocalTeamsHook() {

@@ -11,7 +11,7 @@ import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
 import { getClientConfigHook, useGameSettingsHook } from "../../settings";
-import { MotionConfig } from "framer-motion"
+import { MotionConfig } from "framer-motion";
 
 interface LoadGameProps {
   scenario: string;

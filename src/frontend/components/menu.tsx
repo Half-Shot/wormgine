@@ -32,18 +32,23 @@ const buildNumber = import.meta.env.VITE_BUILD_NUMBER;
 const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
 const lastCommit = localStorage.getItem("wormgine_last_commit");
 
-function SubMenu(props: {key: string|GameMenu, children: ComponentChildren}) {
-  return <motion.div
-    className="box"
-    variants={variants}
-    initial="enter"
-    animate="center"
-    exit="exit"
-  >
-    <menu key={props.key} className={styles.menu}>
-      {props.children}
-    </menu>
-  </motion.div>;
+function SubMenu(props: {
+  key: string | GameMenu;
+  children: ComponentChildren;
+}) {
+  return (
+    <motion.div
+      className="box"
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+    >
+      <menu key={props.key} className={styles.menu}>
+        {props.children}
+      </menu>
+    </motion.div>
+  );
 }
 
 function mainMenu(
@@ -119,7 +124,7 @@ const variants = {
     return {
       x: direction > 0 ? "50vw" : "-50vw",
       opacity: 0,
-      transition: { duration: 0.75 }
+      transition: { duration: 0.75 },
     };
   },
   center: {
@@ -127,16 +132,16 @@ const variants = {
     scape: 1,
     x: 0,
     opacity: 1,
-    transition: { duration: 0.75 }
+    transition: { duration: 0.75 },
   },
   exit: (direction: number) => {
     return {
       zIndex: 0,
       x: direction < 0 ? "50vw" : "-50vw",
       opacity: 0,
-      transition: { duration: 0.75 }
+      transition: { duration: 0.75 },
     };
-  }
+  },
 };
 
 export default function Menu({
@@ -174,7 +179,7 @@ export default function Menu({
   if (currentMenu === GameMenu.MainMenu) {
     menu = mainMenu(onStartNewGame, setCurrentMenu);
   } else if (currentMenu === GameMenu.OnlinePlay) {
-    menu =  (
+    menu = (
       <SubMenu key={GameMenu.OnlinePlay}>
         <MenuHeader onGoBack={goBack}>Online Play</MenuHeader>
         <OnlinePlayMenu
@@ -185,24 +190,26 @@ export default function Menu({
       </SubMenu>
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
-    menu =  (
+    menu = (
       <SubMenu key={GameMenu.TeamEditor}>
         <MenuHeader onGoBack={goBack}>Team Editor</MenuHeader>
         <TeamEditorMenu />
       </SubMenu>
     );
   } else if (currentMenu === GameMenu.Settings) {
-    menu =  (
+    menu = (
       <SubMenu key={GameMenu.Settings}>
         <MenuHeader onGoBack={goBack}>Settings</MenuHeader>
         <SettingsMenu />
       </SubMenu>
     );
   } else if (currentMenu === GameMenu.OverlayTest) {
-    menu = <SubMenu key={GameMenu.OverlayTest}>
-      <MenuHeader onGoBack={goBack}>Overlay Test</MenuHeader>
-      <OverlayTest />
-    </SubMenu>;
+    menu = (
+      <SubMenu key={GameMenu.OverlayTest}>
+        <MenuHeader onGoBack={goBack}>Overlay Test</MenuHeader>
+        <OverlayTest />
+      </SubMenu>
+    );
   } else if (currentMenu === GameMenu.Lobby) {
     const onOpenIngame = (gameInstance: RunningNetGameInstance) => {
       // TODO: Hardcoded level.
@@ -230,7 +237,12 @@ export default function Menu({
   } else {
     throw Error(`Unknown menu! ${GameMenu[currentMenu]}`);
   }
-  return <AnimatePresence custom={currentMenu === GameMenu.MainMenu ? 1 : -1} initial={true}>
-    {menu}
-  </AnimatePresence>;
+  return (
+    <AnimatePresence
+      custom={currentMenu === GameMenu.MainMenu ? 1 : -1}
+      initial={true}
+    >
+      {menu}
+    </AnimatePresence>
+  );
 }
