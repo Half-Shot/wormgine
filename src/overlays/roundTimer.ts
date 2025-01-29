@@ -10,7 +10,7 @@ export class RoundTimer {
   public readonly container: Container;
 
   constructor(
-    private readonly position: Observable<{x: number, y: number}>,
+    private readonly position: Observable<{ x: number; y: number }>,
     private readonly roundTimeRemaining: Observable<number>,
     private readonly currentTeamColors: Observable<
       { bg: ColorSource; fg: ColorSource } | undefined
@@ -43,6 +43,6 @@ export class RoundTimer {
 
     this.position.subscribe((pos) => {
       this.container.position.set(pos.x, pos.y);
-    })
+    });
   }
 }

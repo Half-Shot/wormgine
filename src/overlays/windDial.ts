@@ -21,7 +21,7 @@ export class WindDial {
   private readonly windY: number;
 
   constructor(
-    private readonly position: Observable<{x: number, y: number}>,
+    private readonly position: Observable<{ x: number; y: number }>,
     private world: GameWorld,
   ) {
     this.gfx = new Graphics({});
@@ -45,7 +45,7 @@ export class WindDial {
     this.container.addChild(this.gfx, this.windScroller);
     this.position.subscribe((pos) => {
       this.container.position.set(pos.x, pos.y);
-    })
+    });
   }
 
   public update() {

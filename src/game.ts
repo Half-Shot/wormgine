@@ -15,7 +15,8 @@ import Logger from "./log";
 import { CriticalGameError } from "./errors";
 import { getGameSettings } from "./settings";
 import { NetGameWorld } from "./net/netGameWorld";
-import { BehaviorSubject, debounceTime, fromEvent, map, merge, Observable, of, tap } from "rxjs";
+import { debounceTime, fromEvent, map, merge, Observable, of } from "rxjs";
+import { IRunningGameInstance } from "./logic/gameinstance";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -27,7 +28,7 @@ export class Game {
   private readonly rapierWorld: RAPIER.World;
   public readonly world: GameWorld;
   public readonly rapierGfx: Graphics;
-  public readonly screenSize$: Observable<{width: number, height: number}>;
+  public readonly screenSize$: Observable<{ width: number; height: number }>;
 
   public get pixiRoot() {
     return this.viewport;
@@ -37,27 +38,21 @@ export class Game {
     window: Window,
     scenario: string,
     gameReactChannel: GameReactChannel,
+    gameInstance: IRunningGameInstance,
     level?: string,
-    netGameInstance?: RunningNetGameInstance,
   ): Promise<Game> {
     await RAPIER.init();
     const pixiApp = new Application();
     await pixiApp.init({ resizeTo: window, preference: "webgl" });
-    return new Game(
-      pixiApp,
-      scenario,
-      gameReactChannel,
-      level,
-      netGameInstance,
-    );
+    return new Game(pixiApp, scenario, gameReactChannel, gameInstance, level);
   }
 
   constructor(
     public readonly pixiApp: Application,
     private readonly scenario: string,
     public readonly gameReactChannel: GameReactChannel,
+    public readonly netGameInstance: IRunningGameInstance,
     public readonly level?: string,
-    public readonly netGameInstance?: RunningNetGameInstance,
   ) {
     // TODO: Set a sensible static width/height and have the canvas pan it.
     this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
@@ -72,9 +67,14 @@ export class Game {
       // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
       events: this.pixiApp.renderer.events,
     });
-    this.world = netGameInstance
-      ? new NetGameWorld(this.rapierWorld, this.pixiApp.ticker, netGameInstance)
-      : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
+    this.world =
+      netGameInstance instanceof RunningNetGameInstance
+        ? new NetGameWorld(
+            this.rapierWorld,
+            this.pixiApp.ticker,
+            netGameInstance,
+          )
+        : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
     this.viewport.zoom(8);
@@ -82,11 +82,16 @@ export class Game {
 
     // TODO: Bit of a hack?
     staticController.bindInput();
-  
+
     this.screenSize$ = merge(
       of({}),
-      fromEvent(globalThis, 'resize').pipe(debounceTime(5))
-    ).pipe(map((v) => ({width: pixiApp.screen.width, height: pixiApp.screen.height})));
+      fromEvent(globalThis, "resize").pipe(debounceTime(5)),
+    ).pipe(
+      map(() => ({
+        width: pixiApp.screen.width,
+        height: pixiApp.screen.height,
+      })),
+    );
   }
 
   public async loadResources() {

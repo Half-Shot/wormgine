@@ -1,10 +1,8 @@
 import {
   GameStageEvent,
   GameConfigEvent,
-  GameStage,
   GameStageEventType,
   GameConfigEventType,
-  ProposedTeam,
   GameProposedTeamEventType,
   GameActionEventType,
   GameClientReadyEventType,
@@ -33,6 +31,7 @@ import Logger from "../log";
 import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
 import { MatrixStateReplay } from "../state/player";
 import { fromNetObject, toNetObject, toNetworkFloat } from "./netfloat";
+import { GameStage, IGameInstance, ProposedTeam } from "../logic/gameinstance";
 
 const logger = new Logger("NetClient");
 
@@ -59,7 +58,7 @@ export enum ClientState {
   OfflineError,
   UnknownError,
 }
-export class NetGameInstance {
+export class NetGameInstance implements IGameInstance {
   private readonly _stage: BehaviorSubject<GameStage>;
   public readonly stage: Observable<GameStage>;
   private readonly _members: BehaviorSubject<Record<string, string>>;
@@ -160,6 +159,10 @@ export class NetGameInstance {
         );
       }
     });
+  }
+
+  public canAlterTeam(t: ProposedTeam): boolean {
+    return this.isHost || t.playerUserId === this.myUserId;
   }
 
   public async updateGameConfig() {

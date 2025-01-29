@@ -20,9 +20,7 @@ export class Toaster {
   private readonly text: Text;
   public readonly container: Container;
 
-  constructor(
-      screenSize: Observable<{width: number, height: number}>,
-  ) {
+  constructor(screenSize: Observable<{ width: number; height: number }>) {
     this.container = new Container();
     this.gfx = new Graphics();
     this.text = new Text({
@@ -38,7 +36,7 @@ export class Toaster {
     screenSize.subscribe((size) => {
       const topY = size.height / 20;
       this.container.position.set(size.width / 2, topY);
-    })
+    });
   }
 
   public update(dt: Ticker) {
@@ -55,7 +53,13 @@ export class Toaster {
         this.currentToastIsInterruptable = newToast.interruptable;
         const totalWidth = this.text.width + 6;
         applyGenericBoxStyle(this.gfx)
-          .roundRect(-(totalWidth/2) - 3, -12, totalWidth+6, this.text.height-4, 4)
+          .roundRect(
+            -(totalWidth / 2) - 3,
+            -12,
+            totalWidth + 6,
+            this.text.height - 4,
+            4,
+          )
           .stroke()
           .fill();
       }

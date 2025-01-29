@@ -28,6 +28,7 @@ import { NetGameState } from "../net/netGameState";
 import { NetGameWorld } from "../net/netGameWorld";
 import { combineLatest, filter } from "rxjs";
 import { RoundState } from "../logic/gamestate";
+import { RunningNetGameInstance } from "../net/client";
 
 const log = new Logger("scenario");
 
@@ -42,57 +43,70 @@ export default async function runScenario(game: Game) {
   const parent = game.viewport;
   const world = game.world as NetGameWorld;
   const { worldWidth } = game.viewport;
-
-  const player = gameInstance.player;
-  player.on("started", () => {
-    logger.info("started playback");
-  });
-
   const wormInstances = new Map<string, Worm>();
 
-  player.on("wormAction", (wormAction) => {
-    const wormInst = wormInstances.get(wormAction.id);
-    if (!wormInst) {
-      throw Error("Worm not found");
-    }
-    if (wormInst instanceof RemoteWorm === false) {
-      return;
-    }
-    wormInst.replayWormAction(wormAction.action);
+  const stateRecorder = new StateRecorder({
+    async writeLine(data) {
+      stateLogger.debug("Writing state", data);
+      gameInstance.writeAction(data);
+    },
   });
 
-  player.on("wormSelectWeapon", (wormWeapon) => {
-    const wormInst = wormInstances.get(wormWeapon.id);
-    if (!wormInst) {
-      throw Error("Worm not found");
-    }
-    if (wormInst instanceof RemoteWorm === false) {
-      return;
-    }
-    wormInst.selectWeapon(getDefinitionForCode(wormWeapon.weapon));
-  });
+  if (gameInstance instanceof RunningNetGameInstance) {
+    const player = gameInstance.player;
+    player.on("started", () => {
+      logger.info("started playback");
+    });
 
-  player.on("wormActionAim", ({ id, dir, angle }) => {
-    const wormInst = wormInstances.get(id);
-    if (!wormInst) {
-      throw Error("Worm not found");
-    }
-    if (wormInst instanceof RemoteWorm === false) {
-      return;
-    }
-    wormInst.replayAim(dir, parseFloat(angle));
-  });
+    player.on("wormAction", (wormAction) => {
+      const wormInst = wormInstances.get(wormAction.id);
+      if (!wormInst) {
+        throw Error("Worm not found");
+      }
+      if (wormInst instanceof RemoteWorm === false) {
+        return;
+      }
+      wormInst.replayWormAction(wormAction.action);
+    });
 
-  player.on("wormActionFire", ({ id, opts }) => {
-    const wormInst = wormInstances.get(id);
-    if (!wormInst) {
-      throw Error("Worm not found");
-    }
-    if (wormInst instanceof RemoteWorm === false) {
-      return;
-    }
-    wormInst.replayFire(opts);
-  });
+    player.on("wormSelectWeapon", (wormWeapon) => {
+      const wormInst = wormInstances.get(wormWeapon.id);
+      if (!wormInst) {
+        throw Error("Worm not found");
+      }
+      if (wormInst instanceof RemoteWorm === false) {
+        return;
+      }
+      wormInst.selectWeapon(getDefinitionForCode(wormWeapon.weapon));
+    });
+
+    player.on("wormActionAim", ({ id, dir, angle }) => {
+      const wormInst = wormInstances.get(id);
+      if (!wormInst) {
+        throw Error("Worm not found");
+      }
+      if (wormInst instanceof RemoteWorm === false) {
+        return;
+      }
+      wormInst.replayAim(dir, parseFloat(angle));
+    });
+
+    player.on("wormActionFire", ({ id, opts }) => {
+      const wormInst = wormInstances.get(id);
+      if (!wormInst) {
+        throw Error("Worm not found");
+      }
+      if (wormInst instanceof RemoteWorm === false) {
+        return;
+      }
+      wormInst.replayFire(opts);
+    });
+
+    player.on("gameState", (s) => {
+      log.info("New game state recieved:", s.iteration);
+      gameState.applyGameStateUpdate(s);
+    });
+  }
 
   const assets = getAssets();
   const level = await scenarioParser(game.level, assets.data, assets.textures);
@@ -119,27 +133,16 @@ export default async function runScenario(game: Game) {
   const myUserId = gameInstance.myUserId;
 
   const stateLogger = new Logger("StateRecorder");
-  const stateRecorder = new StateRecorder({
-    async writeLine(data) {
-      stateLogger.debug("Writing state", data);
-      gameInstance.writeAction(data);
-    },
-  });
   const gameState = new NetGameState(
     initialTeams,
     world,
-    gameInstance.rules,
+    gameInstance.gameConfigImmediate.rules,
     stateRecorder,
     gameInstance.myUserId,
   );
 
   const bg = await world.addEntity(
-    Background.create(
-      game.screenSize$,
-      game.viewport,
-      terrain,
-      world,
-    ),
+    Background.create(game.screenSize$, game.viewport, terrain, world),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
   world.addEntity(terrain);
@@ -280,18 +283,15 @@ export default async function runScenario(game: Game) {
     }
   };
 
-  player.on("gameState", (s) => {
-    log.info("New game state recieved:", s.iteration);
-    gameState.applyGameStateUpdate(s);
-  });
-
-  if (gameInstance.isHost) {
-    await gameInstance.ready();
-    await gameInstance.allClientsReady();
-    log.info("All clients are ready! Beginning round");
-  } else {
-    await gameInstance.ready();
-    log.info("Marked as ready");
+  if (gameInstance instanceof RunningNetGameInstance) {
+    if (gameInstance.isHost) {
+      await gameInstance.ready();
+      await gameInstance.allClientsReady();
+      log.info("All clients are ready! Beginning round");
+    } else {
+      await gameInstance.ready();
+      log.info("Marked as ready");
+    }
   }
 
   combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])

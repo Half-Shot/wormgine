@@ -1,23 +1,11 @@
+import { GameStage, ProposedTeam } from "../logic/gameinstance";
 import { GameRules } from "../logic/gamestate";
-import { Team, TeamGroup } from "../logic/teams";
-import { StoredTeam } from "../settings";
+import { Team } from "../logic/teams";
 import { NetObject } from "./netfloat";
 
 export interface EntityDescriptor {
   pos: { x: number; y: number };
   rot: number;
-}
-
-export enum GameStage {
-  Lobby = "lobby",
-  InProgress = "in_progress",
-  Finished = "completed",
-}
-
-export interface ProposedTeam extends StoredTeam {
-  playerUserId: string;
-  group: TeamGroup;
-  wormCount: number;
 }
 
 export const GameStageEventType = "uk.half-shot.uk.wormgine.game_stage";

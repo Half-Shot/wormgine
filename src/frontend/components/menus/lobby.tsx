@@ -5,13 +5,19 @@ import {
   NetGameInstance,
   RunningNetGameInstance,
 } from "../../../net/client";
-import { GameStage, ProposedTeam } from "../../../net/models";
 import Logger from "../../../log";
 import { useObservableEagerState } from "observable-hooks";
 import useLocalStorageState from "use-local-storage-state";
 import { StoredTeam, WORMGINE_STORAGE_KEY_TEAMS } from "../../../settings";
 import styles from "./lobby.module.css";
 import { TeamGroup } from "../../../logic/teams";
+import {
+  GameStage,
+  IGameInstance,
+  IRunningGameInstance,
+  LocalGameInstance,
+  ProposedTeam,
+} from "../../../logic/gameinstance";
 
 const logger = new Logger("Lobby");
 
@@ -20,7 +26,7 @@ const MIN_PLAYERS = 1;
 
 interface Props {
   client: NetGameClient;
-  onOpenIngame: (gameInstance: RunningNetGameInstance) => void;
+  onOpenIngame: (gameInstance: IRunningGameInstance) => void;
   exitToMenu: () => void;
   gameRoomId: string;
 }
@@ -72,7 +78,7 @@ export function TeamPicker({
   gameInstance,
   proposedTeams,
 }: {
-  gameInstance: NetGameInstance;
+  gameInstance: IGameInstance;
   proposedTeams: ProposedTeam[];
 }) {
   const membersMap = useObservableEagerState(gameInstance.members);
@@ -146,8 +152,7 @@ export function TeamPicker({
           <h3>In-play</h3>
           <ol>
             {proposedTeams.map((t) => {
-              const canAlter =
-                gameInstance.isHost || t.playerUserId === gameInstance.myUserId;
+              const canAlter = gameInstance.canAlterTeam(t);
               if (!canAlter) {
                 return (
                   <li key={t.uuid}>
@@ -195,7 +200,7 @@ export function ActiveLobby({
   onOpenIngame,
   exitToMenu,
 }: {
-  gameInstance: NetGameInstance;
+  gameInstance: IGameInstance;
   onOpenIngame: () => void;
   exitToMenu: () => void;
 }) {
@@ -226,15 +231,19 @@ export function ActiveLobby({
     [gameInstance, members, proposedTeams],
   );
 
-  const lobbyLink = `${window.location.origin}${window.location.pathname}#?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`;
-
+  const lobbyLink =
+    gameInstance instanceof NetGameInstance
+      ? `${window.location.origin}${window.location.pathname}#?gameRoomId=${encodeURIComponent(gameInstance.roomId)}`
+      : null;
   return (
     <>
-      <p>This area is the staging area for a new networked game.</p>
-      <p>
-        You can invite players by sending them a link to{" "}
-        <a href={lobbyLink}>{lobbyLink}</a>.
-      </p>
+      <p>This area is the staging area for a new game.</p>
+      {lobbyLink && (
+        <p>
+          You can invite players by sending them a link to{" "}
+          <a href={lobbyLink}>{lobbyLink}</a>.
+        </p>
+      )}
       <section>
         <h2>Players</h2>
         <ul>
@@ -265,9 +274,23 @@ export function ActiveLobby({
   );
 }
 
-export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
+function LocalLobby({ onOpenIngame, exitToMenu }: Omit<Props, "client">) {
+  const gameInstance = new LocalGameInstance();
+  return (
+    <ActiveLobby
+      gameInstance={gameInstance}
+      onOpenIngame={() => {
+        gameInstance.startGame();
+        onOpenIngame(gameInstance);
+      }}
+      exitToMenu={exitToMenu}
+    />
+  );
+}
+
+function NetworkLobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
   const [error, setError] = useState<string>();
-  const [gameInstance, setGameInstance] = useState<NetGameInstance>();
+  const [gameInstance, setGameInstance] = useState<IGameInstance>();
 
   const clientState = useObservableEagerState(client.state);
 
@@ -285,11 +308,13 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
         if (gameInstance instanceof RunningNetGameInstance) {
           logger.debug("Using existing game instance");
           onOpenIngame(gameInstance);
-        } else {
+        } else if (gameInstance instanceof NetGameInstance) {
           // Inefficient
           client.joinGameRoom(gameInstance.roomId).then((running) => {
             onOpenIngame(running as RunningNetGameInstance);
           });
+        } else {
+          throw Error("Local game cannot be in progress!");
         }
       }
     });
@@ -304,15 +329,19 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
       return;
     }
     logger.info("Loading game instance", gameRoomId);
-    client
-      .joinGameRoom(gameRoomId)
-      .then((instance) => {
-        setGameInstance(instance);
-      })
-      .catch((ex) => {
-        logger.error("Failed to load game", ex);
-        setError("Failed load existing game!");
-      });
+    if (gameRoomId === "LOCAL_GAME") {
+      setGameInstance(new LocalGameInstance());
+    } else {
+      client
+        .joinGameRoom(gameRoomId)
+        .then((instance) => {
+          setGameInstance(instance);
+        })
+        .catch((ex) => {
+          logger.error("Failed to load game", ex);
+          setError("Failed load existing game!");
+        });
+    }
   }, [clientState, gameRoomId, gameInstance, client]);
 
   const startGame = useCallback(async () => {
@@ -368,4 +397,17 @@ export function Lobby({ client, gameRoomId, onOpenIngame, exitToMenu }: Props) {
       exitToMenu={exitLobby}
     />
   );
+}
+
+export function Lobby(props: Props) {
+  if (props.gameRoomId === "LOCAL_GAME") {
+    return (
+      <LocalLobby
+        gameRoomId={props.gameRoomId}
+        onOpenIngame={props.onOpenIngame}
+        exitToMenu={props.exitToMenu}
+      />
+    );
+  }
+  return <NetworkLobby {...props} />;
 }

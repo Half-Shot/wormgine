@@ -40,29 +40,32 @@ export class GameStateOverlay {
     private readonly stage: Container,
     private readonly gameState: GameState,
     private readonly gameWorld: GameWorld,
-    private readonly screenSize: Observable<{width: number, height: number}>,
+    private readonly screenSize: Observable<{ width: number; height: number }>,
   ) {
     this.toaster = new Toaster(this.screenSize);
 
     this.winddial = new WindDial(
-      screenSize.pipe(map(({width, height}) => ({
-        x: (width / 30) * 26,
-        y: (height / 10) * 8.75
-      }))),
+      screenSize.pipe(
+        map(({ width, height }) => ({
+          x: (width / 30) * 26,
+          y: (height / 10) * 8.75,
+        })),
+      ),
       this.gameWorld,
     );
-  
+
     this.roundTimer = new RoundTimer(
-      screenSize.pipe(map(({width, height}) => ({
-        x: (width / 30),
-        y: (height / 10) * 8.75
-      }))),
+      screenSize.pipe(
+        map(({ width, height }) => ({
+          x: width / 30,
+          y: (height / 10) * 8.75,
+        })),
+      ),
       this.gameState.remainingRoundTimeSeconds$,
       this.gameState.currentTeam$.pipe(
         map((t) => t && teamGroupToColorSet(t.group)),
       ),
     );
-
 
     this.gfx = new Graphics();
     this.stage.addChild(this.toaster.container);
@@ -87,9 +90,9 @@ export class GameStateOverlay {
         );
       }
     });
-    screenSize.subscribe(({width, height}) => {
+    screenSize.subscribe(({ width, height }) => {
       this.gfx.position.set(width / 2, (height / 10) * 8.75);
-    })
+    });
   }
 
   private update(dt: Ticker) {

@@ -2,21 +2,21 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import Menu from "./menu";
 import { assetLoadPercentage, assetsAreReady } from "../../assets";
-import {
-  NetClientConfig,
-  NetGameClient,
-  RunningNetGameInstance,
-} from "../../net/client";
+import { NetClientConfig, NetGameClient } from "../../net/client";
 import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
 import { getClientConfigHook, useGameSettingsHook } from "../../settings";
 import { MotionConfig } from "framer-motion";
+import {
+  IRunningGameInstance,
+  LocalGameInstance,
+} from "../../logic/gameinstance";
 
 interface LoadGameProps {
   scenario: string;
   level?: string;
-  gameInstance?: RunningNetGameInstance;
+  gameInstance: IRunningGameInstance;
 }
 
 export function App() {
@@ -41,6 +41,7 @@ export function App() {
       setGameState({
         scenario,
         level,
+        gameInstance: new LocalGameInstance(),
       });
     }
   }, []);
@@ -64,7 +65,7 @@ export function App() {
   const onNewGame = useCallback(
     (
       scenario: string,
-      gameInstance: RunningNetGameInstance | undefined,
+      gameInstance: IRunningGameInstance,
       level?: keyof AssetData,
     ) => {
       setGameState({ scenario, level, gameInstance });

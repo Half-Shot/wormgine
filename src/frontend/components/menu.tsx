@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { ChangelogModal } from "./changelog";
 import styles from "./menu.module.css";
-import {
-  NetClientConfig,
-  NetGameClient,
-  RunningNetGameInstance,
-} from "../../net/client";
+import { NetClientConfig, NetGameClient } from "../../net/client";
 import { GameMenu } from "./menus/types";
 import OnlinePlayMenu from "./menus/online-play";
 import { OverlayTest } from "./menus/overlaytest";
@@ -16,11 +12,12 @@ import MenuHeader from "./atoms/menu-header";
 import { Lobby } from "./menus/lobby";
 import { motion, AnimatePresence } from "framer-motion";
 import { ComponentChildren } from "preact";
+import { IRunningGameInstance } from "../../logic/gameinstance";
 
 interface Props {
   onNewGame: (
     scenario: string,
-    gameInstance: RunningNetGameInstance | undefined,
+    gameInstance: IRunningGameInstance,
     level?: keyof AssetData,
   ) => void;
   setClientConfig: (config: NetClientConfig | null) => void;
@@ -52,11 +49,7 @@ function SubMenu(props: {
 }
 
 function mainMenu(
-  onStartNewGame: (
-    scenario: string,
-    gameInstance: RunningNetGameInstance | undefined,
-    level?: keyof AssetData,
-  ) => void,
+  onLocalGame: () => void,
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
   return (
@@ -73,13 +66,7 @@ function mainMenu(
       </p>
       <ul className={styles.levelPicker}>
         <li>
-          <button
-            onClick={() =>
-              onStartNewGame("tiledMap", undefined, "levels_testing")
-            }
-          >
-            Skirmish
-          </button>
+          <button onClick={() => onLocalGame()}>Skirmish</button>
         </li>
         <li>
           <button disabled>Missions</button>
@@ -161,19 +148,15 @@ export default function Menu({
     }
   }, [currentLobbyId]);
 
-  const onStartNewGame = useCallback(
-    (
-      scenario: string,
-      gameInstance: RunningNetGameInstance | undefined,
-      level?: keyof AssetData,
-    ) => {
-      localStorage.setItem("wormgine_last_commit", buildCommit);
-      onNewGame(scenario, gameInstance, level);
-    },
-    [onNewGame],
-  );
+  const onStartNewGame = useCallback(() => {
+    localStorage.setItem("wormgine_last_commit", buildCommit);
+    setLobbyId("LOCAL_GAME");
+  }, [onNewGame]);
 
-  const goBack = () => setCurrentMenu(GameMenu.MainMenu);
+  const goBack = () => {
+    setCurrentMenu(GameMenu.MainMenu);
+    setLobbyId("");
+  };
   let menu;
 
   if (currentMenu === GameMenu.MainMenu) {
@@ -211,7 +194,7 @@ export default function Menu({
       </SubMenu>
     );
   } else if (currentMenu === GameMenu.Lobby) {
-    const onOpenIngame = (gameInstance: RunningNetGameInstance) => {
+    const onOpenIngame = (gameInstance: IRunningGameInstance) => {
       // TODO: Hardcoded level.
       onNewGame("netGame", gameInstance, "levels_testing");
     };

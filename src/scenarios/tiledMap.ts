@@ -92,12 +92,7 @@ export default async function runScenario(game: Game) {
   });
 
   const bg = await world.addEntity(
-    Background.create(
-      game.screenSize$,
-      game.viewport,
-      terrain,
-      world,
-    ),
+    Background.create(game.screenSize$, game.viewport, terrain, world),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
   world.addEntity(terrain);

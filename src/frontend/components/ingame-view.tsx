@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import styles from "./ingame-view.module.css";
 import { Game } from "../../game";
-import { RunningNetGameInstance } from "../../net/client";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
+import { IRunningGameInstance } from "../../logic/gameinstance";
 
 export function IngameView({
   scenario,
@@ -14,14 +14,14 @@ export function IngameView({
   scenario: string;
   level?: string;
   gameReactChannel: GameReactChannel;
-  gameInstance?: RunningNetGameInstance;
+  gameInstance: IRunningGameInstance;
 }) {
   const [fatalError, setFatalError] = useState<Error>();
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<AmmoCount | null>(null);
   useEffect(() => {
-    Game.create(window, scenario, gameReactChannel, level, gameInstance)
+    Game.create(window, scenario, gameReactChannel, gameInstance, level)
       .then((game) => {
         (window as unknown as { wormgine: Game }).wormgine = game;
         game.loadResources().then(() => {

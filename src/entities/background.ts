@@ -3,9 +3,7 @@ import {
   Container,
   FillGradient,
   Graphics,
-  Mesh,
   Point,
-  Shader,
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
@@ -32,17 +30,12 @@ const RAINDROP_COUNT = 350;
  */
 export class Background implements IGameEntity {
   static create(
-    screenSize: Observable<{width: number, height: number}>,
+    screenSize: Observable<{ width: number; height: number }>,
     viewport: Viewport,
     terrain: BitmapTerrain,
     world: GameWorld,
   ): Background {
-    return new Background(
-      screenSize,
-      viewport,
-      terrain,
-      world,
-    );
+    return new Background(screenSize, viewport, terrain, world);
   }
   private rainSpeed = 5;
   private rainSpeedVariation = 1;
@@ -55,19 +48,19 @@ export class Background implements IGameEntity {
   private rainParticles: RainParticle[] = [];
 
   private constructor(
-    private readonly screenSize: Observable<{width: number, height: number}>,
+    private readonly screenSize: Observable<{ width: number; height: number }>,
     private viewport: Viewport,
     private readonly terrain: BitmapTerrain,
     private readonly world: GameWorld,
   ) {
     this.gradientMesh = new Graphics();
-    screenSize.subscribe(({width,height}) => {
+    screenSize.subscribe(({ width, height }) => {
       this.gradientMesh.clear();
       const halfViewWidth = width / 2;
       const halfViewHeight = height / 2;
-      const gradient = new FillGradient(0,-halfViewWidth,0,height);
-      gradient.addColorStop(0, 'rgba(3, 0, 51, 0.9)');
-      gradient.addColorStop(1, 'rgba(39, 0, 5, 0.9)');
+      const gradient = new FillGradient(0, -halfViewWidth, 0, height);
+      gradient.addColorStop(0, "rgba(3, 0, 51, 0.9)");
+      gradient.addColorStop(1, "rgba(39, 0, 5, 0.9)");
       this.gradientMesh.rect(-halfViewWidth, -halfViewHeight, width, height);
       this.gradientMesh.fill(gradient);
       this.gradientMesh.position.set(halfViewWidth, halfViewHeight);
@@ -83,7 +76,6 @@ export class Background implements IGameEntity {
         this.rainParticles.splice(0, Math.abs(rainDelta));
       }
     });
-
   }
 
   addRainParticle() {
