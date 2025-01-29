@@ -15,10 +15,12 @@ export interface StoredTeam {
 
 export interface GameSettings {
   soundEffectVolume: number;
+  reduceMotion: boolean;
 }
 
 const DEFAULT_SETTINGS: GameSettings = {
   soundEffectVolume: 0.1,
+  reduceMotion: false,
 };
 
 export function getClientConfigHook() {
@@ -37,6 +39,15 @@ export function getGameSettings(): GameSettings {
     ...DEFAULT_SETTINGS,
     ...JSON.parse(item),
   };
+}
+
+export function useGameSettingsHook() {
+  return useLocalStorageState<GameSettings>(
+    WORMGINE_STORAGE_KEY_SETTINGS,
+    {
+      defaultValue: getGameSettings(),
+    },
+  );
 }
 
 export function getLocalTeamsHook() {

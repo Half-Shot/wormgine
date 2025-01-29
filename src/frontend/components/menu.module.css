@@ -5,6 +5,9 @@
   min-width: 33vw;
   margin-top: 5vh;
   color: var(--text);
+  display: relative;
+  position: absolute;
+  left: 33vw;
 }
 
 p {

@@ -14,6 +14,8 @@ import TeamEditorMenu from "./menus/team-editor";
 import SettingsMenu from "./menus/settings";
 import MenuHeader from "./atoms/menu-header";
 import { Lobby } from "./menus/lobby";
+import { motion, AnimatePresence } from "framer-motion";
+import { ComponentChildren } from "preact";
 
 interface Props {
   onNewGame: (
@@ -30,6 +32,20 @@ const buildNumber = import.meta.env.VITE_BUILD_NUMBER;
 const buildCommit = import.meta.env.VITE_BUILD_COMMIT;
 const lastCommit = localStorage.getItem("wormgine_last_commit");
 
+function SubMenu(props: {key: string|GameMenu, children: ComponentChildren}) {
+  return <motion.div
+    className="box"
+    variants={variants}
+    initial="enter"
+    animate="center"
+    exit="exit"
+  >
+    <menu key={props.key} className={styles.menu}>
+      {props.children}
+    </menu>
+  </motion.div>;
+}
+
 function mainMenu(
   onStartNewGame: (
     scenario: string,
@@ -39,7 +55,7 @@ function mainMenu(
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
   return (
-    <main className={styles.menu}>
+    <SubMenu key="main-menu">
       <h1>Kobold Kombat</h1>
       <p className={styles.betaWarning}>
         The game is still in heavy development, this site is updated with the
@@ -94,18 +110,42 @@ function mainMenu(
           Assets are used under various licences
         </a>
       </p>
-    </main>
+    </SubMenu>
   );
 }
 
-export function Menu({
+const variants = {
+  enter: (direction: number) => {
+    return {
+      x: direction > 0 ? "100vw" : "-100vw",
+      opacity: 1,
+      transition: { duration: 0.75 }
+    };
+  },
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.75 }
+  },
+  exit: (direction: number) => {
+    return {
+      zIndex: 0,
+      x: direction < 0 ? "100vw" : "-100vw",
+      opacity: 1,
+      transition: { duration: 0.75 }
+    };
+  }
+};
+
+export default function Menu({
   onNewGame,
   client,
   setClientConfig,
   lobbyGameRoomId,
 }: Props) {
-  const [currentLobbyId, setLobbyId] = useState(lobbyGameRoomId);
   const [currentMenu, setCurrentMenu] = useState(GameMenu.MainMenu);
+  const [currentLobbyId, setLobbyId] = useState(lobbyGameRoomId);
 
   useEffect(() => {
     if (currentLobbyId) {
@@ -128,39 +168,40 @@ export function Menu({
   );
 
   const goBack = () => setCurrentMenu(GameMenu.MainMenu);
+  let menu;
 
   if (currentMenu === GameMenu.MainMenu) {
-    return mainMenu(onStartNewGame, setCurrentMenu);
+    menu = mainMenu(onStartNewGame, setCurrentMenu);
   } else if (currentMenu === GameMenu.OnlinePlay) {
-    return (
-      <menu className={styles.menu}>
+    menu =  (
+      <SubMenu key={GameMenu.OnlinePlay}>
         <MenuHeader onGoBack={goBack}>Online Play</MenuHeader>
         <OnlinePlayMenu
           onCreateLobby={(roomId) => setLobbyId(roomId)}
           client={client}
           setClientConfig={setClientConfig}
         />
-      </menu>
+      </SubMenu>
     );
   } else if (currentMenu === GameMenu.TeamEditor) {
-    return (
-      <menu className={styles.menu}>
+    menu =  (
+      <SubMenu key={GameMenu.TeamEditor}>
         <MenuHeader onGoBack={goBack}>Team Editor</MenuHeader>
         <TeamEditorMenu />
-      </menu>
+      </SubMenu>
     );
   } else if (currentMenu === GameMenu.Settings) {
-    return (
-      <menu className={styles.menu}>
+    menu =  (
+      <SubMenu key={GameMenu.Settings}>
         <MenuHeader onGoBack={goBack}>Settings</MenuHeader>
         <SettingsMenu />
-      </menu>
+      </SubMenu>
     );
   } else if (currentMenu === GameMenu.OverlayTest) {
-    <menu className={styles.menu}>
+    menu = <SubMenu key={GameMenu.OverlayTest}>
       <MenuHeader onGoBack={goBack}>Overlay Test</MenuHeader>
       <OverlayTest />
-    </menu>;
+    </SubMenu>;
   } else if (currentMenu === GameMenu.Lobby) {
     const onOpenIngame = (gameInstance: RunningNetGameInstance) => {
       // TODO: Hardcoded level.
@@ -174,8 +215,8 @@ export function Menu({
       return <p>Waiting for network connection...</p>;
     }
     // TODO: Go back needs to exit game?
-    return (
-      <menu className={styles.menu}>
+    menu = (
+      <SubMenu key={GameMenu.Lobby}>
         <MenuHeader onGoBack={goBack}>Lobby</MenuHeader>
         <Lobby
           client={client}
@@ -183,8 +224,12 @@ export function Menu({
           exitToMenu={() => setLobbyId(undefined)}
           gameRoomId={currentLobbyId}
         />
-      </menu>
+      </SubMenu>
     );
+  } else {
+    throw Error(`Unknown menu! ${GameMenu[currentMenu]}`);
   }
-  throw Error(`Unknown menu! ${GameMenu[currentMenu]}`);
+  return <AnimatePresence custom={currentMenu === GameMenu.MainMenu ? 1 : -1} initial={true}>
+    {menu}
+  </AnimatePresence>;
 }

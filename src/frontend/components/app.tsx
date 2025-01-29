@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
-import { Menu } from "./menu";
+import Menu from "./menu";
 import { assetLoadPercentage, assetsAreReady } from "../../assets";
 import {
   NetClientConfig,
@@ -10,7 +10,8 @@ import {
 import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
-import { getClientConfigHook } from "../../settings";
+import { getClientConfigHook, useGameSettingsHook } from "../../settings";
+import { MotionConfig } from "framer-motion"
 
 interface LoadGameProps {
   scenario: string;
@@ -28,7 +29,7 @@ export function App() {
   const gameReactChannel = new GameReactChannel();
 
   const [lobbyGameRoomId, setLobbyGameRoomId] = useState<string>();
-
+  const [settings] = useGameSettingsHook();
   useEffect(() => {
     const parameters = new URLSearchParams(window.location.hash.slice(1));
     const gId = parameters.get("gameRoomId");
@@ -103,11 +104,13 @@ export function App() {
   );
 
   return (
-    <Menu
-      onNewGame={onNewGame}
-      setClientConfig={setConfig}
-      lobbyGameRoomId={lobbyGameRoomId}
-      client={client}
-    />
+    <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
+      <Menu
+        onNewGame={onNewGame}
+        setClientConfig={setConfig}
+        lobbyGameRoomId={lobbyGameRoomId}
+        client={client}
+      />
+    </MotionConfig>
   );
 }

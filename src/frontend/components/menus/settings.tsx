@@ -3,17 +3,15 @@ import { useCallback } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import {
   GameSettings,
-  getGameSettings,
-  WORMGINE_STORAGE_KEY_SETTINGS,
+  useGameSettingsHook,
 } from "../../../settings";
 
 export default function SettingsMenu() {
-  const [settings, setSettings] = useLocalStorageState<GameSettings>(
-    WORMGINE_STORAGE_KEY_SETTINGS,
-    {
-      defaultValue: getGameSettings(),
-    },
-  );
+  const [settings, setSettings] = useGameSettingsHook();
+
+  const applySettingChange = useCallback((newConfig: Partial<GameSettings>) => {
+    setSettings((oldSettings: GameSettings) => ({...oldSettings, ...newConfig}));
+  }, []);
 
   const onVolumeSet: JSX.GenericEventHandler<HTMLInputElement> = useCallback(
     (evt) => {
@@ -26,7 +24,8 @@ export default function SettingsMenu() {
     [],
   );
 
-  return (
+
+  return <>
     <section>
       <h2>General</h2>
       <label for="sound-effect-meter">Sound Effect Volume:</label>
@@ -41,5 +40,14 @@ export default function SettingsMenu() {
         max={100}
       />
     </section>
-  );
+    <section>
+      <h2>Accessibility</h2>
+      <label for="sound-effect-meter">Reduce motion (menus, game effects)</label>
+      <input
+        type="checkbox"
+        onChange={() => applySettingChange({reduceMotion: !settings.reduceMotion})}
+        checked={settings.reduceMotion}
+      />
+    </section>
+    </>;
 }

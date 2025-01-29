@@ -50,8 +50,6 @@ export class Background implements IGameEntity {
   }
   private rainSpeed = 5;
   private rainSpeedVariation = 1;
-  // TODO: Constrain to size of screen.
-  private windDirection = 5;
   private rainColor: ColorSource = "rgba(100,100,100,0.33)";
   priority = UPDATE_PRIORITY.LOW;
 
@@ -85,7 +83,6 @@ export class Background implements IGameEntity {
       },
       indexBuffer: [0, 1, 2, 0, 2, 3],
     });
-
     this.gradientMesh = new Mesh({
       geometry,
       shader: new Shader({
