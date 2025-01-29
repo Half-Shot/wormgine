@@ -29,6 +29,5 @@ describe('TweenEngine', () => {
         const engine = new TweenEngine(env.player.body, { x: 0.1, y: 0 }, to);
         const moved = engine.update(50);
         env.waitUntilStopped();
-        console.log(moved);
     });
 });
