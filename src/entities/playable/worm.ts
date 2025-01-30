@@ -46,6 +46,7 @@ import Logger from "../../log";
 import { WormState, InnerWormState } from "./wormState";
 import { filter, first } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
+import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -84,9 +85,6 @@ export interface WormRecordedState extends PlayableRecordedState {
   weapon: IWeaponCode;
 }
 
-const ANIM_FRAME_RATE = 2;
-const TILES_PER_SHEET = 0;
-
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
@@ -109,9 +107,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   private static idleAnim: Texture;
   private static impactDamageMultiplier = 0.75;
   private static minImpactForDamage = 12;
-  private tileCounter = 0;
-  private timeSinceLastAnim = 0;
-
   protected fireWeaponDuration = 0;
   private currentWeapon: IWeaponDefinition = WeaponBazooka;
   protected state = new WormState(InnerWormState.Inactive);
@@ -191,28 +186,27 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     private readonly toaster?: Toaster,
     private readonly recorder?: StateRecorder,
   ) {
-    console.log(
-      Worm.idleAnim
-    )
-    const sprite = new TilingSprite({
+    const sprite = new TiledSpriteAnimated({
       texture: Worm.idleAnim,
       width: 96,
       height: 144,
       tileScale: {x: 1, y: 1},
-      tilePosition: {x: 0, y: 0}
+      tilePosition: {x: 0, y: 0},
+      scale: {x: 0.33, y: 0.33},
+      anchor: {x: 0.5, y: 0.5},
+      columns: 10,
+      tileCount: 120,
+      fps: 60,
     });
-    sprite.scale.set(0.33,0.33);
-    sprite.anchor.set(0.5, 0.5);
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
-        (sprite.width*0.33) / (PIXELS_PER_METER * 2),
-        (sprite.height*0.33) / (PIXELS_PER_METER * 2),
+        (sprite.width*sprite.scale.x) / (PIXELS_PER_METER * 2),
+        (sprite.height*sprite.scale.y) / (PIXELS_PER_METER * 2),
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
         .setSolverGroups(Worm.collisionBitmask)
         .setFriction(0.1),
-      //.setMass(5),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
@@ -439,7 +433,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         this.fireAngle = Math.PI * 2 - this.fireAngle;
       }
       this.facingRight = !this.facingRight;
-      this.sprite.scale.x = this.facingRight ? 0.33 : -0.33;
+      this.sprite.scale.x = this.facingRight ? Math.abs(this.sprite.scale.x) : -Math.abs(this.sprite.scale.x);
     }
 
     this.state.transition(
@@ -651,22 +645,10 @@ export class Worm extends PlayableEntity<WormRecordedState> {
 
   update(dt: number, dMs: number): void {
     super.update(dt, dMs);
-    this.timeSinceLastAnim += dMs;
-    if (this.timeSinceLastAnim > 30) {
-      this.timeSinceLastAnim = 0;
-      this.tileCounter += 1;
-      const tile = (this.sprite as TilingSprite);
-      if (this.tileCounter % 10 === 0) {
-        this.tileCounter = 0;
-        tile.tilePosition.x += 0;
-        tile.tilePosition.y += tile.height;
-      } else {
-        tile.tilePosition.x += tile.width;
-      }
-    }
     if (this.sprite.destroyed) {
       return;
     }
+    (this.sprite as TiledSpriteAnimated).update(dMs);
     this.wireframe.setDebugText(
       `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
     );

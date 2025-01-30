@@ -10,6 +10,7 @@ export enum DebugLevel {
 class Flags extends EventEmitter {
   public DebugView: DebugLevel;
   public simulatePhysics = true;
+  public stepAnimationsId = "";
 
   constructor() {
     super();
@@ -31,6 +32,8 @@ class Flags extends EventEmitter {
     (globalThis as any)["wormgineFlags"] = {
       toggleSimulatePhysics: () =>
         (this.simulatePhysics = !this.simulatePhysics),
+      stepAnimation: (step = true) =>
+        (this.stepAnimationsId = step ? Math.random().toString() : ""),
     };
   }
 }

@@ -1,4 +1,4 @@
-import { UPDATE_PRIORITY, Sprite, Point, ViewContainer } from "pixi.js";
+import { UPDATE_PRIORITY, Sprite, Point, ViewContainer, TilingSprite } from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe";
@@ -57,7 +57,7 @@ export abstract class PhysicsEntity<
   public readonly bodyMoving$: Observable<boolean>;
 
   constructor(
-    public readonly sprite: ViewContainer,
+    public readonly sprite: Sprite|TilingSprite,
     protected physObject: RapierPhysicsObject,
     protected gameWorld: GameWorld,
   ) {
