@@ -18,6 +18,7 @@ import {
   LocalGameInstance,
   ProposedTeam,
 } from "../../../logic/gameinstance";
+import { useLocalTeamsHook } from "../../../settings";
 
 const logger = new Logger("Lobby");
 
@@ -93,10 +94,7 @@ export function TeamPicker({
         [proposedTeams],
       )
     ];
-  const [storedLocalTeams] = useLocalStorageState<StoredTeam[]>(
-    WORMGINE_STORAGE_KEY_TEAMS,
-    { defaultValue: [] },
-  );
+  const [storedLocalTeams] = useLocalTeamsHook();
   const localTeams = useMemo(
     () =>
       storedLocalTeams.filter(

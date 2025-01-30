@@ -9,7 +9,7 @@ import styles from "./online-play.module.css";
 import { useObservableEagerState } from "observable-hooks";
 import Logger from "../../../log";
 import { DefaultWeaponSchema } from "../../../weapons/schema";
-import { getLocalTeamsHook } from "../../../settings";
+import { useLocalTeamsHook } from "../../../settings";
 
 interface Props {
   client: NetGameClient | undefined;
@@ -30,7 +30,7 @@ function LoggedInView({
 }) {
   const [displayname, setDisplayName] = useState<string>();
   const [authenticatedAvatarBlob, setAvatarBlobUrl] = useState<string>();
-  const [localTeams] = getLocalTeamsHook();
+  const [localTeams] = useLocalTeamsHook();
   const [gameCreationInProgress, setInProgress] = useState<boolean>();
 
   const createGameCallback = useCallback(() => {
