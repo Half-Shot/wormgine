@@ -1,4 +1,9 @@
-import { AnimatedSprite, Graphics, Point, Sprite, Texture, TilingSprite, UPDATE_PRIORITY, VideoSource } from "pixi.js";
+import {
+  Graphics,
+  Point,
+  Sprite,
+  Texture,
+} from "pixi.js";
 import {
   FireOpts,
   IWeaponCode,
@@ -190,18 +195,18 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       texture: Worm.idleAnim,
       width: 96,
       height: 144,
-      tileScale: {x: 1, y: 1},
-      tilePosition: {x: 0, y: 0},
-      scale: {x: 0.33, y: 0.33},
-      anchor: {x: 0.5, y: 0.5},
+      tileScale: { x: 1, y: 1 },
+      tilePosition: { x: 0, y: 0 },
+      scale: { x: 0.33, y: 0.33 },
+      anchor: { x: 0.5, y: 0.5 },
       columns: 10,
       tileCount: 120,
       fps: 60,
     });
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
-        (sprite.width*sprite.scale.x) / (PIXELS_PER_METER * 2),
-        (sprite.height*sprite.scale.y) / (PIXELS_PER_METER * 2),
+        (sprite.width * sprite.scale.x) / (PIXELS_PER_METER * 2),
+        (sprite.height * sprite.scale.y) / (PIXELS_PER_METER * 2),
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
@@ -433,7 +438,9 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         this.fireAngle = Math.PI * 2 - this.fireAngle;
       }
       this.facingRight = !this.facingRight;
-      this.sprite.scale.x = this.facingRight ? Math.abs(this.sprite.scale.x) : -Math.abs(this.sprite.scale.x);
+      this.sprite.scale.x = this.facingRight
+        ? Math.abs(this.sprite.scale.x)
+        : -Math.abs(this.sprite.scale.x);
     }
 
     this.state.transition(

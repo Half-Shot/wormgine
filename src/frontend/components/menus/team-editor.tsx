@@ -1,4 +1,3 @@
-import useLocalStorageState from "use-local-storage-state";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 import styles from "./team-editor.module.css";

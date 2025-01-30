@@ -12,7 +12,6 @@ import {
   IRunningGameInstance,
   LocalGameInstance,
 } from "../../logic/gameinstance";
-import { CameraLockPriority } from "../../camera";
 
 interface LoadGameProps {
   scenario: string;

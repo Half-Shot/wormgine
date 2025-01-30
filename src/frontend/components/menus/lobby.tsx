@@ -7,8 +7,7 @@ import {
 } from "../../../net/client";
 import Logger from "../../../log";
 import { useObservableEagerState } from "observable-hooks";
-import useLocalStorageState from "use-local-storage-state";
-import { StoredTeam, WORMGINE_STORAGE_KEY_TEAMS } from "../../../settings";
+import { StoredTeam } from "../../../settings";
 import styles from "./lobby.module.css";
 import { TeamGroup } from "../../../logic/teams";
 import {
