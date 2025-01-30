@@ -119,10 +119,10 @@ export class GameStateOverlay {
     // Check for health change.
     if (this.healthChangeTensionTimer === null) {
       for (const team of this.gameState.getTeams()) {
-        if (this.visibleTeamHealth[team.name] === undefined) {
+        if (this.visibleTeamHealth[team.uuid] === undefined) {
           continue;
         }
-        if (this.visibleTeamHealth[team.name] !== team.health) {
+        if (this.visibleTeamHealth[team.uuid] !== team.health) {
           // TODO: Const, same as the one for Playable.
           this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
           return;
