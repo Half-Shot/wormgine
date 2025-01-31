@@ -242,14 +242,14 @@ export abstract class PlayableEntity<
       Math.abs(magnitude(sub(point, this.physObject.body.translation()))),
     );
     const damage = maxDamage / distance;
-    const forceMag = (radius.value * 10) / (1 / distance);
-    log.info("onDamage", opts.maxDamage, distance, "=>", damage);
     this.wormIdent.setHealth(this.wormIdent.health - damage);
+    const forceMag = Math.abs((radius.value * 10) / (1 / distance));
+    const massagedY = point.y + 5;
     const force = mult(
-      sub(point, bodyTranslation),
-      // NOTE: Always positive Y axis?
-      new Vector2(-forceMag, Math.abs(forceMag) * 1.5),
-    );
+      {x: point.x > bodyTranslation.x ? -1.5 : 1.5, y: massagedY - bodyTranslation.y ? -1 : 1 },
+      {x: forceMag, y: forceMag}
+    )
+    log.info("onDamage force", "=>", force);
     this.physObject.body.applyImpulse(force, true);
   }
 
