@@ -20,6 +20,7 @@ import { RecordedEntityState } from "../../state/model";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../../consts";
 import { first, skip, Subscription } from "rxjs";
 import Logger from "../../log";
+import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -58,7 +59,7 @@ export abstract class PlayableEntity<
   private readonly healthSub: Subscription;
 
   constructor(
-    sprite: Sprite | TilingSprite,
+    sprite: Sprite | TiledSpriteAnimated,
     body: RapierPhysicsObject,
     world: GameWorld,
     protected parent: Viewport,
@@ -143,10 +144,17 @@ export abstract class PlayableEntity<
     if (!this.healthTextBox.destroyed) {
       // Nice and simple parenting
       this.healthTextBox.rotation = 0;
-      this.healthTextBox.position.set(
-        this.sprite.x - this.sprite.width / 4,
-        this.sprite.y - 85,
-      );
+      if (this.sprite instanceof TiledSpriteAnimated) {
+        this.healthTextBox.position.set(
+          this.sprite.x - this.sprite.scaledWidth / 4,
+          this.sprite.y - 85,
+        );
+      } else {
+        this.healthTextBox.position.set(
+          this.sprite.x - this.sprite.width / 4,
+          this.sprite.y - 85,
+        );
+      }
     }
 
     if (this.healthChangeTensionTimer) {
