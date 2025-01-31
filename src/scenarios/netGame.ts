@@ -358,6 +358,7 @@ export default async function runScenario(game: Game) {
         }
         currentWorm = wormInstances.get(worm.uuid);
         log.info("Setting next worm", worm.uuid, currentWorm);
+        world.setWind(gameState.currentWind);
         currentWorm?.onWormSelected(true);
         currentWorm?.currentState.on("transition", transitionHandler);
         gameState.beginRound();
