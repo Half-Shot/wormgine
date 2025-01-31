@@ -193,8 +193,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   ) {
     const sprite = new TiledSpriteAnimated({
       texture: Worm.idleAnim,
-      width: 96,
-      height: 144,
+      width: 104,
+      height: 148,
       tileScale: { x: 1, y: 1 },
       tilePosition: { x: 0, y: 0 },
       scale: { x: 0.33, y: 0.33 },
@@ -205,8 +205,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     });
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
-        (sprite.width * sprite.scale.x) / (PIXELS_PER_METER * 2),
-        (sprite.height * sprite.scale.y) / (PIXELS_PER_METER * 2),
+        sprite.scaledWidth / (PIXELS_PER_METER * 2),
+        sprite.scaledHeight / (PIXELS_PER_METER * 2),
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)

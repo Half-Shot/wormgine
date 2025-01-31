@@ -21,6 +21,13 @@ export class TiledSpriteAnimated extends TilingSprite {
     this.columns = opts.columns;
   }
 
+  public get scaledWidth() {
+    return this.width * this.scale.x;
+  }
+  public get scaledHeight() {
+    return this.height * this.scale.y;
+  }
+
   public update(deltaMs: number) {
     this.timeSinceLastAnim += deltaMs;
     if (Flags.stepAnimationsId) {
