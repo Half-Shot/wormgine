@@ -5,7 +5,6 @@ import {
   Text,
   DEG_TO_RAD,
   Graphics,
-  TilingSprite,
 } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
@@ -254,9 +253,12 @@ export abstract class PlayableEntity<
     const forceMag = Math.abs((radius.value * 10) / (1 / distance));
     const massagedY = point.y + 5;
     const force = mult(
-      {x: point.x > bodyTranslation.x ? -1.5 : 1.5, y: massagedY - bodyTranslation.y ? -1 : 1 },
-      {x: forceMag, y: forceMag}
-    )
+      {
+        x: point.x > bodyTranslation.x ? -1.5 : 1.5,
+        y: massagedY - bodyTranslation.y ? -1 : 1,
+      },
+      { x: forceMag, y: forceMag },
+    );
     log.info("onDamage force", "=>", force);
     this.physObject.body.applyImpulse(force, true);
   }

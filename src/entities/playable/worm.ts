@@ -1,9 +1,4 @@
-import {
-  Graphics,
-  Point,
-  Sprite,
-  Texture,
-} from "pixi.js";
+import { Graphics, Point, Sprite, Texture } from "pixi.js";
 import {
   FireOpts,
   IWeaponCode,

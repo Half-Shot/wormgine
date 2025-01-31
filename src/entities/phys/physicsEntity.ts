@@ -1,9 +1,4 @@
-import {
-  UPDATE_PRIORITY,
-  Sprite,
-  Point,
-  TilingSprite,
-} from "pixi.js";
+import { UPDATE_PRIORITY, Sprite, Point, TilingSprite } from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe";
