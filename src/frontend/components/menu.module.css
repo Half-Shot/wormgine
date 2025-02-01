@@ -1,13 +1,16 @@
 .menu {
-  margin-left: auto;
-  margin-right: auto;
-  width: fit-content;
-  min-width: 33vw;
   margin-top: 5vh;
   color: var(--text);
   display: relative;
   position: absolute;
-  left: 33vw;
+  width: 100%;
+
+  > menu {
+    min-width: 33vw;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+  }
 }
 
 p {

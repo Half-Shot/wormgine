@@ -41,9 +41,11 @@ function SubMenu(props: {
       animate="center"
       exit="exit"
     >
-      <menu key={props.key} className={styles.menu}>
-        {props.children}
-      </menu>
+      <div className={styles.menu}>
+        <menu key={props.key} >
+          {props.children}
+        </menu>
+      </div>
     </motion.div>
   );
 }
