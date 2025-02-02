@@ -97,7 +97,7 @@ export class LocalGameInstance implements IRunningGameInstance {
       t.group = updates.teamGroup;
     }
     if (updates.wormCount) {
-      t.group = updates.wormCount;
+      t.wormCount = updates.wormCount;
     }
     this._proposedTeams.next({
       ...this._proposedTeams.value,
