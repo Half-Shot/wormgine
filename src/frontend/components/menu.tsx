@@ -13,6 +13,8 @@ import { Lobby } from "./menus/lobby";
 import { motion, AnimatePresence } from "framer-motion";
 import { ComponentChildren } from "preact";
 import { IRunningGameInstance } from "../../logic/gameinstance";
+import settingsAnim from "../../assets/ui/settings_icon.webm"
+import { JSXInternal } from "preact/src/jsx";
 
 interface Props {
   onNewGame: (
@@ -54,6 +56,8 @@ function mainMenu(
   onLocalGame: () => void,
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
+  const videoHover: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { ((evt.target as HTMLButtonElement).firstChild as HTMLVideoElement).play() };
+  const videoHoverOut: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { ((evt.target as HTMLButtonElement).firstChild as HTMLVideoElement).pause() };
   return (
     <SubMenu key="main-menu">
       <h1>Kobold Kombat</h1>
@@ -86,6 +90,9 @@ function mainMenu(
         <li>
           <button onClick={() => setCurrentMenu(GameMenu.Settings)}>
             Settings
+          </button>
+          <button onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+            <video src={settingsAnim} loop />
           </button>
         </li>
         <li>

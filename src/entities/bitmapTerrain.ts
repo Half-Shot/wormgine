@@ -8,7 +8,7 @@ import {
 } from "pixi.js";
 import { IPhysicalEntity } from "./entity";
 import {
-  generateQuadTreeFromTerrain,
+  generateQuadsFromTerrain,
   imageDataToTerrainBoundaries,
 } from "../terrain";
 import Flags from "../flags";
@@ -185,13 +185,14 @@ export class BitmapTerrain implements IPhysicalEntity {
     this.bounds = boundingBox;
 
     // Turn it into a quadtree of rects
-    const quadtreeRects = generateQuadTreeFromTerrain(
+    const quadtreeRects = generateQuadsFromTerrain(
       boundaries,
       boundingBox.width,
       boundingBox.height,
       boundingBox.x,
       boundingBox.y,
     );
+
     logger.debug("Found", quadtreeRects.length, "quads in terrain");
 
     // Now create the pieces

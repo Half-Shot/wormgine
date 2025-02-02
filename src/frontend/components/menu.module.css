@@ -91,3 +91,20 @@ h1 {
   background: grey;
   color: rgb(255, 77, 77);
 }
+
+button.videoButton {
+  padding: 0.1em;
+  width: fit-content;
+  > video {
+    pointer-events: none;
+    border-radius: 1em;
+    filter: grayscale(100%);
+    width: 15vw;
+  }
+  background-color: unset;
+  border-color: unset;
+}
+
+button.videoButton:hover > video {
+  filter: none;
+}
