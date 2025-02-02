@@ -21,7 +21,8 @@ import { useLocalTeamsHook } from "../../../settings";
 
 const logger = new Logger("Lobby");
 
-const MAX_WORMS = 2;
+const MAX_WORMS = 8;
+const DEFAULT_WORMS = 3;
 const MIN_PLAYERS = 1;
 
 interface Props {
@@ -105,7 +106,7 @@ export function TeamPicker({
   const addTeam = useCallback(
     (_evt: MouseEvent, team: StoredTeam) => {
       gameInstance
-        .addProposedTeam(team, MAX_WORMS, nextTeamGroup)
+        .addProposedTeam(team, Math.min(DEFAULT_WORMS, MAX_WORMS), nextTeamGroup)
         .catch((ex) => {
           logger.warning("Failed to add team", team, ex);
         });
