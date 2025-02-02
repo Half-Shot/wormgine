@@ -33,3 +33,17 @@ export function angleForVector({ x, y }: Vector) {
   // https://www.omnicalculator.com/math/vector-direction
   return Math.atan2(y, x);
 }
+
+
+export function randomChoice<T>(
+  options: T[],
+) {
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+
+export function shuffle<T>(
+  options: T[],
+) {
+  return options.slice(0).sort(() => Math.random() <= 0.5 ? 1 : -1);
+}

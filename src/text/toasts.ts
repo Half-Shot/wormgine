@@ -1,3 +1,5 @@
+import { randomChoice } from "../utils";
+
 export const TurnStartText = [
   "GO GO GO $WormName of $TeamName",
   "Look who's up, it's $WormName!",
@@ -88,7 +90,7 @@ export function templateRandomText(
   options: string[],
   parameters: Record<string, string> = {},
 ) {
-  let chooseOption = options[Math.floor(Math.random() * options.length)];
+  let chooseOption = randomChoice(options);
   for (const [key, value] of Object.entries(parameters)) {
     chooseOption = chooseOption.replaceAll("$" + key, value);
   }

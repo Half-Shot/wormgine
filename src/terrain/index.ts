@@ -1,6 +1,23 @@
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { Rectangle } from "pixi.js";
 
+export function imageDataToAlpha(boundaryX: number,
+  boundaryY: number,
+  imgData: ImageData,
+): {x: number, y: number, a: number}[] {
+  const data: {x: number, y: number, a: number}[] = [];
+  const lengthOfOneRow = imgData.width * 4;
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const x = (i % lengthOfOneRow) / 4;
+    const y = Math.ceil(i / lengthOfOneRow);
+    const realX = x + boundaryX;
+    const realY = y + boundaryY;
+    const [, , , a] = imgData.data.slice(i, i + 4);
+    data.push({x: realX, y: realY, a});
+  }
+  return data;
+}
+
 export function imageDataToTerrainBoundaries(
   boundaryX: number,
   boundaryY: number,
@@ -15,38 +32,28 @@ export function imageDataToTerrainBoundaries(
   const boundaries: Array<Vector2> = [];
   const xBoundaryTracker = new Array(imgData.width);
   const yBoundaryTracker = new Array(imgData.height);
+  const alphas = imageDataToAlpha(boundaryX, boundaryY, imgData);
 
-  const lengthOfOneRow = imgData.width * 4;
-  for (let i = 0; i < imgData.data.length; i += 4) {
-    const x = (i % lengthOfOneRow) / 4;
-    const y = Math.ceil(i / lengthOfOneRow);
-    const realX = x + boundaryX;
-    const realY = y + boundaryY;
-    const [, , , a] = imgData.data.slice(i, i + 4);
-
-    if (x === 0) {
-      xBoundaryTracker[x] = false;
-      yBoundaryTracker[y] = false;
-    }
+  for (const {x ,y,a} of alphas) {
 
     if (a > 5) {
       if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
         // This is to stop us from drawing straight lines down
         // when we have a boundary, but I don't know why this works.
         if (x > 1 && y > 1) {
-          boundaries.push(new Vector2(realX, realY));
+          boundaries.push(new Vector2(x, y));
         }
         xBoundaryTracker[x] = true;
         yBoundaryTracker[y] = true;
 
-        boundingBox.x = Math.min(boundingBox.x, realX);
-        boundingBox.y = Math.min(boundingBox.y, realY);
-        boundingBox.width = Math.max(boundingBox.width, realX);
-        boundingBox.height = Math.max(boundingBox.height, realY);
+        boundingBox.x = Math.min(boundingBox.x, x);
+        boundingBox.y = Math.min(boundingBox.y, y);
+        boundingBox.width = Math.max(boundingBox.width, x);
+        boundingBox.height = Math.max(boundingBox.height, y);
       }
     } else if (a === 0) {
       if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
-        boundaries.push(new Vector2(realX, realY));
+        boundaries.push(new Vector2(x, y));
         xBoundaryTracker[x] = false;
         yBoundaryTracker[y] = false;
       }
@@ -62,7 +69,7 @@ export function imageDataToTerrainBoundaries(
 
 export const QuadtreeCutoff = 4;
 
-export function generateQuadTreeFromTerrain(
+export function generateQuadsFromTerrain(
   boundaries: Vector2[],
   width: number,
   height: number,

@@ -29,6 +29,9 @@ import { NetGameWorld } from "../net/netGameWorld";
 import { combineLatest, filter } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/client";
+import { generateQuadsFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
+import { determineLocationsToSpawn } from "../terrain/spawner";
+import { randomChoice, shuffle } from "../utils";
 
 const log = new Logger("scenario");
 
@@ -187,23 +190,49 @@ export default async function runScenario(game: Game) {
     }
   }
 
-  const spawnPositions = level.objects.filter(
-    (v) => v.type === "wormgine.worm_spawn",
-  ) as WormSpawnRecordedState[];
+  // TODO: Make this work for the net code.
+  const tmpCanvas = BitmapTerrain.drawToCanvas(level.terrain.bitmap);
+  const context = tmpCanvas.getContext('2d')!;
+  const imgData = context.getImageData(
+    0,
+    0,
+    tmpCanvas.width,
+    tmpCanvas.height,
+  );
+  const { boundaries } = imageDataToTerrainBoundaries(
+    0,
+    0,
+    imgData,
+  );
+  tmpCanvas.remove();
+  // Turn it into a quadtree of rects
+  const quadtreeRects = generateQuadsFromTerrain(
+    boundaries,
+    tmpCanvas.width,
+    tmpCanvas.height,
+    0,
+    0,
+  );
+  const spawnPoints = shuffle(determineLocationsToSpawn(quadtreeRects, { wormHeightBuffer: 90, waterLevel: 900, hazardPoints: []}));
+
+
+  // const spawnPositions = level.objects.filter(
+  //   (v) => v.type === "wormgine.worm_spawn",
+  // ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
       log.info(
         `Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`,
-        spawnPositions,
+        spawnPoints,
       );
-      const nextLocationIdx = spawnPositions.findIndex(
-        (v) => v && v.teamGroup === wormInstance.team.group,
-      );
-      if (nextLocationIdx === -1) {
+      // const nextLocationIdx = spawnPositions.findIndex(
+      //   (v) => v && v.teamGroup === wormInstance.team.group,
+      // );
+      const pos = spawnPoints.pop();
+      console.log(pos);
+      if (!pos) {
         throw Error("No location to spawn worm");
       }
-      const nextLocation = spawnPositions[nextLocationIdx];
-      const pos = Coordinate.fromScreen(nextLocation.tra.x, nextLocation.tra.y);
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
         if (newProjectile instanceof PhysicsEntity) {
@@ -233,7 +262,7 @@ export default async function runScenario(game: Game) {
             ),
         wormInstance.uuid,
       );
-      delete spawnPositions[nextLocationIdx];
+      // delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
