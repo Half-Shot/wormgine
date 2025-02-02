@@ -197,6 +197,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       columns: 10,
       tileCount: 120,
       fps: 60,
+      randomizeStartFrame: true,
     });
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(

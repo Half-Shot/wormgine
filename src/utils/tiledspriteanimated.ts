@@ -5,6 +5,7 @@ interface TiledSpriteAnimatedOptions extends TilingSpriteOptions {
   columns: number;
   tileCount: number;
   fps: number;
+  randomizeStartFrame: boolean;
 }
 
 export class TiledSpriteAnimated extends TilingSprite {
@@ -19,6 +20,9 @@ export class TiledSpriteAnimated extends TilingSprite {
     this.targetFrameMs = 1000 / opts.fps;
     this.tileCount = opts.tileCount;
     this.columns = opts.columns;
+    if (opts.randomizeStartFrame) {
+      this.tileCounter = Math.floor(Math.random()*this.tileCount);
+    }
   }
 
   public get scaledWidth() {
