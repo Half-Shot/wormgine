@@ -56,33 +56,22 @@ h1 {
   }
 }
 
-.levelPicker {
+.mainMenu {
   margin-left: auto;
   margin-right: auto;
+  display: grid;
   width: fit-content;
+  grid-template-columns: 50% 50%;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+  padding: 0;
+  list-style: none;
 }
 
-.levelPicker button {
+.mainMenu button {
   font-size: 1.5em;
   width: 12em;
   color: var(--bg);
-  background-color: var(--highlight);
-  border-color: var(--highlight);
-}
-.levelPicker button:disabled {
-  font-size: 1.5em;
-  width: 12em;
-  color: var(--bdbdbd);
-  background-color: var(--bg);
-  border-color: var(--bg);
-}
-
-.levelPicker {
-  padding: 0;
-}
-.levelPicker li {
-  margin-bottom: 2em;
-  list-style: none;
 }
 
 .error {
@@ -93,16 +82,32 @@ h1 {
 }
 
 button.videoButton {
+  border: none;
+  background-color: var(--links);
   padding: 0.1em;
-  width: fit-content;
+  cursor: pointer;
+  width: 15vw;
   > video {
     pointer-events: none;
     border-radius: 1em;
-    filter: grayscale(100%);
-    width: 15vw;
+    width: 100%;
+
+    &:disabled {
+      filter: grayscale(100%);
+    }
   }
-  background-color: unset;
-  border-color: unset;
+  > span {
+    margin-top: 0.5em;
+    padding: 0.1em;
+    pointer-events: none;
+    width: 15vw;
+    position: absolute;
+    display: inline;
+    background: rgba(0, 0, 0, 0.34);
+    border-radius: 1em;
+    font-weight: 600;
+    color: var(--highlight);
+  }
 }
 
 button.videoButton:hover > video {

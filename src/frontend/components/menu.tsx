@@ -15,6 +15,7 @@ import { ComponentChildren } from "preact";
 import { IRunningGameInstance } from "../../logic/gameinstance";
 import settingsAnim from "../../assets/ui/settings_icon.webm"
 import { JSXInternal } from "preact/src/jsx";
+import { useGameSettingsHook } from "../../settings";
 
 interface Props {
   onNewGame: (
@@ -56,8 +57,9 @@ function mainMenu(
   onLocalGame: () => void,
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
-  const videoHover: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { ((evt.target as HTMLButtonElement).firstChild as HTMLVideoElement).play() };
-  const videoHoverOut: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { ((evt.target as HTMLButtonElement).firstChild as HTMLVideoElement).pause() };
+  const [ {  reduceMotion } ] = useGameSettingsHook();
+  const videoHover: JSXInternal.MouseEventHandler<HTMLButtonElement> = useCallback((evt) => { if (reduceMotion) { return; }; (evt.target as HTMLButtonElement).querySelector('video')?.play() }, [reduceMotion]);
+  const videoHoverOut: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { (evt.target as HTMLButtonElement).querySelector('video')?.pause() };
   return (
     <SubMenu key="main-menu">
       <h1>Kobold Kombat</h1>
@@ -70,33 +72,30 @@ function mainMenu(
           lastCommit={lastCommit}
         />
       </p>
-      <ul className={styles.levelPicker}>
+      <ul className={styles.mainMenu}>
         <li>
-          <button onClick={() => onLocalGame()}>Skirmish</button>
-        </li>
-        <li>
-          <button disabled>Missions</button>
-        </li>
-        <li>
-          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)}>
-            Team Editor
-          </button>
-        </li>
-        <li>
-          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)}>
-            Online Play
-          </button>
-        </li>
-        <li>
-          <button onClick={() => setCurrentMenu(GameMenu.Settings)}>
-            Settings
-          </button>
-          <button onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+          <button onClick={() => onLocalGame()} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Skirmish</span>
             <video src={settingsAnim} loop />
           </button>
         </li>
         <li>
-          <button disabled>Developer Tools</button>
+          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Team Editor</span>
+            <video src={settingsAnim} loop />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Online Play</span>
+            <video src={settingsAnim} loop />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => setCurrentMenu(GameMenu.Settings)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
+          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Settings</span>
+            <video src={settingsAnim} loop />
+          </button>
         </li>
       </ul>
       <p>
