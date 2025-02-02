@@ -22,7 +22,7 @@
                     },
                     "fps": 60,
                     "group_color": "#00000000",
-                    "height": 144,
+                    "height": 148,
                     "locked": false,
                     "name": "kobold.svg",
                     "shapes": [
@@ -3951,7 +3951,7 @@
                     ],
                     "uuid": "d156eafc-7ab2-4c95-935d-04212301d891",
                     "visible": true,
-                    "width": 96
+                    "width": 104
                 }
             ]
         },
