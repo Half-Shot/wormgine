@@ -42,6 +42,11 @@ export interface GameConfigEvent {
   content: {
     rules: GameRules;
     teams: Team[];
+    level?: {
+      name: string;
+      data_mxc: string;
+      bitmap_mxc: string;
+    };
   };
 }
 

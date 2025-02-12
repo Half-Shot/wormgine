@@ -83,6 +83,7 @@ const DEFAULT_PER_ROUND_STATE: PerRoundState = {
 
 export interface WormRecordedState extends PlayableRecordedState {
   weapon: IWeaponCode;
+  facingRight: boolean;
 }
 
 /**
@@ -116,7 +117,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   private weaponTimerSecs = 3;
   public fireAngle = 0;
   protected targettingGfx: Graphics;
-  private facingRight = true;
+  protected facingRight = true;
   private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
   private weaponSprite: Sprite;
   protected motionTween?: TweenEngine;
@@ -207,7 +208,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
         .setSolverGroups(Worm.collisionBitmask)
-        .setFriction(0.1),
+        .setFriction(0.025),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
@@ -217,6 +218,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
     });
+    // To give the worm a look of appearing on the ground.
+    this.renderOffset = new Point(0, 4);
     this.weaponSprite = new Sprite({
       texture: this.currentWeapon.sprite?.texture,
     });
@@ -434,9 +437,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         this.fireAngle = Math.PI * 2 - this.fireAngle;
       }
       this.facingRight = !this.facingRight;
-      this.sprite.scale.x = this.facingRight
-        ? Math.abs(this.sprite.scale.x)
-        : -Math.abs(this.sprite.scale.x);
     }
 
     this.state.transition(
@@ -661,6 +661,10 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       return;
     }
 
+    this.sprite.scale.x = this.facingRight
+      ? Math.abs(this.sprite.scale.x)
+      : -Math.abs(this.sprite.scale.x);
+
     const falling = !this.isSinking && this.body.linvel().y > 4;
 
     this.targettingGfx.visible =
@@ -761,6 +765,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       wormIdent: this.wormIdent.uuid,
       type: EntityType.Worm,
       weapon: this.weapon.code,
+      facingRight: this.facingRight,
     };
   }
 

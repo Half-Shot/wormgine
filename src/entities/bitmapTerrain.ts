@@ -9,6 +9,7 @@ import {
 import { IPhysicalEntity } from "./entity";
 import {
   generateQuadsFromTerrain,
+  imageDataToAlpha,
   imageDataToTerrainBoundaries,
 } from "../terrain";
 import Flags from "../flags";
@@ -177,9 +178,10 @@ export class BitmapTerrain implements IPhysicalEntity {
       boundaryWidth,
       boundaryHeight,
     );
+
+    const alphas = imageDataToAlpha(boundaryX, boundaryY, imgData);
     const { boundaries, boundingBox } = imageDataToTerrainBoundaries(
-      boundaryX,
-      boundaryY,
+      alphas,
       imgData,
     );
     this.bounds = boundingBox;

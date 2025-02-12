@@ -6,9 +6,10 @@ import { GameRules } from "../logic/gamestate";
 import { RecordedEntityState } from "../state/model";
 import {
   parseObj,
-  TiledEnumTeamGroup,
+  TiledForgroundLayer,
   TiledGameRulesProperties,
   TiledLevel,
+  TiledObjectLayer,
   TiledTeamProperties,
   TiledTileset,
 } from "./types";
@@ -16,11 +17,13 @@ import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { Team, TeamGroup, WormIdentity } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
 import { DefaultWeaponSchema } from "../weapons/schema";
+import { getSpawnPoints } from "../terrain/spawner";
+import { BaseRecordedState } from "../entities/state/base";
 
 export const COMPATIBLE_TILED_VERSION = "1.11";
 const logger = new Logger("scenarioParser");
 
-interface Scenario {
+export interface Scenario {
   terrain: {
     bitmap: Texture;
     destructible: boolean;
@@ -32,66 +35,18 @@ interface Scenario {
   teams: Team[];
 }
 
-function parseObjectToRecordedState(object: ParsedObject): RecordedEntityState {
-  if (object.type === "wormgine.worm_spawn") {
-    const wp: WormSpawnRecordedState = {
-      type: "wormgine.worm_spawn",
-      tra: {
-        x: object.x,
-        y: object.y,
-      },
-      rot: 0,
-      vel: {
-        x: 0,
-        y: 0,
-      },
-      teamGroup:
-        TeamGroup[
-          object.properties["wormgine.team_group"] as TiledEnumTeamGroup
-        ],
-    };
-    return wp;
+function parseObjectToRecordedState(
+  object: ParsedTiledObject,
+): BaseRecordedState {
+  switch (object.type) {
+    case "wormgine.worm_spawn":
+      return new WormSpawnRecordedState(object);
+    case "wormgine.water":
+    case "wormgine.mine":
+    case "wormgine.target":
+    default:
+      return new BaseRecordedState(object);
   }
-  if (object.type === "wormgine.water") {
-    return {
-      type: "wormgine.water",
-      tra: {
-        x: 0,
-        y: object.y,
-      },
-      rot: 0,
-      vel: {
-        x: 0,
-        y: 0,
-      },
-    };
-  }
-  if (object.type === "wormgine.target") {
-    return {
-      type: "wormgine.target",
-      tra: {
-        x: object.x,
-        y: object.y,
-      },
-      rot: 0,
-      vel: {
-        x: 0,
-        y: 0,
-      },
-    };
-  }
-  return {
-    type: "wormgine.unknown",
-    tra: {
-      x: object.x,
-      y: object.y,
-    },
-    rot: 0,
-    vel: {
-      x: 0,
-      y: 0,
-    },
-  };
 }
 
 function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
@@ -162,7 +117,7 @@ function loadObjectListing(dataAssets: AssetData) {
   return tileset;
 }
 
-interface ParsedObject {
+export interface ParsedTiledObject {
   properties: {
     [x: string]: string | number | boolean;
   };
@@ -173,83 +128,167 @@ interface ParsedObject {
   y: number;
 }
 
-export async function scenarioParser(
-  level: string,
-  dataAssets: AssetData,
-  textureAssets: AssetTextures,
-): Promise<Scenario> {
-  // Load tiled object layer.
-  const tileset = loadObjectListing(dataAssets);
-  if (level in dataAssets === false) {
-    throw Error(`Level '${level}' not found`);
+export class ScenarioBuilder {
+  public static async fromBlob(
+    blob: Blob,
+    assets: AssetData,
+  ): Promise<ScenarioBuilder> {
+    const scenarioMap = JSON.parse(await blob.text()) as TiledLevel;
+    return new ScenarioBuilder(scenarioMap, assets);
   }
-  // Tested above.
-  const scenarioMap = dataAssets[level as keyof AssetData] as TiledLevel;
-  if (scenarioMap.version !== COMPATIBLE_TILED_VERSION) {
-    throw Error(
-      `Tiled map was built for ${scenarioMap.version}, but we only support ${COMPATIBLE_TILED_VERSION}`,
+
+  public static fromDataAsset(
+    name: keyof AssetData,
+    assets: AssetData,
+  ): ScenarioBuilder {
+    if (name in assets === false) {
+      throw Error(`Level '${name}' not found`);
+    }
+    // Tested above.
+    const scenarioMap = assets[name] as TiledLevel;
+    return new ScenarioBuilder(scenarioMap, assets);
+  }
+
+  private readonly objectLayer: TiledObjectLayer;
+  private readonly foregroundLayer: TiledForgroundLayer;
+  private readonly bitmapAssetName: string;
+  private bitmap?: Texture;
+  private readonly tileset: TiledTileset;
+  private readonly objectState: BaseRecordedState[];
+  private readonly providedGameRules: GameRules;
+  private readonly providedTeams: Team[];
+
+  get hasWormSpawns() {
+    return this.objectLayer.objects.some(
+      (o) => o.type === "wormgine.worm_spawn",
     );
   }
-  const foregroundLayer = scenarioMap.layers.find(
-    (l) => l.type === "imagelayer",
-  );
-  const objectLayer = scenarioMap.layers.find((l) => l.type === "objectgroup");
 
-  if (!foregroundLayer) {
-    throw Error("Tiled map is missing foreground layer");
+  constructor(
+    private readonly scenarioMap: TiledLevel,
+    assets: AssetData,
+  ) {
+    this.tileset = loadObjectListing(assets);
+    if (scenarioMap.version !== COMPATIBLE_TILED_VERSION) {
+      throw Error(
+        `Tiled map was built for ${scenarioMap.version}, but we only support ${COMPATIBLE_TILED_VERSION}`,
+      );
+    }
+    const objectLayer = this.scenarioMap.layers.find(
+      (l) => l.type === "objectgroup",
+    );
+    if (!objectLayer) {
+      throw Error("Tiled map is missing object layer");
+    }
+    this.objectLayer = objectLayer;
+    const foregroundLayer = scenarioMap.layers.find(
+      (l) => l.type === "imagelayer",
+    );
+    if (!foregroundLayer) {
+      throw Error("Tiled map is missing foreground layer");
+    }
+    this.foregroundLayer = foregroundLayer;
+
+    const prefilteredObjects = this.objectLayer.objects.map((o) =>
+      parseObj(o, this.tileset),
+    );
+
+    this.providedGameRules = determineRules(
+      prefilteredObjects.find((o) => o.type === "wormgine.game_rules")
+        ?.properties as unknown as TiledGameRulesProperties,
+    );
+
+    this.providedTeams = determineTeams(
+      prefilteredObjects
+        .filter((o) => o.type === "wormgine.team")
+        .map((v) => v.properties as unknown as TiledTeamProperties),
+    );
+
+    this.objectState = prefilteredObjects
+      .map((oData) => {
+        if (oData.type === "unknown") {
+          // Skip unknown objects.
+          logger.warning("Map had unknown object", oData);
+          return;
+        }
+        return parseObjectToRecordedState(oData);
+      })
+      .filter((v) => v !== undefined);
+
+    this.bitmapAssetName = "levels_" + foregroundLayer.image.split(".png")[0];
   }
 
-  if (!objectLayer) {
-    throw Error("Tiled map is missing object layer");
+  public loadBitmapFromAssets(
+    textures: AssetTextures,
+    overrideForegroundName?: string,
+  ): ScenarioBuilder {
+    const key = (overrideForegroundName ??
+      this.bitmapAssetName) as keyof AssetTextures;
+    this.bitmap = textures[key];
+    if (!this.bitmap) {
+      throw Error(`Cannot find texture '${this.bitmapAssetName}'`);
+    }
+    return this;
   }
 
-  const prefilteredObjects = objectLayer.objects.map((o) =>
-    parseObj(o, tileset),
-  );
-
-  const objects = prefilteredObjects
-    .map((oData) => {
-      if (oData.type === "unknown") {
-        // Skip unknown objects.
-        logger.warning("Map had unknown object", oData);
-        return;
-      }
-      return parseObjectToRecordedState(oData);
-    })
-    .filter((v) => v !== undefined);
-
-  const rules = determineRules(
-    prefilteredObjects.find((o) => o.type === "wormgine.game_rules")
-      ?.properties as unknown as TiledGameRulesProperties,
-  );
-
-  const bitmapName = "levels_" + foregroundLayer.image.split(".png")[0];
-  const bitmap = textureAssets[bitmapName as keyof AssetTextures];
-  if (!bitmap) {
-    throw Error("Could not find texture for level.");
+  public async loadBitmapFromBlob(blob: Blob): Promise<ScenarioBuilder> {
+    this.bitmap = Texture.from(await createImageBitmap(blob));
+    if (!this.bitmap) {
+      throw Error(`Cannot find texture '${this.bitmapAssetName}'`);
+    }
+    return this;
   }
 
-  const teams = determineTeams(
-    prefilteredObjects
-      .filter((o) => o.type === "wormgine.team")
-      .map((v) => v.properties as unknown as TiledTeamProperties),
-  );
+  public insertObjects(objects: BaseRecordedState[]): ScenarioBuilder {
+    this.objectState.push(...objects);
+    return this;
+  }
 
-  const destructible = !!(
-    foregroundLayer.properties?.find(
-      (v) => v.name === "wormgine.terrain_destructible",
-    )?.value ?? true
-  );
+  addSpawns(teams: Team[]): ScenarioBuilder {
+    if (!this.bitmap) {
+      throw Error("Bitmap hasn't been loaded");
+    }
+    const newSpawns = getSpawnPoints(this.bitmap, this.objectState, teams);
+    this.insertObjects(newSpawns);
 
-  return {
-    terrain: {
-      bitmap: textureAssets[bitmapName as keyof AssetTextures],
-      x: foregroundLayer.offsetx ?? foregroundLayer.x,
-      y: foregroundLayer.offsety ?? foregroundLayer.y,
-      destructible,
-    },
-    objects,
-    rules,
-    teams,
-  };
+    return this;
+  }
+
+  public parse() {
+    const destructible = !!(
+      this.foregroundLayer.properties?.find(
+        (v) => v.name === "wormgine.terrain_destructible",
+      )?.value ?? true
+    );
+
+    if (!this.bitmap) {
+      throw Error("Bitmap hasn't been loaded");
+    }
+
+    return {
+      terrain: {
+        bitmap: this.bitmap,
+        x: this.foregroundLayer.offsetx ?? this.foregroundLayer.x,
+        y: this.foregroundLayer.offsety ?? this.foregroundLayer.y,
+        destructible,
+      },
+      objects: this.objectState,
+      rules: this.providedGameRules,
+      teams: this.providedTeams,
+    };
+  }
+  public toBlob(): Blob {
+    let i = 0;
+    const newLevel = JSON.stringify({
+      ...this.scenarioMap,
+      layers: [
+        this.scenarioMap.layers.filter((t) => t.type !== "objectgroup"),
+        {
+          objects: this.objectState.map((o) => o.toTiledObject(++i)),
+          type: "objectgroup",
+        } satisfies TiledObjectLayer,
+      ],
+    });
+    return new Blob([newLevel], { type: "application/json" });
+  }
 }

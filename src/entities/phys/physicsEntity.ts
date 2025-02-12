@@ -156,7 +156,6 @@ export abstract class PhysicsEntity<
     const translation = this.body.translation();
     const rotation = this.body.rotation();
     const linvel = this.body.linvel();
-    log.debug("Recording state", translation, rotation, linvel);
     return {
       type: -1,
       tra: {

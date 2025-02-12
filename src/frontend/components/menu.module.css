@@ -68,12 +68,6 @@ h1 {
   list-style: none;
 }
 
-.mainMenu button {
-  font-size: 1.5em;
-  width: 12em;
-  color: var(--bg);
-}
-
 .error {
   padding: 1em;
   border: 1px solid var(--highlight);
@@ -83,10 +77,10 @@ h1 {
 
 button.videoButton {
   border: none;
-  background-color: var(--links);
+  background-color: var(--highlight);
   padding: 0.1em;
   cursor: pointer;
-  width: 15vw;
+  width: 25em;
   > video {
     pointer-events: none;
     border-radius: 1em;
@@ -97,10 +91,12 @@ button.videoButton {
     }
   }
   > span {
+    font-size: 16pt;
+    margin-left: 0.5em;
     margin-top: 0.5em;
     padding: 0.1em;
     pointer-events: none;
-    width: 15vw;
+    width: 15em;
     position: absolute;
     display: inline;
     background: rgba(0, 0, 0, 0.34);

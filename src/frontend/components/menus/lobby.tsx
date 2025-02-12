@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import {
-  ClientState,
-  NetGameClient,
-  NetGameInstance,
-  RunningNetGameInstance,
-} from "../../../net/client";
+import { ClientState, NetGameClient } from "../../../net/client";
 import Logger from "../../../log";
 import { useObservableEagerState } from "observable-hooks";
 import { StoredTeam } from "../../../settings";
@@ -18,6 +13,11 @@ import {
   ProposedTeam,
 } from "../../../logic/gameinstance";
 import { useLocalTeamsHook } from "../../../settings";
+import {
+  NetGameInstance,
+  RunningNetGameInstance,
+} from "../../../net/netgameinstance";
+import { MapPicker } from "../lobby/map-render";
 
 const logger = new Logger("Lobby");
 
@@ -106,7 +106,11 @@ export function TeamPicker({
   const addTeam = useCallback(
     (_evt: MouseEvent, team: StoredTeam) => {
       gameInstance
-        .addProposedTeam(team, Math.min(DEFAULT_WORMS, MAX_WORMS), nextTeamGroup)
+        .addProposedTeam(
+          team,
+          Math.min(DEFAULT_WORMS, MAX_WORMS),
+          nextTeamGroup,
+        )
         .catch((ex) => {
           logger.warning("Failed to add team", team, ex);
         });
@@ -211,10 +215,25 @@ export function ActiveLobby({
     [membersMap],
   );
   const proposedTeams = useObservableEagerState(gameInstance.proposedTeams);
+  const mapReady = useObservableEagerState(gameInstance.mapReady);
+  // TODO: Replace with level picker
+  useEffect(() => {
+    if (mapReady) {
+      return;
+    }
+    if (gameInstance?.isHost && !mapReady) {
+      gameInstance
+        .chooseNewLevel("levels_testing", "levels_testingGround")
+        .catch((ex) => {
+          logger.error("Failed to set level", ex);
+        });
+    }
+  }, [gameInstance, mapReady]);
 
   const viableToStart = useMemo(
     () =>
       gameInstance.isHost &&
+      mapReady &&
       members.length >= MIN_PLAYERS &&
       proposedTeams.length >= 2 &&
       Object.keys(
@@ -226,7 +245,7 @@ export function ActiveLobby({
           {},
         ),
       ).length >= 2,
-    [gameInstance, members, proposedTeams],
+    [gameInstance, mapReady, members, proposedTeams],
   );
 
   const lobbyLink =
@@ -242,23 +261,33 @@ export function ActiveLobby({
           <a href={lobbyLink}>{lobbyLink}</a>.
         </p>
       )}
-      <section>
-        <h2>Players</h2>
-        <ul>
-          {members.map(([userId, displayname]) => {
-            return (
-              <li>
-                {displayname}{" "}
-                {userId === gameInstance.hostUserId ? (
-                  <span title="Host">🌟</span>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <TeamPicker gameInstance={gameInstance} proposedTeams={proposedTeams} />
+      <div className={styles.controlGrid}>
+        <div>
+          <section>
+            <h2>Players</h2>
+            <ul>
+              {members.map(([userId, displayname]) => {
+                return (
+                  <li>
+                    {displayname}{" "}
+                    {userId === gameInstance.hostUserId ? (
+                      <span title="Host">🌟</span>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+          <TeamPicker
+            gameInstance={gameInstance}
+            proposedTeams={proposedTeams}
+          />
+        </div>
+        <div>
+          <h2>Map</h2>
+          <MapPicker gameInstance={gameInstance} />
+        </div>
+      </div>
 
       <section>
         <button onClick={() => onOpenIngame()} disabled={!viableToStart}>
@@ -274,6 +303,7 @@ export function ActiveLobby({
 
 function LocalLobby({ onOpenIngame, exitToMenu }: Omit<Props, "client">) {
   const gameInstance = new LocalGameInstance();
+
   return (
     <ActiveLobby
       gameInstance={gameInstance}

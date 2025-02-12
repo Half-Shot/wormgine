@@ -4,13 +4,8 @@ import {
   GameStageEventType,
   GameConfigEventType,
   GameProposedTeamEventType,
-  GameActionEventType,
-  GameClientReadyEventType,
-  GameStateIncrementalEventType,
-  GameStateIncrementalEvent,
 } from "./models";
 import { EventEmitter } from "pixi.js";
-import { RecordedEntityState, StateRecordLine } from "../state/model";
 import {
   ClientEvent,
   createClient,
@@ -18,36 +13,24 @@ import {
   MatrixError,
   MemoryStore,
   Preset,
-  Room,
   RoomEvent,
-  RoomStateEvent,
   SyncState,
   Visibility,
 } from "matrix-js-sdk";
-import { Team, TeamGroup, WormIdentity } from "../logic/teams";
-import { GameRules } from "../logic/gamestate";
-import { BehaviorSubject, map, Observable } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import Logger from "../log";
-import { StoredTeam, WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
-import { MatrixStateReplay } from "../state/player";
-import { fromNetObject, toNetObject, toNetworkFloat } from "./netfloat";
-import { GameStage, IGameInstance, ProposedTeam } from "../logic/gameinstance";
+import { WORMGINE_STORAGE_KEY_CLIENT_CONFIG } from "../settings";
+import { GameStage, ProposedTeam } from "../logic/gameinstance";
+import { NetGameInstance, RunningNetGameInstance } from "./netgameinstance";
+import { GameRules } from "../logic/gamestate";
+import { getAssets } from "../assets";
+import { ScenarioBuilder } from "../levels/scenarioParser";
 
 const logger = new Logger("NetClient");
 
 export interface NetClientConfig {
   baseUrl: string;
   accessToken: string;
-}
-
-interface NetGameConfiguration {
-  myUserId: string;
-  hostUserId: string;
-  members: Record<string, string>;
-  // state_key ->
-  teams: Record<string, ProposedTeam>;
-  stage: GameStage;
-  rules: GameRules;
 }
 
 export enum ClientState {
@@ -57,203 +40,6 @@ export enum ClientState {
   AuthenticationError,
   OfflineError,
   UnknownError,
-}
-export class NetGameInstance implements IGameInstance {
-  private readonly _stage: BehaviorSubject<GameStage>;
-  public readonly stage: Observable<GameStage>;
-  private readonly _members: BehaviorSubject<Record<string, string>>;
-  public members: Observable<Record<string, string>>;
-  private readonly _proposedTeams: BehaviorSubject<
-    Record<string, ProposedTeam>
-  >;
-  public readonly proposedTeams: Observable<ProposedTeam[]>;
-  private readonly _rules: BehaviorSubject<GameRules>;
-  public readonly proposedRules: Observable<GameRules>;
-
-  public readonly hostUserId: string;
-  public readonly isHost: boolean;
-
-  public get myUserId() {
-    return this.client.userId;
-  }
-
-  public get roomId() {
-    return this.room.roomId;
-  }
-
-  constructor(
-    protected readonly room: Room,
-    protected readonly client: NetGameClient,
-    initialConfiguration: NetGameConfiguration,
-  ) {
-    this.hostUserId = initialConfiguration.hostUserId;
-    this.isHost =
-      initialConfiguration.hostUserId === initialConfiguration.myUserId;
-    this._members = new BehaviorSubject<Record<string, string>>(
-      initialConfiguration.members,
-    );
-    this._stage = new BehaviorSubject(initialConfiguration.stage);
-    this.stage = this._stage.asObservable();
-    this._rules = new BehaviorSubject(initialConfiguration.rules);
-    this.proposedRules = this._rules.asObservable();
-    this._proposedTeams = new BehaviorSubject(initialConfiguration.teams);
-    this.proposedTeams = this._proposedTeams.pipe(map((v) => Object.values(v)));
-    this.members = this._members.asObservable();
-    if (!this.room) {
-      throw Error("Room not found");
-    }
-
-    this.client.client.on(RoomStateEvent.Events, (event, state) => {
-      logger.debug("Got room events", event, state);
-      if (state.roomId !== this.roomId) {
-        return;
-      }
-      const stateKey = event.getStateKey();
-      const type = event.getType();
-      logger.debug("Proposing things", stateKey, type, this._stage.value);
-      if (
-        stateKey &&
-        type === GameProposedTeamEventType &&
-        this._stage.value === GameStage.Lobby
-      ) {
-        const content = event.getContent() as ProposedTeam;
-        if (Object.keys(content).length > 0) {
-          this._proposedTeams.next({
-            ...this._proposedTeams.value,
-            [stateKey]: content,
-          });
-        } else {
-          this._proposedTeams.next(
-            Object.fromEntries(
-              Object.entries(this._proposedTeams.value).filter(
-                ([sk]) => sk !== stateKey,
-              ),
-            ),
-          );
-        }
-      } else if (stateKey === "" && type === GameStageEventType) {
-        const content = event.getContent() as GameStageEvent["content"];
-        this._stage.next(content.stage);
-      } else if (stateKey === "" && type === GameConfigEventType) {
-        const content = event.getContent() as GameConfigEvent["content"];
-        this._rules.next(content.rules);
-      }
-    });
-
-    this.client.client.on(RoomStateEvent.Members, (_e, _s, member) => {
-      if (member.roomId !== this.roomId) {
-        return;
-      }
-      if (member.membership === "join") {
-        this._members.next({
-          ...this._members.value,
-          [member.userId]: member.name,
-        });
-      } else {
-        this._members.next(
-          Object.fromEntries(
-            Object.entries(this._members.value).filter(
-              ([u]) => u !== member.userId,
-            ),
-          ),
-        );
-      }
-    });
-  }
-
-  public canAlterTeam(t: ProposedTeam): boolean {
-    return this.isHost || t.playerUserId === this.myUserId;
-  }
-
-  public async updateGameConfig() {
-    const teams: Team[] = Object.values(this._proposedTeams.value).map((v) => ({
-      name: v.name,
-      flag: v.flagb64,
-      group: v.group,
-      playerUserId: v.playerUserId,
-      uuid: v.uuid,
-      // Needs to come from rules.
-      ammo: this._rules.value.ammoSchema,
-      worms: v.worms.slice(0, v.wormCount).map(
-        (w) =>
-          ({
-            name: w,
-            health: this._rules.value.wormHealth,
-            maxHealth: this._rules.value.wormHealth,
-            uuid: globalThis.crypto.randomUUID(),
-          }) satisfies WormIdentity,
-      ),
-    }));
-    await this.client.client.sendStateEvent(this.roomId, GameConfigEventType, {
-      rules: this._rules.value,
-      teams,
-    } satisfies GameConfigEvent["content"]);
-  }
-
-  public async addProposedTeam(
-    proposedTeam: StoredTeam,
-    wormCount: number,
-    teamGroup: TeamGroup,
-  ) {
-    await this.client.client.sendStateEvent(
-      this.roomId,
-      GameProposedTeamEventType,
-      {
-        ...proposedTeam,
-        group: teamGroup,
-        wormCount,
-        playerUserId: this.client.userId,
-      },
-      proposedTeam.uuid,
-    );
-  }
-
-  public async updateProposedTeam(
-    proposedTeam: ProposedTeam,
-    updates: { wormCount?: number; teamGroup?: TeamGroup },
-  ) {
-    await this.client.client.sendStateEvent(
-      this.roomId,
-      GameProposedTeamEventType,
-      {
-        ...proposedTeam,
-        ...(updates.teamGroup !== undefined && { group: updates.teamGroup }),
-        ...(updates.wormCount !== undefined && {
-          wormCount: updates.wormCount,
-        }),
-      },
-      proposedTeam.uuid,
-    );
-  }
-
-  public async removeProposedTeam(proposedTeam: ProposedTeam) {
-    await this.client.client.sendStateEvent(
-      this.roomId,
-      GameProposedTeamEventType,
-      {},
-      proposedTeam.uuid,
-    );
-  }
-
-  public async startGame() {
-    this.updateGameConfig();
-    await this.client.client.sendStateEvent(this.roomId, GameStageEventType, {
-      stage: GameStage.InProgress,
-    } satisfies GameStageEvent["content"]);
-  }
-
-  public async exitGame() {
-    // TODO: Perform any cleanup
-    await this.client.client.leave(this.roomId);
-  }
-
-  public async sendGameState(data: GameStateIncrementalEvent["content"]) {
-    await this.client.client.sendEvent(
-      this.roomId,
-      GameStateIncrementalEventType,
-      data,
-    );
-  }
 }
 
 const WormgineRoomType = "uk.half-shot.wormgine.v1";
@@ -414,9 +200,7 @@ export class NetGameClient extends EventEmitter {
     await this.client.setDisplayName(name);
   }
 
-  public async createGameRoom(
-    initialConfig: GameConfigEvent["content"],
-  ): Promise<string> {
+  public async createGameRoom(rules: GameRules): Promise<string> {
     return (
       await this.client.createRoom({
         name: `Wormtrix ${new Date().toUTCString()}`,
@@ -444,7 +228,10 @@ export class NetGameClient extends EventEmitter {
           {
             state_key: "",
             type: "uk.half-shot.wormgine.game_config",
-            content: initialConfig,
+            content: {
+              rules,
+              teams: [],
+            },
           } satisfies GameConfigEvent,
         ],
       })
@@ -504,6 +291,11 @@ export class NetGameClient extends EventEmitter {
           .map((m) => [m.state_key, m.content as ProposedTeam]),
       ),
       rules: configEvent.content.rules,
+      level: configEvent.content.level && {
+        mapName: configEvent.content.level.name,
+        levelMxc: configEvent.content.level.data_mxc,
+        terrainMxc: configEvent.content.level.bitmap_mxc,
+      },
     };
 
     if (gameStage === GameStage.InProgress) {
@@ -513,141 +305,58 @@ export class NetGameClient extends EventEmitter {
       if (!configEvent) {
         throw Error("In progress game had no state");
       }
+
+      if (!configEvent.content.level) {
+        throw Error("Missing required level content");
+      }
+
+      const bitmapMxc = await this.downloadMedia(
+        configEvent.content.level.bitmap_mxc,
+      );
+      const dataBlob = await this.downloadMedia(
+        configEvent.content.level.data_mxc,
+      );
+
+      const assets = getAssets();
+      const scenario = (
+        await (
+          await ScenarioBuilder.fromBlob(dataBlob, assets.data)
+        ).loadBitmapFromBlob(bitmapMxc)
+      ).parse();
+
       return new RunningNetGameInstance(
         room,
         this,
         initialConfig,
         configEvent["content"],
+        scenario,
       );
     }
 
     return new NetGameInstance(room, this, initialConfig);
   }
-}
 
-type DecodedGameState = {
-  iteration: number;
-  ents: (RecordedEntityState & { uuid: string })[];
-};
-
-export class RunningNetGameInstance extends NetGameInstance {
-  private readonly _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
-  public readonly gameConfig: Observable<GameConfigEvent["content"]>;
-  private readonly _gameState: BehaviorSubject<DecodedGameState>;
-  public readonly gameState: Observable<DecodedGameState>;
-  public readonly player: MatrixStateReplay;
-
-  public get gameConfigImmediate() {
-    return this._gameConfig.value;
-  }
-  public get gameHasStarted() {
-    return this._gameState.value.iteration > 0;
+  public async uploadMedia(data: Blob): Promise<string> {
+    const req = await this.client.uploadContent(data);
+    return req.content_uri;
   }
 
-  public get rules() {
-    return this.initialConfig.rules;
-  }
-
-  constructor(
-    room: Room,
-    client: NetGameClient,
-    private readonly initialConfig: NetGameConfiguration,
-    currentState: GameConfigEvent["content"],
-  ) {
-    super(room, client, initialConfig);
-    this._gameConfig = new BehaviorSubject(currentState);
-    this.gameConfig = this._gameConfig.asObservable();
-    this._gameState = new BehaviorSubject({
-      iteration: 0,
-      ents: [] as DecodedGameState["ents"],
-    });
-    this.gameState = this._gameState.asObservable();
-    this.player = new MatrixStateReplay();
-    room.on(RoomStateEvent.Events, (event) => {
-      const stateKey = event.getStateKey();
-      const type = event.getType();
-      if (
-        stateKey &&
-        type === GameConfigEventType &&
-        event.getSender() !== this.myUserId
-      ) {
-        const content = fromNetObject(
-          event.getContent() as GameConfigEvent["content"],
-        );
-        this._gameConfig.next(content as GameConfigEvent["content"]);
-      }
-    });
-    room.on(RoomEvent.Timeline, (event) => {
-      const type = event.getType();
-      // Filter our won events out.
-      if (
-        type === GameActionEventType &&
-        !event.isState() &&
-        event.getSender() !== this.myUserId
-      ) {
-        void this.player.handleEvent(event.getContent());
-      }
-      if (
-        type === GameStateIncrementalEventType &&
-        event.getSender() !== this.myUserId
-      ) {
-        const content = fromNetObject(
-          event.getContent() as GameStateIncrementalEvent["content"],
-        ) as {
-          iteration: number;
-          ents: (RecordedEntityState & { uuid: string })[];
-        };
-        logger.info("Got new incremental event", content);
-        this._gameState.next(content);
-      }
-    });
-  }
-
-  writeAction(act: StateRecordLine) {
-    const packet: Record<keyof typeof act, unknown> = {
-      ts: toNetworkFloat(act.ts),
-      kind: act.kind,
-      index: act.index,
-      data: toNetObject(act.data),
-    };
-    return this.client.client.sendEvent(this.roomId, GameActionEventType, {
-      action: packet,
-    });
-  }
-
-  async ready() {
-    return this.client.client.sendEvent(
-      this.roomId,
-      GameClientReadyEventType,
-      {},
-    );
-  }
-
-  async allClientsReady() {
-    const setOfReady = new Set<string>([
-      ...(this.room
-        .getLiveTimeline()
-        .getEvents()
-        .filter((e) => e.getType() === GameClientReadyEventType)
-        .map((e) => e.getSender()) as string[]),
-    ]);
-
-    const expectedCount = Object.values(this.initialConfig.members).length;
-    logger.info("Ready check", expectedCount, setOfReady);
-    if (setOfReady.size === expectedCount) {
-      return;
+  public async downloadMedia(
+    ...params: Parameters<MatrixClient["mxcUrlToHttp"]>
+  ): Promise<Blob> {
+    params[6] = true;
+    const url = this.client.mxcUrlToHttp(...params);
+    if (!url) {
+      throw Error(`Could not generate HTTP url for ${params[0]}`);
     }
-
-    await new Promise<void>((resolve) => {
-      this.room.on(RoomEvent.Timeline, (event) => {
-        if (event.getType() === GameClientReadyEventType && !event.isState()) {
-          setOfReady.add(event.getSender()!);
-        }
-        logger.info("Ready check", expectedCount, setOfReady);
-        if (setOfReady.size === expectedCount) {
-          resolve();
-        }
-      });
+    const req = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${this.client.getAccessToken()}`,
+      },
     });
+    if (!req.ok) {
+      throw Error("Failed to load media");
+    }
+    return req.blob();
   }
 }

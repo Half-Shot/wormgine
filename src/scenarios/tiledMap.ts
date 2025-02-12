@@ -25,11 +25,12 @@ import staticController, { InputKind } from "../input";
 import { StateRecorder } from "../state/recorder";
 import { CameraLockPriority, ViewportCamera } from "../camera";
 import { getAssets } from "../assets";
-import { scenarioParser } from "../levels/scenarioParser";
+import { ScenarioBuilder } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
 import { getLocalTeams } from "../settings";
+import { AssetData } from "../assets/manifest";
 
 const weapons = [
   WeaponBazooka,
@@ -49,7 +50,12 @@ export default async function runScenario(game: Game) {
   const { worldWidth } = game.viewport;
 
   const assets = getAssets();
-  const level = await scenarioParser(game.level, assets.data, assets.textures);
+  const level = ScenarioBuilder.fromDataAsset(
+    game.level as keyof AssetData,
+    assets.data,
+  )
+    .loadBitmapFromAssets(assets.textures)
+    .parse();
   const bitmapPosition = Coordinate.fromScreen(
     level.terrain.x,
     level.terrain.y,

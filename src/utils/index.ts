@@ -34,16 +34,13 @@ export function angleForVector({ x, y }: Vector) {
   return Math.atan2(y, x);
 }
 
-
-export function randomChoice<T>(
-  options: T[],
-) {
+export function randomChoice<T>(options: T[]) {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-
-export function shuffle<T>(
-  options: T[],
-) {
-  return options.slice(0).sort(() => Math.random() <= 0.5 ? 1 : -1);
+export function shuffle<T>(options: T[]) {
+  return options
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
 }

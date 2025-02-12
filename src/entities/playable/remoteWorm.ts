@@ -98,6 +98,9 @@ export class RemoteWorm extends Worm {
       Worm.movementSpeed,
       Coordinate.fromWorld(state.tra),
     );
-    this.selectWeapon(getDefinitionForCode(state.weapon));
+    this.facingRight = state.facingRight;
+    if (this.weapon.code !== state.weapon) {
+      this.selectWeapon(getDefinitionForCode(state.weapon));
+    }
   }
 }

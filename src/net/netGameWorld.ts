@@ -3,7 +3,7 @@ import { GameWorld } from "../world";
 import RAPIER from "@dimforge/rapier2d-compat";
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import Logger from "../log";
-import { RunningNetGameInstance } from "./client";
+import { RunningNetGameInstance } from "./netgameinstance";
 import { NetObject, toNetObject } from "./netfloat";
 
 const TICK_EVERY_MS = 350;
@@ -35,6 +35,7 @@ export class NetGameWorld extends GameWorld {
           );
           return;
         }
+        console.log(ent);
         (ent as PhysicsEntity).applyState(e);
       });
     });

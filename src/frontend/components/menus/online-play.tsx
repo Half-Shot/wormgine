@@ -19,8 +19,6 @@ interface Props {
 
 const logger = new Logger("menu/online-play");
 
-const AVATAR_PX = 64;
-
 function LoggedInView({
   client,
   onCreateLobby,
@@ -37,12 +35,9 @@ function LoggedInView({
     setInProgress(true);
     client
       .createGameRoom({
-        rules: {
-          winWhenOneGroupRemains: true,
-          wormHealth: 100,
-          ammoSchema: DefaultWeaponSchema,
-        },
-        teams: [],
+        winWhenOneGroupRemains: true,
+        wormHealth: 100,
+        ammoSchema: DefaultWeaponSchema,
       })
       .then((roomId) => onCreateLobby(roomId))
       .catch((ex) => {
@@ -57,32 +52,10 @@ function LoggedInView({
   useEffect(() => {
     client.client.getProfileInfo(client.client.getUserId()!).then((data) => {
       setDisplayName(data.displayname ?? client.client.getUserIdLocalpart()!);
-      const avatarUrl =
-        data.avatar_url &&
-        client.client.mxcUrlToHttp(
-          data.avatar_url,
-          AVATAR_PX,
-          AVATAR_PX,
-          "scale",
-          false,
-          true,
-          true,
-        );
-      if (avatarUrl) {
-        fetch(avatarUrl, {
-          headers: {
-            Authorization: `Bearer ${client.client.getAccessToken()}`,
-          },
-        })
-          .then((req) => {
-            if (!req.ok) {
-              throw Error("Request not OK");
-            }
-            return req.blob();
-          })
-          .then((blob) => {
-            setAvatarBlobUrl(URL.createObjectURL(blob));
-          });
+      if (data.avatar_url) {
+        client.downloadMedia(data.avatar_url).then((blob) => {
+          setAvatarBlobUrl(URL.createObjectURL(blob));
+        });
       }
     });
   }, [client]);
@@ -288,7 +261,6 @@ export function OnlinePlayWithClient({
       NetGameClient.clearConfig();
       setClientConfig(null);
       return null;
-      break;
     default:
       return (
         <div>

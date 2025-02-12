@@ -25,7 +25,7 @@ export interface TiledTileset {
   ];
 }
 
-interface TiledForgroundLayer {
+export interface TiledForgroundLayer {
   image: string;
   type: "imagelayer";
   offsetx: number;
@@ -35,7 +35,7 @@ interface TiledForgroundLayer {
   properties?: Properties;
 }
 
-interface TiledObject {
+export interface TiledObject {
   /**
    * The object type ID.
    */
@@ -50,7 +50,7 @@ interface TiledObject {
   type: string;
 }
 
-interface TiledObjectLayer {
+export interface TiledObjectLayer {
   type: "objectgroup";
   objects: TiledObject[];
 }

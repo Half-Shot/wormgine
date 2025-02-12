@@ -13,7 +13,7 @@ import { Lobby } from "./menus/lobby";
 import { motion, AnimatePresence } from "framer-motion";
 import { ComponentChildren } from "preact";
 import { IRunningGameInstance } from "../../logic/gameinstance";
-import settingsAnim from "../../assets/ui/settings_icon.webm"
+import settingsAnim from "../../assets/ui/settings_icon.webm";
 import { JSXInternal } from "preact/src/jsx";
 import { useGameSettingsHook } from "../../settings";
 
@@ -45,9 +45,7 @@ function SubMenu(props: {
       exit="exit"
     >
       <div className={styles.menu}>
-        <menu key={props.key} >
-          {props.children}
-        </menu>
+        <menu key={props.key}>{props.children}</menu>
       </div>
     </motion.div>
   );
@@ -57,9 +55,22 @@ function mainMenu(
   onLocalGame: () => void,
   setCurrentMenu: (menu: GameMenu) => void,
 ) {
-  const [ {  reduceMotion } ] = useGameSettingsHook();
-  const videoHover: JSXInternal.MouseEventHandler<HTMLButtonElement> = useCallback((evt) => { if (reduceMotion) { return; }; (evt.target as HTMLButtonElement).querySelector('video')?.play() }, [reduceMotion]);
-  const videoHoverOut: JSXInternal.MouseEventHandler<HTMLButtonElement> = (evt) => { (evt.target as HTMLButtonElement).querySelector('video')?.pause() };
+  const [{ reduceMotion }] = useGameSettingsHook();
+  const videoHover: JSXInternal.MouseEventHandler<HTMLButtonElement> =
+    useCallback(
+      (evt) => {
+        if (reduceMotion) {
+          return;
+        }
+        (evt.target as HTMLButtonElement).querySelector("video")?.play();
+      },
+      [reduceMotion],
+    );
+  const videoHoverOut: JSXInternal.MouseEventHandler<HTMLButtonElement> = (
+    evt,
+  ) => {
+    (evt.target as HTMLButtonElement).querySelector("video")?.pause();
+  };
   return (
     <SubMenu key="main-menu">
       <h1>Kobold Kombat</h1>
@@ -74,26 +85,54 @@ function mainMenu(
       </p>
       <ul className={styles.mainMenu}>
         <li>
-          <button onClick={() => onLocalGame()} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
-          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Skirmish</span>
+          <button
+            onClick={() => onLocalGame()}
+            onMouseOver={videoHover}
+            onMouseOut={videoHoverOut}
+            className={styles.videoButton}
+          >
+            <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
+              Skirmish
+            </span>
             <video src={settingsAnim} loop />
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.TeamEditor)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
-          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Team Editor</span>
+          <button
+            onClick={() => setCurrentMenu(GameMenu.TeamEditor)}
+            onMouseOver={videoHover}
+            onMouseOut={videoHoverOut}
+            className={styles.videoButton}
+          >
+            <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
+              Team Editor
+            </span>
             <video src={settingsAnim} loop />
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.OnlinePlay)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
-          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Online Play</span>
+          <button
+            onClick={() => setCurrentMenu(GameMenu.OnlinePlay)}
+            onMouseOver={videoHover}
+            onMouseOut={videoHoverOut}
+            className={styles.videoButton}
+          >
+            <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
+              Online Play
+            </span>
             <video src={settingsAnim} loop />
           </button>
         </li>
         <li>
-          <button onClick={() => setCurrentMenu(GameMenu.Settings)} onMouseOver={videoHover} onMouseOut={videoHoverOut} className={styles.videoButton}>
-          <span onMouseOver={videoHover} onMouseOut={videoHoverOut} >Settings</span>
+          <button
+            onClick={() => setCurrentMenu(GameMenu.Settings)}
+            onMouseOver={videoHover}
+            onMouseOut={videoHoverOut}
+            className={styles.videoButton}
+          >
+            <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
+              Settings
+            </span>
             <video src={settingsAnim} loop />
           </button>
         </li>

@@ -1,4 +1,5 @@
 import {
+  ColorSource,
   Container,
   Graphics,
   Point,
@@ -12,7 +13,7 @@ import { PIXELS_PER_METER } from "../world";
 import { Viewport } from "pixi-viewport";
 import { debugData } from "../movementController";
 import { DefaultTextStyle } from "../mixins/styles";
-import { RunningNetGameInstance } from "../net/client";
+import { RunningNetGameInstance } from "../net/netgameinstance";
 
 const PHYSICS_SAMPLES = 60;
 const FRAME_SAMPLES = 60;
@@ -28,6 +29,11 @@ export class GameDebugOverlay {
   private skippedUpdatesTarget = 0;
   private mouse: Point = new Point();
   private mouseMoveListener: (e: MouseEvent) => void;
+
+  private static registeredDebugPoints: Record<
+    string,
+    { points: Point[]; color: ColorSource }
+  > = {};
 
   constructor(
     private readonly rapierWorld: RAPIER.World,
@@ -123,6 +129,13 @@ export class GameDebugOverlay {
         .stroke();
     }
 
+    for (const data of Object.values(GameDebugOverlay.registeredDebugPoints)) {
+      this.rapierGfx.setFillStyle({ color: data.color });
+      for (const circle of data.points) {
+        this.rapierGfx.circle(circle.x, circle.y, 5);
+      }
+    }
+
     if (globalFlags.DebugView === DebugLevel.PhysicsOverlay) {
       this.renderPhysicsOverlay();
     }
@@ -150,5 +163,11 @@ export class GameDebugOverlay {
         .lineTo(vtxC, vtxD)
         .stroke();
     }
+  }
+
+  public static registerDebugData(name: string, color: ColorSource): Point[] {
+    const points: Point[] = [];
+    this.registeredDebugPoints[name] = { color, points };
+    return points;
   }
 }

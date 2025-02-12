@@ -33,44 +33,6 @@
                  "y":867.889806322
                 }, 
                 {
-                 "gid":4,
-                 "height":44,
-                 "id":24,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"wormgine.team_group",
-                         "propertytype":"WormTeamGroup",
-                         "type":"string",
-                         "value":"Red"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":33,
-                 "x":670.868686868687,
-                 "y":133.705288175876
-                }, 
-                {
-                 "gid":4,
-                 "height":44,
-                 "id":25,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"wormgine.team_group",
-                         "propertytype":"WormTeamGroup",
-                         "type":"string",
-                         "value":"Blue"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":33,
-                 "x":1203.2513368984,
-                 "y":139.647058823529
-                }, 
-                {
                  "gid":6,
                  "height":44,
                  "id":26,
@@ -167,44 +129,6 @@
                  "width":33,
                  "x":213.420556310513,
                  "y":-134.445898424984
-                }, 
-                {
-                 "gid":4,
-                 "height":44,
-                 "id":29,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"wormgine.team_group",
-                         "propertytype":"WormTeamGroup",
-                         "type":"string",
-                         "value":"Red"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":33,
-                 "x":607.331151482768,
-                 "y":329.322468608068
-                }, 
-                {
-                 "gid":4,
-                 "height":44,
-                 "id":30,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"wormgine.team_group",
-                         "propertytype":"WormTeamGroup",
-                         "type":"string",
-                         "value":"Blue"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":33,
-                 "x":1223.14734170451,
-                 "y":327.986641731232
                 }],
          "opacity":1,
          "type":"objectgroup",

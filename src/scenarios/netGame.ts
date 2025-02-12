@@ -15,8 +15,6 @@ import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import staticController, { InputKind } from "../input";
 import { StateRecorder } from "../state/recorder";
 import { CameraLockPriority, ViewportCamera } from "../camera";
-import { getAssets } from "../assets";
-import { scenarioParser } from "../levels/scenarioParser";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
@@ -28,10 +26,8 @@ import { NetGameState } from "../net/netGameState";
 import { NetGameWorld } from "../net/netGameWorld";
 import { combineLatest, filter } from "rxjs";
 import { RoundState } from "../logic/gamestate";
-import { RunningNetGameInstance } from "../net/client";
-import { generateQuadsFromTerrain, imageDataToTerrainBoundaries } from "../terrain";
-import { determineLocationsToSpawn } from "../terrain/spawner";
-import { randomChoice, shuffle } from "../utils";
+import { RunningNetGameInstance } from "../net/netgameinstance";
+import { Mine } from "../entities/phys/mine";
 
 const log = new Logger("scenario");
 
@@ -111,8 +107,7 @@ export default async function runScenario(game: Game) {
     });
   }
 
-  const assets = getAssets();
-  const level = await scenarioParser(game.level, assets.data, assets.textures);
+  const level = game.netGameInstance.scenario;
   const bitmapPosition = Coordinate.fromScreen(
     level.terrain.x,
     level.terrain.y,
@@ -187,52 +182,32 @@ export default async function runScenario(game: Game) {
       );
       world.addEntity(t);
       parent.addChild(t.sprite);
+    } else if (levelObject.type === "wormgine.mine") {
+      const t = Mine.create(
+        parent,
+        world,
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
+      );
+      world.addEntity(t);
     }
   }
 
-  // TODO: Make this work for the net code.
-  const tmpCanvas = BitmapTerrain.drawToCanvas(level.terrain.bitmap);
-  const context = tmpCanvas.getContext('2d')!;
-  const imgData = context.getImageData(
-    0,
-    0,
-    tmpCanvas.width,
-    tmpCanvas.height,
-  );
-  const { boundaries } = imageDataToTerrainBoundaries(
-    0,
-    0,
-    imgData,
-  );
-  tmpCanvas.remove();
-  // Turn it into a quadtree of rects
-  const quadtreeRects = generateQuadsFromTerrain(
-    boundaries,
-    tmpCanvas.width,
-    tmpCanvas.height,
-    0,
-    0,
-  );
-  const spawnPoints = shuffle(determineLocationsToSpawn(quadtreeRects, { wormHeightBuffer: 90, waterLevel: 900, hazardPoints: []}));
-
-
-  // const spawnPositions = level.objects.filter(
-  //   (v) => v.type === "wormgine.worm_spawn",
-  // ) as WormSpawnRecordedState[];
+  const spawnPositions = level.objects.filter(
+    (v) => v.type === "wormgine.worm_spawn",
+  ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
     for (const wormInstance of team.worms) {
       log.info(
         `Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`,
-        spawnPoints,
+        spawnPositions,
       );
-      // const nextLocationIdx = spawnPositions.findIndex(
-      //   (v) => v && v.teamGroup === wormInstance.team.group,
-      // );
-      const pos = spawnPoints.pop();
-      console.log(pos);
-      if (!pos) {
+      const spawnPoint = spawnPositions.find(
+        (s) => s.wormUuid === wormInstance.uuid,
+      )?.tra;
+      if (!spawnPoint) {
         throw Error("No location to spawn worm");
       }
+      const pos = Coordinate.fromWorld(spawnPoint);
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
         if (newProjectile instanceof PhysicsEntity) {
@@ -350,6 +325,7 @@ export default async function runScenario(game: Game) {
       }),
     )
     .subscribe(([roundState, worm]) => {
+      world.setWind(gameState.currentWind);
       if (
         worm?.team.playerUserId === gameInstance.myUserId &&
         roundState === RoundState.Preround &&
@@ -394,6 +370,9 @@ export default async function runScenario(game: Game) {
         return;
       } else if (roundState === RoundState.Finished) {
         const nextState = gameState.advanceRound();
+        if (nextState.toast) {
+          overlay.toaster.pushToast(nextState.toast, 3500, undefined, true);
+        }
         if ("winningTeams" in nextState) {
           if (nextState.winningTeams.length) {
             overlay.toaster.pushToast(

@@ -21,7 +21,7 @@ export class TiledSpriteAnimated extends TilingSprite {
     this.tileCount = opts.tileCount;
     this.columns = opts.columns;
     if (opts.randomizeStartFrame) {
-      this.tileCounter = Math.floor(Math.random()*this.tileCount);
+      this.tileCounter = Math.floor(Math.random() * this.tileCount);
     }
   }
 

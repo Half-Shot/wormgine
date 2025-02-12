@@ -7,7 +7,6 @@ import RAPIER from "@dimforge/rapier2d-compat";
 import { readAssetsForEntities } from "./entities";
 import { readAssetsForWeapons } from "./weapons";
 import { WindDial } from "./overlays/windDial";
-import { RunningNetGameInstance } from "./net/client";
 import { GameReactChannel } from "./interop/gamechannel";
 import staticController from "./input";
 import { sound } from "@pixi/sound";
@@ -17,6 +16,7 @@ import { getGameSettings } from "./settings";
 import { NetGameWorld } from "./net/netGameWorld";
 import { debounceTime, fromEvent, map, merge, Observable, of } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
+import { RunningNetGameInstance } from "./net/netgameinstance";
 
 const worldWidth = 1920;
 const worldHeight = 1080;

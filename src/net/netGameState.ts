@@ -77,7 +77,12 @@ export class NetGameState extends GameState {
     //   // Skip
     //   return;
     // }
-    log.debug("Applying round state", stateUpdate.round_state);
+    log.debug(
+      "Applying round state",
+      stateUpdate.round_state,
+      stateUpdate.wind,
+    );
+    log.debug("Applying wind", stateUpdate.wind);
     for (const teamData of stateUpdate.teams) {
       const teamWormSet = this.teams.get(teamData.uuid)?.worms;
       if (!teamWormSet) {
@@ -90,6 +95,7 @@ export class NetGameState extends GameState {
         }
       }
     }
+    this.wind = stateUpdate.wind;
     if (
       this.roundState.value !== RoundState.Preround &&
       stateUpdate.round_state === RoundState.Preround
@@ -98,7 +104,6 @@ export class NetGameState extends GameState {
     }
     if (stateUpdate.round_state === RoundState.WaitingToBegin) {
       const result = this.advanceRound();
-      this.wind = stateUpdate.wind;
       return result;
     } else if (stateUpdate.round_state === RoundState.Playing) {
       this.playerMoved();

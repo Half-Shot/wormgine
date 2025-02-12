@@ -4,6 +4,10 @@ import { StoredTeam } from "../settings";
 import { Team, TeamGroup, WormIdentity } from "./teams";
 import { DefaultWeaponSchema } from "../weapons/schema";
 import { StateRecordLine } from "../state/model";
+import { Scenario, ScenarioBuilder } from "../levels/scenarioParser";
+import { getAssets } from "../assets";
+import { AssetData, AssetTextures } from "../assets/manifest";
+import { Texture } from "pixi.js";
 
 export enum GameStage {
   Lobby = "lobby",
@@ -29,12 +33,20 @@ export interface IGameInstance {
     maxWorms: number,
     teamGroup: TeamGroup,
   ): Promise<unknown>;
-  startGame(): void;
+  startGame(): Promise<void>;
   exitGame(): void;
+  chooseNewLevel(
+    levelAssetName: string,
+    bitmapAssetName: string,
+  ): Promise<void>;
+  uploadNewLevel(levelAssetName: string, bitmap: Blob): Promise<void>;
   members: Observable<Record<string, string>>;
   stage: Observable<GameStage>;
   proposedRules: Observable<GameRules>;
   proposedTeams: Observable<ProposedTeam[]>;
+  terrainThumbnail: Observable<string | null>;
+  mapName: Observable<string>;
+  mapReady: Observable<boolean>;
   isHost: boolean;
   hostUserId: string;
   myUserId: string;
@@ -43,6 +55,7 @@ export interface IGameInstance {
 export interface IRunningGameInstance extends IGameInstance {
   writeAction(data: StateRecordLine<Record<string, unknown>>): unknown;
   gameConfigImmediate: { teams: Team[]; rules: GameRules };
+  scenario: Scenario;
 }
 
 export class LocalGameInstance implements IRunningGameInstance {
@@ -59,8 +72,19 @@ export class LocalGameInstance implements IRunningGameInstance {
   private readonly _rules: BehaviorSubject<GameRules>;
   public readonly proposedRules: Observable<GameRules>;
 
+  private readonly _level: BehaviorSubject<{
+    levelAsset: string;
+    terrainAsset: string | Blob;
+    mapName: string;
+  } | null>;
+
+  public readonly terrainThumbnail: Observable<string | null>;
+  public readonly mapName: Observable<string>;
+  public readonly mapReady: Observable<boolean>;
+
   // TODO: This is probably a bit gross. We set this once.
   public finalTeams!: Team[];
+  public scenario!: Scenario;
 
   constructor() {
     this.members = of({ [this.hostUserId]: "Me" });
@@ -73,9 +97,31 @@ export class LocalGameInstance implements IRunningGameInstance {
       ammoSchema: DefaultWeaponSchema,
     } as GameRules);
     this.proposedRules = this._rules.asObservable();
-    // TODO: If the player doesn't have any teams, bake some in for them.
     this._proposedTeams = new BehaviorSubject({});
     this.proposedTeams = this._proposedTeams.pipe(map((v) => Object.values(v)));
+
+    this._level = new BehaviorSubject<{
+      levelAsset: string;
+      terrainAsset: string | Blob;
+      mapName: string;
+    } | null>(null);
+    this.mapName = this._level.pipe(map((l) => l?.mapName ?? "Unknown map"));
+    const assets = getAssets();
+    this.terrainThumbnail = this._level.pipe(
+      map((level) => {
+        if (typeof level?.terrainAsset === "string") {
+          return assets.textures[
+            level?.terrainAsset as unknown as keyof AssetTextures
+          ].source._sourceOrigin;
+        } else if (level?.terrainAsset) {
+          return URL.createObjectURL(level.terrainAsset);
+        }
+        return null;
+      }),
+    );
+    this.mapReady = this._level.pipe(
+      map((l) => Boolean(l?.levelAsset && l.terrainAsset)),
+    );
   }
 
   public get gameConfigImmediate() {
@@ -87,6 +133,22 @@ export class LocalGameInstance implements IRunningGameInstance {
 
   canAlterTeam(): true {
     return true;
+  }
+
+  async uploadNewLevel(levelAssetName: string, bitmap: Blob): Promise<void> {
+    this._level.next({
+      mapName: "TestingMapName",
+      levelAsset: levelAssetName,
+      terrainAsset: bitmap,
+    });
+  }
+
+  async chooseNewLevel(levelAssetName: string, bitmapAssetName: string) {
+    this._level.next({
+      mapName: "TestingMapName",
+      levelAsset: levelAssetName,
+      terrainAsset: bitmapAssetName,
+    });
   }
 
   async updateProposedTeam(
@@ -131,7 +193,7 @@ export class LocalGameInstance implements IRunningGameInstance {
     });
   }
 
-  startGame() {
+  async startGame() {
     this.finalTeams = Object.values(this._proposedTeams.value).map((v) => ({
       name: v.name,
       flag: v.flagb64,
@@ -150,6 +212,40 @@ export class LocalGameInstance implements IRunningGameInstance {
           }) satisfies WormIdentity,
       ),
     }));
+
+    const levelData = this._level.value;
+
+    if (!levelData) {
+      throw Error("No level data!");
+    }
+
+    const texture: Texture | string =
+      typeof levelData.terrainAsset === "object"
+        ? Texture.from(await createImageBitmap(levelData.terrainAsset))
+        : levelData.terrainAsset;
+
+    if (!texture) {
+      throw Error("Expected texture");
+    }
+
+    const assets = getAssets();
+    const builder = ScenarioBuilder.fromDataAsset(
+      levelData.levelAsset as keyof AssetData,
+      assets.data,
+    );
+    if (typeof levelData.terrainAsset === "string") {
+      builder.loadBitmapFromAssets(assets.textures);
+    } else {
+      await builder.loadBitmapFromBlob(levelData.terrainAsset);
+    }
+    // Load the scenario
+    if (!builder.hasWormSpawns) {
+      // TODO: We assume if there are no spawn points then we are fine to add in our own, but there
+      // should be a better switch for this.
+      builder.addSpawns(this.finalTeams);
+    }
+    this.scenario = builder.parse();
+
     this._stage.next(GameStage.InProgress);
   }
 

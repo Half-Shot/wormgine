@@ -1,11 +1,12 @@
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { Rectangle } from "pixi.js";
 
-export function imageDataToAlpha(boundaryX: number,
+export function imageDataToAlpha(
+  boundaryX: number,
   boundaryY: number,
   imgData: ImageData,
-): {x: number, y: number, a: number}[] {
-  const data: {x: number, y: number, a: number}[] = [];
+): Map<number, Map<number, number>> {
+  const data: Map<number, Map<number, number>> = new Map();
   const lengthOfOneRow = imgData.width * 4;
   for (let i = 0; i < imgData.data.length; i += 4) {
     const x = (i % lengthOfOneRow) / 4;
@@ -13,14 +14,16 @@ export function imageDataToAlpha(boundaryX: number,
     const realX = x + boundaryX;
     const realY = y + boundaryY;
     const [, , , a] = imgData.data.slice(i, i + 4);
-    data.push({x: realX, y: realY, a});
+    if (!data.has(realY)) {
+      data.set(realY, new Map());
+    }
+    data.get(realY)?.set(realX, a);
   }
   return data;
 }
 
 export function imageDataToTerrainBoundaries(
-  boundaryX: number,
-  boundaryY: number,
+  alphas: ReturnType<typeof imageDataToAlpha>,
   imgData: ImageData,
 ): { boundaries: Vector2[]; boundingBox: Rectangle } {
   const boundingBox = new Rectangle(
@@ -32,30 +35,30 @@ export function imageDataToTerrainBoundaries(
   const boundaries: Array<Vector2> = [];
   const xBoundaryTracker = new Array(imgData.width);
   const yBoundaryTracker = new Array(imgData.height);
-  const alphas = imageDataToAlpha(boundaryX, boundaryY, imgData);
 
-  for (const {x ,y,a} of alphas) {
+  for (const [y, xValues] of alphas.entries()) {
+    for (const [x, a] of xValues.entries()) {
+      if (a > 5) {
+        if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
+          // This is to stop us from drawing straight lines down
+          // when we have a boundary, but I don't know why this works.
+          if (x > 1 && y > 1) {
+            boundaries.push(new Vector2(x, y));
+          }
+          xBoundaryTracker[x] = true;
+          yBoundaryTracker[y] = true;
 
-    if (a > 5) {
-      if (!xBoundaryTracker[x] || !yBoundaryTracker[y]) {
-        // This is to stop us from drawing straight lines down
-        // when we have a boundary, but I don't know why this works.
-        if (x > 1 && y > 1) {
-          boundaries.push(new Vector2(x, y));
+          boundingBox.x = Math.min(boundingBox.x, x);
+          boundingBox.y = Math.min(boundingBox.y, y);
+          boundingBox.width = Math.max(boundingBox.width, x);
+          boundingBox.height = Math.max(boundingBox.height, y);
         }
-        xBoundaryTracker[x] = true;
-        yBoundaryTracker[y] = true;
-
-        boundingBox.x = Math.min(boundingBox.x, x);
-        boundingBox.y = Math.min(boundingBox.y, y);
-        boundingBox.width = Math.max(boundingBox.width, x);
-        boundingBox.height = Math.max(boundingBox.height, y);
-      }
-    } else if (a === 0) {
-      if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
-        boundaries.push(new Vector2(x, y));
-        xBoundaryTracker[x] = false;
-        yBoundaryTracker[y] = false;
+      } else if (a === 0) {
+        if (xBoundaryTracker[x] || yBoundaryTracker[y]) {
+          boundaries.push(new Vector2(x, y));
+          xBoundaryTracker[x] = false;
+          yBoundaryTracker[y] = false;
+        }
       }
     }
   }

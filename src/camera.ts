@@ -71,12 +71,6 @@ export class ViewportCamera {
     const clampYTo = 200 + this.clampY.pixels - this.viewport.screenHeight / 2;
 
     if (targetXY[1] > clampYTo) {
-      logger.info("Clamped Y", {
-        from: targetXY[1],
-        to: clampYTo,
-        pixels: this.clampY.pixels,
-        height: this.viewport.screenHeight,
-      });
       targetXY[1] = clampYTo;
     }
 

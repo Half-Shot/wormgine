@@ -78,6 +78,7 @@ export class GameWorld {
   ) {}
 
   public setWind(windSpeed: number) {
+    logger.info(`setWind(${windSpeed})`);
     this.windSubject.next(windSpeed);
   }
 
