@@ -3,8 +3,13 @@ import {
   ExtensionType,
   LoaderParserPriority,
   extensions,
+  path,
 } from "pixi.js";
 
+// https://github.com/pixijs/pixijs/issues/11106
+path.isUrl = function(path: string): boolean {
+  return (/^(?:https?|tauri):/).test(this.toPosix(path));
+}
 // create a custom asset loader for tiled files.
 const tiledAssetLoader = {
   name: "tile-asset-loader",
