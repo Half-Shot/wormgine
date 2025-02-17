@@ -45,6 +45,12 @@ jobs:
         run: yarn
       - name: Build
         run: yarn build --base '/wormgine'
+      - name: Set up mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: "0.4.45"
+      - name: Build docs
+        run: yarn docs:build && cp -r book dist/docs
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

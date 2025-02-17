@@ -24,3 +24,6 @@ src/assets/borrowed/*
 *.sw?
 test-out
 wormgine.tiled-session
+
+# Docs
+book

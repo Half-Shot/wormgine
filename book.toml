@@ -1,0 +1,9 @@
+[book]
+authors = ["Half-Shot"]
+language = "en"
+multilingual = false
+src = "docs"
+title = "Kobold Kombat"
+
+[output.html]
+site-url = "https://half-shot.github.io/wormgine/docs"

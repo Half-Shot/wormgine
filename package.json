@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "VITE_BUILD_COMMIT=`git log --pretty=format:'%h' -n 1` VITE_DEFAULT_HOMESERVER=http://localhost:8008 vite",
     "build": "tsc && vite build",
+    "docs:build": "mdbook build",
     "preview": "vite preview",
     "lint:eslint": "eslint src/",
     "lint:eslint-fix": "eslint --fix src/",
