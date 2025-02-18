@@ -245,20 +245,20 @@ export class Worm extends PlayableEntity<WormRecordedState> {
           3000,
         );
       });
-      this.arrowSprite = new TiledSpriteAnimated({
-        visible: false,
-        texture: Worm.springArrow,
-        width: 138,
-        height: 180,
-        tileScale: { x: 1, y: 1 },
-        tilePosition: { x: 0, y: 0 },
-        scale: { x: 0.33, y: 0.33 },
-        anchor: { x: 0.5, y: 0.5 },
-        columns: 10,
-        tileCount: 60,
-        fps: 60,
-        tint,
-      });
+    this.arrowSprite = new TiledSpriteAnimated({
+      visible: false,
+      texture: Worm.springArrow,
+      width: 138,
+      height: 180,
+      tileScale: { x: 1, y: 1 },
+      tilePosition: { x: 0, y: 0 },
+      scale: { x: 0.33, y: 0.33 },
+      anchor: { x: 0.5, y: 0.5 },
+      columns: 10,
+      tileCount: 60,
+      fps: 60,
+      tint,
+    });
   }
 
   public selectWeapon(weapon: IWeaponDefinition) {
