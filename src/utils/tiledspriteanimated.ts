@@ -5,7 +5,7 @@ interface TiledSpriteAnimatedOptions extends TilingSpriteOptions {
   columns: number;
   tileCount: number;
   fps: number;
-  randomizeStartFrame: boolean;
+  randomizeStartFrame?: boolean;
 }
 
 export class TiledSpriteAnimated extends TilingSprite {
@@ -33,6 +33,9 @@ export class TiledSpriteAnimated extends TilingSprite {
   }
 
   public update(deltaMs: number) {
+    if (!this.visible) {
+      return;
+    }
     this.timeSinceLastAnim += deltaMs;
     if (Flags.stepAnimationsId) {
       if (this.debugStepAnim === Flags.stepAnimationsId) {

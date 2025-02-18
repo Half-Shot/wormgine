@@ -102,8 +102,10 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   public static readAssets(assets: AssetPack) {
     Worm.texture = assets.textures.player_koboldStatic;
     Worm.idleAnim = assets.textures.player_koboldIdle;
+    Worm.springArrow = assets.textures.spring;
   }
 
+  private static springArrow: Texture;
   private static texture: Texture;
   private static idleAnim: Texture;
   private static impactDamageMultiplier = 0.75;
@@ -120,6 +122,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   protected facingRight = true;
   private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
   private weaponSprite: Sprite;
+  private arrowSprite: TiledSpriteAnimated;
   protected motionTween?: TweenEngine;
 
   get itemPlacementPosition() {
@@ -159,6 +162,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     parent.addChild(ent.wireframe.renderable);
     parent.addChild(ent.healthTextBox);
     parent.addChild(ent.weaponSprite);
+    parent.addChild(ent.arrowSprite);
     return ent;
   }
 
@@ -187,6 +191,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     private readonly toaster?: Toaster,
     private readonly recorder?: StateRecorder,
   ) {
+    const tint = teamGroupToColorSet(wormIdent.team.group).fg;
     const sprite = new TiledSpriteAnimated({
       texture: Worm.idleAnim,
       width: 104,
@@ -199,6 +204,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       tileCount: 120,
       fps: 60,
       randomizeStartFrame: true,
+      tint,
     });
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
@@ -213,7 +219,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
     );
-    sprite.tint = teamGroupToColorSet(wormIdent.team.group).fg;
     super(sprite, body, world, parent, wormIdent, {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
@@ -239,6 +244,20 @@ export class Worm extends PlayableEntity<WormRecordedState> {
           }),
           3000,
         );
+      });
+      this.arrowSprite = new TiledSpriteAnimated({
+        visible: false,
+        texture: Worm.springArrow,
+        width: 138,
+        height: 180,
+        tileScale: { x: 1, y: 1 },
+        tilePosition: { x: 0, y: 0 },
+        scale: { x: 0.33, y: 0.33 },
+        anchor: { x: 0.5, y: 0.5 },
+        columns: 10,
+        tileCount: 60,
+        fps: 60,
+        tint,
       });
   }
 
@@ -656,6 +675,13 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
     );
     this.weaponSprite.visible = this.state.showWeapon;
+    this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
+    if (this.arrowSprite.visible) {
+      this.arrowSprite.visible = true;
+      this.arrowSprite.update(dMs);
+      this.arrowSprite.x = this.sprite.x;
+      this.arrowSprite.y = this.healthTextBox.y - 25;
+    }
     if (!this.state.shouldUpdate) {
       // Do nothing.
       return;
