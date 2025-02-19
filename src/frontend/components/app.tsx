@@ -7,7 +7,7 @@ import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
 import { getClientConfigHook, useGameSettingsHook } from "../../settings";
-import { AnimatePresence, MotionConfig } from "framer-motion";
+import { MotionConfig } from "framer-motion";
 import {
   IRunningGameInstance,
   LocalGameInstance,
@@ -87,12 +87,10 @@ export function App() {
     [setClientConfig],
   );
 
-
   let root = null;
   if (!assetsLoaded) {
     root = null;
-  }
-  else if (gameState) {
+  } else if (gameState) {
     root = (
       <IngameView
         scenario={gameState.scenario}
@@ -102,17 +100,19 @@ export function App() {
       />
     );
   } else {
-    root = <Menu
-      onNewGame={onNewGame}
-      setClientConfig={setConfig}
-      lobbyGameRoomId={lobbyGameRoomId}
-      client={client}
-    />;
+    root = (
+      <Menu
+        onNewGame={onNewGame}
+        setClientConfig={setConfig}
+        lobbyGameRoomId={lobbyGameRoomId}
+        client={client}
+      />
+    );
   }
 
   return (
     <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
-      <LoadingPage visible={!assetsLoaded} progress={assetProgress}/>
+      <LoadingPage visible={!assetsLoaded} progress={assetProgress} />
       {root}
     </MotionConfig>
   );

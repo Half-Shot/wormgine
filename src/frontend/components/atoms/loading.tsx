@@ -1,33 +1,51 @@
-import { useEffect, useRef } from "preact/hooks"
-import video from "../../../assets/ui/loading.webm"
+import { useEffect, useRef } from "preact/hooks";
+import video from "../../../assets/ui/loading.webm";
 
 const VIDEO_TIME_S = 3;
 
-export function Loading({progress, className, loadingDone}: {progress: number, className?: string, loadingDone: () => void}) {
-    const videoRef = useRef<HTMLVideoElement|null>(null);
+export function Loading({
+  progress,
+  className,
+  loadingDone,
+}: {
+  progress: number;
+  className?: string;
+  loadingDone: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    useEffect(() => {
-        if (!videoRef.current) {
-            return;
-        }
-        videoRef.current.addEventListener('ended', () => {
-            loadingDone();
-        })
-    }, [videoRef]);
+  useEffect(() => {
+    if (!videoRef.current) {
+      return;
+    }
+    videoRef.current.addEventListener("ended", () => {
+      loadingDone();
+    });
+  }, [videoRef]);
 
-    useEffect(() => {
-        if (!videoRef.current) {
-            return;
-        }
-        const expectedProgress = VIDEO_TIME_S * progress;
-        const currentTime = videoRef.current.currentTime;
-        if (expectedProgress > currentTime) {
-            videoRef.current.playbackRate = expectedProgress-currentTime > 2 ? 3 : 1;
-            videoRef.current.play();
-        } else if (currentTime >= expectedProgress) {
-            videoRef.current.pause();
-        }
-    }, [videoRef, progress]);
+  useEffect(() => {
+    if (!videoRef.current) {
+      return;
+    }
+    const expectedProgress = VIDEO_TIME_S * progress;
+    const currentTime = videoRef.current.currentTime;
+    if (expectedProgress > currentTime) {
+      videoRef.current.playbackRate =
+        expectedProgress - currentTime > 2 ? 3 : 1;
+      videoRef.current.play();
+    } else if (currentTime >= expectedProgress) {
+      videoRef.current.pause();
+    }
+  }, [videoRef, progress]);
 
-    return <video style={{maxWidth: "500px", width: "15vw"}} className={className} ref={videoRef} src={video} controls={false} preload="auto"></video>
+  return (
+    <video
+      style={{ maxWidth: "500px", width: "15vw" }}
+      className={className}
+      ref={videoRef}
+      src={video}
+      controls={false}
+      preload="auto"
+    ></video>
+  );
 }
