@@ -214,7 +214,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
         .setSolverGroups(Worm.collisionBitmask)
-        .setFriction(0.025),
+        .setFriction(0.025)
+        .setRestitution(0.65),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
