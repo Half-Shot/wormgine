@@ -3,7 +3,8 @@ import styles from "./ingame-view.module.css";
 import { Game } from "../../game";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
-import { IRunningGameInstance } from "../../logic/gameinstance";
+import { IRunningGameInstance, LocalGameInstance } from "../../logic/gameinstance";
+import { LoadingPage } from "./loading-page";
 
 export function IngameView({
   scenario,
@@ -16,21 +17,35 @@ export function IngameView({
   gameReactChannel: GameReactChannel;
   gameInstance: IRunningGameInstance;
 }) {
+  const [hasLoaded, setLoaded] = useState<boolean>(false);
   const [fatalError, setFatalError] = useState<Error>();
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<AmmoCount | null>(null);
   useEffect(() => {
-    Game.create(window, scenario, gameReactChannel, gameInstance, level)
-      .then((game) => {
-        (window as unknown as { wormgine: Game }).wormgine = game;
-        game.loadResources().then(() => {
-          setGame(game);
-        });
-      })
-      .catch((ex) => {
-        setFatalError(ex);
+  
+    async function init() {
+      if (gameInstance instanceof LocalGameInstance) {
+        // XXX: Only so the game feels more responsive by capturing this inside the loading phase.
+        await gameInstance.startGame();
+        console.log("Game started");
+      }
+      const game = await Game.create(window, scenario, gameReactChannel, gameInstance, level);
+      setGame(game);
+      game.ready$.subscribe(r => {
+        if (r) {
+          console.log("Game loaded");
+          setLoaded(true);
+        }
       });
+      // Bind the game to the window such that we can debug it.
+      (globalThis as unknown as { wormgine: Game }).wormgine = game;
+      await game.loadResources();
+    }
+  
+    void init().catch((ex) => {
+      setFatalError(ex);
+    });
   }, []);
 
   useEffect(() => {
@@ -42,7 +57,6 @@ export function IngameView({
       return;
     }
 
-    // Bind the game to the window such that we can debug it.
     ref.current.appendChild(game.canvas);
     game.run().catch((ex) => {
       setFatalError(ex);
@@ -85,6 +99,7 @@ export function IngameView({
 
   return (
     <>
+      <LoadingPage visible={!hasLoaded} force />
       <div id="overlay" className={styles.overlay}>
         <WeaponSelector
           weapons={weaponMenu}

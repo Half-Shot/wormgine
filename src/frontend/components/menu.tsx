@@ -94,7 +94,7 @@ function mainMenu(
             <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
               Skirmish
             </span>
-            <video src={settingsAnim} loop />
+            <video muted src={settingsAnim} loop />
           </button>
         </li>
         <li>
@@ -107,7 +107,7 @@ function mainMenu(
             <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
               Team Editor
             </span>
-            <video src={settingsAnim} loop />
+            <video muted src={settingsAnim} loop />
           </button>
         </li>
         <li>
@@ -120,7 +120,7 @@ function mainMenu(
             <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
               Online Play
             </span>
-            <video src={settingsAnim} loop />
+            <video muted src={settingsAnim} loop />
           </button>
         </li>
         <li>
@@ -133,7 +133,7 @@ function mainMenu(
             <span onMouseOver={videoHover} onMouseOut={videoHoverOut}>
               Settings
             </span>
-            <video src={settingsAnim} loop />
+            <video muted src={settingsAnim} loop />
           </button>
         </li>
       </ul>

@@ -308,7 +308,6 @@ function LocalLobby({ onOpenIngame, exitToMenu }: Omit<Props, "client">) {
     <ActiveLobby
       gameInstance={gameInstance}
       onOpenIngame={() => {
-        gameInstance.startGame();
         onOpenIngame(gameInstance);
       }}
       exitToMenu={exitToMenu}

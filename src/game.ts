@@ -14,7 +14,7 @@ import Logger from "./log";
 import { CriticalGameError } from "./errors";
 import { getGameSettings } from "./settings";
 import { NetGameWorld } from "./net/netGameWorld";
-import { debounceTime, fromEvent, map, merge, Observable, of } from "rxjs";
+import { BehaviorSubject, debounceTime, fromEvent, map, merge, Observable, of } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
 
@@ -29,6 +29,8 @@ export class Game {
   public readonly world: GameWorld;
   public readonly rapierGfx: Graphics;
   public readonly screenSize$: Observable<{ width: number; height: number }>;
+  private readonly ready = new BehaviorSubject(false);
+  public readonly ready$ = this.ready.asObservable() ;
 
   public get pixiRoot() {
     return this.viewport;
@@ -124,6 +126,7 @@ export class Game {
       undefined,
     );
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
+    this.ready.next(true);
 
     // Run physics engine at 90fps.
     const tickEveryMs = 1000 / 90;

@@ -8,7 +8,7 @@ export function Loading({
   className,
   loadingDone,
 }: {
-  progress: number;
+  progress?: number;
   className?: string;
   loadingDone: () => void;
 }) {
@@ -27,6 +27,11 @@ export function Loading({
     if (!videoRef.current) {
       return;
     }
+    if (progress === undefined) {
+        videoRef.current.playbackRate = 2;
+        videoRef.current.play();
+        return;
+    }
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
@@ -38,14 +43,16 @@ export function Loading({
     }
   }, [videoRef, progress]);
 
+  // Always play muted, because it prevents browsers blocking the animation.
   return (
     <video
+      muted
       style={{ maxWidth: "500px", width: "15vw" }}
       className={className}
       ref={videoRef}
       src={video}
       controls={false}
       preload="auto"
-    ></video>
+    />
   );
 }
