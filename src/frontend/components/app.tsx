@@ -7,11 +7,12 @@ import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
 import { useObservableEagerState } from "observable-hooks";
 import { getClientConfigHook, useGameSettingsHook } from "../../settings";
-import { MotionConfig } from "framer-motion";
+import { AnimatePresence, MotionConfig } from "framer-motion";
 import {
   IRunningGameInstance,
   LocalGameInstance,
 } from "../../logic/gameinstance";
+import { LoadingPage } from "./loading-page";
 
 interface LoadGameProps {
   scenario: string;
@@ -23,6 +24,7 @@ export function App() {
   const [gameState, setGameState] = useState<LoadGameProps>();
   const assetProgress = useObservableEagerState(assetLoadPercentage);
   const assetsLoaded = useObservableEagerState(assetsAreReady);
+
   const [client, setClient] = useState<NetGameClient>();
   const [clientConfig, setClientConfig, { removeItem: removeClientConfig }] =
     getClientConfigHook();
@@ -74,27 +76,6 @@ export function App() {
     },
     [setGameState],
   );
-
-  if (!assetsLoaded) {
-    return (
-      <main>
-        Loading{" "}
-        <progress value={assetProgress * 100} min={0} max={100}></progress>{" "}
-        {Math.round(assetProgress * 100)}%
-      </main>
-    );
-  }
-  if (gameState) {
-    return (
-      <IngameView
-        scenario={gameState.scenario}
-        level={gameState.level}
-        gameReactChannel={gameReactChannel}
-        gameInstance={gameState.gameInstance}
-      />
-    );
-  }
-
   const setConfig = useCallback(
     (v: NetClientConfig | null) => {
       if (v) {
@@ -106,14 +87,33 @@ export function App() {
     [setClientConfig],
   );
 
+
+  let root = null;
+  if (!assetsLoaded) {
+    root = null;
+  }
+  else if (gameState) {
+    root = (
+      <IngameView
+        scenario={gameState.scenario}
+        level={gameState.level}
+        gameReactChannel={gameReactChannel}
+        gameInstance={gameState.gameInstance}
+      />
+    );
+  } else {
+    root = <Menu
+      onNewGame={onNewGame}
+      setClientConfig={setConfig}
+      lobbyGameRoomId={lobbyGameRoomId}
+      client={client}
+    />;
+  }
+
   return (
     <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
-      <Menu
-        onNewGame={onNewGame}
-        setClientConfig={setConfig}
-        lobbyGameRoomId={lobbyGameRoomId}
-        client={client}
-      />
+      <LoadingPage visible={!assetsLoaded} progress={assetProgress}/>
+      {root}
     </MotionConfig>
   );
 }
