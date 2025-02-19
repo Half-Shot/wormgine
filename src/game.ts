@@ -14,7 +14,15 @@ import Logger from "./log";
 import { CriticalGameError } from "./errors";
 import { getGameSettings } from "./settings";
 import { NetGameWorld } from "./net/netGameWorld";
-import { BehaviorSubject, debounceTime, fromEvent, map, merge, Observable, of } from "rxjs";
+import {
+  BehaviorSubject,
+  debounceTime,
+  fromEvent,
+  map,
+  merge,
+  Observable,
+  of,
+} from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
 
@@ -30,7 +38,7 @@ export class Game {
   public readonly rapierGfx: Graphics;
   public readonly screenSize$: Observable<{ width: number; height: number }>;
   private readonly ready = new BehaviorSubject(false);
-  public readonly ready$ = this.ready.asObservable() ;
+  public readonly ready$ = this.ready.asObservable();
 
   public get pixiRoot() {
     return this.viewport;

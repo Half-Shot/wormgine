@@ -28,9 +28,9 @@ export function Loading({
       return;
     }
     if (progress === undefined) {
-        videoRef.current.playbackRate = 2;
-        videoRef.current.play();
-        return;
+      videoRef.current.playbackRate = 2;
+      videoRef.current.play();
+      return;
     }
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;

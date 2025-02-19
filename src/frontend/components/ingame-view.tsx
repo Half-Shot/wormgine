@@ -3,7 +3,10 @@ import styles from "./ingame-view.module.css";
 import { Game } from "../../game";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
-import { IRunningGameInstance, LocalGameInstance } from "../../logic/gameinstance";
+import {
+  IRunningGameInstance,
+  LocalGameInstance,
+} from "../../logic/gameinstance";
 import { LoadingPage } from "./loading-page";
 
 export function IngameView({
@@ -23,16 +26,21 @@ export function IngameView({
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<AmmoCount | null>(null);
   useEffect(() => {
-  
     async function init() {
       if (gameInstance instanceof LocalGameInstance) {
         // XXX: Only so the game feels more responsive by capturing this inside the loading phase.
         await gameInstance.startGame();
         console.log("Game started");
       }
-      const game = await Game.create(window, scenario, gameReactChannel, gameInstance, level);
+      const game = await Game.create(
+        window,
+        scenario,
+        gameReactChannel,
+        gameInstance,
+        level,
+      );
       setGame(game);
-      game.ready$.subscribe(r => {
+      game.ready$.subscribe((r) => {
         if (r) {
           console.log("Game loaded");
           setLoaded(true);
@@ -42,7 +50,7 @@ export function IngameView({
       (globalThis as unknown as { wormgine: Game }).wormgine = game;
       await game.loadResources();
     }
-  
+
     void init().catch((ex) => {
       setFatalError(ex);
     });
