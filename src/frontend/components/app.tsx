@@ -12,7 +12,6 @@ import {
   IRunningGameInstance,
   LocalGameInstance,
 } from "../../logic/gameinstance";
-import { LoadingPage } from "./loading-page";
 
 interface LoadGameProps {
   scenario: string;
@@ -88,9 +87,7 @@ export function App() {
   );
 
   let root = null;
-  if (!assetsLoaded) {
-    root = null;
-  } else if (gameState) {
+  if (gameState) {
     root = (
       <IngameView
         scenario={gameState.scenario}
@@ -112,7 +109,6 @@ export function App() {
 
   return (
     <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
-      <LoadingPage visible={!assetsLoaded} progress={assetProgress} />
       {root}
     </MotionConfig>
   );

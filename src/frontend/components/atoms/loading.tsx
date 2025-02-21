@@ -1,5 +1,9 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import video from "../../../assets/ui/loading.webm";
+
+const staticVideo = fetch(video, { priority: "high" }).then((v) => v.blob()).then((v) => URL.createObjectURL(v)).finally(() => {
+  console.log("Video load done");
+});
 
 const VIDEO_TIME_S = 3;
 
@@ -13,13 +17,21 @@ export function Loading({
   loadingDone: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoSrc, setVideoSrc] = useState<string>();
+  useEffect(() => {
+    staticVideo.then((src) => setVideoSrc(src));
+  }, []);
 
   useEffect(() => {
     if (!videoRef.current) {
       return;
     }
     videoRef.current.addEventListener("ended", () => {
-      loadingDone();
+      console.log("Loading ended");
+      if (videoRef.current?.currentTime === VIDEO_TIME_S) {
+        console.log("Loading Done");
+        loadingDone();
+      }
     });
   }, [videoRef]);
 
@@ -28,6 +40,7 @@ export function Loading({
       return;
     }
     if (progress === undefined) {
+      console.log("No progress, playing at full rate");
       videoRef.current.playbackRate = 2;
       videoRef.current.play();
       return;
@@ -35,10 +48,12 @@ export function Loading({
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
+      console.log("Progress behind", currentTime, expectedProgress);
       videoRef.current.playbackRate =
         expectedProgress - currentTime > 2 ? 3 : 1;
       videoRef.current.play();
     } else if (currentTime >= expectedProgress) {
+      console.log("Progress ahead of current time, pausing", currentTime, expectedProgress);
       videoRef.current.pause();
     }
   }, [videoRef, progress]);
@@ -50,7 +65,7 @@ export function Loading({
       style={{ maxWidth: "500px", width: "15vw" }}
       className={className}
       ref={videoRef}
-      src={video}
+      src={videoSrc}
       controls={false}
       preload="auto"
     />
