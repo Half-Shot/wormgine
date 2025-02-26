@@ -14,7 +14,7 @@ import { magnitude } from "../../utils";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
 import { DefaultTextStyle } from "../../mixins/styles";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 import { EntityType } from "../type";
 
 /**

@@ -1,7 +1,7 @@
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { GameRules } from "./gamestate";
 import { StoredTeam } from "../settings";
-import { Team, TeamGroup, WormIdentity } from "./teams";
+import { TeamDefinition, TeamGroup, WormIdentity } from "./teams";
 import { DefaultWeaponSchema } from "../weapons/schema";
 import { StateRecordLine } from "../state/model";
 import { Scenario, ScenarioBuilder } from "../levels/scenarioParser";
@@ -54,7 +54,7 @@ export interface IGameInstance {
 
 export interface IRunningGameInstance extends IGameInstance {
   writeAction(data: StateRecordLine<Record<string, unknown>>): unknown;
-  gameConfigImmediate: { teams: Team[]; rules: GameRules };
+  gameConfigImmediate: { teams: TeamDefinition[]; rules: GameRules };
   scenario: Scenario;
 }
 
@@ -83,7 +83,7 @@ export class LocalGameInstance implements IRunningGameInstance {
   public readonly mapReady: Observable<boolean>;
 
   // TODO: This is probably a bit gross. We set this once.
-  public finalTeams!: Team[];
+  public finalTeams!: TeamDefinition[];
   public scenario!: Scenario;
 
   constructor() {

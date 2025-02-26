@@ -1,6 +1,6 @@
 import { BehaviorSubject, distinct, Observable } from "rxjs";
 import Logger from "../log";
-import { TeamInstance } from "./teams";
+import { TeamInstanceInterface } from "./teams";
 
 const logger = new Logger("WormInstance");
 
@@ -29,7 +29,7 @@ export class WormInstance {
 
   constructor(
     private readonly identity: WormIdentity,
-    public readonly team: TeamInstance,
+    public readonly team: TeamInstanceInterface,
   ) {
     this.identity = { ...identity };
     this.uuid = identity.uuid ?? globalThis.crypto.randomUUID();

@@ -11,7 +11,7 @@ import { GameWorld, RapierPhysicsObject } from "../../world";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
-import { teamGroupToColorSet, WormInstance } from "../../logic/teams";
+import { teamGroupToColorSet, WormInstance } from "../../logic";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";

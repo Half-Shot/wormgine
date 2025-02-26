@@ -8,7 +8,7 @@ import {
 } from ".";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import { Scenario } from "../levels/scenarioParser";
-import { Team, TeamGroup } from "../logic/teams";
+import { TeamDefinition, TeamGroup } from "../logic/teams";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { GameDebugOverlay } from "../overlays/debugOverlay";
 
@@ -23,22 +23,21 @@ export function determineLocationsToSpawn(
   alpha: ReturnType<typeof imageDataToAlpha>,
   { wormHeightBuffer, waterLevel, hazardPoints }: SpawnerOpts,
 ): Coordinate[] {
-  const filteredQuads = quads.filter(
-    (quad) => quad.y < waterLevel, // Less tahn the water level.
-  );
   const columns: Map<number, number[]> = new Map();
 
-  for (const quads of filteredQuads) {
+  for (const q of quads.filter(
+    (quad) => quad.y < waterLevel, // Less than the water level.
+  )) {
     // Add some clearance above the ground (-15)
-    if (columns.has(quads.x)) {
-      columns.get(quads.x)?.push(quads.y - 15);
+    if (columns.has(q.x)) {
+      columns.get(q.x)?.push(q.y - 15);
     } else {
-      columns.set(quads.x, [quads.y - 15]);
+      columns.set(q.x, [q.y - 15]);
     }
   }
 
   const allowedPoints: Vector[] = [];
-  for (const [x, yvalues] of [...columns.entries()].slice(0)) {
+  for (const [x, yvalues] of columns.entries()) {
     let yValue: number;
     while ((yValue = yvalues.pop()!)) {
       // Ignore if worm doesn't fit.
@@ -58,22 +57,23 @@ export function determineLocationsToSpawn(
           (hazard) => Math.abs(magnitude(sub({ x, y: yValue }, hazard))) <= 30,
         )
       ) {
-        // Ignore if position is too close to previous above.
-        continue;
-      }
-      // Check for ground clerance.
-      const leftSide = new Rectangle(x - 20, yValue + 15, 10, 5);
-      if (!quads.some((q) => q.intersects(leftSide))) {
-        continue;
-      }
-      const rightSide = new Rectangle(x + 20, yValue + 15, 10, 5);
-      if (!quads.some((q) => q.intersects(rightSide))) {
+        // Ignore if position is too close to a hazard.
         continue;
       }
       if (alpha.get(yValue)?.get(x)) {
         // Point is inside terrain.
         continue;
       }
+      // Check for ground clerance.
+      const leftSide = new Rectangle(x - 120, yValue, 40, 30);
+      if (!quads.some((q) => q.intersects(leftSide))) {
+        continue;
+      }
+      const rightSide = new Rectangle(x + 120, yValue, 40, 30);
+      if (!quads.some((q) => q.intersects(rightSide))) {
+        continue;
+      }
+
       allowedPoints.push({ x, y: yValue });
     }
   }
@@ -84,7 +84,7 @@ export function determineLocationsToSpawn(
 export function getSpawnPoints(
   bitmap: Texture,
   objects: Scenario["objects"],
-  teams: Team[],
+  teams: TeamDefinition[],
 ): WormSpawnRecordedState[] {
   const waterHeight = objects.find((o) => o.type === "wormgine.water")?.tra.y;
   if (!waterHeight) {

@@ -1,5 +1,5 @@
 import { RoundState } from "../logic/gamestate";
-import { Team } from "../logic/teams";
+import type { TeamDefinition } from "../logic/teams";
 import { NetworkFloat } from "../net/netfloat";
 import { FireOpts, IWeaponCode } from "../weapons/weapon";
 
@@ -89,7 +89,7 @@ export type StateRecordWormGameState = StateRecordLine<{
       health: number;
       maxHealth: number;
     }[];
-    ammo: Team["ammo"];
+    ammo: TeamDefinition["ammo"];
   }[];
   iteration: number;
   wind: number;

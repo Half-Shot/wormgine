@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-import type { Team } from "../logic/teams";
+import type { TeamDefinition } from "../logic/teams";
 import type { IWeaponCode, IWeaponDefiniton } from "../weapons/weapon";
 
 interface GoToMenuEvent {
@@ -8,8 +8,8 @@ interface GoToMenuEvent {
 }
 
 interface WinDetails {
-  winningTeams: Team[];
-  teams: Team[];
+  winningTeams: TeamDefinition[];
+  teams: TeamDefinition[];
 }
 
 export type AmmoCount = [IWeaponDefiniton, number][];

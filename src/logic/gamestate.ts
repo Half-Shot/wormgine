@@ -1,4 +1,5 @@
-import { TeamInstance, Team, WormInstance } from "./teams";
+import { TeamInstance, WormInstance } from ".";
+import type { TeamDefinition } from "./teams";
 import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
@@ -43,20 +44,20 @@ const PREROUND_TIMER_MS = 5000;
 const logger = new Logger("GameState");
 
 export class GameState {
-  static getTeamMaxHealth(team: Team) {
+  static getTeamMaxHealth(team: TeamDefinition) {
     return team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b);
   }
 
-  static getTeamHealth(team: Team) {
+  static getTeamHealth(team: TeamDefinition) {
     return team.worms.map((w) => w.health).reduce((a, b) => a + b);
   }
 
-  static getTeamHealthPercentage(team: Team) {
+  static getTeamHealthPercentage(team: TeamDefinition) {
     return (
       Math.ceil(
         (team.worms.map((w) => w.health).reduce((a, b) => a + b) /
           team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b)) *
-          100,
+        100,
       ) / 100
     );
   }
@@ -118,7 +119,7 @@ export class GameState {
   }
 
   constructor(
-    teams: Team[],
+    teams: TeamDefinition[],
     private readonly world: GameWorld,
     private readonly rules: GameRules,
   ) {

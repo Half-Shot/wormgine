@@ -14,7 +14,7 @@ import {
   TiledTileset,
 } from "./types";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
-import { Team, TeamGroup, WormIdentity } from "../logic/teams";
+import { TeamDefinition, TeamGroup, WormIdentity } from "../logic/teams";
 import { IWeaponCode } from "../weapons/weapon";
 import { DefaultWeaponSchema } from "../weapons/schema";
 import { getSpawnPoints } from "../terrain/spawner";
@@ -32,7 +32,7 @@ export interface Scenario {
   };
   objects: RecordedEntityState[];
   rules: GameRules;
-  teams: Team[];
+  teams: TeamDefinition[];
 }
 
 function parseObjectToRecordedState(
@@ -49,11 +49,11 @@ function parseObjectToRecordedState(
   }
 }
 
-function determineTeams(teamProps: TiledTeamProperties[]): Team[] {
+function determineTeams(teamProps: TiledTeamProperties[]): TeamDefinition[] {
   return teamProps.map((tiledTeam) => {
     const health = tiledTeam["wormgine.starting_health"] ?? 100;
     // TODO: Make this cleaner
-    const ammo: Team["ammo"] = {};
+    const ammo: TeamDefinition["ammo"] = {};
     for (const [wep, ammoCount] of Object.entries(
       tiledTeam["wormgine.loadout"] ?? {},
     )) {
@@ -156,7 +156,7 @@ export class ScenarioBuilder {
   private readonly tileset: TiledTileset;
   private readonly objectState: BaseRecordedState[];
   private readonly providedGameRules: GameRules;
-  private readonly providedTeams: Team[];
+  private readonly providedTeams: TeamDefinition[];
 
   get hasWormSpawns() {
     return this.objectLayer.objects.some(
@@ -244,7 +244,7 @@ export class ScenarioBuilder {
     return this;
   }
 
-  addSpawns(teams: Team[]): ScenarioBuilder {
+  addSpawns(teams: TeamDefinition[]): ScenarioBuilder {
     if (!this.bitmap) {
       throw Error("Bitmap hasn't been loaded");
     }

@@ -1,6 +1,6 @@
 import { GameStage, ProposedTeam } from "../logic/gameinstance";
 import { GameRules } from "../logic/gamestate";
-import { Team } from "../logic/teams";
+import { TeamDefinition } from "../logic/teams";
 import { NetObject } from "./netfloat";
 
 export interface EntityDescriptor {
@@ -41,7 +41,7 @@ export interface GameConfigEvent {
   type: typeof GameConfigEventType;
   content: {
     rules: GameRules;
-    teams: Team[];
+    teams: TeamDefinition[];
     level?: {
       name: string;
       data_mxc: string;

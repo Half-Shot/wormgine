@@ -8,7 +8,7 @@ import {
   IRunningGameInstance,
 } from "../logic/gameinstance";
 import { GameRules } from "../logic/gamestate";
-import { Team, TeamGroup } from "../logic/teams";
+import { TeamDefinition, TeamGroup } from "../logic/teams";
 import { WormIdentity } from "../logic/worminstance";
 import { StoredTeam } from "../settings";
 import { NetGameClient } from "./client";
@@ -239,7 +239,7 @@ export class NetGameInstance implements IGameInstance {
 
   public async updateGameConfig(
     newLevel?: { terrainMxc: string; levelMxc: string; mapName: string },
-    teams?: Team[],
+    teams?: TeamDefinition[],
   ) {
     const levelData = newLevel ?? this._level.value;
 
@@ -248,10 +248,10 @@ export class NetGameInstance implements IGameInstance {
       teams: teams ?? [],
       level: levelData
         ? {
-            bitmap_mxc: levelData.terrainMxc,
-            data_mxc: levelData.levelMxc,
-            name: levelData.mapName,
-          }
+          bitmap_mxc: levelData.terrainMxc,
+          data_mxc: levelData.levelMxc,
+          name: levelData.mapName,
+        }
         : undefined,
     } satisfies GameConfigEvent["content"]);
   }
@@ -314,7 +314,7 @@ export class NetGameInstance implements IGameInstance {
     const builder = await ScenarioBuilder.fromBlob(levelData, assets.data);
     builder.loadBitmapFromBlob(bitmapData);
 
-    const teams: Team[] = Object.values(this._proposedTeams.value).map((v) => ({
+    const teams: TeamDefinition[] = Object.values(this._proposedTeams.value).map((v) => ({
       name: v.name,
       flag: v.flagb64,
       group: v.group,
@@ -377,8 +377,7 @@ type DecodedGameState = {
 
 export class RunningNetGameInstance
   extends NetGameInstance
-  implements IRunningGameInstance
-{
+  implements IRunningGameInstance {
   private readonly _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
   public readonly gameConfig: Observable<GameConfigEvent["content"]>;
   private readonly _gameState: BehaviorSubject<DecodedGameState>;

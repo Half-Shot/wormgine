@@ -12,7 +12,7 @@ import {
   ColliderDesc,
   RigidBodyDesc,
 } from "@dimforge/rapier2d-compat";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 import { PlayableEntity } from "./playable";
 import { Viewport } from "pixi-viewport";
 import { EntityType } from "../type";

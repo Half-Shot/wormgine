@@ -10,7 +10,7 @@ import { PhysicsEntity } from "./physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../../utils/coodinate";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 

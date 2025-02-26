@@ -1,5 +1,5 @@
 import { Viewport } from "pixi-viewport";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 import { Toaster } from "../../overlays/toaster";
 import { Coordinate } from "../../utils";
 import { GameWorld } from "../../world";

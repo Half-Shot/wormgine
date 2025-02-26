@@ -9,7 +9,7 @@ import {
 } from "@dimforge/rapier2d-compat";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { AssetPack } from "../../assets";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
 

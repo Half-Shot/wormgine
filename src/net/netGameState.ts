@@ -1,7 +1,7 @@
 import { GameRules, GameState, RoundState } from "../logic/gamestate";
 import { StateRecorder } from "../state/recorder";
 import { GameWorld } from "../world";
-import { Team } from "../logic/teams";
+import { TeamDefinition } from "../logic/teams";
 import { StateRecordWormGameState } from "../state/model";
 import { combineLatest, map } from "rxjs";
 import Logger from "../log";
@@ -34,7 +34,7 @@ export class NetGameState extends GameState {
   }
 
   constructor(
-    teams: Team[],
+    teams: TeamDefinition[],
     world: GameWorld,
     rules: GameRules,
     private readonly recorder: StateRecorder,

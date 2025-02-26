@@ -22,7 +22,7 @@ import { AssetPack } from "../../assets";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
-import { WormInstance } from "../../logic/teams";
+import { WormInstance } from "../../logic";
 
 const COLOUR_SET = [0x08ff08, 0xffcf00, 0xfe1493, 0xff5555, 0x00fdff, 0xccff02];
 

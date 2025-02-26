@@ -1,5 +1,5 @@
 import { test, expect, describe } from "@jest/globals";
-import { Team, TeamGroup, WormIdentity } from "../../../src/logic/teams";
+import { TeamDefinition, TeamGroup, WormIdentity } from "../../../src/logic/teams";
 import { GameRules, GameState } from "../../../src/logic/gamestate";
 import { GameWorld } from "../../../src/world";
 import { DefaultWeaponSchema } from "../../../src/weapons/schema";
@@ -10,14 +10,14 @@ const DEAD_WORM: WormIdentity = {
   maxHealth: 100,
 }
 
-const RED_TEAM: Team = {
+const RED_TEAM: TeamDefinition = {
   name: "Lovely Reds",
   group: TeamGroup.Red,
   worms: [{
     name: "Diabolical Steve",
     health: 25,
     maxHealth: 100,
-  },{
+  }, {
     name: "Generous Greggory",
     health: 25,
     maxHealth: 100,
@@ -27,7 +27,7 @@ const RED_TEAM: Team = {
   uuid: "red",
 }
 
-const RED_TEAM_2: Team = {
+const RED_TEAM_2: TeamDefinition = {
   name: "Passed over Reds",
   group: TeamGroup.Red,
   worms: [{
@@ -40,7 +40,7 @@ const RED_TEAM_2: Team = {
   uuid: "red2",
 }
 
-const BLUE_TEAM: Team = {
+const BLUE_TEAM: TeamDefinition = {
   name: "Melodramatic Blues",
   group: TeamGroup.Blue,
   worms: [{
@@ -70,6 +70,8 @@ function completeRound(gameState: GameState) {
   gameState.beginRound();
   gameState.playerMoved();
   gameState.markAsFinished();
+  // Don't return toast.
+  delete round.toast;
   return round;
 }
 
@@ -78,7 +80,7 @@ describe('GameState', () => {
     expect(() => new GameState([], {} as GameWorld, DefaultRules)).toThrow();
   });
   test('should be able to get active teams', () => {
-    const gameState = new GameState([RED_TEAM, {...BLUE_TEAM, worms: [DEAD_WORM]}], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, { ...BLUE_TEAM, worms: [DEAD_WORM] }], {} as GameWorld, DefaultRules);
     const teams = gameState.getActiveTeams();
     expect(teams).toHaveLength(1);
   });
@@ -141,7 +143,7 @@ describe('GameState', () => {
     expect(gameState.iteration).toEqual(1);
     gameState.beginRound();
     for (let index = 0; index < 5; index++) {
-      gameState.update({ deltaMS: 1000 });      
+      gameState.update({ deltaMS: 1000 });
     }
     expect(gameState.remainingRoundTime).toEqual(DefaultRules.roundDurationMs);
     expect(gameState.isPreRound).toEqual(false);
@@ -155,16 +157,22 @@ describe('GameState', () => {
     expect(gameState.iteration).toEqual(1);
     gameState.beginRound();
     for (let index = 0; index < 5; index++) {
-      gameState.update({ deltaMS: 1000 });      
+      gameState.update({ deltaMS: 1000 });
     }
     expect(gameState.remainingRoundTime).toEqual(DefaultRules.roundDurationMs);
     expect(gameState.isPreRound).toEqual(false);
     expect(gameState.paused).toEqual(false);
     for (let index = 0; index < 45; index++) {
-      gameState.update({ deltaMS: 1000 });      
+      gameState.update({ deltaMS: 1000 });
     }
     expect(gameState.remainingRoundTime).toEqual(0);
-    expect(gameState.advanceRound()).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
+    const state = gameState.advanceRound();
+    if ('winningTeams' in state) {
+      throw Error('Unexpected win');
+    }
+    const { nextTeam, nextWorm } = state;
+    expect(nextTeam).toEqual(blueTeam);
+    expect(nextWorm).toEqual(blueTeam.worms[0]);
   });
 
 });
