@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import video from "../../../assets/ui/loading.webm";
 
-const staticVideo = fetch(video, { priority: "high" }).then((v) => v.blob()).then((v) => URL.createObjectURL(v)).finally(() => {
-  console.log("Video load done");
-});
+const staticVideo = fetch(video, { priority: "high" })
+  .then((v) => v.blob())
+  .then((v) => URL.createObjectURL(v))
+  .finally(() => {
+    console.log("Video load done");
+  });
 
 const VIDEO_TIME_S = 3;
 
@@ -51,7 +54,11 @@ export function Loading({
       console.log("Progress behind", currentTime, expectedProgress);
       videoRef.current.play();
     } else if (currentTime >= expectedProgress) {
-      console.log("Progress ahead of current time, pausing", currentTime, expectedProgress);
+      console.log(
+        "Progress ahead of current time, pausing",
+        currentTime,
+        expectedProgress,
+      );
       videoRef.current.pause();
     }
   }, [videoRef, progress]);

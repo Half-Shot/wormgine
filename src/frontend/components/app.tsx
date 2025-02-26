@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { IngameView } from "./ingame-view";
 import Menu from "./menu";
-import { assetLoadPercentage, assetsAreReady } from "../../assets";
 import { NetClientConfig, NetGameClient } from "../../net/client";
 import { GameReactChannel } from "../../interop/gamechannel";
 import type { AssetData } from "../../assets/manifest";
-import { useObservableEagerState } from "observable-hooks";
 import { getClientConfigHook, useGameSettingsHook } from "../../settings";
 import { MotionConfig } from "framer-motion";
 import {
@@ -21,9 +19,6 @@ interface LoadGameProps {
 
 export function App() {
   const [gameState, setGameState] = useState<LoadGameProps>();
-  const assetProgress = useObservableEagerState(assetLoadPercentage);
-  const assetsLoaded = useObservableEagerState(assetsAreReady);
-
   const [client, setClient] = useState<NetGameClient>();
   const [clientConfig, setClientConfig, { removeItem: removeClientConfig }] =
     getClientConfigHook();

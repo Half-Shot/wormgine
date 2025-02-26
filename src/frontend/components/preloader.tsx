@@ -5,13 +5,13 @@ import { MotionConfig } from "framer-motion";
 import { LoadingPage } from "./loading-page";
 
 export function Preloader() {
-    const assetProgress = useObservableEagerState(assetLoadPercentage);
-    const assetsLoaded = useObservableEagerState(assetsAreReady);
-    const [settings] = useGameSettingsHook();
+  const assetProgress = useObservableEagerState(assetLoadPercentage);
+  const assetsLoaded = useObservableEagerState(assetsAreReady);
+  const [settings] = useGameSettingsHook();
 
-    return (
-        <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
-            <LoadingPage visible={!assetsLoaded} progress={assetProgress} />
-        </MotionConfig>
-    );
+  return (
+    <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
+      <LoadingPage visible={!assetsLoaded} progress={assetProgress} />
+    </MotionConfig>
+  );
 }
