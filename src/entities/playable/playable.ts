@@ -16,7 +16,7 @@ import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
-import { HEALTH_CHANGE_TENSION_TIMER } from "../../consts";
+import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../../consts";
 import { first, skip, Subscription } from "rxjs";
 import Logger from "../../log";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
@@ -97,7 +97,7 @@ export abstract class PlayableEntity<
     this.healthSub = this.wormIdent.health$.pipe(skip(1)).subscribe((h) => {
       this.healthTarget = h;
       // TODO: Potentially further delay until the player has stopped moving.
-      this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
+      this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER_MS;
     });
 
     this.nameText.position.set(0, -5);
@@ -180,7 +180,7 @@ export abstract class PlayableEntity<
 
     // Only decrease the timer when we have come to a standstill.
     if (this.healthChangeTensionTimer && this.canReduceHealthTimer) {
-      this.healthChangeTensionTimer -= dt;
+      this.healthChangeTensionTimer -= dMs;
     }
 
     // If the timer has run out, set to null to indiciate it has expired.
@@ -206,7 +206,7 @@ export abstract class PlayableEntity<
 
       // If we are dead, set a new timer to decrease to explode after a small delay.
       if (this.visibleHealth === 0) {
-        this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
+        this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER_MS;
       }
     }
   }

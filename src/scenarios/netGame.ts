@@ -334,7 +334,12 @@ export default async function runScenario(game: Game) {
       ) {
         world.setBroadcasting(false);
       }
-      log.info("Round state sub fired for", roundState, worm, entsMoving);
+      log.info(
+        "GameState Round state sub fired for",
+        roundState,
+        worm,
+        entsMoving,
+      );
       if (
         worm === undefined &&
         roundState === RoundState.Finished &&

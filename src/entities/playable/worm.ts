@@ -86,6 +86,9 @@ export interface WormRecordedState extends PlayableRecordedState {
   facingRight: boolean;
 }
 
+const FRICTION_WHEN_ACTIVE = 0.075;
+const FRICTION_WHEN_IDLE = 0.125;
+
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
@@ -105,25 +108,25 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     Worm.springArrow = assets.textures.spring;
   }
 
-  private static springArrow: Texture;
-  private static texture: Texture;
+  // TODO: Best place for this var?
+  private arrowSprite: TiledSpriteAnimated;
+  private currentWeapon: IWeaponDefinition = WeaponBazooka;
+  private impactVelocity = 0;
+  private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
   private static idleAnim: Texture;
   private static impactDamageMultiplier = 0.75;
   private static minImpactForDamage = 12;
-  protected fireWeaponDuration = 0;
-  private currentWeapon: IWeaponDefinition = WeaponBazooka;
-  protected state = new WormState(InnerWormState.Inactive);
+  private static springArrow: Texture;
+  private static texture: Texture;
   private turnEndedReason: EndTurnReason | undefined;
-  private impactVelocity = 0;
-  // TODO: Best place for this var?
-  private weaponTimerSecs = 3;
-  public fireAngle = 0;
-  protected targettingGfx: Graphics;
-  protected facingRight = true;
-  private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
   private weaponSprite: Sprite;
-  private arrowSprite: TiledSpriteAnimated;
+  private weaponTimerSecs = 3;
+  protected facingRight = true;
+  protected fireWeaponDuration = 0;
   protected motionTween?: TweenEngine;
+  protected state = new WormState(InnerWormState.Inactive);
+  protected targettingGfx: Graphics;
+  public fireAngle = 0;
 
   get itemPlacementPosition() {
     const trans = this.body.translation();
@@ -214,7 +217,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
         .setSolverGroups(Worm.collisionBitmask)
-        .setFriction(0.025)
+        .setFriction(FRICTION_WHEN_IDLE)
         .setRestitution(0.65),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
@@ -285,6 +288,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       teamGroupToColorSet(this.wormIdent.team.group).fg,
       true,
     );
+    this.collider.setFriction(FRICTION_WHEN_ACTIVE);
     this.state.transition(InnerWormState.Idle);
     this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
     this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
@@ -321,7 +325,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         3000,
       );
     }
-
+    this.collider.setFriction(FRICTION_WHEN_IDLE);
     this.state.transition(InnerWormState.Inactive);
     Controller.removeListener("inputBegin", this.onInputBegin);
     Controller.removeListener("inputEnd", this.onInputEnd);
@@ -533,7 +537,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     radius: MetersValue,
     opts: OnDamageOpts,
   ): void {
-    logger.info("onDamage");
+    this.collider.setFriction(FRICTION_WHEN_ACTIVE);
     super.onDamage(point, radius, opts);
     if (this.state.isPlaying) {
       this.state.transition(InnerWormState.Inactive);
@@ -684,7 +688,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
     (this.sprite as TiledSpriteAnimated).update(dMs);
     this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}`,
     );
     this.weaponSprite.visible = this.state.showWeapon;
     this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
@@ -694,6 +698,10 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.arrowSprite.x = this.sprite.x;
       this.arrowSprite.y = this.healthTextBox.y - 25;
     }
+    if (!this.state.active && !this.body.isMoving()) {
+      this.collider.setFriction(FRICTION_WHEN_IDLE);
+    }
+
     if (!this.state.shouldUpdate) {
       // Do nothing.
       return;

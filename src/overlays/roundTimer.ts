@@ -24,19 +24,21 @@ export class RoundTimer {
         align: "center",
       },
     });
+    const { width, height } = text;
     this.container = new Container();
     this.container.addChild(this.gfx);
     this.container.addChild(text);
 
     this.roundTimeRemaining.subscribe((timeSeconds) => {
-      text.text = timeSeconds === 0 ? "--" : timeSeconds;
+      text.text =
+        timeSeconds === 0 ? "--" : timeSeconds.toString().padStart(2, "0");
     });
 
     this.currentTeamColors.subscribe((color) => {
       this.gfx.clear();
       // Round timer
       applyGenericBoxStyle(this.gfx, color?.fg)
-        .roundRect(-8, 8, text.width + 16, text.height, 4)
+        .roundRect(-8, 8, width + 16, height, 4)
         .stroke()
         .fill();
     });

@@ -12,9 +12,9 @@ import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
 import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
-import { HEALTH_CHANGE_TENSION_TIMER } from "../consts";
+import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../consts";
 import Logger from "../log";
-import { combineLatest, delay, first, map, Observable } from "rxjs";
+import { combineLatest, debounceTime, first, map, Observable } from "rxjs";
 import { RoundTimer } from "./roundTimer";
 
 const logger = new Logger("GameStateOverlay");
@@ -94,7 +94,7 @@ export class GameStateOverlay {
       this.gfx.position.set(width / 2, (height / 10) * 8.75);
     });
     this.gameWorld.entitiesMoving$
-      .pipe(delay(HEALTH_CHANGE_TENSION_TIMER))
+      .pipe(debounceTime(HEALTH_CHANGE_TENSION_TIMER_MS))
       .subscribe((f) => {
         this.shouldChangeTeamHealth = f;
       });

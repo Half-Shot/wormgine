@@ -8,6 +8,7 @@ import {
   BehaviorSubject,
   combineLatest,
   distinctUntilChanged,
+  filter,
   map,
   merge,
   skip,
@@ -178,19 +179,18 @@ export class GameState {
       this.remainingRoundTimeSeconds$,
       this.roundState$,
       this.world.entitiesMoving$,
-    ]).subscribe(([seconds, roundState, moving]) => {
-      if (seconds) {
-        return;
-      }
-      console.log({ seconds, roundState, moving });
-      if (roundState === RoundState.Preround) {
-        logger.info("Moving round to playing");
-        this.playerMoved();
-      } else if (roundState === RoundState.Playing) {
-        console.log("Moving round to finished");
-        this.roundState.next(RoundState.Finished);
-      }
-    });
+    ])
+      .pipe(filter(([seconds]) => seconds === 0))
+      .subscribe(([seconds, roundState, moving]) => {
+        logger.info("State accumulator", seconds, roundState, moving);
+        if (roundState === RoundState.Preround) {
+          logger.info("Moving round to playing");
+          this.playerMoved();
+        } else if (roundState === RoundState.Playing) {
+          logger.info("Moving round to finished");
+          this.roundState.next(RoundState.Finished);
+        }
+      });
   }
 
   public pauseTimer() {
@@ -228,6 +228,7 @@ export class GameState {
   }
 
   public markAsFinished() {
+    logger.info("Mark as finished");
     this.roundState.next(RoundState.Finished);
   }
 

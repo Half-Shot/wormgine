@@ -157,10 +157,12 @@ export class NetGameState extends GameState {
       return;
     }
 
-    if (roundState === RoundState.Preround) {
-      this.playerMoved();
-    } else {
-      this.roundState.next(RoundState.Finished);
-    }
+    // if (roundState === RoundState.Preround) {
+    //   console.log("Setting moved");
+    //   this.playerMoved();
+    // } else {
+    //   console.log("Setting finished")
+    //   this.roundState.next(RoundState.Finished);
+    // }
   }
 }
