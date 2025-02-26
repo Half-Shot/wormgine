@@ -26,6 +26,7 @@ export function Loading({
     if (!videoRef.current) {
       return;
     }
+    videoRef.current.playbackRate = 2;
     videoRef.current.addEventListener("ended", () => {
       console.log("Loading ended");
       if (videoRef.current?.currentTime === VIDEO_TIME_S) {
@@ -41,7 +42,6 @@ export function Loading({
     }
     if (progress === undefined) {
       console.log("No progress, playing at full rate");
-      videoRef.current.playbackRate = 2;
       videoRef.current.play();
       return;
     }
@@ -49,8 +49,6 @@ export function Loading({
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
       console.log("Progress behind", currentTime, expectedProgress);
-      videoRef.current.playbackRate =
-        expectedProgress - currentTime > 2 ? 3 : 1;
       videoRef.current.play();
     } else if (currentTime >= expectedProgress) {
       console.log("Progress ahead of current time, pausing", currentTime, expectedProgress);
