@@ -20,8 +20,8 @@ export interface TeamDefinition {
 }
 
 export interface TeamInstanceInterface extends TeamDefinition {
-  availableWeapons: [IWeaponDefiniton, number][],
-  consumeAmmo: (code: IWeaponCode) => void,
+  availableWeapons: [IWeaponDefiniton, number][];
+  consumeAmmo: (code: IWeaponCode) => void;
 }
 
 export enum TeamGroup {
@@ -32,7 +32,6 @@ export enum TeamGroup {
   Purple,
   Orange,
 }
-
 
 export function teamGroupToColorSet(group: TeamGroup): {
   bg: ColorSource;

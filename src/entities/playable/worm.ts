@@ -353,7 +353,12 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       return;
     }
     this.perRoundState.hasPerformedAction = true;
-    logger.info("Got input", inputKind, position);
+    logger.info(
+      "Got input",
+      inputKind,
+      this.state.stateName,
+      this.state.canFire,
+    );
     if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
       this.setMoveDirection(inputKind);
     } else if (inputKind === InputKind.Jump) {
@@ -361,6 +366,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     } else if (inputKind === InputKind.Backflip) {
       this.onBackflip();
     } else if (!this.state.canFire) {
+      console.log("Bork!");
       return;
     } else if (inputKind === InputKind.AimUp) {
       this.state.transition(InnerWormState.AimingUp);
@@ -427,7 +433,12 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     if (inputKind === InputKind.MoveLeft || inputKind === InputKind.MoveRight) {
       this.resetMoveDirection(inputKind);
     }
-    if (inputKind === InputKind.AimUp || inputKind === InputKind.AimDown) {
+    if (
+      (this.state.state === InnerWormState.AimingUp &&
+        inputKind === InputKind.AimUp) ||
+      (this.state.state === InnerWormState.AimingDown &&
+        inputKind === InputKind.AimDown)
+    ) {
       this.recorder?.recordWormAim(
         this.wormIdent.uuid,
         this.state.state === InnerWormState.AimingUp ? "up" : "down",
@@ -720,7 +731,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-          (this.sprite.width + this.currentWeapon.sprite.offset.x),
+            (this.sprite.width + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;

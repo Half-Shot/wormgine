@@ -31,9 +31,7 @@ export function Loading({
     }
     videoRef.current.playbackRate = 2;
     videoRef.current.addEventListener("ended", () => {
-      console.log("Loading ended");
       if (videoRef.current?.currentTime === VIDEO_TIME_S) {
-        console.log("Loading Done");
         loadingDone();
       }
     });
@@ -44,21 +42,14 @@ export function Loading({
       return;
     }
     if (progress === undefined) {
-      console.log("No progress, playing at full rate");
       videoRef.current.play();
       return;
     }
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
-      console.log("Progress behind", currentTime, expectedProgress);
       videoRef.current.play();
     } else if (currentTime >= expectedProgress) {
-      console.log(
-        "Progress ahead of current time, pausing",
-        currentTime,
-        expectedProgress,
-      );
       videoRef.current.pause();
     }
   }, [videoRef, progress]);

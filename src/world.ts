@@ -17,7 +17,12 @@ import { Coordinate, MetersValue } from "./utils/coodinate";
 import { add, mult } from "./utils";
 import Logger from "./log";
 import globalFlags from "./flags";
-import { BehaviorSubject } from "rxjs";
+import {
+  BehaviorSubject,
+  debounceTime,
+  distinctUntilChanged,
+  Observable,
+} from "rxjs";
 
 const logger = new Logger("World");
 
@@ -65,6 +70,9 @@ export class GameWorld {
   private readonly windSubject = new BehaviorSubject(0);
   public readonly wind$ = this.windSubject.asObservable();
 
+  private readonly entitiesMoving = new BehaviorSubject(false);
+  public readonly entitiesMoving$: Observable<boolean>;
+
   /**
    * @deprecated Use `this.wind$`
    */
@@ -72,18 +80,36 @@ export class GameWorld {
     return this.windSubject.value;
   }
 
+  /**
+   * @deprecated Use `this.entitiesMoving$`
+   */
+  get entitiesMovingValue() {
+    return this.entitiesMoving.value;
+  }
+
   constructor(
     public readonly rapierWorld: World,
     protected readonly ticker: Ticker,
-  ) {}
+  ) {
+    this.entitiesMoving$ = this.entitiesMoving.pipe(
+      distinctUntilChanged(),
+      debounceTime(1500),
+    );
+    this.entitiesMoving$.subscribe((entsMoving) => {
+      logger.info(`Entities moving: ${entsMoving}`);
+    });
+  }
 
   public setWind(windSpeed: number) {
     logger.info(`setWind(${windSpeed})`);
     this.windSubject.next(windSpeed);
   }
 
-  public areEntitiesMoving() {
+  private areEntitiesMoving() {
     for (const e of this.bodyEntityMap.values()) {
+      if (e.consideredActive) {
+        return true;
+      }
       if (
         !e.destroyed &&
         e.body?.isEnabled?.() &&
@@ -112,6 +138,7 @@ export class GameWorld {
     this.eventQueue.drainContactForceEvents((event) => {
       logger.verbose("contactForceEvents", event);
     });
+    this.entitiesMoving.next(this.areEntitiesMoving());
   }
 
   private onCollision(collider1: Collider, collider2: Collider) {

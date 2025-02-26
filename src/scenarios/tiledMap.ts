@@ -248,10 +248,10 @@ export default async function runScenario(game: Game) {
         return;
       }
     }
-    if (world.areEntitiesMoving()) {
-      // Don't advance while entities are moving.
-      return;
-    }
+    // if (world.areEntitiesMoving()) {
+    //   // Don't advance while entities are moving.
+    //   return;
+    // }
     if (endOfRoundWaitDuration === null) {
       const nextState = gameState.advanceRound();
       if (nextState.toast) {

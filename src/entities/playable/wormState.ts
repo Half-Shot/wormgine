@@ -20,12 +20,20 @@ type Events = {
 
 export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
   private innerStatePriorToMotion?: InnerWormState;
+  private isGetaway = false;
 
   constructor(private innerState: InnerWormState) {
     super();
   }
 
   transition(newState: InnerWormState) {
+    // Once we mark a worm as getaway, do not allow them to go back to an idle state.
+    if (newState === InnerWormState.Getaway) {
+      this.isGetaway = true;
+    } else if (newState === InnerWormState.Inactive) {
+      this.isGetaway = false;
+    }
+
     if (newState === InnerWormState.InMotion) {
       this.innerStatePriorToMotion = this.innerState;
     } else if (newState === InnerWormState.MovingLeft) {
@@ -39,7 +47,9 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   voidStatePriorToMotion() {
-    this.innerStatePriorToMotion = InnerWormState.Idle;
+    this.innerStatePriorToMotion = this.isGetaway
+      ? InnerWormState.Getaway
+      : InnerWormState.Idle;
   }
 
   get timerShouldRun() {

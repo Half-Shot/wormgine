@@ -8,7 +8,7 @@ export enum LogLevels {
 
 export default class Logger {
   public static LogLevel = LogLevels.Error;
-  constructor(private readonly moduleName: string) { }
+  constructor(private readonly moduleName: string) {}
 
   public verbose(...info: unknown[]) {
     if (Logger.LogLevel > LogLevels.Verbose) {

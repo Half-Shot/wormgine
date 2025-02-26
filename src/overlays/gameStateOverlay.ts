@@ -14,7 +14,7 @@ import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
 import { HEALTH_CHANGE_TENSION_TIMER } from "../consts";
 import Logger from "../log";
-import { combineLatest, first, map, Observable } from "rxjs";
+import { combineLatest, delay, first, map, Observable } from "rxjs";
 import { RoundTimer } from "./roundTimer";
 
 const logger = new Logger("GameStateOverlay");
@@ -27,8 +27,8 @@ export class GameStateOverlay {
   private readonly gfx: Graphics;
   private previousStateIteration = -1;
   private visibleTeamHealth: Record<string, number> = {};
-  private healthChangeTensionTimer: number | null = null;
   private largestHealthPool = 0;
+  private shouldChangeTeamHealth = false;
 
   public readonly toaster: Toaster;
   private readonly winddial: WindDial;
@@ -93,22 +93,20 @@ export class GameStateOverlay {
     screenSize.subscribe(({ width, height }) => {
       this.gfx.position.set(width / 2, (height / 10) * 8.75);
     });
+    this.gameWorld.entitiesMoving$
+      .pipe(delay(HEALTH_CHANGE_TENSION_TIMER))
+      .subscribe((f) => {
+        this.shouldChangeTeamHealth = f;
+      });
   }
 
   private update(dt: Ticker) {
     this.toaster.update(dt);
     this.winddial.update();
-    if (this.healthChangeTensionTimer && !this.gameWorld.areEntitiesMoving()) {
-      this.healthChangeTensionTimer -= dt.deltaTime;
-    }
-
-    const shouldChangeTeamHealth =
-      this.healthChangeTensionTimer !== null &&
-      this.healthChangeTensionTimer <= 0;
 
     if (
       this.previousStateIteration === this.gameState.iteration &&
-      !shouldChangeTeamHealth
+      !this.shouldChangeTeamHealth
     ) {
       return;
     }
@@ -117,16 +115,9 @@ export class GameStateOverlay {
 
     // TODO: Could the gameState flag this explicitly.
     // Check for health change.
-    if (this.healthChangeTensionTimer === null) {
-      for (const team of this.gameState.getTeams()) {
-        if (this.visibleTeamHealth[team.uuid] === undefined) {
-          continue;
-        }
-        if (this.visibleTeamHealth[team.uuid] !== team.health) {
-          // TODO: Const, same as the one for Playable.
-          this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER;
-          return;
-        }
+    for (const team of this.gameState.getTeams()) {
+      if (this.visibleTeamHealth[team.uuid] === undefined) {
+        continue;
       }
     }
 
@@ -147,7 +138,7 @@ export class GameStateOverlay {
       }
       if (
         this.visibleTeamHealth[team.uuid] > team.health &&
-        shouldChangeTeamHealth
+        this.shouldChangeTeamHealth
       ) {
         this.visibleTeamHealth[team.uuid] -= 1;
         allHealthAccurate = false;
@@ -228,12 +219,7 @@ export class GameStateOverlay {
 
     if (allHealthAccurate) {
       logger.debug("All health considered accurate");
-      if (
-        this.healthChangeTensionTimer !== null &&
-        this.healthChangeTensionTimer <= 0
-      ) {
-        this.healthChangeTensionTimer = null;
-      }
+      this.shouldChangeTeamHealth = false;
     }
   }
 }

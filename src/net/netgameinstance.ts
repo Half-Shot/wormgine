@@ -248,10 +248,10 @@ export class NetGameInstance implements IGameInstance {
       teams: teams ?? [],
       level: levelData
         ? {
-          bitmap_mxc: levelData.terrainMxc,
-          data_mxc: levelData.levelMxc,
-          name: levelData.mapName,
-        }
+            bitmap_mxc: levelData.terrainMxc,
+            data_mxc: levelData.levelMxc,
+            name: levelData.mapName,
+          }
         : undefined,
     } satisfies GameConfigEvent["content"]);
   }
@@ -314,7 +314,9 @@ export class NetGameInstance implements IGameInstance {
     const builder = await ScenarioBuilder.fromBlob(levelData, assets.data);
     builder.loadBitmapFromBlob(bitmapData);
 
-    const teams: TeamDefinition[] = Object.values(this._proposedTeams.value).map((v) => ({
+    const teams: TeamDefinition[] = Object.values(
+      this._proposedTeams.value,
+    ).map((v) => ({
       name: v.name,
       flag: v.flagb64,
       group: v.group,
@@ -377,7 +379,8 @@ type DecodedGameState = {
 
 export class RunningNetGameInstance
   extends NetGameInstance
-  implements IRunningGameInstance {
+  implements IRunningGameInstance
+{
   private readonly _gameConfig: BehaviorSubject<GameConfigEvent["content"]>;
   public readonly gameConfig: Observable<GameConfigEvent["content"]>;
   private readonly _gameState: BehaviorSubject<DecodedGameState>;

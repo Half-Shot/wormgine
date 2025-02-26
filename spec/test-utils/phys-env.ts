@@ -46,10 +46,11 @@ export class PhysicsEnvironment {
 
     waitUntilStopped() {
         let step = 0;
+        let entsMoving;
         do {
             this.world.step();
             step++;
-        } while (this.world.areEntitiesMoving() && step <= MaxSteps);
+        } while (this.world.entitiesMovingValue && step <= MaxSteps);
         expect(step).toBeLessThan(MaxSteps);
         return this.player.body.translation();
     }

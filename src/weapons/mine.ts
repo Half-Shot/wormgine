@@ -19,6 +19,6 @@ export const WeaponMine: IWeaponDefiniton = {
   },
   fireFn(parent: Container, world: GameWorld, worm: Worm) {
     // Getaway time + some time
-    return Mine.create(parent, world, worm.itemPlacementPosition, 7000);
+    return Mine.create(parent, world, worm.itemPlacementPosition, 4000);
   },
 };

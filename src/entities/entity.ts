@@ -30,6 +30,11 @@ export interface IPhysicalEntity extends IGameEntity {
   body?: RigidBody;
 
   /**
+   * Override flag to mark the entity as active when it is otherwise not moving.
+   */
+  consideredActive?: boolean;
+
+  /**
    *
    * @param other
    * @param contactPoint

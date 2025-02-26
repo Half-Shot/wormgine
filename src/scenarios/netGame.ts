@@ -237,7 +237,6 @@ export default async function runScenario(game: Game) {
             ),
         wormInstance.uuid,
       );
-      // delete spawnPositions[nextLocationIdx];
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
@@ -299,11 +298,7 @@ export default async function runScenario(game: Game) {
   }
 
   combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])
-    .pipe(
-      filter(
-        ([state, seconds]) => state === RoundState.Finished && seconds === 0,
-      ),
-    )
+    .pipe(filter(([state]) => state === RoundState.Finished))
     .subscribe(() => {
       if (currentWorm) {
         log.info("Timer ran out");
@@ -315,6 +310,7 @@ export default async function runScenario(game: Game) {
   const roundStateSub = combineLatest([
     gameState.roundState$,
     gameState.currentWorm$,
+    world.entitiesMoving$,
   ])
     .pipe(
       filter(([roundState, worm]) => {
@@ -324,7 +320,7 @@ export default async function runScenario(game: Game) {
         return true;
       }),
     )
-    .subscribe(([roundState, worm]) => {
+    .subscribe(([roundState, worm, entsMoving]) => {
       world.setWind(gameState.currentWind);
       if (
         worm?.team.playerUserId === gameInstance.myUserId &&
@@ -338,7 +334,7 @@ export default async function runScenario(game: Game) {
       ) {
         world.setBroadcasting(false);
       }
-      log.info("Round state sub fired for", roundState, worm);
+      log.info("Round state sub fired for", roundState, worm, entsMoving);
       if (
         worm === undefined &&
         roundState === RoundState.Finished &&
@@ -368,7 +364,7 @@ export default async function runScenario(game: Game) {
         currentWorm?.currentState.on("transition", transitionHandler);
         gameState.beginRound();
         return;
-      } else if (roundState === RoundState.Finished) {
+      } else if (roundState === RoundState.Finished && !entsMoving) {
         const nextState = gameState.advanceRound();
         if (nextState.toast) {
           overlay.toaster.pushToast(nextState.toast, 3500, undefined, true);

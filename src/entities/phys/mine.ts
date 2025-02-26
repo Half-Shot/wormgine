@@ -60,6 +60,10 @@ export class Mine extends TimedExplosive {
     return ent;
   }
 
+  get consideredActive() {
+    return this.inactiveUntilTs > 0 || this.timer !== undefined;
+  }
+
   private get timerTextValue() {
     return `${((this.timer ?? 0) / (Ticker.targetFPMS * 1000)).toFixed(1)}`;
   }

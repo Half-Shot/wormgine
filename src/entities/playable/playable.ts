@@ -50,6 +50,7 @@ export abstract class PlayableEntity<
   private visibleHealth: number;
   private healthTarget: number;
   private healthChangeTensionTimer: number | null = null;
+  private canReduceHealthTimer = false;
 
   get position() {
     return this.physObject.body.translation();
@@ -127,6 +128,11 @@ export abstract class PlayableEntity<
     this.setHealthTextPosition();
 
     this.healthTextBox.addChild(this.healthText, this.nameText);
+    this.gameWorld.entitiesMoving$.subscribe((entitiesMoving) => {
+      this.canReduceHealthTimer = !(
+        entitiesMoving || !this.healthChangeTensionTimer
+      );
+    });
   }
 
   public setHealthTextPosition() {
@@ -173,7 +179,7 @@ export abstract class PlayableEntity<
     // we can render the damage to the player.
 
     // Only decrease the timer when we have come to a standstill.
-    if (!this.gameWorld.areEntitiesMoving() && this.healthChangeTensionTimer) {
+    if (this.healthChangeTensionTimer && this.canReduceHealthTimer) {
       this.healthChangeTensionTimer -= dt;
     }
 

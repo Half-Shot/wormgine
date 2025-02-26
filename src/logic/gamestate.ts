@@ -4,7 +4,14 @@ import Logger from "../log";
 import { EntityType } from "../entities/type";
 import { GameWorld } from "../world";
 import { IWeaponCode } from "../weapons/weapon";
-import { BehaviorSubject, distinctUntilChanged, map, merge, skip } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  distinctUntilChanged,
+  map,
+  merge,
+  skip,
+} from "rxjs";
 import {
   EndTurnTookDamange,
   FireResultHitEnemy,
@@ -57,7 +64,7 @@ export class GameState {
       Math.ceil(
         (team.worms.map((w) => w.health).reduce((a, b) => a + b) /
           team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b)) *
-        100,
+          100,
       ) / 100
     );
   }
@@ -167,6 +174,23 @@ export class GameState {
     this.currentTeam.subscribe((s) =>
       logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`),
     );
+    combineLatest([
+      this.remainingRoundTimeSeconds$,
+      this.roundState$,
+      this.world.entitiesMoving$,
+    ]).subscribe(([seconds, roundState, moving]) => {
+      if (seconds) {
+        return;
+      }
+      console.log({ seconds, roundState, moving });
+      if (roundState === RoundState.Preround) {
+        logger.info("Moving round to playing");
+        this.playerMoved();
+      } else if (roundState === RoundState.Playing) {
+        console.log("Moving round to finished");
+        this.roundState.next(RoundState.Finished);
+      }
+    });
   }
 
   public pauseTimer() {
@@ -220,20 +244,12 @@ export class GameState {
 
     remainingRoundTimeMs = Math.max(0, remainingRoundTimeMs - ticker.deltaMS);
     this.remainingRoundTimeMs.next(remainingRoundTimeMs);
-    if (remainingRoundTimeMs) {
-      return;
-    }
-    if (roundState === RoundState.Preround) {
-      this.playerMoved();
-    } else {
-      this.roundState.next(RoundState.Finished);
-    }
   }
 
   public playerMoved() {
+    this.remainingRoundTimeMs.next(this.roundDurationMs);
     this.roundState.next(RoundState.Playing);
     logger.debug("playerMoved", this.roundDurationMs);
-    this.remainingRoundTimeMs.next(this.roundDurationMs);
   }
 
   public beginRound() {
@@ -242,9 +258,10 @@ export class GameState {
         `Expected round to be WaitingToBegin for advanceRound(), but got ${this.roundState.value}`,
       );
     }
+    // It is critical to advance the timer before the state.
+    this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
     this.roundState.next(RoundState.Preround);
     logger.debug("beginRound", PREROUND_TIMER_MS);
-    this.remainingRoundTimeMs.next(PREROUND_TIMER_MS);
   }
 
   public getToastForRound(): string | undefined {

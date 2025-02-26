@@ -3,6 +3,8 @@ import { TeamDefinition, TeamGroup, WormIdentity } from "../../../src/logic/team
 import { GameRules, GameState } from "../../../src/logic/gamestate";
 import { GameWorld } from "../../../src/world";
 import { DefaultWeaponSchema } from "../../../src/weapons/schema";
+import Logger, { LogLevels } from "../../../src/log";
+import { of } from "rxjs";
 
 const DEAD_WORM: WormIdentity = {
   name: "fishbait",
@@ -75,30 +77,34 @@ function completeRound(gameState: GameState) {
   return round;
 }
 
+const world = {
+  entitiesMoving$: of(false),
+} as Partial<GameWorld> as GameWorld;
+
 describe('GameState', () => {
   test('requires at least one team', () => {
-    expect(() => new GameState([], {} as GameWorld, DefaultRules)).toThrow();
+    expect(() => new GameState([], world, DefaultRules)).toThrow();
   });
   test('should be able to get active teams', () => {
-    const gameState = new GameState([RED_TEAM, { ...BLUE_TEAM, worms: [DEAD_WORM] }], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, { ...BLUE_TEAM, worms: [DEAD_WORM] }], world, DefaultRules);
     const teams = gameState.getActiveTeams();
     expect(teams).toHaveLength(1);
   });
   test('should advance round to the next team', () => {
-    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
     const [redTeam, blueTeam] = gameState.getActiveTeams();
     expect(completeRound(gameState)).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
     expect(completeRound(gameState)).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
   });
   test('should advance round to the next team, skipping over the same group', () => {
-    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], world, DefaultRules);
     const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
     expect(completeRound(gameState)).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
     expect(completeRound(gameState)).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
     expect(completeRound(gameState)).toEqual({ nextTeam: redTeam2, nextWorm: redTeam2.worms[0] });
   });
   test('should advance round to the next team, should ensure that all teams within the same group get to play', () => {
-    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], world, DefaultRules);
     const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
     expect(completeRound(gameState)).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[0] });
     expect(completeRound(gameState)).toEqual({ nextTeam: blueTeam, nextWorm: blueTeam.worms[0] });
@@ -107,7 +113,7 @@ describe('GameState', () => {
     expect(completeRound(gameState)).toEqual({ nextTeam: redTeam, nextWorm: redTeam.worms[1] });
   });
   test('should detect a win when only one group has active worms', () => {
-    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], {} as GameWorld, { winWhenOneGroupRemains: true, wormHealth: 100, ammoSchema: DefaultWeaponSchema });
+    const gameState = new GameState([RED_TEAM, RED_TEAM_2, BLUE_TEAM], world, { winWhenOneGroupRemains: true, wormHealth: 100, ammoSchema: DefaultWeaponSchema });
     const [redTeam, redTeam2, blueTeam] = gameState.getActiveTeams();
     completeRound(gameState);
     // Kill the blues.
@@ -116,7 +122,7 @@ describe('GameState', () => {
   });
 
   test('should handle the first round', () => {
-    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
     gameState.advanceRound();
     expect(gameState.iteration).toEqual(1);
     // Not in preround yet.
@@ -127,7 +133,7 @@ describe('GameState', () => {
   });
 
   test('should handle the player moving during preround', () => {
-    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
     gameState.advanceRound();
     expect(gameState.iteration).toEqual(1);
     gameState.beginRound();
@@ -138,7 +144,9 @@ describe('GameState', () => {
   });
 
   test('should handle preround timing out', () => {
-    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {
+      entitiesMoving$: of(false),
+    } as Partial<GameWorld> as any, DefaultRules);
     gameState.advanceRound();
     expect(gameState.iteration).toEqual(1);
     gameState.beginRound();
@@ -151,7 +159,7 @@ describe('GameState', () => {
   });
 
   test('should handle round finishing due to timeout', () => {
-    const gameState = new GameState([RED_TEAM, BLUE_TEAM], {} as GameWorld, DefaultRules);
+    const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
     const [_redTeam, blueTeam] = gameState.getActiveTeams();
     gameState.advanceRound();
     expect(gameState.iteration).toEqual(1);
