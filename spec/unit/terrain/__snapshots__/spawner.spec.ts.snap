@@ -1,0 +1,122 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`determineLocationsToSpawn positioning is sane 1`] = `
+[
+  Coordinate {
+    "worldX": 31.15,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 31.15,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 35.25,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 35.25,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 35.25,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 39.4,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 39.4,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 39.4,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 43.5,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 43.5,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 43.5,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 47.65,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 47.65,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 47.65,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 22.5,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 26.65,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 26.65,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 51.75,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 51.75,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 51.75,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 55.9,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 55.9,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 55.9,
+    "worldY": 7.1,
+  },
+  Coordinate {
+    "worldX": 60,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 60,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 64.15,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 64.15,
+    "worldY": 16.85,
+  },
+  Coordinate {
+    "worldX": 68.25,
+    "worldY": 24.75,
+  },
+  Coordinate {
+    "worldX": 72.4,
+    "worldY": 24.75,
+  },
+]
+`;
