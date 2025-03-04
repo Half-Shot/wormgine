@@ -739,7 +739,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-            (this.sprite.width + this.currentWeapon.sprite.offset.x),
+          (this.sprite.width + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;
@@ -817,6 +817,11 @@ export class Worm extends PlayableEntity<WormRecordedState> {
 
   destroy(): void {
     super.destroy();
+    this.targettingGfx.destroy();
+    this.wireframe.renderable.destroy();
+    this.healthTextBox.destroy();
+    this.weaponSprite.destroy();
+    this.arrowSprite.destroy();
     // XXX: This might need to be dead.
     this.state.transition(InnerWormState.Inactive);
     if (this.isSinking) {

@@ -44,6 +44,10 @@ export default async function runScenario(game: Game) {
   const { worldWidth } = game.viewport;
   const wormInstances = new Map<string, Worm>();
 
+  game.gameReactChannel.on("saveGameState", (cb) => {
+    cb();
+  })
+
   const stateRecorder = new StateRecorder({
     async writeLine(data) {
       stateLogger.debug("Writing state", data);
@@ -219,22 +223,22 @@ export default async function runScenario(game: Game) {
       const wormEnt = world.addEntity(
         wormInstance.team.playerUserId === myUserId
           ? Worm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-              stateRecorder,
-            )
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+            stateRecorder,
+          )
           : RemoteWorm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-            ),
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+          ),
         wormInstance.uuid,
       );
       wormInstances.set(wormInstance.uuid, wormEnt);

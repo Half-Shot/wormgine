@@ -1,4 +1,4 @@
-import { Application, Graphics, UPDATE_PRIORITY } from "pixi.js";
+import { Application, Graphics, Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { getAssets } from "./assets";
 import { GameDebugOverlay } from "./overlays/debugOverlay";
@@ -17,6 +17,7 @@ import { NetGameWorld } from "./net/netGameWorld";
 import {
   BehaviorSubject,
   debounceTime,
+  filter,
   fromEvent,
   map,
   merge,
@@ -25,9 +26,13 @@ import {
 } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
+import { UpdatePayload } from "vite/types/hmrPayload";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
+
+// Run physics engine at 90fps.
+const tickEveryMs = 1000 / 90;
 
 const logger = new Logger("Game");
 
@@ -39,6 +44,10 @@ export class Game {
   public readonly screenSize$: Observable<{ width: number; height: number }>;
   private readonly ready = new BehaviorSubject(false);
   public readonly ready$ = this.ready.asObservable();
+  private lastPhysicsTick: number = 0;
+  private overlay?: GameDebugOverlay;
+  private readonly reloadState = new BehaviorSubject<null | any>(null);
+  public readonly needsReload$ = this.reloadState.pipe(filter(s => s));
 
   public get pixiRoot() {
     return this.viewport;
@@ -80,10 +89,10 @@ export class Game {
     this.world =
       netGameInstance instanceof RunningNetGameInstance
         ? new NetGameWorld(
-            this.rapierWorld,
-            this.pixiApp.ticker,
-            netGameInstance,
-          )
+          this.rapierWorld,
+          this.pixiApp.ticker,
+          netGameInstance,
+        )
         : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
@@ -126,7 +135,7 @@ export class Game {
       );
     }
 
-    const overlay = new GameDebugOverlay(
+    this.overlay = new GameDebugOverlay(
       this.rapierWorld,
       this.pixiApp.ticker,
       this.pixiApp.stage,
@@ -136,22 +145,9 @@ export class Game {
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
 
-    // Run physics engine at 90fps.
-    const tickEveryMs = 1000 / 90;
-    let lastPhysicsTick = 0;
+    import.meta.hot?.on('vite:beforeUpdate', this.hotReload);
 
-    this.pixiApp.ticker.add(
-      (dt) => {
-        // TODO: Timing.
-        const startTime = performance.now();
-        lastPhysicsTick += dt.deltaMS;
-        // Note: If we are lagging behind terribly, this will multiple ticks
-        while (lastPhysicsTick >= tickEveryMs) {
-          this.world.step();
-          lastPhysicsTick -= tickEveryMs;
-        }
-        overlay.physicsSamples.push(performance.now() - startTime);
-      },
+    this.pixiApp.ticker.add(this.tickWorld,
       undefined,
       UPDATE_PRIORITY.HIGH,
     );
@@ -161,7 +157,34 @@ export class Game {
     return this.pixiApp.canvas;
   }
 
+  public tickWorld = (dt: Ticker) => {
+    // TODO: Timing.
+    const startTime = performance.now();
+    this.lastPhysicsTick += dt.deltaMS;
+    // Note: If we are lagging behind terribly, this will run multiple ticks
+    while (this.lastPhysicsTick >= tickEveryMs) {
+      this.world.step();
+      this.lastPhysicsTick -= tickEveryMs;
+    }
+    this.overlay?.physicsSamples.push(performance.now() - startTime);
+  }
+
   public destroy() {
+    import.meta.hot?.off('vite:beforeUpdate', this.hotReload);
+    this.overlay?.destroy();
     this.pixiApp.destroy();
+    this.rapierWorld.free();
+  }
+
+  public hotReload = (payload: UpdatePayload) => {
+    logger.info("hot reload requested, saving game state");
+    this.pixiApp.ticker.stop();
+    const handler = async () => {
+      const state = await this.gameReactChannel.saveGameState();
+      this.destroy();
+      logger.info("game state saved, ready to reload");
+      this.reloadState.next(state);
+    };
+    void handler();
   }
 }

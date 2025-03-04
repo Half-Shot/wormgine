@@ -19,6 +19,7 @@ type GameReactChannelEvents = {
   closeWeaponMenu: () => void;
   openWeaponMenu: (weapons: AmmoCount) => void;
   weaponSelected: (code: IWeaponCode) => void;
+  saveGameState: (callback: () => void) => void;
 };
 
 export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents>) {
@@ -40,5 +41,9 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
 
   public weaponMenuSelect(code: IWeaponCode) {
     this.emit("weaponSelected", code);
+  }
+
+  public async saveGameState(): Promise<void> {
+    return new Promise(resolve => this.emit("saveGameState", () => resolve()));
   }
 }

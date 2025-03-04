@@ -96,3 +96,13 @@ export function templateRandomText(
   }
   return chooseOption;
 }
+
+export function templateText(
+  option: string,
+  parameters: Record<string, string> = {},
+) {
+  for (const [key, value] of Object.entries(parameters)) {
+    option = option.replaceAll("$" + key, value);
+  }
+  return option;
+}

@@ -51,13 +51,7 @@ export class GameDebugOverlay {
     });
     this.rapierGfx = new Graphics();
     this.tickerFn = this.update.bind(this);
-    globalFlags.on("toggleDebugView", (level: DebugLevel) => {
-      if (level !== DebugLevel.None) {
-        this.enableOverlay();
-      } else {
-        this.disableOverlay();
-      }
-    });
+    globalFlags.on("toggleDebugView", this.toggleDebugView);
     if (globalFlags.DebugView) {
       this.enableOverlay();
     }
@@ -65,6 +59,14 @@ export class GameDebugOverlay {
       const pos = this.viewport.toWorld(new Point(evt.clientX, evt.clientY));
       this.mouse = pos;
     };
+  }
+
+  private toggleDebugView = (level: DebugLevel) => {
+    if (level !== DebugLevel.None) {
+      this.enableOverlay();
+    } else {
+      this.disableOverlay();
+    }
   }
 
   private enableOverlay() {
@@ -79,6 +81,11 @@ export class GameDebugOverlay {
     this.stage.removeChild(this.text);
     this.viewport.removeChild(this.rapierGfx);
     window.removeEventListener("mousemove", this.mouseMoveListener);
+  }
+
+  public destroy() {
+    this.disableOverlay();
+    globalFlags.off("toggleDebugView", this.toggleDebugView);
   }
 
   private update(dt: Ticker) {
@@ -97,7 +104,7 @@ export class GameDebugOverlay {
       Math.ceil(
         (this.physicsSamples.reduce((a, b) => a + b, 0) /
           (this.physicsSamples.length || 1)) *
-          100,
+        100,
       ) / 100;
 
     this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)} | Ticker fns: ${this.ticker.count}`;

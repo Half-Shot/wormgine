@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import styles from "./ingame-view.module.css";
-import { Game } from "../../game";
+import { type Game } from "../../game";
 import { AmmoCount, GameReactChannel } from "../../interop/gamechannel";
 import { WeaponSelector } from "./gameui/weapon-select";
 import {
@@ -8,6 +8,17 @@ import {
   LocalGameInstance,
 } from "../../logic/gameinstance";
 import { LoadingPage } from "./loading-page";
+import Logger from "../../log";
+import { logger } from "matrix-js-sdk/lib/logger";
+
+const log = new Logger('ingame-view');
+
+if (import.meta.hot) {
+  import.meta.hot.accept('../../game', (newFoo) => {
+    log.info("New foo", newFoo);
+  })
+
+}
 
 export function IngameView({
   scenario,
@@ -25,30 +36,67 @@ export function IngameView({
   const [game, setGame] = useState<Game>();
   const ref = useRef<HTMLDivElement>(null);
   const [weaponMenu, setWeaponMenu] = useState<AmmoCount | null>(null);
+
+  const onGameLoaded = (newGame: Game) => {
+    if (!newGame) {
+      return;
+    }
+    void newGame.loadResources();
+
+    log.info("Game effect", newGame);
+
+    // Bind the game to the window such that we can debug it.
+    (globalThis as unknown as { wormgine: Game }).wormgine = newGame;
+
+    newGame.needsReload$.subscribe(() => {
+      setLoaded(false);
+      log.info("needs reload");
+      import(`../../game?ts=${Date.now()}`).then((imp) =>
+        imp.Game.create(
+          window,
+          scenario,
+          gameReactChannel,
+          gameInstance,
+          level,
+        )
+      ).then((g) => {
+        setGame(g);
+        logger.info("onGameLoaded called");
+        onGameLoaded(g);
+      });
+    });
+
+    newGame.ready$.subscribe((r) => {
+      if (r) {
+        log.info("Game loaded");
+        setLoaded(true);
+      }
+    });
+
+    newGame.run().catch((ex) => {
+      setFatalError(ex);
+      newGame.destroy();
+    });
+  };
+
   useEffect(() => {
     async function init() {
       if (gameInstance instanceof LocalGameInstance) {
         // XXX: Only so the game feels more responsive by capturing this inside the loading phase.
         await gameInstance.startGame();
-        console.log("Game started");
+        log.info("Game started");
       }
-      const game = await Game.create(
+      const { Game } = await import("../../game");
+      const newGame = await Game.create(
         window,
         scenario,
         gameReactChannel,
         gameInstance,
         level,
       );
-      setGame(game);
-      game.ready$.subscribe((r) => {
-        if (r) {
-          console.log("Game loaded");
-          setLoaded(true);
-        }
-      });
-      // Bind the game to the window such that we can debug it.
-      (globalThis as unknown as { wormgine: Game }).wormgine = game;
-      await game.loadResources();
+      setGame(newGame);
+      logger.info("useEffect called");
+      onGameLoaded(newGame);
     }
 
     void init().catch((ex) => {
@@ -60,16 +108,7 @@ export function IngameView({
     if (!ref.current || !game) {
       return;
     }
-    if (ref.current.children.length > 0) {
-      // Already bound
-      return;
-    }
-
-    ref.current.appendChild(game.canvas);
-    game.run().catch((ex) => {
-      setFatalError(ex);
-      game.destroy();
-    });
+    ref.current.replaceChildren(game.canvas);
   }, [ref, game]);
 
   useEffect(() => {

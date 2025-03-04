@@ -33,7 +33,7 @@ export class TiledSpriteAnimated extends TilingSprite {
   }
 
   public update(deltaMs: number) {
-    if (!this.visible) {
+    if (!this.visible || this.destroyed) {
       return;
     }
     this.timeSinceLastAnim += deltaMs;
