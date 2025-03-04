@@ -26,7 +26,6 @@ import {
 } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
-import { UpdatePayload } from "vite/types/hmrPayload";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -46,8 +45,8 @@ export class Game {
   public readonly ready$ = this.ready.asObservable();
   private lastPhysicsTick: number = 0;
   private overlay?: GameDebugOverlay;
-  private readonly reloadState = new BehaviorSubject<null | any>(null);
-  public readonly needsReload$ = this.reloadState.pipe(filter(s => s));
+  private readonly reloadState = new BehaviorSubject<null | boolean>(null);
+  public readonly needsReload$ = this.reloadState.pipe(filter((s) => !!s));
 
   public get pixiRoot() {
     return this.viewport;
@@ -89,10 +88,10 @@ export class Game {
     this.world =
       netGameInstance instanceof RunningNetGameInstance
         ? new NetGameWorld(
-          this.rapierWorld,
-          this.pixiApp.ticker,
-          netGameInstance,
-        )
+            this.rapierWorld,
+            this.pixiApp.ticker,
+            netGameInstance,
+          )
         : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
@@ -145,12 +144,9 @@ export class Game {
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
 
-    import.meta.hot?.on('vite:beforeUpdate', this.hotReload);
+    import.meta.hot?.on("vite:beforeUpdate", this.hotReload);
 
-    this.pixiApp.ticker.add(this.tickWorld,
-      undefined,
-      UPDATE_PRIORITY.HIGH,
-    );
+    this.pixiApp.ticker.add(this.tickWorld, undefined, UPDATE_PRIORITY.HIGH);
   }
 
   public get canvas() {
@@ -167,24 +163,24 @@ export class Game {
       this.lastPhysicsTick -= tickEveryMs;
     }
     this.overlay?.physicsSamples.push(performance.now() - startTime);
-  }
+  };
 
   public destroy() {
-    import.meta.hot?.off('vite:beforeUpdate', this.hotReload);
+    import.meta.hot?.off("vite:beforeUpdate", this.hotReload);
     this.overlay?.destroy();
     this.pixiApp.destroy();
     this.rapierWorld.free();
   }
 
-  public hotReload = (payload: UpdatePayload) => {
+  public hotReload = () => {
     logger.info("hot reload requested, saving game state");
     this.pixiApp.ticker.stop();
     const handler = async () => {
-      const state = await this.gameReactChannel.saveGameState();
+      await this.gameReactChannel.saveGameState();
       this.destroy();
       logger.info("game state saved, ready to reload");
-      this.reloadState.next(state);
+      this.reloadState.next(true);
     };
     void handler();
-  }
+  };
 }

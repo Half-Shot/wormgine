@@ -11,13 +11,12 @@ import { LoadingPage } from "./loading-page";
 import Logger from "../../log";
 import { logger } from "matrix-js-sdk/lib/logger";
 
-const log = new Logger('ingame-view');
+const log = new Logger("ingame-view");
 
 if (import.meta.hot) {
-  import.meta.hot.accept('../../game', (newFoo) => {
+  import.meta.hot.accept("../../game", (newFoo) => {
     log.info("New foo", newFoo);
-  })
-
+  });
 }
 
 export function IngameView({
@@ -51,19 +50,21 @@ export function IngameView({
     newGame.needsReload$.subscribe(() => {
       setLoaded(false);
       log.info("needs reload");
-      import(`../../game?ts=${Date.now()}`).then((imp) =>
-        imp.Game.create(
-          window,
-          scenario,
-          gameReactChannel,
-          gameInstance,
-          level,
+      import(`../../game?ts=${Date.now()}`)
+        .then((imp) =>
+          imp.Game.create(
+            window,
+            scenario,
+            gameReactChannel,
+            gameInstance,
+            level,
+          ),
         )
-      ).then((g) => {
-        setGame(g);
-        logger.info("onGameLoaded called");
-        onGameLoaded(g);
-      });
+        .then((g) => {
+          setGame(g);
+          logger.info("onGameLoaded called");
+          onGameLoaded(g);
+        });
     });
 
     newGame.ready$.subscribe((r) => {

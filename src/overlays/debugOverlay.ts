@@ -67,7 +67,7 @@ export class GameDebugOverlay {
     } else {
       this.disableOverlay();
     }
-  }
+  };
 
   private enableOverlay() {
     this.stage.addChild(this.text);
@@ -104,7 +104,7 @@ export class GameDebugOverlay {
       Math.ceil(
         (this.physicsSamples.reduce((a, b) => a + b, 0) /
           (this.physicsSamples.length || 1)) *
-        100,
+          100,
       ) / 100;
 
     this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)} | Ticker fns: ${this.ticker.count}`;

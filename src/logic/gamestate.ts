@@ -52,7 +52,6 @@ const PREROUND_TIMER_MS = 5000;
 const logger = new Logger("GameState");
 
 export class GameState {
-
   static getTeamMaxHealth(team: TeamDefinition) {
     return team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b);
   }
@@ -66,7 +65,7 @@ export class GameState {
       Math.ceil(
         (team.worms.map((w) => w.health).reduce((a, b) => a + b) /
           team.worms.map((w) => w.maxHealth).reduce((a, b) => a + b)) *
-        100,
+          100,
       ) / 100
     );
   }

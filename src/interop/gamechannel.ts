@@ -44,6 +44,8 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
   }
 
   public async saveGameState(): Promise<void> {
-    return new Promise(resolve => this.emit("saveGameState", () => resolve()));
+    return new Promise((resolve) =>
+      this.emit("saveGameState", () => resolve()),
+    );
   }
 }
