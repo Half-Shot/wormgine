@@ -57,7 +57,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
 
   game.gameReactChannel.on("saveGameState", (cb) => {
     cb({
-      iteration: iteration + 1
+      iteration: iteration + 1,
     } satisfies HotReloadGameState);
   });
 
@@ -236,22 +236,22 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       const wormEnt = world.addEntity(
         wormInstance.team.playerUserId === myUserId
           ? Worm.create(
-            parent,
-            world,
-            pos,
-            wormInstance,
-            fireFn,
-            overlay.toaster,
-            stateRecorder,
-          )
+              parent,
+              world,
+              pos,
+              wormInstance,
+              fireFn,
+              overlay.toaster,
+              stateRecorder,
+            )
           : RemoteWorm.create(
-            parent,
-            world,
-            pos,
-            wormInstance,
-            fireFn,
-            overlay.toaster,
-          ),
+              parent,
+              world,
+              pos,
+              wormInstance,
+              fireFn,
+              overlay.toaster,
+            ),
         wormInstance.uuid,
       );
       wormEnt.addCondition(PlayableCondition.Sickness);
@@ -316,12 +316,11 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     }
   }
 
-
   combineLatest([gameState.roundState$])
     .pipe(filter(([state]) => state === RoundState.Finished))
     .subscribe(() => {
-      log.info("Round tick")
-      wormInstances.forEach(w => w.roundTick());
+      log.info("Round tick");
+      wormInstances.forEach((w) => w.roundTick());
     });
 
   combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])

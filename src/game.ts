@@ -35,7 +35,7 @@ const tickEveryMs = 1000 / 90;
 
 const logger = new Logger("Game");
 
-export class Game<ReloadedGameState extends object = {}> {
+export class Game<ReloadedGameState extends object = object> {
   public readonly viewport: Viewport;
   private readonly rapierWorld: RAPIER.World;
   public readonly world: GameWorld;
@@ -45,7 +45,9 @@ export class Game<ReloadedGameState extends object = {}> {
   public readonly ready$ = this.ready.asObservable();
   private lastPhysicsTick: number = 0;
   public overlay?: GameDebugOverlay;
-  private readonly reloadState = new BehaviorSubject<ReloadedGameState | null>(null);
+  private readonly reloadState = new BehaviorSubject<ReloadedGameState | null>(
+    null,
+  );
   public readonly needsReload$ = this.reloadState.pipe(filter((s) => !!s));
 
   public get pixiRoot() {
@@ -63,7 +65,14 @@ export class Game<ReloadedGameState extends object = {}> {
     await RAPIER.init();
     const pixiApp = new Application();
     await pixiApp.init({ resizeTo: window, preference: "webgl" });
-    return new Game(pixiApp, scenario, gameReactChannel, gameInstance, level, previousGameState);
+    return new Game(
+      pixiApp,
+      scenario,
+      gameReactChannel,
+      gameInstance,
+      level,
+      previousGameState,
+    );
   }
 
   constructor(
@@ -90,10 +99,10 @@ export class Game<ReloadedGameState extends object = {}> {
     this.world =
       netGameInstance instanceof RunningNetGameInstance
         ? new NetGameWorld(
-          this.rapierWorld,
-          this.pixiApp.ticker,
-          netGameInstance,
-        )
+            this.rapierWorld,
+            this.pixiApp.ticker,
+            netGameInstance,
+          )
         : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
@@ -126,7 +135,6 @@ export class Game<ReloadedGameState extends object = {}> {
     if (this.scenario.replaceAll(/[A-Za-z]/g, "") !== "") {
       throw new CriticalGameError(Error("Invalid level name"));
     }
-
 
     this.overlay = new GameDebugOverlay(
       this.rapierWorld,

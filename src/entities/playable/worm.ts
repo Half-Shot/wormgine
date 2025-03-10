@@ -699,7 +699,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
     (this.sprite as TiledSpriteAnimated).update(dMs);
     this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.values().toArray().join(', ')}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.values().toArray().join(", ")}`,
     );
     this.weaponSprite.visible = this.state.showWeapon;
     this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
@@ -750,7 +750,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-          (this.sprite.width + this.currentWeapon.sprite.offset.x),
+            (this.sprite.width + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;

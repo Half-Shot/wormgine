@@ -112,7 +112,7 @@ export class GameDebugOverlay {
       Math.ceil(
         (this.physicsSamples.reduce((a, b) => a + b, 0) /
           (this.physicsSamples.length || 1)) *
-        100,
+          100,
       ) / 100;
 
     this.text.text = [
@@ -121,7 +121,15 @@ export class GameDebugOverlay {
       `Total bodies: ${this.rapierWorld.bodies.len()}`,
       `Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)}`,
       `Ticker fns: ${this.ticker.count}`,
-    ].concat(this.textFields.values().filter(v => !!v.text).map(v => v.text).toArray()).join(' | ')
+    ]
+      .concat(
+        this.textFields
+          .values()
+          .filter((v) => !!v.text)
+          .map((v) => v.text)
+          .toArray(),
+      )
+      .join(" | ");
 
     this.skippedUpdatesTarget = 180 / avgFps;
 

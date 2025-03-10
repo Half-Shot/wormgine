@@ -22,7 +22,11 @@ type GameReactChannelEvents<ReloadedGameState extends object> = {
   saveGameState: (callback: (state: ReloadedGameState) => void) => void;
 };
 
-export class GameReactChannel<ReloadedGameState extends object = object> extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents<object>>) {
+export class GameReactChannel<
+  ReloadedGameState extends object = object,
+> extends (EventEmitter as new () => TypedEmitter<
+  GameReactChannelEvents<object>
+>) {
   constructor() {
     super();
   }
@@ -45,7 +49,9 @@ export class GameReactChannel<ReloadedGameState extends object = object> extends
 
   public async saveGameState(): Promise<ReloadedGameState> {
     return new Promise((resolve) =>
-      this.emit("saveGameState", (state) => resolve(state as ReloadedGameState)),
+      this.emit("saveGameState", (state) =>
+        resolve(state as ReloadedGameState),
+      ),
     );
   }
 }
