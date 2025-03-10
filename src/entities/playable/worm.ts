@@ -47,6 +47,7 @@ import { WormState, InnerWormState } from "./wormState";
 import { filter, first } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
+import { getConditionTint, PlayableCondition } from "./conditions";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -103,7 +104,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   };
 
   public static readAssets(assets: AssetPack) {
-    Worm.texture = assets.textures.player_koboldStatic;
     Worm.idleAnim = assets.textures.player_koboldIdle;
     Worm.springArrow = assets.textures.spring;
   }
@@ -117,7 +117,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
   private static impactDamageMultiplier = 0.75;
   private static minImpactForDamage = 12;
   private static springArrow: Texture;
-  private static texture: Texture;
   private turnEndedReason: EndTurnReason | undefined;
   private weaponSprite: Sprite;
   private weaponTimerSecs = 3;
@@ -194,7 +193,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     private readonly toaster?: Toaster,
     private readonly recorder?: StateRecorder,
   ) {
-    const tint = teamGroupToColorSet(wormIdent.team.group).fg;
     const sprite = new TiledSpriteAnimated({
       texture: Worm.idleAnim,
       width: 104,
@@ -207,8 +205,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       tileCount: 120,
       fps: 60,
       randomizeStartFrame: true,
-      tint,
     });
+    const teamColor = teamGroupToColorSet(wormIdent.team.group).fg;
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(
         sprite.scaledWidth / (PIXELS_PER_METER * 2),
@@ -227,6 +225,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
     });
+    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
     // To give the worm a look of appearing on the ground.
     this.renderOffset = new Point(0, 4);
     this.weaponSprite = new Sprite({
@@ -261,8 +260,20 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       columns: 10,
       tileCount: 60,
       fps: 60,
-      tint,
+      tint: teamColor,
     });
+  }
+
+  public addCondition(condition: PlayableCondition) {
+    this.conditions.add(condition);
+    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
+    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
+  }
+
+  public removeCondition(condition: PlayableCondition) {
+    this.conditions.delete(condition);
+    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
+    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
   }
 
   public selectWeapon(weapon: IWeaponDefinition) {
@@ -688,7 +699,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     }
     (this.sprite as TiledSpriteAnimated).update(dMs);
     this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.values().toArray().join(', ')}`,
     );
     this.weaponSprite.visible = this.state.showWeapon;
     this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
@@ -739,7 +750,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-            (this.sprite.width + this.currentWeapon.sprite.offset.x),
+          (this.sprite.width + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;
@@ -768,7 +779,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
         //this.body.setGravityScale(0, false);
         if (this.impactVelocity > Worm.minImpactForDamage) {
           const damage = this.impactVelocity * Worm.impactDamageMultiplier;
-          this.wormIdent.setHealth(this.wormIdent.health - damage);
+          this.reduceHealth(damage);
           this.state.transition(InnerWormState.Inactive);
           this.turnEndedReason = EndTurnReason.FallDamage;
         }

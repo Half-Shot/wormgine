@@ -20,6 +20,7 @@ import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../../consts";
 import { first, skip, Subscription } from "rxjs";
 import Logger from "../../log";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
+import { getConditionEffect, PlayableCondition, PlayableConditonAttributes } from "./conditions";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -51,6 +52,8 @@ export abstract class PlayableEntity<
   private healthTarget: number;
   private healthChangeTensionTimer: number | null = null;
   private canReduceHealthTimer = false;
+
+  protected readonly conditions = new Set<PlayableCondition>();
 
   get position() {
     return this.physObject.body.translation();
@@ -242,6 +245,45 @@ export abstract class PlayableEntity<
     return false;
   }
 
+  public reduceHealth(damage: number) {
+    const damageMultiplier = this.conditions.values().map(v => getConditionEffect(v).damageMultiplier).reduce((v, c) => {
+      if (c === undefined) {
+        return v;
+      }
+      if (v === undefined) {
+        return c;
+      }
+      return Math.min(v, c);
+    }) ?? 1;
+    this.wormIdent.setHealth(this.wormIdent.health - (damage * damageMultiplier));
+  }
+
+  public roundTick() {
+    const { takeDamagePerRound, cannotDieFromDamage } = this.conditions.values().map(v => {
+      const condtion = getConditionEffect(v);
+      return {
+        takeDamagePerRound: condtion.takeDamagePerRound ?? 0,
+        cannotDieFromDamage: condtion.cannotDieFromDamage ?? false,
+      }
+    }).reduce((v, c) => {
+      if (c === undefined) {
+        return v;
+      }
+      if (v === undefined) {
+        return c;
+      }
+      return {
+        cannotDieFromDamage: v.cannotDieFromDamage || c.cannotDieFromDamage,
+        takeDamagePerRound: v.takeDamagePerRound + c.takeDamagePerRound,
+      };
+    }) ?? 0;
+    if (takeDamagePerRound) {
+      if (cannotDieFromDamage && this.wormIdent.health > takeDamagePerRound) {
+        this.reduceHealth(takeDamagePerRound);
+      }
+    }
+  }
+
   public onDamage(
     point: Vector2,
     radius: MetersValue,
@@ -255,8 +297,17 @@ export abstract class PlayableEntity<
       Math.abs(magnitude(sub(point, this.physObject.body.translation()))),
     );
     const damage = maxDamage / distance;
-    this.wormIdent.setHealth(this.wormIdent.health - damage);
-    const forceMag = Math.abs((radius.value * 10) / (1 / distance));
+    this.reduceHealth(damage);
+    const forceMultiplier = this.conditions.values().map(v => getConditionEffect(v).forceMultiplier).reduce((v, c) => {
+      if (c === undefined) {
+        return v;
+      }
+      if (v === undefined) {
+        return c;
+      }
+      return Math.min(v, c);
+    }) ?? 1;
+    const forceMag = Math.abs((radius.value * 10) / (1 / distance)) * forceMultiplier;
     const massagedY = point.y + 5;
     const force = mult(
       {
