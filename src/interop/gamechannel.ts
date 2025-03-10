@@ -14,15 +14,15 @@ interface WinDetails {
 
 export type AmmoCount = [IWeaponDefiniton, number][];
 
-type GameReactChannelEvents = {
+type GameReactChannelEvents<ReloadedGameState extends object> = {
   goToMenu: (event: GoToMenuEvent) => void;
   closeWeaponMenu: () => void;
   openWeaponMenu: (weapons: AmmoCount) => void;
   weaponSelected: (code: IWeaponCode) => void;
-  saveGameState: (callback: () => void) => void;
+  saveGameState: (callback: (state: ReloadedGameState) => void) => void;
 };
 
-export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents>) {
+export class GameReactChannel<ReloadedGameState extends object = object> extends (EventEmitter as new () => TypedEmitter<GameReactChannelEvents<object>>) {
   constructor() {
     super();
   }
@@ -43,9 +43,9 @@ export class GameReactChannel extends (EventEmitter as new () => TypedEmitter<Ga
     this.emit("weaponSelected", code);
   }
 
-  public async saveGameState(): Promise<void> {
+  public async saveGameState(): Promise<ReloadedGameState> {
     return new Promise((resolve) =>
-      this.emit("saveGameState", () => resolve()),
+      this.emit("saveGameState", (state) => resolve(state as ReloadedGameState)),
     );
   }
 }

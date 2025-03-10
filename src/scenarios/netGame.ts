@@ -28,10 +28,15 @@ import { combineLatest, filter } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";
+import { PlayableCondition } from "../entities/playable/conditions";
 
 const log = new Logger("scenario");
 
-export default async function runScenario(game: Game) {
+interface HotReloadGameState {
+  iteration: number;
+}
+
+export default async function runScenario(game: Game<HotReloadGameState>) {
   if (!game.level) {
     throw Error("Level required!");
   }
@@ -44,8 +49,16 @@ export default async function runScenario(game: Game) {
   const { worldWidth } = game.viewport;
   const wormInstances = new Map<string, Worm>();
 
+  const iteration = game.previousGameState?.iteration || 1;
+  const iterField = game.overlay?.addTextField();
+  if (iterField) {
+    iterField.text = `Iteration: ${iteration}`;
+  }
+
   game.gameReactChannel.on("saveGameState", (cb) => {
-    cb();
+    cb({
+      iteration: iteration + 1
+    } satisfies HotReloadGameState);
   });
 
   const stateRecorder = new StateRecorder({
@@ -223,24 +236,26 @@ export default async function runScenario(game: Game) {
       const wormEnt = world.addEntity(
         wormInstance.team.playerUserId === myUserId
           ? Worm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-              stateRecorder,
-            )
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+            stateRecorder,
+          )
           : RemoteWorm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-            ),
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+          ),
         wormInstance.uuid,
       );
+      wormEnt.addCondition(PlayableCondition.Sickness);
+      wormEnt.addCondition(PlayableCondition.Metallic);
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
@@ -300,6 +315,14 @@ export default async function runScenario(game: Game) {
       log.info("Marked as ready");
     }
   }
+
+
+  combineLatest([gameState.roundState$])
+    .pipe(filter(([state]) => state === RoundState.Finished))
+    .subscribe(() => {
+      log.info("Round tick")
+      wormInstances.forEach(w => w.roundTick());
+    });
 
   combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])
     .pipe(filter(([state]) => state === RoundState.Finished))

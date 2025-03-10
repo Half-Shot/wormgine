@@ -35,7 +35,7 @@ const tickEveryMs = 1000 / 90;
 
 const logger = new Logger("Game");
 
-export class Game {
+export class Game<ReloadedGameState extends object = {}> {
   public readonly viewport: Viewport;
   private readonly rapierWorld: RAPIER.World;
   public readonly world: GameWorld;
@@ -44,33 +44,35 @@ export class Game {
   private readonly ready = new BehaviorSubject(false);
   public readonly ready$ = this.ready.asObservable();
   private lastPhysicsTick: number = 0;
-  private overlay?: GameDebugOverlay;
-  private readonly reloadState = new BehaviorSubject<null | boolean>(null);
+  public overlay?: GameDebugOverlay;
+  private readonly reloadState = new BehaviorSubject<ReloadedGameState | null>(null);
   public readonly needsReload$ = this.reloadState.pipe(filter((s) => !!s));
 
   public get pixiRoot() {
     return this.viewport;
   }
 
-  public static async create(
+  public static async create<ReloadedGameState extends object>(
     window: Window,
     scenario: string,
-    gameReactChannel: GameReactChannel,
+    gameReactChannel: GameReactChannel<ReloadedGameState>,
     gameInstance: IRunningGameInstance,
     level?: string,
-  ): Promise<Game> {
+    previousGameState?: ReloadedGameState,
+  ): Promise<Game<ReloadedGameState>> {
     await RAPIER.init();
     const pixiApp = new Application();
     await pixiApp.init({ resizeTo: window, preference: "webgl" });
-    return new Game(pixiApp, scenario, gameReactChannel, gameInstance, level);
+    return new Game(pixiApp, scenario, gameReactChannel, gameInstance, level, previousGameState);
   }
 
   constructor(
     public readonly pixiApp: Application,
     private readonly scenario: string,
-    public readonly gameReactChannel: GameReactChannel,
+    public readonly gameReactChannel: GameReactChannel<ReloadedGameState>,
     public readonly netGameInstance: IRunningGameInstance,
     public readonly level?: string,
+    public readonly previousGameState?: ReloadedGameState,
   ) {
     // TODO: Set a sensible static width/height and have the canvas pan it.
     this.rapierWorld = new RAPIER.World({ x: 0, y: 9.81 });
@@ -88,10 +90,10 @@ export class Game {
     this.world =
       netGameInstance instanceof RunningNetGameInstance
         ? new NetGameWorld(
-            this.rapierWorld,
-            this.pixiApp.ticker,
-            netGameInstance,
-          )
+          this.rapierWorld,
+          this.pixiApp.ticker,
+          netGameInstance,
+        )
         : new GameWorld(this.rapierWorld, this.pixiApp.ticker);
     this.pixiApp.stage.addChild(this.viewport);
     this.viewport.decelerate().drag();
@@ -124,6 +126,16 @@ export class Game {
     if (this.scenario.replaceAll(/[A-Za-z]/g, "") !== "") {
       throw new CriticalGameError(Error("Invalid level name"));
     }
+
+
+    this.overlay = new GameDebugOverlay(
+      this.rapierWorld,
+      this.pixiApp.ticker,
+      this.pixiApp.stage,
+      this.viewport,
+      undefined,
+    );
+
     try {
       logger.info(`Loading scenario ${this.scenario}`);
       const module = await import(`./scenarios/${this.scenario}.ts`);
@@ -134,13 +146,6 @@ export class Game {
       );
     }
 
-    this.overlay = new GameDebugOverlay(
-      this.rapierWorld,
-      this.pixiApp.ticker,
-      this.pixiApp.stage,
-      this.viewport,
-      undefined,
-    );
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
 
@@ -176,10 +181,10 @@ export class Game {
     logger.info("hot reload requested, saving game state");
     this.pixiApp.ticker.stop();
     const handler = async () => {
-      await this.gameReactChannel.saveGameState();
+      const state = await this.gameReactChannel.saveGameState();
       this.destroy();
       logger.info("game state saved, ready to reload");
-      this.reloadState.next(true);
+      this.reloadState.next(state);
     };
     void handler();
   };

@@ -47,7 +47,7 @@ export function IngameView({
     // Bind the game to the window such that we can debug it.
     (globalThis as unknown as { wormgine: Game }).wormgine = newGame;
 
-    newGame.needsReload$.subscribe(() => {
+    newGame.needsReload$.subscribe((previousState) => {
       setLoaded(false);
       log.info("needs reload");
       import(`../../game?ts=${Date.now()}`)
@@ -58,6 +58,7 @@ export function IngameView({
             gameReactChannel,
             gameInstance,
             level,
+            previousState,
           ),
         )
         .then((g) => {

@@ -30,6 +30,8 @@ export class GameDebugOverlay {
   private mouse: Point = new Point();
   private mouseMoveListener: (e: MouseEvent) => void;
 
+  private readonly textFields = new Set<{ text: string }>();
+
   private static registeredDebugPoints: Record<
     string,
     { points: Point[]; color: ColorSource }
@@ -59,6 +61,12 @@ export class GameDebugOverlay {
       const pos = this.viewport.toWorld(new Point(evt.clientX, evt.clientY));
       this.mouse = pos;
     };
+  }
+
+  public addTextField() {
+    const newTextField = { text: "" };
+    this.textFields.add(newTextField);
+    return newTextField;
   }
 
   private toggleDebugView = (level: DebugLevel) => {
@@ -104,10 +112,16 @@ export class GameDebugOverlay {
       Math.ceil(
         (this.physicsSamples.reduce((a, b) => a + b, 0) /
           (this.physicsSamples.length || 1)) *
-          100,
+        100,
       ) / 100;
 
-    this.text.text = `FPS: ${avgFps} | Physics time: ${avgPhysicsCostMs}ms| Total bodies: ${this.rapierWorld.bodies.len()} | Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)} | Ticker fns: ${this.ticker.count}`;
+    this.text.text = [
+      `FPS: ${avgFps}`,
+      `Physics time: ${avgPhysicsCostMs}ms`,
+      `Total bodies: ${this.rapierWorld.bodies.len()}`,
+      `Mouse: ${Math.round(this.mouse.x)} ${Math.round(this.mouse.y)}`,
+      `Ticker fns: ${this.ticker.count}`,
+    ].concat(this.textFields.values().filter(v => !!v.text).map(v => v.text).toArray()).join(' | ')
 
     this.skippedUpdatesTarget = 180 / avgFps;
 
