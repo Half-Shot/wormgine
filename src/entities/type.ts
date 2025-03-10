@@ -1,6 +1,7 @@
 export enum EntityType {
   Worm = "wormgine.worm",
   Grenade = "wormgine.grenade",
+  GasGrenade = "wormgine.grenade_gas",
   BazookaShell = "wormgine.bazooka_shell",
   HomingMissile = "wormgine.homing_missile",
   Mine = "wormgine.mine",

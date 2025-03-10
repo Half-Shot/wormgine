@@ -1,6 +1,7 @@
 import { AssetPack } from "../assets";
 import { WeaponBazooka } from "./bazooka";
 import { WeaponGrenade } from "./grenade";
+import { WeaponGasGrenade } from "./gas-grenade";
 import WeaponShotgun from "./shotgun";
 import WeaponFireworkLauncher from "./firework";
 import WeaponHomingMissile from "./homingMissile";
@@ -31,6 +32,8 @@ export function getDefinitionForCode(code: IWeaponCode) {
       return WeaponMine;
     case IWeaponCode.HomingMissile:
       return WeaponHomingMissile;
+    case IWeaponCode.GasGrenade:
+      return WeaponGasGrenade;
     default:
       throw Error(`Unknown weapon code '${code}'`);
   }

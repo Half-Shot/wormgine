@@ -2,6 +2,7 @@ import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { UPDATE_PRIORITY } from "pixi.js";
 import { MetersValue } from "../utils";
 import { EntityType } from "./type";
+import { PlayableCondition } from "./playable/conditions";
 
 /**
  * Base entity which all game objects implement
@@ -17,6 +18,9 @@ export interface IGameEntity {
 
 export interface OnDamageOpts {
   maxDamage?: number;
+  forceMultiplier?: number;
+  applyCondition?: PlayableCondition;
+  damagesTerrain?: boolean,
 }
 
 /**

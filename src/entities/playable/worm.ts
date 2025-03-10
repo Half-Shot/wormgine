@@ -264,18 +264,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     });
   }
 
-  public addCondition(condition: PlayableCondition) {
-    this.conditions.add(condition);
-    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
-    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
-  }
-
-  public removeCondition(condition: PlayableCondition) {
-    this.conditions.delete(condition);
-    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
-    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
-  }
-
   public selectWeapon(weapon: IWeaponDefinition) {
     if (this.perRoundState.shotsTaken > 0) {
       // Worm is already in progress of shooting things.
@@ -307,6 +295,8 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       Controller.on("inputBegin", this.onInputBegin);
       Controller.on("inputEnd", this.onInputEnd);
     }
+    // TODO: Switch weapon if there is no more ammo.
+    // if (this.wormIdent.team.availableWeapons
   }
 
   onEndOfTurn() {
@@ -750,7 +740,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-            (this.sprite.width + this.currentWeapon.sprite.offset.x),
+          (this.sprite.width + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;

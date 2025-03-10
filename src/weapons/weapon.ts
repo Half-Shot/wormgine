@@ -8,6 +8,7 @@ import { Vector2 } from "@dimforge/rapier2d-compat";
 
 export enum IWeaponCode {
   Grenade = "wep_grenade",
+  GasGrenade = "wep_grenade_gas",
   Bazooka = "wep_bazooka",
   Shotgun = "wep_shotgun",
   FireworkLauncher = "wep_firework",

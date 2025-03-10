@@ -13,8 +13,9 @@ import { MetersValue } from "../../utils/coodinate";
 import { WormInstance } from "../../logic";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
+import { PlayableCondition } from "../playable/conditions";
 
-interface Opts {
+export interface TimedExplosiveOpts {
   explosionRadius: MetersValue;
   explodeOnContact: boolean;
   explosionHue?: ColorSource;
@@ -23,6 +24,9 @@ interface Opts {
   timerSecs?: number;
   ownerWorm?: WormInstance;
   maxDamage: number;
+  applyCondition?: PlayableCondition,
+  damagesTerrain?: boolean;
+  forceMultiplier?: number;
 }
 
 export interface TimedExplosiveRecordedState extends RecordedEntityState {
@@ -48,7 +52,7 @@ export abstract class TimedExplosive<
     body: RapierPhysicsObject,
     gameWorld: GameWorld,
     private readonly parent: Container,
-    protected readonly opts: Opts,
+    protected readonly opts: TimedExplosiveOpts,
   ) {
     super(sprite, body, gameWorld);
     this.gameWorld.addBody(this, body.collider);
@@ -93,6 +97,9 @@ export abstract class TimedExplosive<
         hue: this.opts.explosionHue ?? 0xffffff,
         shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
         maxDamage: this.opts.maxDamage,
+        applyCondition: this.opts.applyCondition,
+        damagesTerrain: this.opts.damagesTerrain,
+        forceMultiplier: this.opts.forceMultiplier,
       },
       this.physObject.collider,
     );

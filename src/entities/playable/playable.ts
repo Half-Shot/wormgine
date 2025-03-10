@@ -20,7 +20,7 @@ import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../../consts";
 import { first, skip, Subscription } from "rxjs";
 import Logger from "../../log";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
-import { getConditionEffect, PlayableCondition } from "./conditions";
+import { getConditionEffect, getConditionTint, PlayableCondition } from "./conditions";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -250,7 +250,7 @@ export abstract class PlayableEntity<
       this.conditions
         .values()
         .map((v) => getConditionEffect(v).damageMultiplier)
-        .reduce((v, c) => {
+        .reduce<number>((v, c) => {
           if (c === undefined) {
             return v;
           }
@@ -258,7 +258,7 @@ export abstract class PlayableEntity<
             return c;
           }
           return Math.min(v, c);
-        }) ?? 1;
+        }, 1);
     this.wormIdent.setHealth(this.wormIdent.health - damage * damageMultiplier);
   }
 
@@ -284,12 +284,24 @@ export abstract class PlayableEntity<
             cannotDieFromDamage: v.cannotDieFromDamage || c.cannotDieFromDamage,
             takeDamagePerRound: v.takeDamagePerRound + c.takeDamagePerRound,
           };
-        }) ?? 0;
+        }, { takeDamagePerRound: 0, cannotDieFromDamage: false });
     if (takeDamagePerRound) {
       if (cannotDieFromDamage && this.wormIdent.health > takeDamagePerRound) {
         this.reduceHealth(takeDamagePerRound);
       }
     }
+  }
+
+  public addCondition(condition: PlayableCondition) {
+    this.conditions.add(condition);
+    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
+    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
+  }
+
+  public removeCondition(condition: PlayableCondition) {
+    this.conditions.delete(condition);
+    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
+    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
   }
 
   public onDamage(
@@ -310,7 +322,7 @@ export abstract class PlayableEntity<
       this.conditions
         .values()
         .map((v) => getConditionEffect(v).forceMultiplier)
-        .reduce((v, c) => {
+        .reduce<number>((v, c) => {
           if (c === undefined) {
             return v;
           }
@@ -318,9 +330,9 @@ export abstract class PlayableEntity<
             return c;
           }
           return Math.min(v, c);
-        }) ?? 1;
+        }, 1);
     const forceMag =
-      Math.abs((radius.value * 10) / (1 / distance)) * forceMultiplier;
+      Math.abs((radius.value * 10) / (1 / distance)) * forceMultiplier * (opts.forceMultiplier ?? 1);
     const massagedY = point.y + 5;
     const force = mult(
       {
@@ -331,6 +343,9 @@ export abstract class PlayableEntity<
     );
     log.info("onDamage force", "=>", force);
     this.physObject.body.applyImpulse(force, true);
+    if (opts.applyCondition) {
+      this.addCondition(opts.applyCondition);
+    }
   }
 
   public recordState() {

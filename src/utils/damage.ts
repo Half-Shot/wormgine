@@ -4,8 +4,9 @@ import { GameWorld, PIXELS_PER_METER } from "../world";
 import { Explosion, ExplosionsOptions } from "../entities/explosion";
 import { Container } from "pixi.js";
 import { OnDamageOpts } from "../entities/entity";
+import { BitmapTerrain } from "../entities/bitmapTerrain";
 
-interface Opts extends Partial<ExplosionsOptions>, OnDamageOpts {}
+interface Opts extends Partial<ExplosionsOptions>, OnDamageOpts { }
 
 export function handleDamageInRadius(
   gameWorld: GameWorld,
@@ -22,6 +23,9 @@ export function handleDamageInRadius(
     ignoreCollider,
   );
   for (const element of explosionCollidesWith) {
+    if (element instanceof BitmapTerrain && opts.damagesTerrain === false) {
+      continue;
+    }
     element.onDamage?.(point, radius, opts);
   }
   gameWorld.addEntity(

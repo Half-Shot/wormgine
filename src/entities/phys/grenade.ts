@@ -1,5 +1,5 @@
 import { Container, Sprite, Text, Texture, Ticker } from "pixi.js";
-import { TimedExplosive } from "./timedExplosive";
+import { TimedExplosive, TimedExplosiveOpts } from "./timedExplosive";
 import { IPhysicalEntity } from "../entity";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { IMediaInstance, Sound } from "@pixi/sound";
@@ -62,13 +62,14 @@ export class Grenade extends TimedExplosive {
   }
   public bounceSoundPlayback?: IMediaInstance;
 
-  private constructor(
+  protected constructor(
     position: Coordinate,
     initialForce: { x: number; y: number },
     world: GameWorld,
     parent: Container,
     timerSecs: number,
     owner?: WormInstance,
+    optsOverrides?: Partial<TimedExplosiveOpts>,
   ) {
     const sprite = new Sprite(Grenade.texture);
     sprite.scale.set(0.5);
@@ -89,6 +90,7 @@ export class Grenade extends TimedExplosive {
       autostartTimer: true,
       ownerWorm: owner,
       maxDamage: 40,
+      ...optsOverrides,
     });
     this.timerText = new Text({
       text: "",
