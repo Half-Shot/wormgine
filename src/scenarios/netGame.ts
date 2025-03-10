@@ -236,26 +236,24 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       const wormEnt = world.addEntity(
         wormInstance.team.playerUserId === myUserId
           ? Worm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-              stateRecorder,
-            )
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+            stateRecorder,
+          )
           : RemoteWorm.create(
-              parent,
-              world,
-              pos,
-              wormInstance,
-              fireFn,
-              overlay.toaster,
-            ),
+            parent,
+            world,
+            pos,
+            wormInstance,
+            fireFn,
+            overlay.toaster,
+          ),
         wormInstance.uuid,
       );
-      wormEnt.addCondition(PlayableCondition.Sickness);
-      wormEnt.addCondition(PlayableCondition.Metallic);
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
