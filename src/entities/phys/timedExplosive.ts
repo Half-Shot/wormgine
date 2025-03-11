@@ -24,7 +24,7 @@ export interface TimedExplosiveOpts {
   timerSecs?: number;
   ownerWorm?: WormInstance;
   maxDamage: number;
-  applyCondition?: PlayableCondition,
+  applyCondition?: PlayableCondition;
   damagesTerrain?: boolean;
   forceMultiplier?: number;
 }

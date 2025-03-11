@@ -20,7 +20,7 @@ export interface OnDamageOpts {
   maxDamage?: number;
   forceMultiplier?: number;
   applyCondition?: PlayableCondition;
-  damagesTerrain?: boolean,
+  damagesTerrain?: boolean;
 }
 
 /**

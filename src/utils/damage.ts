@@ -6,7 +6,7 @@ import { Container } from "pixi.js";
 import { OnDamageOpts } from "../entities/entity";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 
-interface Opts extends Partial<ExplosionsOptions>, OnDamageOpts { }
+interface Opts extends Partial<ExplosionsOptions>, OnDamageOpts {}
 
 export function handleDamageInRadius(
   gameWorld: GameWorld,

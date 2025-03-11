@@ -43,7 +43,7 @@ export class GasGrenade extends Grenade {
       maxDamage: 10,
       explosionRadius: new MetersValue(3),
       damagesTerrain: false,
-      explosionHue: getConditionTint([PlayableCondition.Sickness]) ?? 0xFFFFF,
+      explosionHue: getConditionTint([PlayableCondition.Sickness]) ?? 0xfffff,
       forceMultiplier: 0.25,
     });
   }
