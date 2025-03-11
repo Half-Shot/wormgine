@@ -123,7 +123,7 @@ export class Game<ReloadedGameState extends object = object> {
     );
   }
 
-  public async loadResources() {
+  private async loadResources() {
     const assetPack = getAssets();
     await readAssetsForEntities(assetPack);
     readAssetsForWeapons(assetPack);
@@ -135,6 +135,8 @@ export class Game<ReloadedGameState extends object = object> {
     if (this.scenario.replaceAll(/[A-Za-z]/g, "") !== "") {
       throw new CriticalGameError(Error("Invalid level name"));
     }
+
+    await this.loadResources();
 
     this.overlay = new GameDebugOverlay(
       this.rapierWorld,
