@@ -47,7 +47,7 @@ import { WormState, InnerWormState } from "./wormState";
 import { filter, first } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
-import { getConditionTint, PlayableCondition } from "./conditions";
+import { getConditionTint } from "./conditions";
 
 export enum EndTurnReason {
   TimerElapsed = 0,

@@ -28,7 +28,6 @@ import { combineLatest, filter } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";
-import { PlayableCondition } from "../entities/playable/conditions";
 
 const log = new Logger("scenario");
 
