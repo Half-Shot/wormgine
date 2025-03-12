@@ -6,7 +6,7 @@ import {
   Ticker,
   UPDATE_PRIORITY,
 } from "pixi.js";
-import { GameState } from "../logic/gamestate";
+import { GameState, RoundState } from "../logic/gamestate";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";
@@ -151,6 +151,7 @@ export class GameStateOverlay {
         text: team.name,
         style: {
           ...DefaultTextStyle,
+          fill: this.gameState.activeTeam === team ? 0xffffff : fg,
           align: "center",
         },
       });
