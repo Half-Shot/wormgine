@@ -26,6 +26,8 @@ import {
 } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
+import { PlayableEntity } from "./entities/playable/playable";
+import globalFlags from "./flags";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -64,7 +66,14 @@ export class Game<ReloadedGameState extends object = object> {
   ): Promise<Game<ReloadedGameState>> {
     await RAPIER.init();
     const pixiApp = new Application();
-    await pixiApp.init({ resizeTo: window, preference: "webgl" });
+    await pixiApp.init({
+      resizeTo: window,
+      preference: "webgpu",
+      antialias: true,
+      hello: true,
+      renderableGCActive: false   //  try to disable auto GC probably causing TilledSprite 
+      //  'Uncaught TypeError: Cannot read properties of undefined (reading 'indices')'
+    });
     return new Game(
       pixiApp,
       scenario,
@@ -158,6 +167,11 @@ export class Game<ReloadedGameState extends object = object> {
 
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
+    globalFlags.wormInstances = this.world.entities
+      .values()
+      .filter((e) => e instanceof PlayableEntity)
+      .map((e) => e.wormIdent)
+      .toArray();
 
     import.meta.hot?.on("vite:beforeUpdate", this.hotReload);
 
