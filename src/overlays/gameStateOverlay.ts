@@ -6,7 +6,7 @@ import {
   Ticker,
   UPDATE_PRIORITY,
 } from "pixi.js";
-import { GameState, RoundState } from "../logic/gamestate";
+import { GameState } from "../logic/gamestate";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import { teamGroupToColorSet } from "../logic/teams";
 import { GameWorld } from "../world";

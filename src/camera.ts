@@ -27,11 +27,11 @@ export enum CameraLockPriority {
 }
 
 export interface LockableEntity {
-  cameraLockPriority$: Observable<CameraLockPriority>,
-  destroyed: boolean,
+  cameraLockPriority$: Observable<CameraLockPriority>;
+  destroyed: boolean;
   sprite: {
-    position: Point,
-  }
+    position: Point;
+  };
 }
 
 export class ViewportCamera {

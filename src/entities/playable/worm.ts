@@ -44,7 +44,7 @@ import { CameraLockPriority } from "../../camera";
 import { OnDamageOpts } from "../entity";
 import Logger from "../../log";
 import { WormState, InnerWormState } from "./wormState";
-import { filter, first } from "rxjs";
+import { combineLatest, filter, first, timer } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import { getConditionTint } from "./conditions";
@@ -591,7 +591,19 @@ export class Worm extends PlayableEntity<
     // Determine worm state based on the kind of weapon
     const hasMoreShots = maxShots > this.perRoundState.shotsTaken;
     if (hasMoreShots) {
-      this.state.transition(InnerWormState.Idle);
+      this.state.transition(InnerWormState.FiringWaitingForNextShot);
+      const sub = combineLatest([
+        timer(1500),
+        this.gameWorld.entitiesMoving$,
+      ]).subscribe(([timer, entitiesMoving]) => {
+        logger.info("hasMoreShots", timer, entitiesMoving);
+        if (timer === 0 && !entitiesMoving) {
+          if (this.state.state === InnerWormState.FiringWaitingForNextShot) {
+            this.state.transition(InnerWormState.Idle);
+            sub.unsubscribe();
+          }
+        }
+      });
     } else if (this.weapon.allowGetaway) {
       this.state.transition(InnerWormState.Getaway);
     } else {
@@ -739,7 +751,7 @@ export class Worm extends PlayableEntity<
     this.targettingGfx.visible =
       !this.needsTarget &&
       !!this.currentWeapon.showTargetGuide &&
-      this.state.showWeapon;
+      this.state.showWeaponTarget;
 
     if (this.targettingGfx.visible) {
       const { x, y } = pointOnRadius(

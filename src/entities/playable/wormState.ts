@@ -10,6 +10,7 @@ export enum InnerWormState {
   AimingUp = 5,
   AimingDown = 6,
   Getaway = 7,
+  FiringWaitingForNextShot = 8,
   InactiveWaiting = 98,
   Inactive = 99,
 }
@@ -79,7 +80,8 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
   get shouldHandleNewInput() {
     return (
       this.innerState !== InnerWormState.Firing &&
-      this.innerState !== InnerWormState.InactiveWaiting
+      this.innerState !== InnerWormState.InactiveWaiting &&
+      this.innerState !== InnerWormState.FiringWaitingForNextShot
     );
   }
 
@@ -91,12 +93,20 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     return this.innerState === InnerWormState.Idle;
   }
 
+  get showWeaponTarget() {
+    return (
+      this.innerState !== InnerWormState.FiringWaitingForNextShot &&
+      this.showWeapon
+    );
+  }
+
   get showWeapon() {
     return [
       InnerWormState.Firing,
       InnerWormState.Idle,
       InnerWormState.AimingDown,
       InnerWormState.AimingUp,
+      InnerWormState.FiringWaitingForNextShot,
     ].includes(this.innerState);
   }
 
@@ -121,6 +131,7 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
       InnerWormState.InMotion,
       InnerWormState.Getaway,
       InnerWormState.InactiveWaiting,
+      InnerWormState.FiringWaitingForNextShot,
     ].includes(this.innerState);
   }
 }
