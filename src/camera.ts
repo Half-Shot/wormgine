@@ -7,9 +7,7 @@ import { MetersValue } from "./utils";
 import {
   combineLatest,
   debounceTime,
-  filter,
   map,
-  merge,
   Observable,
   Subscription,
 } from "rxjs";

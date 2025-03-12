@@ -3,7 +3,6 @@ import {
   Sprite,
   UPDATE_PRIORITY,
   DEG_TO_RAD,
-  View,
   ViewContainer,
 } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
@@ -17,14 +16,12 @@ import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../../consts";
 import Logger from "../../log";
-import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import {
   getConditionEffect,
   getConditionTint,
   PlayableCondition,
 } from "./conditions";
 import { PlayableInfoBox } from "../../overlays/playableInfoBox";
-import { CameraLockPriority } from "../../camera";
 
 interface Opts {
   explosionRadius: MetersValue;

@@ -1,4 +1,4 @@
-import { Container, Texture, UPDATE_PRIORITY } from "pixi.js";
+import { Container, Texture } from "pixi.js";
 import { GameWorld } from "../../world";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { WormInstance } from "../../logic";
@@ -12,7 +12,7 @@ import { AssetPack } from "../../assets";
  */
 export class GasGrenade extends Grenade {
   private static gasTexture: Texture;
-  public static readAssets({ textures, sounds }: AssetPack) {
+  public static readAssets({ textures }: AssetPack) {
     GasGrenade.gasTexture = textures.potionGreen;
   }
   static create(

@@ -14,7 +14,7 @@ import {
 import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import staticController, { InputKind } from "../input";
 import { StateRecorder } from "../state/recorder";
-import { CameraLockPriority, ViewportCamera } from "../camera";
+import { ViewportCamera } from "../camera";
 import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
@@ -24,7 +24,7 @@ import { logger } from "matrix-js-sdk/lib/logger";
 import { getDefinitionForCode } from "../weapons";
 import { NetGameState } from "../net/netGameState";
 import { NetGameWorld } from "../net/netGameWorld";
-import { BehaviorSubject, combineLatest, filter, map, Observable } from "rxjs";
+import { combineLatest, filter, map, Observable } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";

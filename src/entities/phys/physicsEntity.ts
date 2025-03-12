@@ -1,11 +1,4 @@
-import {
-  UPDATE_PRIORITY,
-  Sprite,
-  Point,
-  TilingSprite,
-  View,
-  ViewContainer,
-} from "pixi.js";
+import { UPDATE_PRIORITY, Sprite, Point, ViewContainer } from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe";
@@ -17,7 +10,7 @@ import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
-import { BehaviorSubject, distinct, Observable, of } from "rxjs";
+import { BehaviorSubject, distinct, Observable } from "rxjs";
 import Logger from "../../log";
 
 const log = new Logger("PhysicsEntity");

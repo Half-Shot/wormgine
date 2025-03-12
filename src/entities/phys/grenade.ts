@@ -1,4 +1,4 @@
-import { Container, Point, Sprite, Text, Texture, Ticker } from "pixi.js";
+import { Container, Sprite, Text, Texture, Ticker } from "pixi.js";
 import { TimedExplosive, TimedExplosiveOpts } from "./timedExplosive";
 import { IPhysicalEntity } from "../entity";
 import { BitmapTerrain } from "../bitmapTerrain";

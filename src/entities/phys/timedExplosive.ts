@@ -14,7 +14,6 @@ import { WormInstance } from "../../logic";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { PlayableCondition } from "../playable/conditions";
-import { of } from "rxjs";
 import { CameraLockPriority } from "../../camera";
 
 export interface TimedExplosiveOpts {

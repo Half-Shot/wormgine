@@ -1,12 +1,5 @@
 import { teamGroupToColorSet, WormInstance } from "../logic";
-import {
-  Container,
-  Graphics,
-  Sprite,
-  Text,
-  TilingSprite,
-  ViewContainer,
-} from "pixi.js";
+import { Container, Graphics, Text, ViewContainer } from "pixi.js";
 import { applyGenericBoxStyle, DefaultTextStyle } from "../mixins/styles";
 import {
   BehaviorSubject,
