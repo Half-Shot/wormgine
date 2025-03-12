@@ -7,21 +7,20 @@ import {
 } from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
-import icon from "../assets/grenade.png";
+import icon from "../assets/potion_green.png";
 import { GasGrenade } from "../entities/phys/gas-grenade";
 
 export const WeaponGasGrenade: IWeaponDefiniton = {
-  name: "Gas Grenade",
+  name: "Glass of Creamy Green",
   icon,
   code: IWeaponCode.GasGrenade,
   maxDuration: 50,
   allowGetaway: true,
-  timerAdjustable: true,
   showTargetGuide: true,
   loadAssets(assets) {
     this.sprite = {
-      texture: assets.textures.grenade,
-      scale: new Point(0.33, 0.33),
+      texture: assets.textures.potionGreen,
+      scale: new Point(0.15, 0.15),
       offset: new Point(3, -10),
     };
   },
@@ -45,7 +44,7 @@ export const WeaponGasGrenade: IWeaponDefiniton = {
       world,
       position,
       force,
-      opts.timer,
+      3,
       worm.wormIdent,
     );
   },

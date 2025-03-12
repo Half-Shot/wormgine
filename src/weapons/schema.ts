@@ -8,4 +8,5 @@ export const DefaultWeaponSchema: Record<IWeaponCode, number> = Object.freeze({
   [IWeaponCode.Mine]: 2,
   [IWeaponCode.Shotgun]: -1,
   [IWeaponCode.GasGrenade]: 3,
+  [IWeaponCode.MetalPotion]: 1,
 });

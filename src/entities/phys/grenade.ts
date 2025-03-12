@@ -1,4 +1,4 @@
-import { Container, Sprite, Text, Texture, Ticker } from "pixi.js";
+import { Container, Point, Sprite, Text, Texture, Ticker } from "pixi.js";
 import { TimedExplosive, TimedExplosiveOpts } from "./timedExplosive";
 import { IPhysicalEntity } from "../entity";
 import { BitmapTerrain } from "../bitmapTerrain";
@@ -70,16 +70,18 @@ export class Grenade extends TimedExplosive {
     timerSecs: number,
     owner?: WormInstance,
     optsOverrides?: Partial<TimedExplosiveOpts>,
+    textureOverride?: Texture,
+    scaleOverride?: number,
   ) {
-    const sprite = new Sprite(Grenade.texture);
-    sprite.scale.set(0.5);
+    const sprite = new Sprite(textureOverride ?? Grenade.texture);
+    sprite.scale.set(scaleOverride ? scaleOverride : 0.5);
     sprite.anchor.set(0.5);
     const body = world.createRigidBodyCollider(
       ColliderDesc.roundCuboid(0.05, 0.05, 0.5)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Grenade.collisionBitmask)
         .setSolverGroups(Grenade.collisionBitmask)
-        .setMass(1),
+        .setMass(0.1),
       RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY),
     );
     sprite.position = body.body.translation();

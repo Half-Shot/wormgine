@@ -1,15 +1,20 @@
-import { Container } from "pixi.js";
+import { Container, Texture, UPDATE_PRIORITY } from "pixi.js";
 import { GameWorld } from "../../world";
 import { Coordinate, MetersValue } from "../../utils/coodinate";
 import { WormInstance } from "../../logic";
 import { EntityType } from "../type";
 import { Grenade } from "./grenade";
 import { getConditionTint, PlayableCondition } from "../playable/conditions";
+import { AssetPack } from "../../assets";
 
 /**
  * Grenade projectile.
  */
 export class GasGrenade extends Grenade {
+  private static gasTexture: Texture;
+  public static readAssets({ textures, sounds }: AssetPack) {
+    GasGrenade.gasTexture = textures.potionGreen;
+  }
   static create(
     parent: Container,
     world: GameWorld,
@@ -41,11 +46,11 @@ export class GasGrenade extends Grenade {
     super(position, initialForce, world, parent, timerSecs, owner, {
       applyCondition: PlayableCondition.Sickness,
       maxDamage: 10,
-      explosionRadius: new MetersValue(3),
+      explosionRadius: new MetersValue(6),
       damagesTerrain: false,
       explosionHue: getConditionTint([PlayableCondition.Sickness]) ?? 0xfffff,
-      forceMultiplier: 0.25,
-    });
+      forceMultiplier: 0.025,
+    }, GasGrenade.gasTexture, 0.15);
   }
 
   recordState() {

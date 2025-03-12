@@ -14,6 +14,7 @@ export enum IWeaponCode {
   FireworkLauncher = "wep_firework",
   HomingMissile = "wep_missile",
   Mine = "wep_mine",
+  MetalPotion = "wep_tool_metalpotion",
 }
 
 export interface FireOpts {

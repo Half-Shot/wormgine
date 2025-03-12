@@ -14,6 +14,8 @@ import { WormInstance } from "../../logic";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { PlayableCondition } from "../playable/conditions";
+import { of } from "rxjs";
+import { CameraLockPriority } from "../../camera";
 
 export interface TimedExplosiveOpts {
   explosionRadius: MetersValue;
@@ -56,6 +58,7 @@ export abstract class TimedExplosive<
   ) {
     super(sprite, body, gameWorld);
     this.gameWorld.addBody(this, body.collider);
+    this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
     if (opts.autostartTimer) {
       this.timer = opts.timerSecs
         ? Ticker.targetFPMS * opts.timerSecs * 1000
