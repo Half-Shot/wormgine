@@ -40,9 +40,6 @@ export function IngameView({
     if (!newGame) {
       return;
     }
-    void newGame.loadResources();
-
-    log.info("Game effect", newGame);
 
     // Bind the game to the window such that we can debug it.
     (globalThis as unknown as { wormgine: Game }).wormgine = newGame;
