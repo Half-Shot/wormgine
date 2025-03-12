@@ -93,7 +93,10 @@ const FRICTION_WHEN_IDLE = 0.125;
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
-export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated> {
+export class Worm extends PlayableEntity<
+  WormRecordedState,
+  TiledSpriteAnimated
+> {
   private static readonly collisionBitmask = collisionGroupBitmask(
     [CollisionGroups.WorldObjects],
     [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
@@ -226,11 +229,13 @@ export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated>
       damageMultiplier: 250,
     });
     this.infoBox.$onBeginChanged.subscribe((visibleHealth) => {
-      this.desiredCameraLockPriority.next(visibleHealth === 0
-        ? CameraLockPriority.LockIfNotLocalPlayer
-        : CameraLockPriority.NoLock);
+      this.desiredCameraLockPriority.next(
+        visibleHealth === 0
+          ? CameraLockPriority.LockIfNotLocalPlayer
+          : CameraLockPriority.NoLock,
+      );
     });
-    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
+    this.sprite.tint = getConditionTint(this.conditions.keys()) ?? teamColor;
     // To give the worm a look of appearing on the ground.
     this.renderOffset = new Point(0, 4);
     this.weaponSprite = new Sprite({
@@ -283,6 +288,18 @@ export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated>
   }
 
   onWormSelected(bindInput = true) {
+    // Tick down any conditions with timers.
+    for (const [condition, turns] of this.conditions.entries()) {
+      if (turns === -1) {
+        return;
+      }
+      if (turns === 1) {
+        this.removeCondition(condition);
+      } else {
+        this.conditions.set(condition, turns - 1);
+      }
+    }
+
     this.toaster?.pushToast(
       templateRandomText(TurnStartText, {
         WormName: this.wormIdent.name,
@@ -300,8 +317,15 @@ export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated>
       Controller.on("inputBegin", this.onInputBegin);
       Controller.on("inputEnd", this.onInputEnd);
     }
-    // TODO: Switch weapon if there is no more ammo.
-    // if (this.wormIdent.team.availableWeapons
+    // If the current weapon has no ammo, switch to the first available.
+    const weps = new Map(this.wormIdent.team.availableWeapons);
+    if (!weps.has(this.currentWeapon)) {
+      this.currentWeapon = [...weps.keys()][0];
+      if (this.currentWeapon === undefined) {
+        // We should never allow an inventory with a non-infinite weapon.
+        throw Error("No weapons in inventory, worm cannot play");
+      }
+    }
   }
 
   onEndOfTurn() {
@@ -351,7 +375,7 @@ export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated>
       this.wormIdent.uuid,
       StateWormAction.Backflip,
     );
-    this.body.applyImpulse({ x: this.facingRight ? -6 : 6, y: -25 }, true);
+    this.body.applyImpulse({ x: this.facingRight ? -6 : 6, y: -45 }, true);
   }
 
   onInputBegin = (
@@ -687,7 +711,7 @@ export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated>
     }
     (this.sprite as TiledSpriteAnimated).update(dMs);
     this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.values().toArray().join(", ")}`,
+      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.keys().toArray().join(", ")}`,
     );
     this.weaponSprite.visible = this.state.showWeapon;
     this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;

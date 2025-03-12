@@ -16,6 +16,7 @@ import { AssetPack } from "../../assets";
 import { DefaultTextStyle } from "../../mixins/styles";
 import { WormInstance } from "../../logic";
 import { EntityType } from "../type";
+import { PlayableEntity } from "../playable/playable";
 
 /**
  * Grenade projectile.
@@ -86,12 +87,13 @@ export class Grenade extends TimedExplosive {
     );
     sprite.position = body.body.translation();
     super(sprite, body, world, parent, {
-      explosionRadius: new MetersValue(3),
+      explosionRadius: new MetersValue(2.25),
       explodeOnContact: false,
       timerSecs,
       autostartTimer: true,
       ownerWorm: owner,
-      maxDamage: 40,
+      maxDamage: 35,
+      forceMultiplier: 0.25,
       ...optsOverrides,
     });
     this.timerText = new Text({
@@ -125,6 +127,9 @@ export class Grenade extends TimedExplosive {
     if (super.onCollision(otherEnt, contactPoint)) {
       this.timerText.destroy();
       return true;
+    }
+    if (otherEnt instanceof PlayableEntity) {
+      this.body.collider(0).setFriction(0.95);
     }
     // We don't explode, but we do make a noise.
     if (otherEnt instanceof BitmapTerrain === false) {

@@ -17,9 +17,11 @@ export function handleDamageInRadius(
   ignoreCollider?: Collider,
 ) {
   // Detect if anything is around us.
+  // We actually target a larger area than the resulting crater as it's
+  // more realistic.
   const explosionCollidesWith = gameWorld.checkCollision(
     new Coordinate(point.x, point.y),
-    radius,
+    radius.multiply(1.33),
     ignoreCollider,
   );
   for (const element of explosionCollidesWith) {
@@ -32,7 +34,7 @@ export function handleDamageInRadius(
     Explosion.create(
       parent,
       { x: point.x * PIXELS_PER_METER, y: point.y * PIXELS_PER_METER },
-      radius,
+      radius.multiply(1.33),
       opts,
     ),
   );

@@ -39,13 +39,6 @@ export const WeaponGasGrenade: IWeaponDefiniton = {
       opts.duration,
       opts.angle,
     );
-    return GasGrenade.create(
-      parent,
-      world,
-      position,
-      force,
-      3,
-      worm.wormIdent,
-    );
+    return GasGrenade.create(parent, world, position, force, 3, worm.wormIdent);
   },
 };

@@ -1,4 +1,11 @@
-import { UPDATE_PRIORITY, Sprite, Point, TilingSprite, View, ViewContainer } from "pixi.js";
+import {
+  UPDATE_PRIORITY,
+  Sprite,
+  Point,
+  TilingSprite,
+  View,
+  ViewContainer,
+} from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe";
@@ -77,9 +84,9 @@ export abstract class PhysicsEntity<
     });
     this.bodyMoving = new BehaviorSubject(false);
     this.bodyMoving$ = this.bodyMoving.pipe(distinct());
-    this.cameraLockPriority$.subscribe(s => {
+    this.cameraLockPriority$.subscribe((s) => {
       log.info("Camera lock changed for", this.toString(), s);
-    })
+    });
   }
 
   destroy(): void {

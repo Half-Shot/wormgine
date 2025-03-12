@@ -1,4 +1,11 @@
-import { Point, Sprite, UPDATE_PRIORITY, DEG_TO_RAD, View, ViewContainer } from "pixi.js";
+import {
+  Point,
+  Sprite,
+  UPDATE_PRIORITY,
+  DEG_TO_RAD,
+  View,
+  ViewContainer,
+} from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
@@ -39,12 +46,15 @@ const log = new Logger("Playable");
 export abstract class PlayableEntity<
   T extends PlayableRecordedState = PlayableRecordedState,
   S extends ViewContainer = Sprite,
-> extends PhysicsEntity<T,S> {
+> extends PhysicsEntity<T, S> {
   priority = UPDATE_PRIORITY.LOW;
 
   private explodeTimer: number | null = null;
 
-  protected readonly conditions = new Set<PlayableCondition>();
+  /**
+   * Conditions turns remaining. -1 for never expiring.
+   */
+  protected readonly conditions = new Map<PlayableCondition, number>();
   protected readonly infoBox: PlayableInfoBox;
 
   get position() {
@@ -133,7 +143,7 @@ export abstract class PlayableEntity<
 
   public reduceHealth(damage: number) {
     const damageMultiplier = this.conditions
-      .values()
+      .keys()
       .map((v) => getConditionEffect(v).damageMultiplier)
       .reduce<number>((v, c) => {
         if (c === undefined) {
@@ -149,7 +159,7 @@ export abstract class PlayableEntity<
 
   public roundTick() {
     const { takeDamagePerRound, cannotDieFromDamage } = this.conditions
-      .values()
+      .keys()
       .map((v) => {
         const condtion = getConditionEffect(v);
         return {
@@ -179,16 +189,17 @@ export abstract class PlayableEntity<
     }
   }
 
-  public addCondition(condition: PlayableCondition) {
-    this.conditions.add(condition);
+  public addCondition(condition: PlayableCondition, turns = -1) {
+    this.conditions.set(condition, turns);
     const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
-    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
+    this.sprite.tint = getConditionTint(this.conditions.keys()) ?? teamColor;
   }
 
   public removeCondition(condition: PlayableCondition) {
-    this.conditions.delete(condition);
-    const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
-    this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
+    if (this.conditions.delete(condition)) {
+      const teamColor = teamGroupToColorSet(this.wormIdent.team.group).fg;
+      this.sprite.tint = getConditionTint(this.conditions.keys()) ?? teamColor;
+    }
   }
 
   public onDamage(
@@ -206,7 +217,7 @@ export abstract class PlayableEntity<
     const damage = maxDamage / distance;
     this.reduceHealth(damage);
     const forceMultiplier = this.conditions
-      .values()
+      .keys()
       .map((v) => getConditionEffect(v).forceMultiplier)
       .reduce<number>((v, c) => {
         if (c === undefined) {

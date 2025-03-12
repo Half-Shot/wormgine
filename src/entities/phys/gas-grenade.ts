@@ -43,14 +43,24 @@ export class GasGrenade extends Grenade {
     timerSecs: number,
     owner?: WormInstance,
   ) {
-    super(position, initialForce, world, parent, timerSecs, owner, {
-      applyCondition: PlayableCondition.Sickness,
-      maxDamage: 10,
-      explosionRadius: new MetersValue(6),
-      damagesTerrain: false,
-      explosionHue: getConditionTint([PlayableCondition.Sickness]) ?? 0xfffff,
-      forceMultiplier: 0.025,
-    }, GasGrenade.gasTexture, 0.15);
+    super(
+      position,
+      initialForce,
+      world,
+      parent,
+      timerSecs,
+      owner,
+      {
+        applyCondition: PlayableCondition.Sickness,
+        maxDamage: 10,
+        explosionRadius: new MetersValue(6),
+        damagesTerrain: false,
+        explosionHue: getConditionTint([PlayableCondition.Sickness]) ?? 0xfffff,
+        forceMultiplier: 0.025,
+      },
+      GasGrenade.gasTexture,
+      0.15,
+    );
   }
 
   recordState() {

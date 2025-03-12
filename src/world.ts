@@ -81,8 +81,12 @@ export class GameWorld {
   /**
    * Observer for the current set of physics object in the world.
    */
-  public readonly physicsEntitySet$: Observable<IteratorObject<IPhysicalEntity>> =
-    this.physicsEntitySet.pipe(debounceTime(150), map(e => e.values()));
+  public readonly physicsEntitySet$: Observable<
+    IteratorObject<IPhysicalEntity>
+  > = this.physicsEntitySet.pipe(
+    debounceTime(150),
+    map((e) => e.values()),
+  );
 
   /**
    * @deprecated Use `this.wind$`

@@ -1,8 +1,5 @@
 import { Container, Point } from "pixi.js";
-import {
-  IWeaponCode,
-  IWeaponDefiniton,
-} from "./weapon";
+import { IWeaponCode, IWeaponDefiniton } from "./weapon";
 import { Worm } from "../entities/playable/worm";
 import { GameWorld } from "../world";
 import icon from "../assets/potion_metal.png";
@@ -18,10 +15,10 @@ export const WeaponMetalPotion: IWeaponDefiniton = {
     this.sprite = {
       texture: assets.textures.potionMetal,
       scale: new Point(0.15, 0.15),
-      offset: new Point(0,0),
+      offset: new Point(0, 0),
     };
   },
   fireFn(_parent: Container, _world: GameWorld, worm: Worm) {
-    worm.addCondition(PlayableCondition.Metallic);
+    worm.addCondition(PlayableCondition.Metallic, 2);
   },
 };

@@ -48,7 +48,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   const world = game.world;
   const { worldWidth } = game.viewport;
   const wormInstances = new Map<string, Worm>();
-  let currentWorm: Worm|undefined;
+  let currentWorm: Worm | undefined;
 
   const iteration = game.previousGameState?.iteration || 1;
   const iterField = game.overlay?.addTextField();
@@ -319,16 +319,8 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       wormInstances.forEach((w) => w.roundTick());
     });
 
-  combineLatest([
-    gameState.roundState$,
-    gameState.remainingRoundTimeSeconds$,
-  ])
-    .pipe(
-      filter(
-        ([state, _seconds]) =>
-          state === RoundState.Finished,
-      ),
-    )
+  combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])
+    .pipe(filter(([state, _seconds]) => state === RoundState.Finished))
     .subscribe(() => {
       if (currentWorm) {
         log.info("Timer ran out");

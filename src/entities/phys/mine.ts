@@ -94,6 +94,7 @@ export class Mine extends TimedExplosive {
       timerSecs: 5,
       autostartTimer: false,
       maxDamage: 40,
+      forceMultiplier: 0.75,
     });
     this.inactiveUntilTs = performance.now() + inactiveForMs;
     this.sensor = world.rapierWorld.createCollider(

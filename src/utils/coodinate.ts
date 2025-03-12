@@ -23,6 +23,10 @@ export class MetersValue {
   public toString() {
     return `{${this.value}m, ${this.value}px}`;
   }
+
+  public multiply(factor: number) {
+    return new MetersValue(this.value * factor);
+  }
 }
 export class Coordinate {
   static fromScreen(screenX: number, screenY: number) {

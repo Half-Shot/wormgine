@@ -47,7 +47,8 @@ export function IngameView({
     newGame.needsReload$.subscribe((previousState) => {
       setLoaded(false);
       log.info("needs reload");
-      import(`../../game?ts=${Date.now()}`)
+      // We deliberatly want to load a new version of the game.
+      import(/* @vite-ignore */ `../../game?ts=${Date.now()}`)
         .then((imp) =>
           imp.Game.create(
             window,

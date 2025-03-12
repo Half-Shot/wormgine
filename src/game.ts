@@ -71,7 +71,7 @@ export class Game<ReloadedGameState extends object = object> {
       preference: "webgpu",
       antialias: true,
       hello: true,
-      renderableGCActive: false   //  try to disable auto GC probably causing TilledSprite 
+      renderableGCActive: false, //  try to disable auto GC probably causing TilledSprite
       //  'Uncaught TypeError: Cannot read properties of undefined (reading 'indices')'
     });
     return new Game(
