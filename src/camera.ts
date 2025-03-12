@@ -1,6 +1,5 @@
 import { Viewport } from "pixi-viewport";
 import { Point } from "pixi.js";
-import { PhysicsEntity } from "./entities/phys/physicsEntity";
 import { MovedEvent } from "pixi-viewport/dist/types";
 import Logger from "./log";
 import { MetersValue } from "./utils";
@@ -27,9 +26,17 @@ export enum CameraLockPriority {
   AlwaysLock = 4,
 }
 
+export interface LockableEntity {
+  cameraLockPriority$: Observable<CameraLockPriority>,
+  destroyed: boolean,
+  sprite: {
+    position: Point,
+  }
+}
+
 export class ViewportCamera {
   private currentLock: {
-    target: PhysicsEntity;
+    target: LockableEntity;
     priority: CameraLockPriority;
     isLocal: boolean;
   } | null = null;
@@ -37,14 +44,14 @@ export class ViewportCamera {
   private lastMoveHash = Number.MIN_SAFE_INTEGER;
   private cameraSub?: Subscription;
 
-  public get lockTarget(): PhysicsEntity | null {
+  public get lockTarget(): LockableEntity | null {
     return this.currentLock?.target ?? null;
   }
 
   constructor(
     private readonly viewport: Viewport,
     private readonly clampY: MetersValue,
-    physicalEntities: Observable<IteratorObject<PhysicsEntity>>,
+    physicalEntities: Observable<IteratorObject<LockableEntity>>,
     currentPlayableIsLocal: Observable<boolean>,
   ) {
     viewport.on("moved", (event: MovedEvent) => {
@@ -129,7 +136,7 @@ export class ViewportCamera {
   }
 
   public updateEntitySet(
-    entities: IteratorObject<PhysicsEntity>,
+    entities: IteratorObject<LockableEntity>,
     isLocal: boolean,
   ) {
     this.cameraSub?.unsubscribe();

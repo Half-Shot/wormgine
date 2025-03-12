@@ -186,7 +186,7 @@ describe('GameState', () => {
     });
   });
   describe('Toast calculation', () => {
-    test.only('should show a toast when the enemy was hit', () => {
+    test('should show a toast when the enemy was hit', () => {
       const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
       const [redTeam, blueTeam] = gameState.getActiveTeams();
       gameState.advanceRound();

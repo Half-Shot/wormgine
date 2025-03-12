@@ -1,17 +1,16 @@
-import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { CameraLockPriority, ViewportCamera } from "../../src/camera";
+import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { CameraLockPriority, LockableEntity, ViewportCamera } from "../../src/camera";
 import { Viewport } from "pixi-viewport";
 import { MockViewport } from "../test-utils/viewport-mock";
 import { MockPhysicsEntity } from "../test-utils/physent-mock";
 import { MetersValue } from "../../src/utils";
 import { BehaviorSubject, map } from "rxjs";
-import { PhysicsEntity } from "../../src/entities/phys/physicsEntity";
 
 
 function createTestEnv() {
     const viewport = new MockViewport();
     const waterPosition = new MetersValue(30);
-    const entities = new BehaviorSubject<PhysicsEntity[]>([]);
+    const entities = new BehaviorSubject<LockableEntity[]>([]);
     const isLocalPlayer = new BehaviorSubject<boolean>(true);
     const camera = new ViewportCamera(viewport as unknown as Viewport, waterPosition, entities.pipe(map(e => new Set(e).values())), isLocalPlayer.asObservable());
     return { viewport, camera, entities, isLocalPlayer };
@@ -20,6 +19,9 @@ function createTestEnv() {
 describe('ViewportCamera', () => {
     beforeEach(() =>{
         jest.useFakeTimers();
+    })
+    afterEach(() =>{
+        jest.useRealTimers();
     })
 
     test('camera starts with nolock', () => {
