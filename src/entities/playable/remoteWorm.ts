@@ -36,7 +36,7 @@ export class RemoteWorm extends Worm {
     parent.addChild(ent.targettingGfx);
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
-    parent.addChild(ent.healthTextBox);
+    parent.addChild(ent.infoBox.container);
     return ent;
   }
 

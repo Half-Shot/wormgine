@@ -61,7 +61,7 @@ export class TestDummy extends PlayableEntity {
     world.addBody(ent, ent.physObject.collider);
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
-    parent.addChild(ent.healthTextBox);
+    parent.addChild(ent.infoBox.container);
     return ent;
   }
 

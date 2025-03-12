@@ -1,23 +1,14 @@
-import {
-  Point,
-  Sprite,
-  UPDATE_PRIORITY,
-  Text,
-  DEG_TO_RAD,
-  Graphics,
-} from "pixi.js";
+import { Point, Sprite, UPDATE_PRIORITY, DEG_TO_RAD, View, ViewContainer } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { Vector2 } from "@dimforge/rapier2d-compat";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { teamGroupToColorSet, WormInstance } from "../../logic";
-import { applyGenericBoxStyle, DefaultTextStyle } from "../../mixins/styles";
 import { Viewport } from "pixi-viewport";
 import { handleDamageInRadius } from "../../utils/damage";
 import { RecordedEntityState } from "../../state/model";
 import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../../consts";
-import { first, skip, Subscription } from "rxjs";
 import Logger from "../../log";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import {
@@ -25,6 +16,8 @@ import {
   getConditionTint,
   PlayableCondition,
 } from "./conditions";
+import { PlayableInfoBox } from "../../overlays/playableInfoBox";
+import { CameraLockPriority } from "../../camera";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -45,28 +38,21 @@ const log = new Logger("Playable");
  */
 export abstract class PlayableEntity<
   T extends PlayableRecordedState = PlayableRecordedState,
-> extends PhysicsEntity<T> {
+  S extends ViewContainer = Sprite,
+> extends PhysicsEntity<T,S> {
   priority = UPDATE_PRIORITY.LOW;
 
-  private nameText: Text;
-  private healthText: Text;
-  protected healthTextBox: Graphics;
-
-  private visibleHealth: number;
-  private healthTarget: number;
-  private healthChangeTensionTimer: number | null = null;
-  private canReduceHealthTimer = false;
+  private explodeTimer: number | null = null;
 
   protected readonly conditions = new Set<PlayableCondition>();
+  protected readonly infoBox: PlayableInfoBox;
 
   get position() {
     return this.physObject.body.translation();
   }
 
-  private readonly healthSub: Subscription;
-
   constructor(
-    sprite: Sprite | TiledSpriteAnimated,
+    sprite: S,
     body: RapierPhysicsObject,
     world: GameWorld,
     protected parent: Viewport,
@@ -75,103 +61,23 @@ export abstract class PlayableEntity<
   ) {
     super(sprite, body, world);
     this.renderOffset = new Point(4, 1);
-    const { fg } = teamGroupToColorSet(wormIdent.team.group);
-    this.nameText = new Text({
-      text: this.wormIdent.name,
-      style: {
-        ...DefaultTextStyle,
-        fill: fg,
-        align: "center",
-      },
+    this.infoBox = new PlayableInfoBox(wormIdent, world.entitiesMoving$);
+    this.infoBox.$onChanged.subscribe((visibleHealth) => {
+      if (visibleHealth === 0) {
+        log.info("Set explode timer");
+        this.explodeTimer = HEALTH_CHANGE_TENSION_TIMER_MS;
+      }
     });
-    this.visibleHealth = -1;
-    this.healthTarget = -1;
-    this.healthText = new Text({
-      text: this.visibleHealth,
-      style: {
-        ...DefaultTextStyle,
-        fill: fg,
-        align: "center",
-      },
-    });
-
-    this.wormIdent.health$.pipe(first()).subscribe((h) => {
-      this.healthTarget = h;
-      this.visibleHealth = h;
-      this.healthText.text = h;
-    });
-
-    this.healthSub = this.wormIdent.health$.pipe(skip(1)).subscribe((h) => {
-      this.healthTarget = h;
-      // TODO: Potentially further delay until the player has stopped moving.
-      this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER_MS;
-    });
-
-    this.nameText.position.set(0, -5);
-    this.healthTextBox = new Graphics();
-    const nameTextXY = [-this.nameText.width / 2, 0];
-    const healthTextXY = [-this.healthText.width / 2, this.nameText.height + 4];
-    applyGenericBoxStyle(this.healthTextBox)
-      .roundRect(
-        nameTextXY[0],
-        nameTextXY[1],
-        this.nameText.width + 10,
-        this.nameText.height - 2,
-        4,
-      )
-      .stroke()
-      .fill()
-      .roundRect(
-        healthTextXY[0],
-        healthTextXY[1],
-        this.healthText.width + 10,
-        this.healthText.height - 4,
-        4,
-      )
-      .stroke()
-      .fill();
-
-    this.nameText.position.set(nameTextXY[0] + 4, nameTextXY[1] - 4);
-    this.setHealthTextPosition();
-
-    this.healthTextBox.addChild(this.healthText, this.nameText);
-    this.gameWorld.entitiesMoving$.subscribe((entitiesMoving) => {
-      this.canReduceHealthTimer = !(
-        entitiesMoving || !this.healthChangeTensionTimer
-      );
-    });
-  }
-
-  public setHealthTextPosition() {
-    const healthTextXY = [-this.healthText.width / 2, this.nameText.height + 4];
-    this.healthText.position.set(healthTextXY[0] + 4, healthTextXY[1] - 4);
   }
 
   public update(dt: number, dMs: number): void {
     super.update(dt, dMs);
     if (this.destroyed) {
+      log.debug("FIXME Ran update for a destroyed entity");
       // TODO: Feels totally unnessacery.
       return;
     }
-    if (!this.healthTextBox.destroyed) {
-      // Nice and simple parenting
-      this.healthTextBox.rotation = 0;
-      if (this.sprite instanceof TiledSpriteAnimated) {
-        this.healthTextBox.position.set(
-          this.sprite.x - this.sprite.scaledWidth / 4,
-          this.sprite.y - 85,
-        );
-      } else {
-        this.healthTextBox.position.set(
-          this.sprite.x - this.sprite.width / 4,
-          this.sprite.y - 85,
-        );
-      }
-    }
-
-    if (this.healthChangeTensionTimer) {
-      this.wireframe.setDebugText(`tension: ${this.healthChangeTensionTimer}`);
-    }
+    this.infoBox.update(this.sprite);
 
     // TODO: Settling code.
     // if (!this.physObject.body.isMoving() && this.wasMoving) {
@@ -185,41 +91,17 @@ export abstract class PlayableEntity<
     // Whenever the entity takes damage, `healthChangeTensionTimer` is set to a unit of time before
     // we can render the damage to the player.
 
-    // Only decrease the timer when we have come to a standstill.
-    if (this.healthChangeTensionTimer && this.canReduceHealthTimer) {
-      this.healthChangeTensionTimer -= dMs;
-    }
-
     // If the timer has run out, set to null to indiciate it has expired.
-    if (this.healthChangeTensionTimer && this.healthChangeTensionTimer <= 0) {
-      if (this.visibleHealth === 0 && !this.isSinking) {
+    // XXX: Should the visible health setting control this?
+    if (this.explodeTimer !== null) {
+      log.info("Explode timer called");
+      if (this.explodeTimer <= 0) {
         this.explode();
-        return;
+      } else {
+        this.explodeTimer -= dMs;
       }
-      this.healthChangeTensionTimer = null;
+      return;
     }
-
-    // If the timer is null, decrease the rendered health if nessacery.
-    if (this.healthChangeTensionTimer === null) {
-      if (this.visibleHealth > this.healthTarget) {
-        this.onHealthTensionTimerExpired(true);
-        this.visibleHealth--;
-        this.healthText.text = this.visibleHealth;
-        this.setHealthTextPosition();
-        if (this.visibleHealth <= this.healthTarget) {
-          this.onHealthTensionTimerExpired(false);
-        }
-      }
-
-      // If we are dead, set a new timer to decrease to explode after a small delay.
-      if (this.visibleHealth === 0) {
-        this.healthChangeTensionTimer = HEALTH_CHANGE_TENSION_TIMER_MS;
-      }
-    }
-  }
-
-  protected onHealthTensionTimerExpired(_decreasing: boolean) {
-    return;
   }
 
   public explode() {
@@ -241,7 +123,7 @@ export abstract class PlayableEntity<
     if (super.onCollision(otherEnt, contactPoint)) {
       if (this.isSinking) {
         this.wormIdent.setHealth(0);
-        this.healthTextBox.destroy();
+        this.infoBox.destroy();
         this.physObject.body.setRotation(DEG_TO_RAD * 180, false);
       }
       return true;
@@ -362,10 +244,7 @@ export abstract class PlayableEntity<
   }
 
   public destroy(): void {
-    this.healthSub.unsubscribe();
+    this.infoBox.destroy();
     super.destroy();
-    if (!this.healthTextBox.destroyed) {
-      this.healthTextBox.destroy();
-    }
   }
 }
