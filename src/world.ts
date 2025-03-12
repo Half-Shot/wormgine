@@ -21,8 +21,10 @@ import {
   BehaviorSubject,
   debounceTime,
   distinctUntilChanged,
+  map,
   Observable,
 } from "rxjs";
+import type { PhysicsEntity } from "./entities/phys/physicsEntity";
 
 const logger = new Logger("World");
 
@@ -72,6 +74,15 @@ export class GameWorld {
 
   private readonly entitiesMoving = new BehaviorSubject(false);
   public readonly entitiesMoving$: Observable<boolean>;
+
+  private readonly physicsEntitySet = new BehaviorSubject<Set<IPhysicalEntity>>(
+    new Set(),
+  );
+  /**
+   * Observer for the current set of physics object in the world.
+   */
+  public readonly physicsEntitySet$: Observable<IteratorObject<IPhysicalEntity>> =
+    this.physicsEntitySet.pipe(debounceTime(150), map(e => e.values()));
 
   /**
    * @deprecated Use `this.wind$`
@@ -223,6 +234,7 @@ export class GameWorld {
       }
       this.bodyEntityMap.set(collider.handle, entity);
     });
+    this.physicsEntitySet.next(this.physicsEntitySet.value.add(entity));
   }
 
   removeBody(obj: RapierPhysicsObject) {
@@ -239,6 +251,9 @@ export class GameWorld {
       throw Error("Entity not found in world");
     }
     this.entities.delete(key);
+    if (this.physicsEntitySet.value.delete(entity as PhysicsEntity)) {
+      this.physicsEntitySet.next(this.physicsEntitySet.value);
+    }
   }
 
   public pointInAnyObject(position: Coordinate): boolean {

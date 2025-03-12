@@ -1,11 +1,10 @@
 import { Viewport } from "pixi-viewport";
-import { Point, Ticker } from "pixi.js";
-import { GameWorld } from "./world";
+import { Point } from "pixi.js";
 import { PhysicsEntity } from "./entities/phys/physicsEntity";
-import { PlayableEntity } from "./entities/playable/playable";
 import { MovedEvent } from "pixi-viewport/dist/types";
 import Logger from "./log";
 import { MetersValue } from "./utils";
+import { combineLatest, debounceTime, map, merge, Observable, Subscription } from "rxjs";
 
 const logger = new Logger("ViewportCamera");
 
@@ -23,18 +22,24 @@ export enum CameraLockPriority {
 }
 
 export class ViewportCamera {
-  private currentLockTarget: PhysicsEntity | null = null;
+  private currentLock: {
+    target: PhysicsEntity,
+    priority: CameraLockPriority,
+    isLocal: boolean,
+  }|null = null;
   private userWantsControl = false;
   private lastMoveHash = Number.MIN_SAFE_INTEGER;
+  private cameraSub?: Subscription;
 
   public get lockTarget() {
-    return this.currentLockTarget;
+    return this.currentLock?.target;
   }
 
   constructor(
     private readonly viewport: Viewport,
-    private readonly world: GameWorld,
     private readonly clampY: MetersValue,
+    physicalEntities: Observable<IteratorObject<PhysicsEntity>>,
+    currentPlayableIsLocal: Observable<boolean>,
   ) {
     viewport.on("moved", (event: MovedEvent) => {
       if (
@@ -52,6 +57,11 @@ export class ViewportCamera {
         logger.debug("Player took control");
       }
     });
+    combineLatest([physicalEntities, currentPlayableIsLocal]).pipe(debounceTime(200)).subscribe(
+      ([entities, currentPlayableIsLocal]) => {
+        this.updateEntitySet(entities, currentPlayableIsLocal);
+      },
+    );
   }
 
   public snapToPosition(
@@ -68,10 +78,13 @@ export class ViewportCamera {
     }
     this.lastMoveHash = newMoveHash;
 
-    const clampYTo = 200 + this.clampY.pixels - this.viewport.screenHeight / 2;
+    const clampYTo = (this.clampY.pixels) - (this.viewport.screenHeight / 2);
 
     if (targetXY[1] > clampYTo) {
+      logger.debug("Clamped", targetXY[1], this.viewport.screenHeight, this.clampY.pixels);
       targetXY[1] = clampYTo;
+    } else {
+      logger.debug("Set Y to", targetXY[1]);
     }
 
     switch (priority) {
@@ -104,36 +117,53 @@ export class ViewportCamera {
     }
   }
 
-  public update(_dt: Ticker, currentWorm: PlayableEntity | undefined) {
-    let newTarget: PhysicsEntity | null = null;
-    let priority: CameraLockPriority = CameraLockPriority.NoLock;
-    if (this.currentLockTarget?.destroyed) {
-      this.currentLockTarget = null;
-    }
-    for (const e of this.world.entities.values()) {
-      if (e instanceof PhysicsEntity === false) {
-        continue;
-      }
-      if (e.cameraLockPriority > priority) {
-        newTarget = e;
-        priority = e.cameraLockPriority;
-      }
-    }
-    if (!newTarget) {
-      return;
-    }
+  public updateEntitySet(
+    entities: IteratorObject<PhysicsEntity>,
+    isLocal: boolean,
+  ) {
+    this.cameraSub?.unsubscribe();
+    logger.info("Recalculating entity set");
 
-    const isLocal = !currentWorm?.wormIdent.team.playerUserId;
-    if (newTarget !== this.currentLockTarget) {
-      // Reset user control.
-      this.userWantsControl = false;
-      logger.debug("New lock target", newTarget.toString());
+    const obs = entities
+      // XXX: This type is actually wrong.
+      .filter((entity) => entity.cameraLockPriority$)
+      .map((entity) =>
+        entity.cameraLockPriority$.pipe(
+          map((priority) => ({ priority, entity })),
+        ),
+      );
+
+    this.cameraSub = merge(...obs).subscribe(({entity, priority}) => {
+      logger.info("New camera lock requested", entity.toString(), CameraLockPriority[priority]);
+
+      if (this.currentLock?.target === entity) {
+        this.currentLock.priority = priority;
+      }
+      
+      if (this.currentLock && this.currentLock?.priority >= priority) {
+        logger.debug("New lock is not higher priority than", this.currentLock.target.toString(), CameraLockPriority[priority]);
+        // Skipping as higher priority exists.
+        return;
+      }
+      if (entity !== this.currentLock?.target) {
+        // Reset user control.
+        this.userWantsControl = false;
+        logger.debug("New lock target", entity.toString());
+      } else {
+        logger.debug("New lock target is same as last, ignoring");
+        return;
+      }
+      this.currentLock = {
+        target: entity,
+        priority,
+        isLocal,
+      }
+    });
+  }
+
+  public update() {
+    if (this.currentLock && !this.currentLock.target.destroyed) {
+      this.snapToPosition(this.currentLock.target.sprite.position, this.currentLock.priority, this.currentLock.isLocal);
     }
-    this.currentLockTarget = newTarget;
-    this.snapToPosition(
-      newTarget.sprite.position,
-      newTarget.cameraLockPriority,
-      isLocal,
-    );
   }
 }

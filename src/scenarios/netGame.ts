@@ -24,10 +24,11 @@ import { logger } from "matrix-js-sdk/lib/logger";
 import { getDefinitionForCode } from "../weapons";
 import { NetGameState } from "../net/netGameState";
 import { NetGameWorld } from "../net/netGameWorld";
-import { combineLatest, filter } from "rxjs";
+import { BehaviorSubject, combineLatest, filter, map, Observable } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";
+import globalFlags from "../flags";
 
 const log = new Logger("scenario");
 
@@ -47,6 +48,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   const world = game.world;
   const { worldWidth } = game.viewport;
   const wormInstances = new Map<string, Worm>();
+  let currentWorm: Worm|undefined;
 
   const iteration = game.previousGameState?.iteration || 1;
   const iterField = game.overlay?.addTextField();
@@ -182,12 +184,13 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   );
   water.addToWorld(parent, world);
 
-  const camera = new ViewportCamera(game.viewport, world, water.waterHeight);
-  camera.snapToPosition(
-    bitmapPosition.toScreenPoint(),
-    CameraLockPriority.SuggestedLockNonLocal,
-    false,
+  const camera = new ViewportCamera(
+    game.viewport,
+    new MetersValue(water.waterHeight.value + 2),
+    world.physicsEntitySet$ as Observable<IteratorObject<PhysicsEntity>>,
+    gameState.currentWorm$.pipe(map((w) => w?.team.playerUserId === null)),
   );
+  globalFlags.viewportCamera = camera;
 
   for (const levelObject of level.objects) {
     if (levelObject.type === "wormgine.target") {
@@ -226,9 +229,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       const pos = Coordinate.fromWorld(spawnPoint);
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
-        if (newProjectile instanceof PhysicsEntity) {
-          newProjectile.cameraLockPriority =
-            CameraLockPriority.LockIfNotLocalPlayer;
+        if (newProjectile) {
           world.addEntity(newProjectile);
         }
       };
@@ -256,8 +257,6 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       wormInstances.set(wormInstance.uuid, wormEnt);
     }
   }
-
-  let currentWorm: Worm | undefined;
 
   staticController.on("inputEnd", (kind: InputKind) => {
     if (!currentWorm?.currentState.canFire) {
@@ -320,13 +319,21 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       wormInstances.forEach((w) => w.roundTick());
     });
 
-  combineLatest([gameState.roundState$, gameState.remainingRoundTimeSeconds$])
-    .pipe(filter(([state]) => state === RoundState.Finished))
+  combineLatest([
+    gameState.roundState$,
+    gameState.remainingRoundTimeSeconds$,
+  ])
+    .pipe(
+      filter(
+        ([state, _seconds]) =>
+          state === RoundState.Finished,
+      ),
+    )
     .subscribe(() => {
       if (currentWorm) {
         log.info("Timer ran out");
-        currentWorm?.onEndOfTurn();
-        currentWorm?.currentState.off("transition", transitionHandler);
+        currentWorm.onEndOfTurn();
+        currentWorm.currentState.off("transition", transitionHandler);
       }
     });
 
@@ -427,5 +434,5 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     });
 
   game.pixiApp.ticker.add(roundHandlerFn);
-  game.pixiApp.ticker.add((dt) => camera.update(dt, currentWorm));
+  game.pixiApp.ticker.add(camera.update.bind(camera));
 }

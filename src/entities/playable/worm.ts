@@ -93,7 +93,7 @@ const FRICTION_WHEN_IDLE = 0.125;
 /**
  * Physical representation of a worm on the map. May be controlled.
  */
-export class Worm extends PlayableEntity<WormRecordedState> {
+export class Worm extends PlayableEntity<WormRecordedState, TiledSpriteAnimated> {
   private static readonly collisionBitmask = collisionGroupBitmask(
     [CollisionGroups.WorldObjects],
     [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
@@ -162,7 +162,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     parent.addChild(ent.targettingGfx);
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
-    parent.addChild(ent.healthTextBox);
+    parent.addChild(ent.infoBox.container);
     parent.addChild(ent.weaponSprite);
     parent.addChild(ent.arrowSprite);
     return ent;
@@ -224,6 +224,11 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     super(sprite, body, world, parent, wormIdent, {
       explosionRadius: new MetersValue(5),
       damageMultiplier: 250,
+    });
+    this.infoBox.$onBeginChanged.subscribe((visibleHealth) => {
+      this.desiredCameraLockPriority.next(visibleHealth === 0
+        ? CameraLockPriority.LockIfNotLocalPlayer
+        : CameraLockPriority.NoLock);
     });
     this.sprite.tint = getConditionTint(this.conditions) ?? teamColor;
     // To give the worm a look of appearing on the ground.
@@ -289,7 +294,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     );
     this.collider.setFriction(FRICTION_WHEN_ACTIVE);
     this.state.transition(InnerWormState.Idle);
-    this.cameraLockPriority = CameraLockPriority.SuggestedLockLocal;
+    this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
     this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
     if (bindInput) {
       Controller.on("inputBegin", this.onInputBegin);
@@ -330,7 +335,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     this.state.transition(InnerWormState.Inactive);
     Controller.removeListener("inputBegin", this.onInputBegin);
     Controller.removeListener("inputEnd", this.onInputEnd);
-    this.cameraLockPriority = CameraLockPriority.NoLock;
+    this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
     this.targettingGfx.visible = false;
   }
 
@@ -371,7 +376,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     } else if (inputKind === InputKind.Backflip) {
       this.onBackflip();
     } else if (!this.state.canFire) {
-      console.log("Bork!");
       return;
     } else if (inputKind === InputKind.AimUp) {
       this.state.transition(InnerWormState.AimingUp);
@@ -482,12 +486,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     );
   }
 
-  protected onHealthTensionTimerExpired(decreasing: boolean): void {
-    this.cameraLockPriority = decreasing
-      ? CameraLockPriority.LockIfNotLocalPlayer
-      : CameraLockPriority.NoLock;
-  }
-
   resetMoveDirection(
     inputDirection?: InputKind.MoveLeft | InputKind.MoveRight,
   ) {
@@ -563,7 +561,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     this.targettingGfx.visible = false;
     this.perRoundState.shotsTaken++;
     // TODO: Need a middle state for while the world is still active.
-    this.cameraLockPriority = CameraLockPriority.NoLock;
+    this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
     this.fireWeaponDuration = 0;
 
     // Determine worm state based on the kind of weapon
@@ -697,7 +695,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       this.arrowSprite.visible = true;
       this.arrowSprite.update(dMs);
       this.arrowSprite.x = this.sprite.x;
-      this.arrowSprite.y = this.healthTextBox.y - 25;
+      this.arrowSprite.y = this.infoBox.container.y - 25;
     }
     if (!this.state.active && !this.body.isMoving()) {
       this.collider.setFriction(FRICTION_WHEN_IDLE);
@@ -740,7 +738,7 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       } else {
         this.weaponSprite.position.set(
           this.sprite.x -
-            (this.sprite.width + this.currentWeapon.sprite.offset.x),
+            (this.sprite.scaledWidth + this.currentWeapon.sprite.offset.x),
           this.sprite.y + this.currentWeapon.sprite.offset.y,
         );
         this.weaponSprite.rotation = this.fireAngle - Math.PI;
@@ -820,7 +818,6 @@ export class Worm extends PlayableEntity<WormRecordedState> {
     super.destroy();
     this.targettingGfx.destroy();
     this.wireframe.renderable.destroy();
-    this.healthTextBox.destroy();
     this.weaponSprite.destroy();
     this.arrowSprite.destroy();
     // XXX: This might need to be dead.
@@ -835,5 +832,9 @@ export class Worm extends PlayableEntity<WormRecordedState> {
       );
       // Sinking death
     }
+  }
+
+  public toString() {
+    return `[Worm: ${this.wormIdent.name} | ${this.wormIdent.uuid}]`;
   }
 }

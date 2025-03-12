@@ -1,4 +1,4 @@
-import { UPDATE_PRIORITY, Sprite, Point, TilingSprite } from "pixi.js";
+import { UPDATE_PRIORITY, Sprite, Point, TilingSprite, View, ViewContainer } from "pixi.js";
 import { IPhysicalEntity, OnDamageOpts } from "../entity";
 import { Water } from "../water";
 import { BodyWireframe } from "../../mixins/bodyWireframe";
@@ -10,7 +10,7 @@ import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
 import { CameraLockPriority } from "../../camera";
-import { BehaviorSubject, distinct, Observable } from "rxjs";
+import { BehaviorSubject, distinct, Observable, of } from "rxjs";
 import Logger from "../../log";
 
 const log = new Logger("PhysicsEntity");
@@ -24,6 +24,7 @@ const log = new Logger("PhysicsEntity");
  */
 export abstract class PhysicsEntity<
   T extends RecordedEntityState = RecordedEntityState,
+  S extends ViewContainer = Sprite,
 > implements IPhysicalEntity
 {
   public static readAssets({ sounds }: AssetPack) {
@@ -43,7 +44,9 @@ export abstract class PhysicsEntity<
   priority = UPDATE_PRIORITY.NORMAL;
   private splashSoundPlayback?: IMediaInstance;
 
-  public cameraLockPriority: CameraLockPriority = CameraLockPriority.NoLock;
+  protected desiredCameraLockPriority = new BehaviorSubject<CameraLockPriority>(
+    CameraLockPriority.NoLock,
+  );
 
   public get destroyed() {
     return this.isDestroyed;
@@ -56,8 +59,12 @@ export abstract class PhysicsEntity<
   private readonly bodyMoving: BehaviorSubject<boolean>;
   public readonly bodyMoving$: Observable<boolean>;
 
+  public get cameraLockPriority$() {
+    return this.desiredCameraLockPriority.asObservable();
+  }
+
   constructor(
-    public readonly sprite: Sprite | TilingSprite,
+    public readonly sprite: S,
     protected physObject: RapierPhysicsObject,
     protected gameWorld: GameWorld,
   ) {
@@ -70,10 +77,13 @@ export abstract class PhysicsEntity<
     });
     this.bodyMoving = new BehaviorSubject(false);
     this.bodyMoving$ = this.bodyMoving.pipe(distinct());
+    this.cameraLockPriority$.subscribe(s => {
+      log.info("Camera lock changed for", this.toString(), s);
+    })
   }
 
   destroy(): void {
-    this.cameraLockPriority = CameraLockPriority.NoLock;
+    this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
     this.isDestroyed = true;
     this.sprite.destroy();
     this.wireframe.renderable.destroy();
@@ -112,7 +122,7 @@ export abstract class PhysicsEntity<
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
     if (otherEnt instanceof Water) {
-      this.cameraLockPriority = CameraLockPriority.NoLock;
+      this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
 
       if (
         !this.splashSoundPlayback?.progress ||
