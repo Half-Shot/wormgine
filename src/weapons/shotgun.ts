@@ -13,7 +13,7 @@ const radius = new MetersValue(1.5);
 let fireSound: Sound;
 
 const WeaponShotgun: IWeaponDefiniton = {
-  name: "Shotgun",
+  name: "Ol' Reliable Shotgun",
   iconWidth: 64,
   icon,
   code: IWeaponCode.Shotgun,
