@@ -155,10 +155,10 @@ export class LocalGameInstance implements IRunningGameInstance {
     t: ProposedTeam,
     updates: { wormCount?: number; teamGroup?: TeamGroup },
   ): Promise<void> {
-    if (updates.teamGroup) {
+    if (updates.teamGroup !== undefined) {
       t.group = updates.teamGroup;
     }
-    if (updates.wormCount) {
+    if (updates.wormCount !== undefined) {
       t.wormCount = updates.wormCount;
     }
     this._proposedTeams.next({
