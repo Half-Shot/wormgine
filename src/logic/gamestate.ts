@@ -12,6 +12,7 @@ import {
   map,
   merge,
   skip,
+  timer,
 } from "rxjs";
 import {
   EndTurnTookDamange,
@@ -177,13 +178,17 @@ export class GameState {
       logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`),
     );
     combineLatest([
+      timer(3000),
       this.remainingRoundTimeSeconds$,
       this.roundState$,
       this.world.entitiesMoving$,
     ])
-      .pipe(filter(([seconds]) => seconds === 0))
-      .subscribe(([seconds, roundState, moving]) => {
-        logger.info("State accumulator", seconds, roundState, moving);
+      .pipe(
+        filter(([timer, seconds]) => timer === 0 && seconds === 0),
+        map(([_timer, _seconds, roundState, moving]) => [roundState, moving]),
+      )
+      .subscribe(([roundState, moving]) => {
+        logger.info("State accumulator", roundState, moving);
         if (roundState === RoundState.Preround) {
           logger.info("Moving round to playing");
           this.playerMoved();
@@ -281,7 +286,6 @@ export class GameState {
     let randomTextSet: string[];
     const { teamsDamaged, teamsKilled, wormsDamaged, wormsKilled } =
       this.roundDamageDelta;
-
 
     if (wormsKilled.has(ownWorm)) {
       randomTextSet = FireResultKilledSelf;

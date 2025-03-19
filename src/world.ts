@@ -113,10 +113,7 @@ export class GameWorld {
     public readonly rapierWorld: World,
     protected readonly ticker: Ticker,
   ) {
-    this.entitiesMoving$ = this.entitiesMoving.pipe(
-      distinctUntilChanged(),
-      debounceTime(1500),
-    );
+    this.entitiesMoving$ = this.entitiesMoving.pipe(distinctUntilChanged());
     this.entitiesMoving$.subscribe((entsMoving) => {
       logger.info(`Entities moving: ${entsMoving}`);
     });

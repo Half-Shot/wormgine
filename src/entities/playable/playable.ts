@@ -80,7 +80,7 @@ export abstract class PlayableEntity<
     if (this.isSinking) {
       return;
     }
-    this.infoBox.update(this.sprite);
+    this.infoBox.update(this.sprite, dMs);
 
     // TODO: Settling code.
     // if (!this.physObject.body.isMoving() && this.wasMoving) {
