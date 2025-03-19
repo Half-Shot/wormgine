@@ -13,17 +13,23 @@ import { Coordinate } from "../utils";
 import globalFlags from "../flags";
 import { GameWorld } from "../world";
 import { Observable } from "rxjs";
+import Logger from "../log";
 
 interface RainParticle {
   position: Point;
   length: number;
   angle: number;
   speed: number;
+  wind: number;
 }
 
-const MAX_RAIN_LENGTH = 15;
+const MAX_RAIN_LENGTH = 10;
 const MIN_RAIN_LENGTH = 6;
 const RAINDROP_COUNT = 350;
+const WIND_ADJUST_EVERY_PARTICLE = 10;
+const WIND_ADJUST_BY = 0.33;
+
+const log = new Logger('Background');
 
 /**
  * Background of the game world. Includes rain particles.
@@ -37,10 +43,14 @@ export class Background implements IGameEntity {
   ): Background {
     return new Background(screenSize, viewport, terrain, world);
   }
-  private rainSpeed = 5;
-  private rainSpeedVariation = 1;
+  private rainSpeed = 15;
+  private rainSpeedVariation = 0.65;
   private rainColor: ColorSource = "rgba(100,100,100,0.33)";
   priority = UPDATE_PRIORITY.LOW;
+
+  private currentWind = 0;
+  private targetWind = 0;
+  private windAdjustParticleCount = 0;
 
   private gradientMesh: Graphics;
 
@@ -48,12 +58,15 @@ export class Background implements IGameEntity {
   private rainParticles: RainParticle[] = [];
 
   private constructor(
-    private readonly screenSize: Observable<{ width: number; height: number }>,
+    screenSize: Observable<{ width: number; height: number }>,
     private viewport: Viewport,
     private readonly terrain: BitmapTerrain,
-    private readonly world: GameWorld,
+    world: GameWorld,
   ) {
     this.gradientMesh = new Graphics();
+    world.wind$.subscribe((wind) => {
+      this.targetWind = wind; 
+    });
     screenSize.subscribe(({ width, height }) => {
       this.gradientMesh.clear();
       const halfViewWidth = width / 2;
@@ -93,7 +106,19 @@ export class Background implements IGameEntity {
         Math.round(Math.random() * (MAX_RAIN_LENGTH - MIN_RAIN_LENGTH)),
       angle: (Math.random() - 0.5) * 15,
       speed: this.rainSpeed * (0.5 + Math.random() * this.rainSpeedVariation),
+      wind: this.currentWind,
     });
+    if (Math.abs(this.targetWind - this.currentWind) > WIND_ADJUST_BY) {
+      log.debug("Background wind off", this.targetWind, this.currentWind);
+      if (this.windAdjustParticleCount > WIND_ADJUST_EVERY_PARTICLE) {
+        this.windAdjustParticleCount = 0;
+        const adjustment = this.targetWind > this.currentWind ? WIND_ADJUST_BY : -WIND_ADJUST_BY;
+        this.currentWind += adjustment;
+        log.debug("Wind adjusted", this.currentWind);
+      } else {
+        this.windAdjustParticleCount++;
+      }
+    }
   }
 
   addToWorld(worldContainer: Container, viewport: Container) {
@@ -138,10 +163,10 @@ export class Background implements IGameEntity {
         this.addRainParticle();
         continue;
       }
-      const anglularVelocity = this.world.wind + particle.angle * 0.1;
+      const anglularVelocity = particle.wind + particle.angle * 0.1;
       particle.position.x += anglularVelocity;
       particle.position.y += particle.speed;
-      const lengthX = particle.position.x + anglularVelocity * 5;
+      const lengthX = particle.position.x + anglularVelocity * 1;
       const lengthY = particle.position.y - particle.length + anglularVelocity;
       this.rainGraphic
         .stroke({ width: 2, color: this.rainColor })
