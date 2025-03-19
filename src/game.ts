@@ -183,15 +183,18 @@ export class Game<ReloadedGameState extends object = object> {
   }
 
   public tickWorld = (dt: Ticker) => {
-    // TODO: Timing.
     const startTime = performance.now();
     this.lastPhysicsTick += dt.deltaMS;
+    if (this.lastPhysicsTick >= tickEveryMs*3) {
+      logger.warning("Game engine is lagging behind target update rate");
+    }
     // Note: If we are lagging behind terribly, this will run multiple ticks
     while (this.lastPhysicsTick >= tickEveryMs) {
       this.world.step();
       this.lastPhysicsTick -= tickEveryMs;
     }
     this.overlay?.physicsSamples.push(performance.now() - startTime);
+    this.world.updateEntities(dt);
   };
 
   public destroy() {

@@ -75,6 +75,10 @@ export class GameWorld {
   private readonly entitiesMoving = new BehaviorSubject(false);
   public readonly entitiesMoving$: Observable<boolean>;
 
+  private readonly entityUpdatePool = new Map<UPDATE_PRIORITY, Set<IGameEntity>>();
+
+  public waterYPosition = 0;
+
   private readonly physicsEntitySet = new BehaviorSubject<Set<IPhysicalEntity>>(
     new Set(),
   );
@@ -113,6 +117,11 @@ export class GameWorld {
     this.entitiesMoving$.subscribe((entsMoving) => {
       logger.info(`Entities moving: ${entsMoving}`);
     });
+    this.entityUpdatePool.set(UPDATE_PRIORITY.INTERACTION, new Set());
+    this.entityUpdatePool.set(UPDATE_PRIORITY.HIGH, new Set());
+    this.entityUpdatePool.set(UPDATE_PRIORITY.NORMAL, new Set());
+    this.entityUpdatePool.set(UPDATE_PRIORITY.LOW, new Set());
+    this.entityUpdatePool.set(UPDATE_PRIORITY.UTILITY, new Set());
   }
 
   public setWind(windSpeed: number) {
@@ -122,16 +131,24 @@ export class GameWorld {
 
   private areEntitiesMoving() {
     for (const e of this.bodyEntityMap.values()) {
-      if (e.consideredActive) {
-        return true;
-      }
-      if (
-        !e.destroyed &&
-        e.body?.isEnabled?.() &&
-        e.body?.isDynamic?.() &&
-        e.body?.isMoving?.()
-      ) {
-        return true;
+      try {
+        if (e.consideredActive) {
+          return true;
+        }
+        if (e.consideredActive === false) {
+          continue;
+        }
+        if (
+          !e.destroyed &&
+          e.body?.isEnabled?.() &&
+          e.body?.isDynamic?.() &&
+          e.body?.isMoving?.()
+        ) {
+          return true;
+        }
+      } catch (ex) {
+        logger.error("Error caught when handing", e);
+        throw ex;
       }
     }
     return false;
@@ -154,6 +171,18 @@ export class GameWorld {
       logger.verbose("contactForceEvents", event);
     });
     this.entitiesMoving.next(this.areEntitiesMoving());
+  }
+
+  public updateEntities(ticker: Ticker) {
+    // TODO: Skip update of lower pools if we're behind time.
+    for (const pool of this.entityUpdatePool.values()) {
+      for (const ent of pool) {
+        if (!ent.destroyed) {
+          // Always defined.
+          ent.update?.(ticker.deltaTime, ticker.deltaMS);
+        }
+      }
+    }
   }
 
   private onCollision(collider1: Collider, collider2: Collider) {
@@ -195,19 +224,9 @@ export class GameWorld {
     }
     const entUuid = uuid ?? globalThis.crypto.randomUUID();
     this.entities.set(entUuid, entity);
-    const tickerFn = (dt: Ticker) => {
-      if (entity.destroyed) {
-        this.ticker.remove(tickerFn);
-        this.entities.delete(entUuid);
-        return;
-      }
-      entity.update?.(dt.deltaTime, dt.deltaMS);
-    };
-    this.ticker.add(
-      tickerFn,
-      undefined,
-      entity.priority ? entity.priority : UPDATE_PRIORITY.LOW,
-    );
+    if (entity.update) {
+      this.entityUpdatePool.get(entity.priority)?.add(entity);
+    }
     return entity;
   }
 
@@ -242,9 +261,12 @@ export class GameWorld {
   }
 
   removeBody(obj: RapierPhysicsObject) {
-    this.rapierWorld.removeCollider(obj.collider, false);
-    this.rapierWorld.removeRigidBody(obj.body);
-    this.bodyEntityMap.delete(obj.collider.handle);
+    if (this.bodyEntityMap.delete(obj.collider.handle)) {
+      this.rapierWorld.removeCollider(obj.collider, false);
+      this.rapierWorld.removeRigidBody(obj.body);
+    } else {
+      logger.error("Entity already deleted!");
+    }
   }
 
   removeEntity(entity: IGameEntity) {
@@ -255,6 +277,7 @@ export class GameWorld {
       throw Error("Entity not found in world");
     }
     this.entities.delete(key);
+    this.entityUpdatePool.forEach(p => p.delete(entity));
     if (this.physicsEntitySet.value.delete(entity as PhysicsEntity)) {
       this.physicsEntitySet.next(this.physicsEntitySet.value);
     }

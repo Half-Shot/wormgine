@@ -75,8 +75,9 @@ export class BazookaShell extends TimedExplosive {
         .setLinvel(initialForce.x, initialForce.y)
         // TODO: Check
         // TODO: Friction
-        .setLinearDamping(0.05),
+        .setLinearDamping(0.05)
     );
+    body.body.addForce({ x: world.wind * 1.25, y: 0 }, false);
 
     super(sprite, body, world, parent, {
       explosionRadius: new MetersValue(2.75),
@@ -93,19 +94,19 @@ export class BazookaShell extends TimedExplosive {
 
     // Align sprite with body.
     this.rotationOffset = Math.PI / 2;
-    this.body.addForce({ x: this.gameWorld.wind * 1.25, y: 0 }, false);
   }
 
   update(dt: number, dMs: number) {
-    this.wireframe.setDebugText(
-      `${this.body.rotation()} ${Math.round(this.body.linvel().x)} ${Math.round(this.body.linvel().y)}`,
-    );
-    this.body.setRotation(angleForVector(this.body.linvel()), false);
-
     super.update(dt, dMs);
-    if (!this.physObject || this.sprite.destroyed) {
+    if (!this.physObject || this.sprite.destroyed || this.isSinking) {
       return;
     }
+    this.safeUsePhys(({body}) => {
+      body.setRotation(angleForVector(body.linvel()), false);
+      this.wireframe.setDebugText(
+        `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,
+      );
+    });
   }
 
   destroy(): void {

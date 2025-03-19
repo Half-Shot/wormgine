@@ -106,6 +106,7 @@ export default async function runScenario(game: Game) {
       world,
     ),
   );
+  world.waterYPosition = water.body.translation().y;
   water.addToWorld(game.viewport, world);
   // const worm = world.addEntity(await Worm.create(parent, world, Coordinate.fromScreen(500,400), async (worm, definition, duration) => {
   //     const newProjectile = await definition.fireFn(parent, world, worm, duration);

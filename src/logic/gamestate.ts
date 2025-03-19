@@ -18,6 +18,7 @@ import {
   FireResultHitEnemy,
   FireResultHitOwnTeam,
   FireResultKilledEnemy,
+  FireResultKilledEnemyTeam,
   FireResultKilledOwnTeam,
   FireResultKilledSelf,
   FireResultMiss,
@@ -266,7 +267,7 @@ export class GameState {
     logger.debug("beginRound", PREROUND_TIMER_MS);
   }
 
-  public getToastForRound(): string | undefined {
+  private getToastForRound(): string | undefined {
     if (!this.roundDamageDelta) {
       return;
     }
@@ -280,26 +281,32 @@ export class GameState {
     let randomTextSet: string[];
     const { teamsDamaged, teamsKilled, wormsDamaged, wormsKilled } =
       this.roundDamageDelta;
-    if (teamsKilled.has(ownTeam)) {
-      randomTextSet = FireResultKilledOwnTeam;
-    } else if (wormsKilled.has(ownWorm)) {
+    
+    console.log({ownTeam, ownWorm, teamsDamaged, wormsDamaged});
+
+    if (wormsKilled.has(ownWorm)) {
       randomTextSet = FireResultKilledSelf;
+    } else if (teamsKilled.has(ownTeam)) {
+      randomTextSet = FireResultKilledOwnTeam;
+    } else if (teamsKilled.size) {
+      randomTextSet = FireResultKilledEnemyTeam;
     } else if (wormsKilled.size) {
       randomTextSet = FireResultKilledEnemy;
-    } else if (wormsDamaged.size) {
-      randomTextSet = FireResultHitEnemy;
-    } else if (teamsDamaged.has(ownTeam)) {
-      randomTextSet = FireResultHitOwnTeam;
     } else if (wormsDamaged.has(ownWorm)) {
       // Not required, will be caught by turn end.
       randomTextSet = EndTurnTookDamange;
       return;
+    } else if (teamsDamaged.has(ownTeam)) {
+      randomTextSet = FireResultHitOwnTeam;
+    } else if (wormsDamaged.size) {
+      randomTextSet = FireResultHitEnemy;
     } else {
       randomTextSet = FireResultMiss;
     }
     return templateRandomText(randomTextSet, {
       WormName: this.currentWorm.value.name,
       TeamName: this.currentTeam.value.name,
+      OtherTeams: [...teamsKilled].map(t => this.teams.get(t)?.name ?? t).join(', '),
     });
   }
 

@@ -88,28 +88,33 @@ export abstract class TimedExplosive<
     }
     this.hasExploded = true;
     this.timer = undefined;
-    handleDamageInRadius(
-      this.gameWorld,
-      this.parent,
-      this.body.translation(),
-      this.opts.explosionRadius,
-      {
-        shrapnelMax: 35,
-        shrapnelMin: 15,
-        hue: this.opts.explosionHue ?? 0xffffff,
-        shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
-        maxDamage: this.opts.maxDamage,
-        applyCondition: this.opts.applyCondition,
-        damagesTerrain: this.opts.damagesTerrain,
-        forceMultiplier: this.opts.forceMultiplier,
-      },
-      this.physObject.collider,
-    );
-    this.destroy();
+    this.safeUsePhys(({body}) => {
+        handleDamageInRadius(
+          this.gameWorld,
+          this.parent,
+          body.translation(),
+          this.opts.explosionRadius,
+          {
+            shrapnelMax: 35,
+            shrapnelMin: 15,
+            hue: this.opts.explosionHue ?? 0xffffff,
+            shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+            maxDamage: this.opts.maxDamage,
+            applyCondition: this.opts.applyCondition,
+            damagesTerrain: this.opts.damagesTerrain,
+            forceMultiplier: this.opts.forceMultiplier,
+          },
+          this.physObject.collider,
+        );
+      this.destroy();
+    });
   }
 
   update(dt: number, dMs: number): void {
     super.update(dt, dMs);
+    if (this.isSinking) {
+      return;
+    }
     if (this.timer !== undefined) {
       if (this.timer > 0) {
         this.timer -= dt;
@@ -119,12 +124,14 @@ export abstract class TimedExplosive<
     }
   }
 
+  protected sink() {
+    super.sink();
+    this.timer = 0;
+    this.sprite.rotation = 0.15;
+  }
+
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
     if (super.onCollision(otherEnt, contactPoint)) {
-      if (this.isSinking) {
-        this.timer = 0;
-        this.physObject.body.setRotation(0.15, false);
-      }
       return true;
     }
 

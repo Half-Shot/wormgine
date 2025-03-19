@@ -46,6 +46,10 @@ export const FireResultHitEnemy = ["$WormName takes a chunk out of the enemy."];
 export const FireResultKilledEnemy = [
   "$WormName levels out the playing field.",
 ];
+export const FireResultKilledEnemyTeam = [
+  "$WormName eliminates $OtherTeams.",
+  "$OtherTeams will not be taking home any trophies"
+];
 
 export const FireResultKilledOwnTeam = [
   "$WormName appears to have gone colourblind.. that's *YOUR* team!",

@@ -112,32 +112,41 @@ export class Firework extends TimedExplosive {
   }
 
   update(dt: number, dMs: number) {
+    super.update(dt, dMs);
+    if (this.isSinking) {
+      return;
+    }
+    this.safeUsePhys(({body}) => {
+      body.setRotation(angleForVector(body.linvel()), false);
+      this.wireframe.setDebugText(
+        `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,
+      );
+      if (!this.hasExploded) {
+        const xSpeed = Math.random() * 0.5 - 0.25;
+        const kind = Math.random() >= 0.75 ? "fire" : "pop";
+        const coodinate = new Coordinate(
+          body.translation().x,
+          body.translation().y,
+        );
+        this.trail.push({
+          alpha: 1,
+          point: new Point(coodinate.screenX, coodinate.screenY),
+          speed: new Point(xSpeed, 0.5),
+          accel: new Point(
+            // Invert the accel
+            xSpeed / 2,
+            0.25,
+          ),
+          radius: 1 + Math.random() * (kind === "pop" ? 4.5 : 2.5),
+          kind,
+        });
+      }
+    });
     if (!this.sprite.destroyed) {
-      this.body.setRotation(angleForVector(this.body.linvel()), false);
-      super.update(dt, dMs);
     }
 
     this.gfx.clear();
-    if (!this.hasExploded) {
-      const xSpeed = Math.random() * 0.5 - 0.25;
-      const kind = Math.random() >= 0.75 ? "fire" : "pop";
-      const coodinate = new Coordinate(
-        this.physObject.body.translation().x,
-        this.physObject.body.translation().y,
-      );
-      this.trail.push({
-        alpha: 1,
-        point: new Point(coodinate.screenX, coodinate.screenY),
-        speed: new Point(xSpeed, 0.5),
-        accel: new Point(
-          // Invert the accel
-          xSpeed / 2,
-          0.25,
-        ),
-        radius: 1 + Math.random() * (kind === "pop" ? 4.5 : 2.5),
-        kind,
-      });
-    }
+
 
     const shrapnelHue = new Color(0xaaaaaa);
     for (const shrapnel of this.trail) {

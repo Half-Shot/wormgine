@@ -225,7 +225,7 @@ export class Worm extends PlayableEntity<
         .lockRotations(),
     );
     super(sprite, body, world, parent, wormIdent, {
-      explosionRadius: new MetersValue(5),
+      explosionRadius: new MetersValue(2.5),
       damageMultiplier: 250,
     });
     this.infoBox.$onBeginChanged.subscribe((visibleHealth) => {
@@ -288,6 +288,7 @@ export class Worm extends PlayableEntity<
   }
 
   onWormSelected(bindInput = true) {
+    logger.info("Selected worm", this.toString());
     // Tick down any conditions with timers.
     for (const [condition, turns] of this.conditions.entries()) {
       if (turns === -1) {
@@ -309,7 +310,9 @@ export class Worm extends PlayableEntity<
       teamGroupToColorSet(this.wormIdent.team.group).fg,
       true,
     );
-    this.collider.setFriction(FRICTION_WHEN_ACTIVE);
+    this.safeUsePhys(({collider}) => {
+      collider.setFriction(FRICTION_WHEN_ACTIVE);
+    });
     this.state.transition(InnerWormState.Idle);
     this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
     this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
@@ -355,7 +358,9 @@ export class Worm extends PlayableEntity<
         3000,
       );
     }
-    this.collider.setFriction(FRICTION_WHEN_IDLE);
+    this.safeUsePhys(({collider}) => {
+      collider.setFriction(FRICTION_WHEN_IDLE);
+    });
     this.state.transition(InnerWormState.Inactive);
     Controller.removeListener("inputBegin", this.onInputBegin);
     Controller.removeListener("inputEnd", this.onInputEnd);
@@ -560,7 +565,9 @@ export class Worm extends PlayableEntity<
     radius: MetersValue,
     opts: OnDamageOpts,
   ): void {
-    this.collider.setFriction(FRICTION_WHEN_ACTIVE);
+    this.safeUsePhys(({collider}) => {
+      collider.setFriction(FRICTION_WHEN_ACTIVE);
+    });
     super.onDamage(point, radius, opts);
     if (this.state.isPlaying) {
       this.state.transition(InnerWormState.Inactive);
@@ -721,10 +728,15 @@ export class Worm extends PlayableEntity<
     if (this.sprite.destroyed) {
       return;
     }
-    (this.sprite as TiledSpriteAnimated).update(dMs);
-    this.wireframe.setDebugText(
-      `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.keys().toArray().join(", ")}`,
-    );
+    this.sprite.update(dMs);
+    if (this.isSinking) {
+      return;
+    }
+    if (this.wireframe.enabled) {
+      this.wireframe.setDebugText(
+        `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.keys().toArray().join(", ")}`,
+      );
+    }
     this.weaponSprite.visible = this.state.showWeapon;
     this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
     if (this.arrowSprite.visible) {
@@ -734,7 +746,9 @@ export class Worm extends PlayableEntity<
       this.arrowSprite.y = this.infoBox.container.y - 25;
     }
     if (!this.state.active && !this.body.isMoving()) {
-      this.collider.setFriction(FRICTION_WHEN_IDLE);
+      this.safeUsePhys(({collider}) => {
+        collider.setFriction(FRICTION_WHEN_IDLE);
+      })
     }
 
     if (!this.state.shouldUpdate) {

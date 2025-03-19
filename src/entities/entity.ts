@@ -35,6 +35,7 @@ export interface IPhysicalEntity extends IGameEntity {
 
   /**
    * Override flag to mark the entity as active when it is otherwise not moving.
+   * Set to true to always be active, false to never check or otherwise check on undefined.
    */
   consideredActive?: boolean;
 

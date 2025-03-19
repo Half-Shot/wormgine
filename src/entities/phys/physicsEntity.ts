@@ -5,7 +5,7 @@ import { BodyWireframe } from "../../mixins/bodyWireframe";
 import globalFlags, { DebugLevel } from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { Vector2 } from "@dimforge/rapier2d-compat";
+import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
@@ -52,6 +52,9 @@ export abstract class PhysicsEntity<
     return this.isDestroyed;
   }
 
+  /**
+   * @deprecated Use safeUsePhys
+   */
   public get body() {
     return this.physObject.body;
   }
@@ -91,78 +94,102 @@ export abstract class PhysicsEntity<
     this.gameWorld.removeEntity(this);
   }
 
-  update(dt: number, _dMs: number): void {
-    this.bodyMoving.next(this.body.isMoving());
-    const pos = this.physObject.body.translation();
-    const rotation = this.physObject.body.rotation() + this.rotationOffset;
-    this.sprite.updateTransform({
-      x: pos.x * PIXELS_PER_METER + (this.renderOffset?.x ?? 0),
-      y: pos.y * PIXELS_PER_METER + (this.renderOffset?.y ?? 0),
-      rotation,
-    });
-
-    this.wireframe.update();
-
-    // TODO: We do need a better system for this.
-    if (this.body.translation().y > 1080 / PIXELS_PER_METER) {
-      this.isSinking = true;
-    }
-
-    // Sinking.
-    if (this.isSinking) {
-      this.physObject.body.setTranslation(
-        { x: pos.x, y: pos.y + 0.05 * dt },
-        false,
-      );
-      if (pos.y > this.sinkingY) {
-        this.destroy();
-      }
+  protected sink() {
+    this.isSinking = true;
+    this.sinkingY = (this.body.translation().y + 10) * PIXELS_PER_METER;
+    this.gameWorld.removeBody(this.physObject);
+    this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
+    if (
+      !this.splashSoundPlayback?.progress ||
+      this.splashSoundPlayback.progress === 1
+    ) {
+      // TODO: Hacks
+      Promise.resolve(PhysicsEntity.splashSound.play()).then((instance) => {
+        this.splashSoundPlayback = instance;
+      });
     }
   }
 
-  onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
-    if (otherEnt instanceof Water) {
-      this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
-
-      if (
-        !this.splashSoundPlayback?.progress ||
-        this.splashSoundPlayback.progress === 1
-      ) {
-        // TODO: Hacks
-        Promise.resolve(PhysicsEntity.splashSound.play()).then((instance) => {
-          this.splashSoundPlayback = instance;
-        });
+  update(dt: number, _dMs: number): void {
+    if (this.isSinking) {
+      this.bodyMoving.next(false);
+      log.debug("Setting new translation");
+      this.sprite.y += PIXELS_PER_METER*(_dMs/500);
+      if (this.sprite.y >= this.sinkingY) {
+        this.destroy();
       }
-      const contactY = contactPoint.y;
-      // Time to sink
-      this.isSinking = true;
-      this.sinkingY = contactY + 10;
-      // Set static.
-      this.physObject.body.setEnabled(false);
+      return;
+    }
+
+    this.safeUsePhys(({body}) => {
+      this.bodyMoving.next(body.isMoving());
+      const pos = body.translation();
+      const rotation = body.rotation() + this.rotationOffset;
+      this.sprite.updateTransform({
+        x: pos.x * PIXELS_PER_METER + (this.renderOffset?.x ?? 0),
+        y: pos.y * PIXELS_PER_METER + (this.renderOffset?.y ?? 0),
+        rotation,
+      });
+  
+      // Sinking.
+      if (body.translation().y > this.gameWorld.waterYPosition) {
+        log.debug('Splosh');
+        this.sink();
+        return;
+      }
+    
+      this.wireframe.update();
+    });
+  }
+
+  onCollision(_otherEnt: IPhysicalEntity, _contactPoint: Vector2) {
+    if (_otherEnt instanceof Water) {
       return true;
     }
     return false;
   }
 
   onDamage(point: Vector2, radius: MetersValue, _opts: OnDamageOpts): void {
-    const bodyTranslation = this.physObject.body.translation();
-    const forceMag =
-      radius.value / magnitude(sub(point, this.physObject.body.translation()));
-    const force = mult(
-      sub(point, bodyTranslation),
-      new Vector2(-forceMag, -forceMag * 1.5),
-    );
-    this.physObject.body.applyImpulse(force, true);
+    this.safeUsePhys(({body}) => {
+      const bodyTranslation = body.translation();
+      const forceMag =
+        radius.value / magnitude(sub(point, body.translation()));
+      const force = mult(
+        sub(point, bodyTranslation),
+        new Vector2(-forceMag, -forceMag * 1.5),
+      );
+      body.applyImpulse(force, true);
+    });
   }
 
   applyState(state: T): void {
-    log.debug("Applying state", state);
-    this.body.setTranslation(state.tra, true);
+    this.safeUsePhys(({body}) => {
+      log.debug("Applying state", state);
+      body.setTranslation(state.tra, true);
+    });
     // this.body.setLinvel(state.vel, true);
     // this.body.setRotation(state.rot, true);
   }
 
   recordState(): T {
+    if (this.destroyed) {
+      throw Error("Can't record state of a destroyed entity");
+    }
+    if (this.isSinking) {
+      return {
+        type: -1,
+        tra: {
+          x: 0,
+          y: 0,
+        },
+        rot: 0,
+        vel: {
+          x: 0,
+          y: 0,
+        },
+        sinking: this.isSinking,
+      } as T;
+    }
     const translation = this.body.translation();
     const rotation = this.body.rotation();
     const linvel = this.body.linvel();
@@ -178,5 +205,14 @@ export abstract class PhysicsEntity<
         y: linvel.y,
       },
     } as T;
+  }
+
+  protected safeUsePhys(fn: (body: RapierPhysicsObject) => void) {
+    if (this.isSinking || this.destroyed) {
+      const stacktrace = new Error().stack;
+      log.warning(`Tried to use body (for ${this.toString()}) after sinking / destroyed, this WILL CAUSE BUGS`, stacktrace);
+      return;
+    }
+    fn(this.physObject);
   }
 }

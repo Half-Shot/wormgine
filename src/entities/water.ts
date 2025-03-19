@@ -14,7 +14,7 @@ import {
   PIXELS_PER_METER,
   RapierPhysicsObject,
 } from "../world";
-import { ColliderDesc, RigidBodyDesc } from "@dimforge/rapier2d-compat";
+import { ColliderDesc, Cuboid, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils";
 
 /**
@@ -29,6 +29,9 @@ export class Water implements IPhysicalEntity {
   priority = UPDATE_PRIORITY.LOW;
   private readonly geometry: Geometry;
   private readonly waterMesh: Mesh<Geometry, Shader>;
+
+  // Never active.
+  consideredActive = false;
 
   public get destroyed() {
     // Water cannot be destroyed
@@ -98,9 +101,8 @@ export class Water implements IPhysicalEntity {
         },
       },
     });
-    // TODO: Potentially optimise into a polyline?
     this.physObject = world.createRigidBodyCollider(
-      ColliderDesc.cuboid(width.value, 6).setSensor(true),
+      ColliderDesc.cuboid(width.value/10, 6).setSensor(true),
       // .setCollisionGroups(Water.collisionBitmask)
       // .setSolverGroups(Water.collisionBitmask),
       RigidBodyDesc.fixed().setTranslation(0, height.value),
@@ -124,6 +126,7 @@ export class Water implements IPhysicalEntity {
   addToWorld(parent: Container, world: GameWorld) {
     parent.addChildAt(this.waterMesh, Math.max(0, parent.children.length - 1));
     world.addBody(this, this.physObject.collider);
+    world.waterYPosition = this.body.translation().y - (this.physObject.collider.shape as Cuboid).halfExtents.y;
   }
 
   update(): void {

@@ -118,7 +118,7 @@ export class Mine extends TimedExplosive {
 
   update(dt: number, dMs: number) {
     super.update(dt, dMs);
-    if (this.sprite.destroyed) {
+    if (this.sprite.destroyed || this.isSinking) {
       return;
     }
     if (

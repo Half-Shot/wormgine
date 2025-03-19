@@ -11,7 +11,10 @@ export interface RecordedEntityState {
   rot: number;
   // Linear velocity
   vel: { x: number; y: number };
+  // state
+  sinking?: boolean;
 }
+
 
 export enum StateRecordKind {
   Header = "header",

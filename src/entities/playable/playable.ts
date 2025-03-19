@@ -28,7 +28,6 @@ interface Opts {
   damageMultiplier: number;
 }
 
-// This is clearly not milliseconds, something is odd about our dt.
 const SELF_EXPLODE_MAX_DAMAGE = 25;
 
 export interface PlayableRecordedState extends RecordedEntityState {
@@ -84,6 +83,9 @@ export abstract class PlayableEntity<
       // TODO: Feels totally unnessacery.
       return;
     }
+    if (this.isSinking) {
+      return;
+    }
     this.infoBox.update(this.sprite);
 
     // TODO: Settling code.
@@ -128,11 +130,6 @@ export abstract class PlayableEntity<
     contactPoint: Vector2,
   ): boolean {
     if (super.onCollision(otherEnt, contactPoint)) {
-      if (this.isSinking) {
-        this.wormIdent.setHealth(0);
-        this.infoBox.destroy();
-        this.physObject.body.setRotation(DEG_TO_RAD * 180, false);
-      }
       return true;
     }
     return false;
@@ -252,7 +249,12 @@ export abstract class PlayableEntity<
   }
 
   public destroy(): void {
-    this.infoBox.destroy();
     super.destroy();
+    this.infoBox.destroy();
+  }
+
+  protected sink(): void {
+    super.sink();
+    this.wormIdent.setHealth(0);
   }
 }

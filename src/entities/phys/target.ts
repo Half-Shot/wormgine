@@ -66,21 +66,23 @@ export class WeaponTarget extends PhysicsEntity {
       throw Error("Tried to explode twice");
     }
     this.hasExploded = true;
-    handleDamageInRadius(
-      this.gameWorld,
-      this.parent,
-      this.body.translation(),
-      this.opts.explosionRadius ?? new MetersValue(2),
-      {
-        shrapnelMax: 35,
-        shrapnelMin: 15,
-        hue: this.opts.explosionHue ?? 0xffffff,
-        shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
-        maxDamage: 0,
-      },
-      this.physObject.collider,
-    );
-    this.destroy();
+    this.safeUsePhys(({body}) => {
+      handleDamageInRadius(
+        this.gameWorld,
+        this.parent,
+        body.translation(),
+        this.opts.explosionRadius ?? new MetersValue(2),
+        {
+          shrapnelMax: 35,
+          shrapnelMin: 15,
+          hue: this.opts.explosionHue ?? 0xffffff,
+          shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+          maxDamage: 0,
+        },
+        this.physObject.collider,
+      );
+      this.destroy();
+    });
   }
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {

@@ -134,7 +134,7 @@ export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
 
   update(dt: number, dMs: number) {
     super.update(dt, dMs);
-    if (!this.physObject || this.sprite.destroyed) {
+    if (!this.physObject || this.sprite.destroyed || this.isSinking) {
       return;
     }
     this.lastPathAdjustment += dt;
@@ -162,22 +162,26 @@ export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
     if (this.hasActivated && this.lastPathAdjustment >= ADJUSTMENT_TIME_MS) {
       this.lastPathAdjustment = 0;
       const [nextOrLastItem] = this.forcePath.splice(0, 1);
-      if (nextOrLastItem) {
-        const translation = this.body.translation();
-        const impulse = mult(
-          new Vector2(
-            nextOrLastItem.worldX - translation.x,
-            nextOrLastItem.worldY - translation.y,
-          ),
-          forceMult,
-        );
-        this.body.setLinvel(impulse, true);
-      }
+      this.safeUsePhys(({body}) => {
+        if (nextOrLastItem) {
+          const translation = body.translation();
+          const impulse = mult(
+            new Vector2(
+              nextOrLastItem.worldX - translation.x,
+              nextOrLastItem.worldY - translation.y,
+            ),
+            forceMult,
+          );
+          body.setLinvel(impulse, true);
+        }
+      })
     }
-    this.body.setRotation(angleForVector(this.body.linvel()), false);
-    this.wireframe.setDebugText(
-      `${this.lastPathAdjustment}t ${this.body.rotation()}  ${Math.round(this.body.linvel().x)} ${Math.round(this.body.linvel().y)} ${this.hasActivated ? "act" : "noact"}`,
-    );
+    this.safeUsePhys(({body}) => {
+      body.setRotation(angleForVector(body.linvel()), false);
+      this.wireframe.setDebugText(
+        `${this.lastPathAdjustment}t ${body.rotation()}  ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)} ${this.hasActivated ? "act" : "noact"}`,
+      );
+    });
   }
 
   destroy(): void {
