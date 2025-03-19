@@ -15,7 +15,6 @@ export interface RecordedEntityState {
   sinking?: boolean;
 }
 
-
 export enum StateRecordKind {
   Header = "header",
   EntitySync = "ent_sync",

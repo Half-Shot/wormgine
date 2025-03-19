@@ -129,9 +129,9 @@ export class Grenade extends TimedExplosive {
       return true;
     }
     if (otherEnt instanceof PlayableEntity) {
-      this.safeUsePhys(({body}) => {
+      this.safeUsePhys(({ body }) => {
         body.collider(0).setFriction(0.95);
-      })
+      });
     }
     // We don't explode, but we do make a noise.
     if (otherEnt instanceof BitmapTerrain === false) {

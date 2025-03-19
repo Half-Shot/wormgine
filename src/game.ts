@@ -185,7 +185,7 @@ export class Game<ReloadedGameState extends object = object> {
   public tickWorld = (dt: Ticker) => {
     const startTime = performance.now();
     this.lastPhysicsTick += dt.deltaMS;
-    if (this.lastPhysicsTick >= tickEveryMs*3) {
+    if (this.lastPhysicsTick >= tickEveryMs * 3) {
       logger.warning("Game engine is lagging behind target update rate");
     }
     // Note: If we are lagging behind terribly, this will run multiple ticks

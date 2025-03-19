@@ -153,10 +153,22 @@ function RegistrationForm({
           Error: <span>{error}</span>
         </p>
       )}
-      <form disabled={loginInProgress} onSubmit={onSubmit}>
-        <input type="text" placeholder="username" id="username"></input>
-        <input type="password" placeholder="password" id="password"></input>
-        <button type="submit">Register</button>
+      <form onSubmit={onSubmit}>
+        <input
+          disabled={loginInProgress}
+          type="text"
+          placeholder="username"
+          id="username"
+        ></input>
+        <input
+          disabled={loginInProgress}
+          type="password"
+          placeholder="password"
+          id="password"
+        ></input>
+        <button disabled={loginInProgress} type="submit">
+          Register
+        </button>
       </form>
       <button onClick={onBack}>Back to login</button>
     </section>
@@ -225,10 +237,22 @@ function LoginForm({
           Error: <span>{error}</span>
         </p>
       )}
-      <form disabled={loginInProgress} onSubmit={onSubmit}>
-        <input type="text" placeholder="username" id="username"></input>
-        <input type="password" placeholder="password" id="password"></input>
-        <button type="submit">Login</button>
+      <form onSubmit={onSubmit}>
+        <input
+          disabled={loginInProgress}
+          type="text"
+          placeholder="username"
+          id="username"
+        ></input>
+        <input
+          disabled={loginInProgress}
+          type="password"
+          placeholder="password"
+          id="password"
+        ></input>
+        <button disabled={loginInProgress} type="submit">
+          Login
+        </button>
       </form>
       {config.registrationToken && (
         <button onClick={() => setShowRegForm(true)}>

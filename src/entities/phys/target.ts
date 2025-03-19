@@ -66,7 +66,7 @@ export class WeaponTarget extends PhysicsEntity {
       throw Error("Tried to explode twice");
     }
     this.hasExploded = true;
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       handleDamageInRadius(
         this.gameWorld,
         this.parent,

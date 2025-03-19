@@ -75,7 +75,7 @@ export class BazookaShell extends TimedExplosive {
         .setLinvel(initialForce.x, initialForce.y)
         // TODO: Check
         // TODO: Friction
-        .setLinearDamping(0.05)
+        .setLinearDamping(0.05),
     );
     body.body.addForce({ x: world.wind * 1.25, y: 0 }, false);
 
@@ -101,7 +101,7 @@ export class BazookaShell extends TimedExplosive {
     if (!this.physObject || this.sprite.destroyed || this.isSinking) {
       return;
     }
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       body.setRotation(angleForVector(body.linvel()), false);
       this.wireframe.setDebugText(
         `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,

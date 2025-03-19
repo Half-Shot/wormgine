@@ -5,7 +5,7 @@ import { BodyWireframe } from "../../mixins/bodyWireframe";
 import globalFlags, { DebugLevel } from "../../flags";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { RigidBody, Vector2 } from "@dimforge/rapier2d-compat";
+import { Vector2 } from "@dimforge/rapier2d-compat";
 import { magnitude, MetersValue, mult, sub } from "../../utils";
 import { AssetPack } from "../../assets";
 import type { RecordedEntityState } from "../../state/model";
@@ -110,18 +110,18 @@ export abstract class PhysicsEntity<
     }
   }
 
-  update(dt: number, _dMs: number): void {
+  update(_dt: number, _dMs: number): void {
     if (this.isSinking) {
       this.bodyMoving.next(false);
       log.debug("Setting new translation");
-      this.sprite.y += PIXELS_PER_METER*(_dMs/500);
+      this.sprite.y += PIXELS_PER_METER * (_dMs / 500);
       if (this.sprite.y >= this.sinkingY) {
         this.destroy();
       }
       return;
     }
 
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       this.bodyMoving.next(body.isMoving());
       const pos = body.translation();
       const rotation = body.rotation() + this.rotationOffset;
@@ -130,14 +130,14 @@ export abstract class PhysicsEntity<
         y: pos.y * PIXELS_PER_METER + (this.renderOffset?.y ?? 0),
         rotation,
       });
-  
+
       // Sinking.
       if (body.translation().y > this.gameWorld.waterYPosition) {
-        log.debug('Splosh');
+        log.debug("Splosh");
         this.sink();
         return;
       }
-    
+
       this.wireframe.update();
     });
   }
@@ -150,10 +150,9 @@ export abstract class PhysicsEntity<
   }
 
   onDamage(point: Vector2, radius: MetersValue, _opts: OnDamageOpts): void {
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       const bodyTranslation = body.translation();
-      const forceMag =
-        radius.value / magnitude(sub(point, body.translation()));
+      const forceMag = radius.value / magnitude(sub(point, body.translation()));
       const force = mult(
         sub(point, bodyTranslation),
         new Vector2(-forceMag, -forceMag * 1.5),
@@ -163,7 +162,7 @@ export abstract class PhysicsEntity<
   }
 
   applyState(state: T): void {
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       log.debug("Applying state", state);
       body.setTranslation(state.tra, true);
     });
@@ -210,7 +209,10 @@ export abstract class PhysicsEntity<
   protected safeUsePhys(fn: (body: RapierPhysicsObject) => void) {
     if (this.isSinking || this.destroyed) {
       const stacktrace = new Error().stack;
-      log.warning(`Tried to use body (for ${this.toString()}) after sinking / destroyed, this WILL CAUSE BUGS`, stacktrace);
+      log.warning(
+        `Tried to use body (for ${this.toString()}) after sinking / destroyed, this WILL CAUSE BUGS`,
+        stacktrace,
+      );
       return;
     }
     fn(this.physObject);

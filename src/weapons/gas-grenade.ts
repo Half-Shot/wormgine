@@ -36,7 +36,7 @@ export const WeaponGasGrenade: IWeaponDefiniton = {
     }
     const { position, force } = projectileWeaponHelper(
       worm.position,
-      opts.duration/50,
+      opts.duration / 50,
       opts.angle,
     );
     return GasGrenade.create(parent, world, position, force, 3, worm.wormIdent);

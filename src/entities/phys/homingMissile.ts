@@ -162,7 +162,7 @@ export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
     if (this.hasActivated && this.lastPathAdjustment >= ADJUSTMENT_TIME_MS) {
       this.lastPathAdjustment = 0;
       const [nextOrLastItem] = this.forcePath.splice(0, 1);
-      this.safeUsePhys(({body}) => {
+      this.safeUsePhys(({ body }) => {
         if (nextOrLastItem) {
           const translation = body.translation();
           const impulse = mult(
@@ -174,9 +174,9 @@ export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
           );
           body.setLinvel(impulse, true);
         }
-      })
+      });
     }
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       body.setRotation(angleForVector(body.linvel()), false);
       this.wireframe.setDebugText(
         `${this.lastPathAdjustment}t ${body.rotation()}  ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)} ${this.hasActivated ? "act" : "noact"}`,

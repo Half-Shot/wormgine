@@ -102,7 +102,7 @@ export class Water implements IPhysicalEntity {
       },
     });
     this.physObject = world.createRigidBodyCollider(
-      ColliderDesc.cuboid(width.value/10, 6).setSensor(true),
+      ColliderDesc.cuboid(width.value / 10, 6).setSensor(true),
       // .setCollisionGroups(Water.collisionBitmask)
       // .setSolverGroups(Water.collisionBitmask),
       RigidBodyDesc.fixed().setTranslation(0, height.value),
@@ -126,7 +126,9 @@ export class Water implements IPhysicalEntity {
   addToWorld(parent: Container, world: GameWorld) {
     parent.addChildAt(this.waterMesh, Math.max(0, parent.children.length - 1));
     world.addBody(this, this.physObject.collider);
-    world.waterYPosition = this.body.translation().y - (this.physObject.collider.shape as Cuboid).halfExtents.y;
+    world.waterYPosition =
+      this.body.translation().y -
+      (this.physObject.collider.shape as Cuboid).halfExtents.y;
   }
 
   update(): void {

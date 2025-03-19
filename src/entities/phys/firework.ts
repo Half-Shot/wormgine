@@ -116,7 +116,7 @@ export class Firework extends TimedExplosive {
     if (this.isSinking) {
       return;
     }
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       body.setRotation(angleForVector(body.linvel()), false);
       this.wireframe.setDebugText(
         `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,
@@ -142,11 +142,8 @@ export class Firework extends TimedExplosive {
         });
       }
     });
-    if (!this.sprite.destroyed) {
-    }
 
     this.gfx.clear();
-
 
     const shrapnelHue = new Color(0xaaaaaa);
     for (const shrapnel of this.trail) {

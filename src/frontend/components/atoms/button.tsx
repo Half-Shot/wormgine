@@ -10,7 +10,7 @@ export default function Button({
 }: {
   children: ComponentChildren;
   kind?: "normal" | "error";
-} & JSX.HTMLAttributes<HTMLButtonElement>) {
+} & JSX.AllHTMLAttributes<HTMLButtonElement>) {
   return (
     <button {...props} className={clsx(styles.button, styles[kind])}>
       {children}

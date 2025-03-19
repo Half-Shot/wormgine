@@ -88,24 +88,24 @@ export abstract class TimedExplosive<
     }
     this.hasExploded = true;
     this.timer = undefined;
-    this.safeUsePhys(({body}) => {
-        handleDamageInRadius(
-          this.gameWorld,
-          this.parent,
-          body.translation(),
-          this.opts.explosionRadius,
-          {
-            shrapnelMax: 35,
-            shrapnelMin: 15,
-            hue: this.opts.explosionHue ?? 0xffffff,
-            shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
-            maxDamage: this.opts.maxDamage,
-            applyCondition: this.opts.applyCondition,
-            damagesTerrain: this.opts.damagesTerrain,
-            forceMultiplier: this.opts.forceMultiplier,
-          },
-          this.physObject.collider,
-        );
+    this.safeUsePhys(({ body }) => {
+      handleDamageInRadius(
+        this.gameWorld,
+        this.parent,
+        body.translation(),
+        this.opts.explosionRadius,
+        {
+          shrapnelMax: 35,
+          shrapnelMin: 15,
+          hue: this.opts.explosionHue ?? 0xffffff,
+          shrapnelHue: this.opts.explosionShrapnelHue ?? 0xffffff,
+          maxDamage: this.opts.maxDamage,
+          applyCondition: this.opts.applyCondition,
+          damagesTerrain: this.opts.damagesTerrain,
+          forceMultiplier: this.opts.forceMultiplier,
+        },
+        this.physObject.collider,
+      );
       this.destroy();
     });
   }

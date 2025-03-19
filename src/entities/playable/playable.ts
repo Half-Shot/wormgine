@@ -1,10 +1,4 @@
-import {
-  Point,
-  Sprite,
-  UPDATE_PRIORITY,
-  DEG_TO_RAD,
-  ViewContainer,
-} from "pixi.js";
+import { Point, Sprite, UPDATE_PRIORITY, ViewContainer } from "pixi.js";
 import { PhysicsEntity } from "../phys/physicsEntity";
 import { GameWorld, RapierPhysicsObject } from "../../world";
 import { magnitude, MetersValue, mult, sub } from "../../utils";

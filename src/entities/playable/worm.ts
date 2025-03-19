@@ -310,7 +310,7 @@ export class Worm extends PlayableEntity<
       teamGroupToColorSet(this.wormIdent.team.group).fg,
       true,
     );
-    this.safeUsePhys(({collider}) => {
+    this.safeUsePhys(({ collider }) => {
       collider.setFriction(FRICTION_WHEN_ACTIVE);
     });
     this.state.transition(InnerWormState.Idle);
@@ -358,7 +358,7 @@ export class Worm extends PlayableEntity<
         3000,
       );
     }
-    this.safeUsePhys(({collider}) => {
+    this.safeUsePhys(({ collider }) => {
       collider.setFriction(FRICTION_WHEN_IDLE);
     });
     this.state.transition(InnerWormState.Inactive);
@@ -565,7 +565,7 @@ export class Worm extends PlayableEntity<
     radius: MetersValue,
     opts: OnDamageOpts,
   ): void {
-    this.safeUsePhys(({collider}) => {
+    this.safeUsePhys(({ collider }) => {
       collider.setFriction(FRICTION_WHEN_ACTIVE);
     });
     super.onDamage(point, radius, opts);
@@ -746,9 +746,9 @@ export class Worm extends PlayableEntity<
       this.arrowSprite.y = this.infoBox.container.y - 25;
     }
     if (!this.state.active && !this.body.isMoving()) {
-      this.safeUsePhys(({collider}) => {
+      this.safeUsePhys(({ collider }) => {
         collider.setFriction(FRICTION_WHEN_IDLE);
-      })
+      });
     }
 
     if (!this.state.shouldUpdate) {

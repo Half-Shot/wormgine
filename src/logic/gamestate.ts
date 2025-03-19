@@ -281,8 +281,8 @@ export class GameState {
     let randomTextSet: string[];
     const { teamsDamaged, teamsKilled, wormsDamaged, wormsKilled } =
       this.roundDamageDelta;
-    
-    console.log({ownTeam, ownWorm, teamsDamaged, wormsDamaged});
+
+    console.log({ ownTeam, ownWorm, teamsDamaged, wormsDamaged });
 
     if (wormsKilled.has(ownWorm)) {
       randomTextSet = FireResultKilledSelf;
@@ -306,7 +306,9 @@ export class GameState {
     return templateRandomText(randomTextSet, {
       WormName: this.currentWorm.value.name,
       TeamName: this.currentTeam.value.name,
-      OtherTeams: [...teamsKilled].map(t => this.teams.get(t)?.name ?? t).join(', '),
+      OtherTeams: [...teamsKilled]
+        .map((t) => this.teams.get(t)?.name ?? t)
+        .join(", "),
     });
   }
 

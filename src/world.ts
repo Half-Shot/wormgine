@@ -75,7 +75,10 @@ export class GameWorld {
   private readonly entitiesMoving = new BehaviorSubject(false);
   public readonly entitiesMoving$: Observable<boolean>;
 
-  private readonly entityUpdatePool = new Map<UPDATE_PRIORITY, Set<IGameEntity>>();
+  private readonly entityUpdatePool = new Map<
+    UPDATE_PRIORITY,
+    Set<IGameEntity>
+  >();
 
   public waterYPosition = 0;
 
@@ -277,7 +280,7 @@ export class GameWorld {
       throw Error("Entity not found in world");
     }
     this.entities.delete(key);
-    this.entityUpdatePool.forEach(p => p.delete(entity));
+    this.entityUpdatePool.forEach((p) => p.delete(entity));
     if (this.physicsEntitySet.value.delete(entity as PhysicsEntity)) {
       this.physicsEntitySet.next(this.physicsEntitySet.value);
     }

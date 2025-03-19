@@ -48,7 +48,7 @@ export const FireResultKilledEnemy = [
 ];
 export const FireResultKilledEnemyTeam = [
   "$WormName eliminates $OtherTeams.",
-  "$OtherTeams will not be taking home any trophies"
+  "$OtherTeams will not be taking home any trophies",
 ];
 
 export const FireResultKilledOwnTeam = [
