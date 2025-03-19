@@ -1,12 +1,4 @@
-import {
-  Color,
-  Container,
-  Graphics,
-  Point,
-  Sprite,
-  Texture,
-  UPDATE_PRIORITY,
-} from "pixi.js";
+import { Container, Sprite, Texture, UPDATE_PRIORITY } from "pixi.js";
 import { TimedExplosive } from "./timedExplosive";
 import { IPhysicalEntity } from "../entity";
 import { IMediaInstance, Sound } from "@pixi/sound";

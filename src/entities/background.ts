@@ -29,7 +29,7 @@ const RAINDROP_COUNT = 350;
 const WIND_ADJUST_EVERY_PARTICLE = 10;
 const WIND_ADJUST_BY = 0.33;
 
-const log = new Logger('Background');
+const log = new Logger("Background");
 
 /**
  * Background of the game world. Includes rain particles.
@@ -65,7 +65,7 @@ export class Background implements IGameEntity {
   ) {
     this.gradientMesh = new Graphics();
     world.wind$.subscribe((wind) => {
-      this.targetWind = wind; 
+      this.targetWind = wind;
     });
     screenSize.subscribe(({ width, height }) => {
       this.gradientMesh.clear();
@@ -112,7 +112,8 @@ export class Background implements IGameEntity {
       log.debug("Background wind off", this.targetWind, this.currentWind);
       if (this.windAdjustParticleCount > WIND_ADJUST_EVERY_PARTICLE) {
         this.windAdjustParticleCount = 0;
-        const adjustment = this.targetWind > this.currentWind ? WIND_ADJUST_BY : -WIND_ADJUST_BY;
+        const adjustment =
+          this.targetWind > this.currentWind ? WIND_ADJUST_BY : -WIND_ADJUST_BY;
         this.currentWind += adjustment;
         log.debug("Wind adjusted", this.currentWind);
       } else {
