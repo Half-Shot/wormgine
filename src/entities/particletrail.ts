@@ -14,30 +14,33 @@ import { randomChoice } from "../utils";
  * Standard, reusable particle trail.
  */
 
-
 interface Opts {
   colours: {
-    color: ColorSource,
-    chance: number,
-    size: number,
-  }[], 
+    color: ColorSource;
+    chance: number;
+    size: number;
+  }[];
 }
 
 const DEFAULT_OPTS: Opts = {
-  colours: [{
-    color: 0xaaaaaa,
-    chance: 7,
-    size: 5,
-  },{
-    color: 0xfd4301,
-    chance: 2,
-    size: 3,
-  },{
-    color: 0xfde101,
-    chance: 1,
-    size: 2,
-  }]
-}
+  colours: [
+    {
+      color: 0xaaaaaa,
+      chance: 7,
+      size: 5,
+    },
+    {
+      color: 0xfd4301,
+      chance: 2,
+      size: 3,
+    },
+    {
+      color: 0xfde101,
+      chance: 1,
+      size: 2,
+    },
+  ],
+};
 
 export class ParticleTrail implements IGameEntity {
   priority = UPDATE_PRIORITY.LOW;
@@ -66,7 +69,7 @@ export class ParticleTrail implements IGameEntity {
     return ent;
   }
 
-  private readonly chanceArray: {color: ColorSource, size: number}[];
+  private readonly chanceArray: { color: ColorSource; size: number }[];
 
   private constructor(
     private readonly parent: ObservablePoint,
@@ -75,14 +78,16 @@ export class ParticleTrail implements IGameEntity {
   ) {
     this.gfx = new Graphics();
     this.chanceArray = [];
-    for (const {color, chance, size} of opts.colours) {
-      this.chanceArray.push(...Array.from({ length: chance}).map(() => ({color, size})));
+    for (const { color, chance, size } of opts.colours) {
+      this.chanceArray.push(
+        ...Array.from({ length: chance }).map(() => ({ color, size })),
+      );
     }
   }
 
   update(dt: number) {
     const xSpeed = Math.random() * 0.5 - 0.25;
-    const {color, size} = randomChoice(this.chanceArray);
+    const { color, size } = randomChoice(this.chanceArray);
     if (!this.parentObject.destroyed && !this.parentObject.sinking) {
       this.trail.push({
         alpha: 1,
@@ -93,7 +98,7 @@ export class ParticleTrail implements IGameEntity {
           xSpeed / 2,
           0.25,
         ),
-        radius: 1 + (Math.random() * size),
+        radius: 1 + Math.random() * size,
         color,
       });
     }
