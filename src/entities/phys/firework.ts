@@ -23,6 +23,7 @@ import { BitmapTerrain } from "../bitmapTerrain";
 import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
 import { WormInstance } from "../../logic";
+import { ParticleTrail } from "../particletrail";
 
 const COLOUR_SET = [0x08ff08, 0xffcf00, 0xfe1493, 0xff5555, 0x00fdff, 0xccff02];
 
@@ -42,15 +43,6 @@ export class Firework extends TimedExplosive {
   private static texture: Texture;
   private static screamSound: Sound;
   private scream?: Promise<IMediaInstance>;
-  private readonly gfx: Graphics;
-  private trail: {
-    point: Point;
-    speed: Point;
-    accel: Point;
-    radius: number;
-    alpha: number;
-    kind: "fire" | "pop";
-  }[] = [];
 
   priority = UPDATE_PRIORITY.LOW;
 
@@ -62,7 +54,9 @@ export class Firework extends TimedExplosive {
     owner?: WormInstance,
   ) {
     const ent = new Firework(position, world, parent, force, owner);
-    parent.addChild(ent.sprite, ent.wireframe.renderable, ent.gfx);
+    parent.addChild(ent.sprite, ent.wireframe.renderable);
+    const trail = ParticleTrail.create(parent, ent.sprite.position, ent);
+    world.addEntity(trail);
     return ent;
   }
 
@@ -108,12 +102,11 @@ export class Firework extends TimedExplosive {
     });
     this.rotationOffset = Math.PI / 2;
     this.scream = Promise.resolve(Firework.screamSound.play());
-    this.gfx = new Graphics();
   }
 
   update(dt: number, dMs: number) {
     super.update(dt, dMs);
-    if (this.isSinking) {
+    if (!this.physObject || this.sprite.destroyed || this.isSinking) {
       return;
     }
     this.safeUsePhys(({ body }) => {
@@ -121,57 +114,7 @@ export class Firework extends TimedExplosive {
       this.wireframe.setDebugText(
         `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,
       );
-      if (!this.hasExploded) {
-        const xSpeed = Math.random() * 0.5 - 0.25;
-        const kind = Math.random() >= 0.75 ? "fire" : "pop";
-        const coodinate = new Coordinate(
-          body.translation().x,
-          body.translation().y,
-        );
-        this.trail.push({
-          alpha: 1,
-          point: new Point(coodinate.screenX, coodinate.screenY),
-          speed: new Point(xSpeed, 0.5),
-          accel: new Point(
-            // Invert the accel
-            xSpeed / 2,
-            0.25,
-          ),
-          radius: 1 + Math.random() * (kind === "pop" ? 4.5 : 2.5),
-          kind,
-        });
-      }
     });
-
-    this.gfx.clear();
-
-    const shrapnelHue = new Color(0xaaaaaa);
-    for (const shrapnel of this.trail) {
-      shrapnel.speed.x += shrapnel.accel.x * dt;
-      shrapnel.speed.y += shrapnel.accel.y * dt;
-      shrapnel.point.x += shrapnel.speed.x * dt;
-      shrapnel.point.y += shrapnel.speed.y * dt;
-      shrapnel.alpha = Math.max(0, shrapnel.alpha - Math.random() * dt * 0.03);
-      if (shrapnel.alpha === 0) {
-        this.trail.splice(this.trail.indexOf(shrapnel), 1);
-      }
-      if (shrapnel.kind === "pop") {
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius)
-          .fill({ color: shrapnelHue, alpha: shrapnel.alpha });
-      } else {
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius)
-          .fill({ color: 0xfd4301, alpha: shrapnel.alpha });
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius - 3)
-          .fill({ color: 0xfde101, alpha: shrapnel.alpha });
-      }
-    }
-
-    if (this.trail.length === 0 && this.hasExploded) {
-      this.destroy();
-    }
   }
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
@@ -184,7 +127,6 @@ export class Firework extends TimedExplosive {
       return true;
     }
     if (otherEnt instanceof BitmapTerrain || otherEnt === this) {
-      // Meh.
       return false;
     }
     return false;
@@ -198,17 +140,6 @@ export class Firework extends TimedExplosive {
   }
 
   destroy(): void {
-    if (this.trail.length) {
-      super.destroy();
-      this.isDestroyed = false;
-      // Skip until the trail has gone
-      return;
-    }
-    this.scream?.then((b) => {
-      b.stop();
-    });
-    this.gfx.clear();
-    this.gfx.destroy();
-    this.isDestroyed = true;
+    super.destroy();
   }
 }
