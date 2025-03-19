@@ -4,7 +4,7 @@ import { GameRules, GameState } from "../../../src/logic/gamestate";
 import { GameWorld } from "../../../src/world";
 import { DefaultWeaponSchema } from "../../../src/weapons/schema";
 import { of } from "rxjs";
-import { FireResultHitEnemy, templateRandomText, templateText } from "../../../src/text/toasts";
+import { FireResultHitEnemy, FireResultHitOwnTeam, FireResultKilledEnemy, FireResultKilledEnemyTeam, FireResultKilledOwnTeam, templateRandomText, templateText } from "../../../src/text/toasts";
 
 const DEAD_WORM: WormIdentity = {
   name: "fishbait",
@@ -53,6 +53,18 @@ const BLUE_TEAM: TeamDefinition = {
   ammo: {},
   playerUserId: null,
   uuid: "blue",
+}
+const YELLOW_TEAM: TeamDefinition = {
+  name: "Sickly Yellows",
+  group: TeamGroup.Yellow,
+  worms: [{
+    name: "Flu-y Florence",
+    health: 75,
+    maxHealth: 100,
+  }],
+  ammo: {},
+  playerUserId: null,
+  uuid: "yellow",
 }
 
 const DefaultRules: GameRules = {
@@ -120,7 +132,7 @@ describe('GameState', () => {
       completeRound(gameState);
       // Kill the blues.
       blueTeam.worms[0].setHealth(0);
-      // expect(gameState.advanceRound()).toEqual({ winningTeams: [redTeam, redTeam2] });
+      expect(gameState.advanceRound()).toEqual({ winningTeams: [redTeam, redTeam2] });
     });
 
     test('should handle the first round', () => {
@@ -186,18 +198,56 @@ describe('GameState', () => {
     });
   });
   describe('Toast calculation', () => {
-    test('should show a toast when the enemy was hit', () => {
-      const gameState = new GameState([RED_TEAM, BLUE_TEAM], world, DefaultRules);
+    function initiateRound() {
+      const gameState = new GameState([RED_TEAM, BLUE_TEAM, YELLOW_TEAM], world, DefaultRules);
       const [redTeam, blueTeam] = gameState.getActiveTeams();
       gameState.advanceRound();
       gameState.beginRound();
       gameState.markAsFinished();
-      // Take damage
+      return { gameState, redTeam, blueTeam };
+    }
+
+    test('should show correct toast when the enemy was hit', () => {
+      const {gameState, redTeam, blueTeam} = initiateRound();
       blueTeam.worms[0].setHealth(50);
+
       const { toast } = gameState.advanceRound();
       expect(FireResultHitEnemy.map(v => templateText(v, {
         WormName: redTeam.worms[0].name,
         TeamName: redTeam.name,
+      }))).toContain(toast);
+    });
+    test('should show correct toast when the team hits itself', () => {
+      const {gameState, redTeam} = initiateRound();
+
+      redTeam.worms[1].setHealth(10);
+
+      const { toast } = gameState.advanceRound();
+      expect(FireResultHitOwnTeam.map(v => templateText(v, {
+        WormName: redTeam.worms[0].name,
+        TeamName: redTeam.name,
+      }))).toContain(toast);
+    });
+    test('should show correct toast when the team kills itself', () => {
+      const {gameState, redTeam} = initiateRound();
+
+      redTeam.worms[1].setHealth(0);
+
+      const { toast } = gameState.advanceRound();
+      expect(FireResultKilledOwnTeam.map(v => templateText(v, {
+        WormName: redTeam.worms[0].name,
+        TeamName: redTeam.name,
+      }))).toContain(toast);
+    });
+    test('should show correct toast when an enemy team is killed', () => {
+      const {gameState, redTeam, blueTeam} = initiateRound();
+
+      blueTeam.worms[0].setHealth(0);
+
+      const { toast } = gameState.advanceRound();
+      expect(FireResultKilledEnemyTeam.map(v => templateText(v, {
+        WormName: redTeam.worms[0].name,
+        OtherTeams: blueTeam.name,
       }))).toContain(toast);
     });
   });

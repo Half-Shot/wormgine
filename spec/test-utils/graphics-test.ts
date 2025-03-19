@@ -11,6 +11,8 @@ export async function renderTest(canvas: Canvas) {
     context.fillStyle = 'white';
     context.font = "12pt monospace";
     context.fillText(testName, 10, 20);
-    await writeFile(filename, await canvas.encode("webp", 100));
+    const buffer = await canvas.encode("webp", 100);
+    const ui32 = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+    await writeFile(filename, ui32);
     return filename;
 }

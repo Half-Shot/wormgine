@@ -3,10 +3,8 @@ import { Ticker } from "pixi.js";
 import { GameWorld, RapierPhysicsObject } from "../../src/world";
 import { IPhysicalEntity } from "../../src/entities/entity";
 import { expect } from "@jest/globals";
-import { resolve } from "node:path";
 import { exec } from "node:child_process";
-import { Canvas, createCanvas } from "@napi-rs/canvas";
-import { writeFile } from "node:fs/promises";
+import { createCanvas } from "@napi-rs/canvas";
 import { MetersValue } from "../../src/utils";
 import { renderTest } from "./graphics-test";
 
