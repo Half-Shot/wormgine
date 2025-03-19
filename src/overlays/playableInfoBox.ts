@@ -215,6 +215,9 @@ export class PlayableInfoBox {
   }
 
   public destroy() {
+    if (this.container.destroyed) {
+      return;
+    }
     this.subs.forEach((s) => s.unsubscribe());
     this.container.destroy();
   }

@@ -78,6 +78,7 @@ export abstract class PlayableEntity<
       return;
     }
     if (this.isSinking) {
+      this.infoBox.destroy();
       return;
     }
     this.infoBox.update(this.sprite, dMs);
