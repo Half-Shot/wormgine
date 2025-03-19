@@ -35,7 +35,6 @@ export class NetGameWorld extends GameWorld {
           );
           return;
         }
-        console.log(ent);
         (ent as PhysicsEntity).applyState(e);
       });
     });

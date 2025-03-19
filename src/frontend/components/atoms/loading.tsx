@@ -3,10 +3,7 @@ import video from "../../../assets/ui/loading.webm";
 
 const staticVideo = fetch(video, { priority: "high" })
   .then((v) => v.blob())
-  .then((v) => URL.createObjectURL(v))
-  .finally(() => {
-    console.log("Video load done");
-  });
+  .then((v) => URL.createObjectURL(v));
 
 const VIDEO_TIME_S = 3;
 

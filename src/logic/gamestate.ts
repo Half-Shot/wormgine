@@ -282,7 +282,6 @@ export class GameState {
     const { teamsDamaged, teamsKilled, wormsDamaged, wormsKilled } =
       this.roundDamageDelta;
 
-    console.log({ ownTeam, ownWorm, teamsDamaged, wormsDamaged });
 
     if (wormsKilled.has(ownWorm)) {
       randomTextSet = FireResultKilledSelf;

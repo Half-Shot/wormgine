@@ -134,7 +134,6 @@ export function getSpawnPoints(
         ) === false,
     );
     if (!nextSpawn) {
-      console.log(spawns, nextSpawn);
       throw Error("No place to spawn worm");
     }
     spawns.push({
