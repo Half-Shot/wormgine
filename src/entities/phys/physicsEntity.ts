@@ -52,6 +52,10 @@ export abstract class PhysicsEntity<
     return this.isDestroyed;
   }
 
+  public get sinking() {
+    return this.isSinking;
+  }
+
   /**
    * @deprecated Use safeUsePhys
    */

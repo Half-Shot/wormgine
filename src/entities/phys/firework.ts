@@ -47,8 +47,7 @@ export class Firework extends TimedExplosive {
   ) {
     const ent = new Firework(position, world, parent, force, owner);
     parent.addChild(ent.sprite, ent.wireframe.renderable);
-    const trail = ParticleTrail.create(parent, ent.sprite.position, ent);
-    world.addEntity(trail);
+    world.addEntity(ParticleTrail.create(parent, ent.sprite.position, ent));
     return ent;
   }
 

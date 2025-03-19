@@ -12,6 +12,7 @@ import { AssetPack } from "../../assets";
 import { WormInstance } from "../../logic";
 import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
+import { ParticleTrail } from "../particletrail";
 
 /**
  * Standard shell, affected by wind.
@@ -50,6 +51,7 @@ export class BazookaShell extends TimedExplosive {
   ) {
     const ent = new BazookaShell(position, gameWorld, parent, force, owner);
     gameWorld.addBody(ent, ent.physObject.collider);
+    gameWorld.addEntity(ParticleTrail.create(parent, ent.sprite.position, ent));
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
     return ent;

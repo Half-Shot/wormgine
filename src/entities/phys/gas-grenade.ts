@@ -6,6 +6,7 @@ import { EntityType } from "../type";
 import { Grenade } from "./grenade";
 import { getConditionTint, PlayableCondition } from "../playable/conditions";
 import { AssetPack } from "../../assets";
+import { ParticleTrail } from "../particletrail";
 
 /**
  * Grenade projectile.
@@ -31,6 +32,17 @@ export class GasGrenade extends Grenade {
       timerSecs,
       worm,
     );
+    world.addEntity(ParticleTrail.create(parent, ent.sprite.position, ent, {
+      colours: [{
+        color: "rgba(34, 204, 0, 0.47)",
+        size: 10,
+        chance: 1,
+      },{
+        color: "rgba(115, 241, 90, 0.81)",
+        size: 3,
+        chance: 3,
+      }]
+    }));
     parent.addChild(ent.sprite, ent.wireframe.renderable);
     return ent;
   }

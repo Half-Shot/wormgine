@@ -1,5 +1,5 @@
 import {
-  Color,
+  ColorSource,
   Container,
   Graphics,
   ObservablePoint,
@@ -7,10 +7,38 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
+import { PhysicsEntity } from "./phys/physicsEntity";
+import { randomChoice } from "../utils";
 
 /**
  * Standard, reusable particle trail.
  */
+
+
+interface Opts {
+  colours: {
+    color: ColorSource,
+    chance: number,
+    size: number,
+  }[], 
+}
+
+const DEFAULT_OPTS: Opts = {
+  colours: [{
+    color: 0xaaaaaa,
+    chance: 7,
+    size: 5,
+  },{
+    color: 0xfd4301,
+    chance: 2,
+    size: 3,
+  },{
+    color: 0xfde101,
+    chance: 1,
+    size: 2,
+  }]
+}
+
 export class ParticleTrail implements IGameEntity {
   priority = UPDATE_PRIORITY.LOW;
 
@@ -24,30 +52,38 @@ export class ParticleTrail implements IGameEntity {
     accel: Point;
     radius: number;
     alpha: number;
-    kind: "fire" | "pop";
+    color: ColorSource;
   }[] = [];
 
   static create(
     container: Container,
     parent: ObservablePoint,
-    parentObject: IGameEntity,
+    parentObject: PhysicsEntity,
+    opts: Opts = DEFAULT_OPTS,
   ) {
-    const ent = new ParticleTrail(parent, parentObject);
+    const ent = new ParticleTrail(parent, parentObject, opts);
     container.addChild(ent.gfx);
     return ent;
   }
 
+  private readonly chanceArray: {color: ColorSource, size: number}[];
+
   private constructor(
     private readonly parent: ObservablePoint,
-    private readonly parentObject: IGameEntity,
+    private readonly parentObject: PhysicsEntity,
+    private readonly opts: Opts,
   ) {
     this.gfx = new Graphics();
+    this.chanceArray = [];
+    for (const {color, chance, size} of opts.colours) {
+      this.chanceArray.push(...Array.from({ length: chance}).map(() => ({color, size})));
+    }
   }
 
   update(dt: number) {
     const xSpeed = Math.random() * 0.5 - 0.25;
-    const kind = Math.random() >= 0.75 ? "fire" : "pop";
-    if (!this.parentObject.destroyed) {
+    const {color, size} = randomChoice(this.chanceArray);
+    if (!this.parentObject.destroyed && !this.parentObject.sinking) {
       this.trail.push({
         alpha: 1,
         point: this.parent.clone(),
@@ -57,14 +93,13 @@ export class ParticleTrail implements IGameEntity {
           xSpeed / 2,
           0.25,
         ),
-        radius: 1 + Math.random() * (kind === "pop" ? 4.5 : 2.5),
-        kind,
+        radius: 1 + (Math.random() * size),
+        color,
       });
     }
 
     this.gfx.clear();
 
-    const shrapnelHue = new Color(0xaaaaaa);
     for (const shrapnel of this.trail) {
       shrapnel.speed.x += shrapnel.accel.x * dt;
       shrapnel.speed.y += shrapnel.accel.y * dt;
@@ -74,18 +109,9 @@ export class ParticleTrail implements IGameEntity {
       if (shrapnel.alpha === 0) {
         this.trail.splice(this.trail.indexOf(shrapnel), 1);
       }
-      if (shrapnel.kind === "pop") {
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius)
-          .fill({ color: shrapnelHue, alpha: shrapnel.alpha });
-      } else {
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius)
-          .fill({ color: 0xfd4301, alpha: shrapnel.alpha });
-        this.gfx
-          .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius - 3)
-          .fill({ color: 0xfde101, alpha: shrapnel.alpha });
-      }
+      this.gfx
+        .circle(shrapnel.point.x, shrapnel.point.y, shrapnel.radius)
+        .fill({ color: shrapnel.color, alpha: shrapnel.alpha });
     }
     if (this.trail.length === 0) {
       this.destroy();
