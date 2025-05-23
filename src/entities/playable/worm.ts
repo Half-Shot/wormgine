@@ -369,12 +369,18 @@ export class Worm extends PlayableEntity<
   }
 
   onJump() {
+    if (!this.state.canMove) {
+      return;
+    }
     this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Jump);
     this.state.transition(InnerWormState.InMotion);
     this.body.applyImpulse({ x: this.facingRight ? 8 : -8, y: -15 }, true);
   }
 
   onBackflip() {
+    if (!this.state.canMove) {
+      return;
+    }
     this.state.transition(InnerWormState.InMotion);
     this.recorder?.recordWormAction(
       this.wormIdent.uuid,
