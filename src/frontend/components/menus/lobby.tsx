@@ -75,6 +75,8 @@ export function TeamEntry({
   );
 }
 
+const teamGroupSet = Object.values(TeamGroup).filter(i => typeof i === "number");
+
 export function TeamPicker({
   gameInstance,
   proposedTeams,
@@ -84,16 +86,12 @@ export function TeamPicker({
 }) {
   const membersMap = useObservableEagerState(gameInstance.members);
   const nextTeamGroup: TeamGroup =
-    TeamGroup[
-      // @ts-expect-error Standard angry enums
       useMemo(
         () =>
-          (Object.values(TeamGroup).find(
-            (v) => !proposedTeams.some((t) => t.group === v),
-          ) as string) ?? TeamGroup.Red,
+          teamGroupSet.find(t => !proposedTeams.map(t => t.group).includes(t)) as TeamGroup ?? TeamGroup.Red,
         [proposedTeams],
       )
-    ];
+  console.log(nextTeamGroup);
   const [storedLocalTeams] = useLocalTeamsHook();
   const localTeams = useMemo(
     () =>
@@ -115,7 +113,7 @@ export function TeamPicker({
           logger.warning("Failed to add team", team, ex);
         });
     },
-    [gameInstance],
+    [gameInstance, nextTeamGroup],
   );
 
   const removeTeam = useCallback(
