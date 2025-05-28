@@ -5,6 +5,15 @@ import {
   Graphics,
   Point,
   UPDATE_PRIORITY,
+  Text,
+  Renderer,
+  Texture,
+  GraphicsContext,
+  Buffer,
+  BufferUsage,
+  Geometry,
+  Shader,
+  Mesh,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { BitmapTerrain } from "./bitmapTerrain";
@@ -35,15 +44,7 @@ const log = new Logger("Background");
  * Background of the game world. Includes rain particles.
  */
 export class Background implements IGameEntity {
-  static create(
-    screenSize: Observable<{ width: number; height: number }>,
-    viewport: Viewport,
-    terrain: BitmapTerrain,
-    world: GameWorld,
-  ): Background {
-    return new Background(screenSize, viewport, terrain, world);
-  }
-  private rainSpeed = 15;
+  private rainSpeed = 5;
   private rainSpeedVariation = 0.65;
   private rainColor: ColorSource = "rgba(100,100,100,0.33)";
   priority = UPDATE_PRIORITY.LOW;
@@ -52,34 +53,103 @@ export class Background implements IGameEntity {
   private targetWind = 0;
   private windAdjustParticleCount = 0;
 
-  private gradientMesh: Graphics;
+  private gradientGraphics: Graphics;
 
-  private rainGraphic = new Graphics();
+  private rainGraphic: Graphics;
+  private rainGraphicContext = new GraphicsContext();
   private rainParticles: RainParticle[] = [];
+  private emoji?: Texture;
+  instancePositionBuffer: Buffer;
+  rainGeometry: Geometry;
+  rainMesh: Mesh<Geometry, Shader>;
 
-  private constructor(
+  private static vertexSrc: string;
+  private static fragmentSrc: string;
+
+  static async readAssets() {
+    Background.vertexSrc = (await import("../shaders/rain.vert?raw")).default;
+    Background.fragmentSrc = (await import("../shaders/rain.frag?raw")).default;
+  }
+
+  constructor(
     screenSize: Observable<{ width: number; height: number }>,
     private viewport: Viewport,
     private readonly terrain: BitmapTerrain,
     world: GameWorld,
+    renderer: Renderer,
+    emojiRain: string,
   ) {
-    this.gradientMesh = new Graphics();
+    this.rainGraphic = new Graphics(this.rainGraphicContext);
+    this.gradientGraphics = new Graphics();
     world.wind$.subscribe((wind) => {
       this.targetWind = wind;
     });
+    const rainCount = Math.ceil(RAINDROP_COUNT);
+    const emojiText = new Text({ text: "💧", style: {
+      fill: 0xFFFFFF,
+      fontFamily: 'Arial',
+      fontSize: 16 } });
+    this.emoji = renderer.generateTexture(emojiText);
+    const shader = Shader.from({
+        gl: {
+          vertex: Background.vertexSrc,
+          fragment: Background.fragmentSrc
+        },
+        resources: {
+            uTexture: this.emoji.source,
+            uSampler: this.emoji.source.style,
+            waveUniforms: {
+                time: { value: 1, type: 'f32' },
+            },
+        },
+    });
+    this.instancePositionBuffer = new Buffer({
+      data: new Float32Array(rainCount * 2),
+      usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
+    });
+    this.rainGeometry = new Geometry({
+        attributes: {
+            aPosition: [
+                -10,
+                -10, // x, y
+                10,
+                -10, // x, y
+                10,
+                10,
+            ],
+            aUV: [
+                0,
+                0, // u, v
+                1,
+                0, // u, v
+                1,
+                1,
+                0,
+                1,
+            ],
+            aPositionOffset: {
+                buffer: this.instancePositionBuffer,
+                instance: true,
+            },
+        },
+        instanceCount: rainCount,
+    });
+    this.rainMesh = new Mesh({
+        geometry: this.rainGeometry,
+        shader,
+    });
     screenSize.subscribe(({ width, height }) => {
-      this.gradientMesh.clear();
+      this.gradientGraphics.clear();
       const halfViewWidth = width / 2;
       const halfViewHeight = height / 2;
-      const gradient = new FillGradient(0, -halfViewWidth, 0, height);
+      const gradient = new FillGradient({type: 'linear', start: {x: 0, y: -halfViewWidth}, end: {x: 0, y: height}});
       gradient.addColorStop(0, "rgba(3, 0, 51, 0.9)");
       gradient.addColorStop(1, "rgba(39, 0, 5, 0.9)");
-      this.gradientMesh.rect(-halfViewWidth, -halfViewHeight, width, height);
-      this.gradientMesh.fill(gradient);
-      this.gradientMesh.position.set(halfViewWidth, halfViewHeight);
+      this.gradientGraphics.rect(-halfViewWidth, -halfViewHeight, width, height);
+      this.gradientGraphics.fill(gradient);
+      this.gradientGraphics.position.set(halfViewWidth, halfViewHeight);
       this.rainGraphic.position.set(0, 0);
       // Create some rain
-      const rainCount = Math.ceil(RAINDROP_COUNT * (width / 1920));
       const rainDelta = rainCount - this.rainParticles.length;
       if (rainDelta > 0) {
         for (let rainIndex = 0; rainIndex < rainDelta; rainIndex += 1) {
@@ -88,7 +158,18 @@ export class Background implements IGameEntity {
       } else {
         this.rainParticles.splice(0, Math.abs(rainDelta));
       }
+      this.updateInstanceBuffer();
     });
+  }
+
+  public updateInstanceBuffer() {
+    const buffer = this.instancePositionBuffer.data;
+    let count = 0;
+    for (const particle of this.rainParticles) {
+      buffer[count++] = particle.position.x;
+      buffer[count++] = particle.position.y;
+    }
+    this.instancePositionBuffer.update();
   }
 
   addRainParticle() {
@@ -123,12 +204,12 @@ export class Background implements IGameEntity {
   }
 
   addToWorld(worldContainer: Container, viewport: Container) {
-    worldContainer.addChildAt(this.gradientMesh, 0);
-    viewport.addChildAt(this.rainGraphic, 0);
+    worldContainer.addChildAt(this.gradientGraphics, 0);
+    viewport.addChildAt(this.rainMesh, 0);
   }
 
   get destroyed() {
-    return this.gradientMesh.destroyed;
+    return this.gradientGraphics.destroyed;
   }
 
   update(): void {
@@ -167,16 +248,23 @@ export class Background implements IGameEntity {
       const anglularVelocity = particle.wind + particle.angle * 0.1;
       particle.position.x += anglularVelocity;
       particle.position.y += particle.speed;
-      const lengthX = particle.position.x + anglularVelocity * 1;
-      const lengthY = particle.position.y - particle.length + anglularVelocity;
-      this.rainGraphic
-        .stroke({ width: 2, color: this.rainColor })
-        .moveTo(particle.position.x, lengthY)
-        .lineTo(lengthX, particle.position.y);
+    //   if (this.emoji) {
+    //     this.rainGraphicContext
+    //     .stroke({ width: 2, color: this.rainColor })
+    //     .texture(this.emoji, 0xFFFFFF, particle.position.x, particle.position.y);
+    //   } else {
+    //     const lengthX = particle.position.x + anglularVelocity * 1;
+    //     const lengthY = particle.position.y - particle.length + anglularVelocity;
+    //     this.rainGraphic
+    //       .stroke({ width: 2, color: this.rainColor })
+    //       .moveTo(particle.position.x, lengthY)
+    //       .lineTo(lengthX, particle.position.y);
+    //   }
     }
+    this.updateInstanceBuffer();
   }
 
   destroy(): void {
-    this.gradientMesh.destroy();
+    this.gradientGraphics.destroy();
   }
 }

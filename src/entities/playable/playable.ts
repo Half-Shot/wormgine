@@ -91,10 +91,6 @@ export abstract class PlayableEntity<
 
     // }
 
-    // Complex logic ahead, welcome to the health box tension timer!
-    // Whenever the entity takes damage, `healthChangeTensionTimer` is set to a unit of time before
-    // we can render the damage to the player.
-
     // If the timer has run out, set to null to indiciate it has expired.
     // XXX: Should the visible health setting control this?
     if (this.explodeTimer !== null) {

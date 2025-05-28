@@ -4,6 +4,7 @@ import {
   Graphics,
   ObservablePoint,
   Point,
+  PointData,
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
@@ -20,6 +21,8 @@ interface Opts {
     chance: number;
     size: number;
   }[];
+  initialSpeed: PointData,
+  acceleration: PointData,
 }
 
 const DEFAULT_OPTS: Opts = {
@@ -40,6 +43,14 @@ const DEFAULT_OPTS: Opts = {
       size: 2,
     },
   ],
+  initialSpeed: {
+    x: 1,
+    y: 0.5,
+  },
+  acceleration: {
+    x: 0,
+    y: 0.15,
+  }
 };
 
 export class ParticleTrail implements IGameEntity {
@@ -62,9 +73,9 @@ export class ParticleTrail implements IGameEntity {
     container: Container,
     parent: ObservablePoint,
     parentObject: PhysicsEntity,
-    opts: Opts = DEFAULT_OPTS,
+    opts: Partial<Opts> = DEFAULT_OPTS,
   ) {
-    const ent = new ParticleTrail(parent, parentObject, opts);
+    const ent = new ParticleTrail(parent, parentObject, {...DEFAULT_OPTS, ...opts});
     container.addChild(ent.gfx);
     return ent;
   }
@@ -86,17 +97,17 @@ export class ParticleTrail implements IGameEntity {
   }
 
   update(dt: number) {
-    const xSpeed = Math.random() * 0.5 - 0.25;
+    const xSpeedRandMod = Math.random() * 0.5 - 0.25;
     const { color, size } = randomChoice(this.chanceArray);
     if (!this.parentObject.destroyed && !this.parentObject.sinking) {
       this.trail.push({
         alpha: 1,
         point: this.parent.clone(),
-        speed: new Point(xSpeed, 0.5),
+        speed: new Point(xSpeedRandMod * this.opts.initialSpeed.x, this.opts.initialSpeed.y),
         accel: new Point(
           // Invert the accel
-          xSpeed / 2,
-          0.25,
+          this.opts.acceleration.x,
+          this.opts.acceleration.y,
         ),
         radius: 1 + Math.random() * size,
         color,
