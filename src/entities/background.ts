@@ -44,9 +44,8 @@ const log = new Logger("Background");
  * Background of the game world. Includes rain particles.
  */
 export class Background implements IGameEntity {
-  private rainSpeed = 5;
+  private rainSpeed = 6;
   private rainSpeedVariation = 0.65;
-  private rainColor: ColorSource = "rgba(100,100,100,0.33)";
   priority = UPDATE_PRIORITY.LOW;
 
   private currentWind = 0;
@@ -58,7 +57,8 @@ export class Background implements IGameEntity {
   private rainGraphic: Graphics;
   private rainGraphicContext = new GraphicsContext();
   private rainParticles: RainParticle[] = [];
-  private emoji?: Texture;
+  private rainShader: Shader;
+  private emoji: Texture;
   instancePositionBuffer: Buffer;
   rainGeometry: Geometry;
   rainMesh: Mesh<Geometry, Shader>;
@@ -85,12 +85,12 @@ export class Background implements IGameEntity {
       this.targetWind = wind;
     });
     const rainCount = Math.ceil(RAINDROP_COUNT);
-    const emojiText = new Text({ text: "💧", style: {
+    const emojiText = new Text({ text: emojiRain, style: {
       fill: 0xFFFFFF,
       fontFamily: 'Arial',
       fontSize: 16 } });
     this.emoji = renderer.generateTexture(emojiText);
-    const shader = Shader.from({
+    this.rainShader = Shader.from({
         gl: {
           vertex: Background.vertexSrc,
           fragment: Background.fragmentSrc
@@ -99,7 +99,7 @@ export class Background implements IGameEntity {
             uTexture: this.emoji.source,
             uSampler: this.emoji.source.style,
             waveUniforms: {
-                time: { value: 1, type: 'f32' },
+                time: { value: 2, type: 'f32' },
             },
         },
     });
@@ -110,22 +110,21 @@ export class Background implements IGameEntity {
     this.rainGeometry = new Geometry({
         attributes: {
             aPosition: [
-                -10,
-                -10, // x, y
-                10,
-                -10, // x, y
-                10,
-                10,
+                -10,-10, // top left
+                10,-10, // top right
+                10, 10, // bottom right
+
+                10, 10, // bottom right
+                -10, 10, // bottom left
+                -10,-10, // top left
             ],
             aUV: [
-                0,
-                0, // u, v
-                1,
-                0, // u, v
-                1,
-                1,
-                0,
-                1,
+                0, 0, // top left
+                1, 0, // top right
+                1, 1, // bottom right
+                1, 1, // bottom right
+                0, 1,
+                0, 0,
             ],
             aPositionOffset: {
                 buffer: this.instancePositionBuffer,
@@ -136,7 +135,7 @@ export class Background implements IGameEntity {
     });
     this.rainMesh = new Mesh({
         geometry: this.rainGeometry,
-        shader,
+        shader: this.rainShader,
     });
     screenSize.subscribe(({ width, height }) => {
       this.gradientGraphics.clear();
@@ -153,7 +152,7 @@ export class Background implements IGameEntity {
       const rainDelta = rainCount - this.rainParticles.length;
       if (rainDelta > 0) {
         for (let rainIndex = 0; rainIndex < rainDelta; rainIndex += 1) {
-          this.addRainParticle();
+          this.addRainParticle(true);
         }
       } else {
         this.rainParticles.splice(0, Math.abs(rainDelta));
@@ -169,17 +168,19 @@ export class Background implements IGameEntity {
       buffer[count++] = particle.position.x;
       buffer[count++] = particle.position.y;
     }
-    this.instancePositionBuffer.update();
+    //this.instancePositionBuffer.update();
+    this.rainShader.resources.waveUniforms.uniforms.iTime = performance.now() / 1000;
   }
 
-  addRainParticle() {
+  addRainParticle(initial=false) {
     const x =
       this.viewport.center.x +
       Math.round(Math.random() * this.viewport.screenWidth) -
       this.viewport.screenWidth / 2;
-    const y =
-      this.viewport.center.y +
-      (0 - Math.round(Math.random() * this.viewport.screenHeight) - 200);
+    const y = initial ? 
+      (this.viewport.center.y +
+        (0 - Math.round(Math.random() * this.viewport.screenHeight) - 200)) :
+        this.viewport.center.y - this.viewport.screenHeight;
     this.rainParticles.push({
       position: new Point(x, y),
       length:
@@ -248,19 +249,8 @@ export class Background implements IGameEntity {
       const anglularVelocity = particle.wind + particle.angle * 0.1;
       particle.position.x += anglularVelocity;
       particle.position.y += particle.speed;
-    //   if (this.emoji) {
-    //     this.rainGraphicContext
-    //     .stroke({ width: 2, color: this.rainColor })
-    //     .texture(this.emoji, 0xFFFFFF, particle.position.x, particle.position.y);
-    //   } else {
-    //     const lengthX = particle.position.x + anglularVelocity * 1;
-    //     const lengthY = particle.position.y - particle.length + anglularVelocity;
-    //     this.rainGraphic
-    //       .stroke({ width: 2, color: this.rainColor })
-    //       .moveTo(particle.position.x, lengthY)
-    //       .lineTo(lengthX, particle.position.y);
-    //   }
     }
+
     this.updateInstanceBuffer();
   }
 
