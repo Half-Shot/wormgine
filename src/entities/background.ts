@@ -44,8 +44,8 @@ const log = new Logger("Background");
  * Background of the game world. Includes rain particles.
  */
 export class Background implements IGameEntity {
-  private rainSpeed = 6;
-  private rainSpeedVariation = 0.65;
+  private rainSpeed = 2.5;
+  private rainSpeedVariation = 1;
   priority = UPDATE_PRIORITY.LOW;
 
   private currentWind = 0;
@@ -58,7 +58,6 @@ export class Background implements IGameEntity {
   private rainGraphicContext = new GraphicsContext();
   private rainParticles: RainParticle[] = [];
   private rainShader: Shader;
-  private emoji: Texture;
   instancePositionBuffer: Buffer;
   rainGeometry: Geometry;
   rainMesh: Mesh<Geometry, Shader>;
@@ -77,7 +76,7 @@ export class Background implements IGameEntity {
     private readonly terrain: BitmapTerrain,
     world: GameWorld,
     renderer: Renderer,
-    emojiRain: string,
+    rain: string|Texture,
   ) {
     this.rainGraphic = new Graphics(this.rainGraphicContext);
     this.gradientGraphics = new Graphics();
@@ -85,26 +84,32 @@ export class Background implements IGameEntity {
       this.targetWind = wind;
     });
     const rainCount = Math.ceil(RAINDROP_COUNT);
-    const emojiText = new Text({ text: emojiRain, style: {
-      fill: 0xFFFFFF,
-      fontFamily: 'Arial',
-      fontSize: 16 } });
-    this.emoji = renderer.generateTexture(emojiText);
+    let rainTexture;
+    if (typeof rain === "string") {
+      const emojiText = new Text({ text: rain, style: {
+        fill: 0xFFFFFF,
+        fontFamily: 'Arial',
+        fontSize: 16 }
+      });
+      rainTexture = renderer.generateTexture(emojiText);
+    } else {
+      rainTexture = rain;
+    }
     this.rainShader = Shader.from({
         gl: {
           vertex: Background.vertexSrc,
           fragment: Background.fragmentSrc
         },
         resources: {
-            uTexture: this.emoji.source,
-            uSampler: this.emoji.source.style,
+            uTexture: rainTexture.source,
+            uSampler: rainTexture.source.style,
             waveUniforms: {
                 time: { value: 2, type: 'f32' },
             },
         },
     });
     this.instancePositionBuffer = new Buffer({
-      data: new Float32Array(rainCount * 2),
+      data: new Float32Array(rainCount * 3),
       usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
     });
     this.rainGeometry = new Geometry({
@@ -167,9 +172,11 @@ export class Background implements IGameEntity {
     for (const particle of this.rainParticles) {
       buffer[count++] = particle.position.x;
       buffer[count++] = particle.position.y;
+      buffer[count++] = particle.angle;
     }
-    //this.instancePositionBuffer.update();
-    this.rainShader.resources.waveUniforms.uniforms.iTime = performance.now() / 1000;
+    this.instancePositionBuffer.update();
+    this.rainShader.resources.waveUniforms.uniforms.time = 
+    (performance.now() / 1500) * this.currentWind;
   }
 
   addRainParticle(initial=false) {
@@ -181,13 +188,14 @@ export class Background implements IGameEntity {
       (this.viewport.center.y +
         (0 - Math.round(Math.random() * this.viewport.screenHeight) - 200)) :
         this.viewport.center.y - this.viewport.screenHeight;
+    const windAdjust = Math.max(0.33, Math.abs(this.currentWind) / 10);
     this.rainParticles.push({
       position: new Point(x, y),
       length:
         MIN_RAIN_LENGTH +
         Math.round(Math.random() * (MAX_RAIN_LENGTH - MIN_RAIN_LENGTH)),
       angle: (Math.random() - 0.5) * 15,
-      speed: this.rainSpeed * (0.5 + Math.random() * this.rainSpeedVariation),
+      speed: (windAdjust * this.rainSpeed),
       wind: this.currentWind,
     });
     if (Math.abs(this.targetWind - this.currentWind) > WIND_ADJUST_BY) {
@@ -246,7 +254,7 @@ export class Background implements IGameEntity {
         this.addRainParticle();
         continue;
       }
-      const anglularVelocity = particle.wind + particle.angle * 0.1;
+      const anglularVelocity = (particle.wind + particle.angle) * 0.15;
       particle.position.x += anglularVelocity;
       particle.position.y += particle.speed;
     }
