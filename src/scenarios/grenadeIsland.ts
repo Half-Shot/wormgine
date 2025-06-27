@@ -16,6 +16,7 @@ import { Worm } from "../entities/playable/worm";
 import { DefaultTextStyle } from "../mixins/styles";
 import { IWeaponCode } from "../weapons/weapon";
 import { DefaultWeaponSchema } from "../weapons/schema";
+import { getAssets } from "../assets";
 
 const weapons = ["grenade", "mine", "firework"];
 
@@ -93,7 +94,7 @@ export default async function runScenario(game: Game) {
   );
 
   const bg = await world.addEntity(
-    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer),
+    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, 'rain'),
   );
   await world.addEntity(terrain);
   bg.addToWorld(game.pixiApp.stage, parent);
