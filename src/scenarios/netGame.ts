@@ -158,7 +158,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   );
 
   const bg = await world.addEntity(
-    Background.create(game.screenSize$, game.viewport, terrain, world),
+    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, "bork"),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
   world.addEntity(terrain);

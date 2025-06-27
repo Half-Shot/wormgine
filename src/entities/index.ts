@@ -1,4 +1,5 @@
 import { AssetPack } from "../assets";
+import { Background } from "./background";
 import { Explosion } from "./explosion";
 import { BazookaShell } from "./phys/bazookaShell";
 import { Firework } from "./phys/firework";
@@ -18,7 +19,10 @@ import { Water } from "./water";
  * @param assets
  */
 export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
-  const p = Water.readAssets();
+  const p = Promise.all([
+    Water.readAssets(),
+    Background.readAssets(),
+  ]);
   BazookaShell.readAssets(assets);
   Grenade.readAssets(assets);
   GasGrenade.readAssets(assets);
