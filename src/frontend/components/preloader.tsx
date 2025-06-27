@@ -11,7 +11,7 @@ export function Preloader() {
 
   return (
     <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
-      <LoadingPage visible={!assetsLoaded} progress={assetProgress} />
+      <LoadingPage visible={!assetsLoaded} progress={assetProgress} force />
     </MotionConfig>
   );
 }
