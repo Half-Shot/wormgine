@@ -23,6 +23,7 @@ import {
   distinctUntilChanged,
   map,
   Observable,
+  skipWhile,
 } from "rxjs";
 import type { PhysicsEntity } from "./entities/phys/physicsEntity";
 
@@ -136,7 +137,13 @@ export class GameWorld {
     public readonly rapierWorld: World,
     protected readonly ticker: Ticker,
   ) {
-    this.entitiesMoving$ = this.entitiesMoving.pipe(distinctUntilChanged());
+    this.entitiesMoving$ = this.entitiesMoving.pipe(
+      // When the world is created there will be a lot of entities moving about
+      // This segment skips the initial stage.
+      skipWhile((moving) => moving === false),
+      skipWhile((moving) => moving === true),
+      distinctUntilChanged(),
+    );
     this.entitiesMoving$.subscribe((entsMoving) => {
       logger.info(`Entities moving: ${entsMoving}`);
     });

@@ -168,7 +168,10 @@ export class GameState {
       throw Error("GameState already begun");
     }
 
-    combineLatest([this.remainingRoundTimeSeconds$, this.roundState$])
+    this.roundTransitionObservable = combineLatest([
+      this.remainingRoundTimeSeconds$,
+      this.roundState$,
+    ])
       .pipe(
         filter(([seconds]) => seconds === 0),
         map(([_seconds, roundState]) => [roundState]),
@@ -189,9 +192,10 @@ export class GameState {
     combineLatest([
       this.remainingRoundTimeSeconds$,
       this.roundState$,
-      this.world.entitiesMoving$.pipe(skip(2)),
+      this.world.entitiesMoving$,
     ])
       .pipe(
+        // This skips the "settling stage" where entites move around
         filter(
           ([_seconds, roundState, moving]) =>
             moving && roundState === RoundState.Preround,
