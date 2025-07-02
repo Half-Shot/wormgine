@@ -93,8 +93,10 @@ export default async function runScenario(game: Game) {
     game.screenSize$,
   );
 
+  const waterHeight = MetersValue.fromPixels(worldHeight);
+
   const bg = await world.addEntity(
-    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, 'rain'),
+    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, 'rain', waterHeight),
   );
   await world.addEntity(terrain);
   bg.addToWorld(game.pixiApp.stage, parent);
@@ -103,7 +105,7 @@ export default async function runScenario(game: Game) {
   const water = world.addEntity(
     new Water(
       MetersValue.fromPixels(worldWidth * 4),
-      MetersValue.fromPixels(worldHeight),
+      waterHeight,
       world,
     ),
   );

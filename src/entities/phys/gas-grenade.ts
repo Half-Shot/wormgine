@@ -52,7 +52,7 @@ export class GasGrenade extends Grenade {
           },
         ],
         initialSpeed: { x: 0, y: 0.15 },
-        acceleration: { x: 0, y: 0.05 }
+        acceleration: { x: 0, y: 0.05 },
       }),
     );
     parent.addChild(ent.sprite, ent.wireframe.renderable);

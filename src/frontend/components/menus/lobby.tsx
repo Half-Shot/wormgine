@@ -75,7 +75,9 @@ export function TeamEntry({
   );
 }
 
-const teamGroupSet = Object.values(TeamGroup).filter(i => typeof i === "number");
+const teamGroupSet = Object.values(TeamGroup).filter(
+  (i) => typeof i === "number",
+);
 
 export function TeamPicker({
   gameInstance,
@@ -85,12 +87,13 @@ export function TeamPicker({
   proposedTeams: ProposedTeam[];
 }) {
   const membersMap = useObservableEagerState(gameInstance.members);
-  const nextTeamGroup: TeamGroup =
-      useMemo(
-        () =>
-          teamGroupSet.find(t => !proposedTeams.map(t => t.group).includes(t)) as TeamGroup ?? TeamGroup.Red,
-        [proposedTeams],
-      )
+  const nextTeamGroup: TeamGroup = useMemo(
+    () =>
+      (teamGroupSet.find(
+        (t) => !proposedTeams.map((t) => t.group).includes(t),
+      ) as TeamGroup) ?? TeamGroup.Red,
+    [proposedTeams],
+  );
   console.log(nextTeamGroup);
   const [storedLocalTeams] = useLocalTeamsHook();
   const localTeams = useMemo(

@@ -19,10 +19,7 @@ import { Water } from "./water";
  * @param assets
  */
 export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
-  const p = Promise.all([
-    Water.readAssets(),
-    Background.readAssets(),
-  ]);
+  const p = Promise.all([Water.readAssets(), Background.readAssets()]);
   BazookaShell.readAssets(assets);
   Grenade.readAssets(assets);
   GasGrenade.readAssets(assets);

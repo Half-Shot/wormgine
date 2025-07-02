@@ -21,8 +21,8 @@ interface Opts {
     chance: number;
     size: number;
   }[];
-  initialSpeed: PointData,
-  acceleration: PointData,
+  initialSpeed: PointData;
+  acceleration: PointData;
 }
 
 const DEFAULT_OPTS: Opts = {
@@ -50,7 +50,7 @@ const DEFAULT_OPTS: Opts = {
   acceleration: {
     x: 0,
     y: 0.15,
-  }
+  },
 };
 
 export class ParticleTrail implements IGameEntity {
@@ -75,7 +75,10 @@ export class ParticleTrail implements IGameEntity {
     parentObject: PhysicsEntity,
     opts: Partial<Opts> = DEFAULT_OPTS,
   ) {
-    const ent = new ParticleTrail(parent, parentObject, {...DEFAULT_OPTS, ...opts});
+    const ent = new ParticleTrail(parent, parentObject, {
+      ...DEFAULT_OPTS,
+      ...opts,
+    });
     container.addChild(ent.gfx);
     return ent;
   }
@@ -103,7 +106,10 @@ export class ParticleTrail implements IGameEntity {
       this.trail.push({
         alpha: 1,
         point: this.parent.clone(),
-        speed: new Point(xSpeedRandMod * this.opts.initialSpeed.x, this.opts.initialSpeed.y),
+        speed: new Point(
+          xSpeedRandMod * this.opts.initialSpeed.x,
+          this.opts.initialSpeed.y,
+        ),
         accel: new Point(
           // Invert the accel
           this.opts.acceleration.x,

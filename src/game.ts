@@ -26,7 +26,6 @@ import {
 } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
-import { PlayableEntity } from "./entities/playable/playable";
 import globalFlags from "./flags";
 
 const worldWidth = 1920;

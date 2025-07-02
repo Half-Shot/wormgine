@@ -7,11 +7,7 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IPhysicalEntity } from "./entity";
-import {
-  GameWorld,
-  PIXELS_PER_METER,
-  RapierPhysicsObject,
-} from "../world";
+import { GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { ColliderDesc, Cuboid, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils";
 
@@ -67,12 +63,18 @@ export class Water implements IPhysicalEntity {
     this.geometry = new Geometry({
       attributes: {
         aPosition: [
-          -100, 0, // top left
-          -100,  100, // bottom left
-          0, 100, // bottom middle
-          0, 0, // top middle
-          100, 100, // bottom right
-          100, 0, // top right
+          -100,
+          0, // top left
+          -100,
+          100, // bottom left
+          0,
+          100, // bottom middle
+          0,
+          0, // top middle
+          100,
+          100, // bottom right
+          100,
+          0, // top right
         ],
       },
       indexBuffer,

@@ -158,12 +158,20 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     gameInstance.myUserId,
   );
 
+  const waterLevel = MetersValue.fromPixels(
+    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0,
+  );
 
-  const waterLevel =
-    MetersValue.fromPixels(level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0);
-  
   const bg = await world.addEntity(
-    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, (await getAssets()).textures.particles_borealis, waterLevel),
+    new Background(
+      game.screenSize$,
+      game.viewport,
+      terrain,
+      world,
+      game.pixiApp.renderer,
+      (await getAssets()).textures.particles_borealis,
+      waterLevel,
+    ),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
   world.addEntity(terrain);
@@ -178,11 +186,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   );
 
   const water = world.addEntity(
-    new Water(
-      MetersValue.fromPixels(worldWidth * 4),
-      waterLevel,
-      world,
-    ),
+    new Water(MetersValue.fromPixels(worldWidth * 4), waterLevel, world),
   );
   water.addToWorld(parent, world);
 
@@ -192,6 +196,11 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     world.physicsEntitySet$ as Observable<IteratorObject<PhysicsEntity>>,
     gameState.currentWorm$.pipe(map((w) => w?.team.playerUserId === null)),
   );
+
+  const cameraTarget = game.overlay!.addTextField();
+  camera.lockTarget.subscribe((target) => {
+    cameraTarget.text = `Camera target: ${target?.toString() ?? "null"}`;
+  });
   globalFlags.viewportCamera = camera;
   globalFlags.bindGameState(gameState);
 
