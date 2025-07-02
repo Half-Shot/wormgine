@@ -322,8 +322,8 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       await gameInstance.ready();
       log.info("Marked as ready");
     }
-    gameState.begin();
   }
+  gameState.begin();
 
   combineLatest([gameState.roundState$])
     .pipe(filter(([state]) => state === RoundState.Finished))

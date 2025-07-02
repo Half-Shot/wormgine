@@ -14,7 +14,14 @@ import { Toaster } from "./toaster";
 import { WindDial } from "./windDial";
 import { HEALTH_CHANGE_TENSION_TIMER_MS } from "../consts";
 import Logger from "../log";
-import { combineLatest, debounceTime, first, map, Observable } from "rxjs";
+import {
+  combineLatest,
+  debounceTime,
+  filter,
+  first,
+  map,
+  Observable,
+} from "rxjs";
 import { RoundTimer } from "./roundTimer";
 
 const logger = new Logger("GameStateOverlay");
@@ -74,14 +81,6 @@ export class GameStateOverlay {
     this.stage.addChild(this.winddial.container);
     this.tickerFn = this.update.bind(this);
     this.ticker.add(this.tickerFn, undefined, UPDATE_PRIORITY.UTILITY);
-    combineLatest(this.gameState.getTeams().map((t) => t.maxHealth$))
-      .pipe(
-        map((v) => v.reduce((v1, v2) => Math.max(v1, v2))),
-        first(),
-      )
-      .subscribe((s) => {
-        this.largestHealthPool = s;
-      });
     this.gameState.getActiveTeams().forEach((t) => {
       if (t.flag) {
         this.teamFlagTextures[t.name] = Texture.from(
@@ -90,13 +89,30 @@ export class GameStateOverlay {
         );
       }
     });
+    const teamHealthChange = combineLatest(
+      this.gameState.getTeams().map((t) => t.maxHealth$),
+    ).pipe(
+      map((v) => v.reduce((v1, v2) => Math.max(v1, v2))),
+      first(),
+    );
+    teamHealthChange.subscribe((s) => {
+      this.largestHealthPool = s;
+    });
     screenSize.subscribe(({ width, height }) => {
       this.gfx.position.set(width / 2, (height / 10) * 8.75);
     });
     this.gameWorld.entitiesMoving$
-      .pipe(debounceTime(HEALTH_CHANGE_TENSION_TIMER_MS))
-      .subscribe((f) => {
-        this.shouldChangeTeamHealth = f;
+      .pipe(filter((moving) => moving === true))
+      .subscribe(() => {
+        this.shouldChangeTeamHealth = false;
+      });
+    combineLatest([this.gameWorld.entitiesMoving$, teamHealthChange])
+      .pipe(
+        debounceTime(HEALTH_CHANGE_TENSION_TIMER_MS),
+        filter(([moving]) => moving === false),
+      )
+      .subscribe(() => {
+        this.shouldChangeTeamHealth = true;
       });
   }
 
