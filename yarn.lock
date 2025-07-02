@@ -1452,10 +1452,10 @@
   resolved "https://registry.yarnpkg.com/@types/css-font-loading-module/-/css-font-loading-module-0.0.12.tgz#65494833928823f998fbe8e86312821875d80db5"
   integrity sha512-x2tZZYkSxXqWvTDgveSynfjq/T2HyiZHXb00j/+gy19yp70PHCizM48XFdjBCWH7eHBD0R5i/pw9yMBP/BH5uA==
 
-"@types/earcut@^2.1.4":
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/@types/earcut/-/earcut-2.1.4.tgz#5811d7d333048f5a7573b22ddc84923e69596da6"
-  integrity sha512-qp3m9PPz4gULB9MhjGID7wpo3gJ4bTGXm7ltNDsmOvsPduTeHp8wSW9YckBj3mljeOh4F0m2z/0JKAALRKbmLQ==
+"@types/earcut@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/earcut/-/earcut-3.0.0.tgz#c21ab8372c47f8af1bec63cb36eecb6917b6c5b6"
+  integrity sha512-k/9fOUGO39yd2sCjrbAJvGDEQvRwRnQIZlBz43roGwUZo5SHAmyVvSFyaVVZkicRVCaDXPKlbxrUcBuJoSWunQ==
 
 "@types/estree@1.0.6", "@types/estree@^1.0.6":
   version "1.0.6"
@@ -2089,10 +2089,10 @@ domutils@^3.0.1:
     domelementtype "^2.3.0"
     domhandler "^5.0.3"
 
-earcut@^2.2.4:
-  version "2.2.4"
-  resolved "https://registry.npmjs.org/earcut/-/earcut-2.2.4.tgz"
-  integrity sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==
+earcut@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/earcut/-/earcut-3.0.1.tgz#f60b3f671c5657cca9d3e131c5527c5dde00ef38"
+  integrity sha512-0l1/0gOjESMeQyYaK5IDiPNvFeu93Z/cO0TjZh9eZ1vyCtZnA7KMZ8rQggpsJHIbGSdrqYq9OhuveadOVHCshw==
 
 ejs@^3.1.10:
   version "3.1.10"
@@ -3550,17 +3550,17 @@ pixi-viewport@^6.0.3:
   resolved "https://registry.yarnpkg.com/pixi-viewport/-/pixi-viewport-6.0.3.tgz#a35f3abe4d9181d81f325d3223400c6e0bf77f4b"
   integrity sha512-2+qPJ0/n+8hQYhWvY+795+x9y3MiUrCOWacK0DY53whowWaGdx9iDocy7z1pBwjkZhC52YvrJQuZKK0sdVLtBw==
 
-pixi.js@^8.8.1:
-  version "8.8.1"
-  resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-8.8.1.tgz#2812bbaac960ba3d0ef9d99d77da4454702f9e5a"
-  integrity sha512-Zmox3Vy52Kl6X/uxknKlxJWPVEFiP63nsX8soqB4butTkIOK3y7c9C204wcDfAgkwO1OlwYxscWtHv+ef4gqgA==
+pixi.js@8.10.2:
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-8.10.2.tgz#42759ff3f7fbf3d1f583ece80448a76dcac5cc9d"
+  integrity sha512-utRKxzTwNsIhaxOikxIBxKPfxuOyVkPvdYipY23ZEyWSYhONosrQlcB9nymeIcbsrsuSdwExX0eTnHTDjTN3UQ==
   dependencies:
     "@pixi/colord" "^2.9.6"
     "@types/css-font-loading-module" "^0.0.12"
-    "@types/earcut" "^2.1.4"
+    "@types/earcut" "^3.0.0"
     "@webgpu/types" "^0.1.40"
     "@xmldom/xmldom" "^0.8.10"
-    earcut "^2.2.4"
+    earcut "^3.0.1"
     eventemitter3 "^5.0.1"
     gifuct-js "^2.1.2"
     ismobilejs "^1.1.1"

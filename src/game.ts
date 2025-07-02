@@ -68,7 +68,7 @@ export class Game<ReloadedGameState extends object = object> {
     const pixiApp = new Application();
     await pixiApp.init({
       resizeTo: window,
-      preference: "webgpu",
+      preference: "webgl",
       antialias: true,
       hello: true,
       renderableGCActive: false, //  try to disable auto GC probably causing TilledSprite
