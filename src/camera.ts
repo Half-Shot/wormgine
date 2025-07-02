@@ -4,9 +4,11 @@ import { MovedEvent } from "pixi-viewport/dist/types";
 import Logger from "./log";
 import { MetersValue } from "./utils";
 import {
+  BehaviorSubject,
   combineLatest,
   debounceTime,
   map,
+  merge,
   Observable,
   Subscription,
 } from "rxjs";
@@ -34,18 +36,23 @@ export interface LockableEntity {
   };
 }
 
+type CurrentLockType = {
+  target: LockableEntity;
+  priority: CameraLockPriority;
+  isLocal: boolean;
+} | null;
+
 export class ViewportCamera {
-  private currentLock: {
-    target: LockableEntity;
-    priority: CameraLockPriority;
-    isLocal: boolean;
-  } | null = null;
+  private currentLock = new BehaviorSubject<CurrentLockType>(null);
   private userWantsControl = false;
   private lastMoveHash = Number.MIN_SAFE_INTEGER;
   private cameraSub?: Subscription;
 
-  public get lockTarget(): LockableEntity | null {
-    return this.currentLock?.target ?? null;
+  /**
+   * Gets an observable to the current lock target.
+   */
+  public get lockTarget(): Observable<CurrentLockType> {
+    return merge(this.currentLock.asObservable());
   }
 
   constructor(
@@ -151,11 +158,12 @@ export class ViewportCamera {
           ent: e.entity.toString(),
         })),
       );
-      let nextTarget = this.currentLock;
+      const currentTarget = this.currentLock.value;
+      let nextTarget = currentTarget;
 
       // Apply new value for currentLock before iterating.
       const currentEnt = entities.find(
-        (e) => e.entity === this.currentLock?.target,
+        (e) => e.entity === currentTarget?.target,
       );
       if (this.currentLock && !currentEnt) {
         // Ent is no longer found.
@@ -168,16 +176,16 @@ export class ViewportCamera {
         if (priority === CameraLockPriority.NoLock) {
           continue;
         }
-        if (this.currentLock && this.currentLock?.priority >= priority) {
+        if (currentTarget && currentTarget?.priority >= priority) {
           logger.debug(
             "New lock is not higher priority than",
-            this.currentLock.target.toString(),
+            currentTarget.target.toString(),
             CameraLockPriority[priority],
           );
           // Skipping as higher priority exists.
           continue;
         }
-        if (entity !== this.currentLock?.target) {
+        if (entity !== currentTarget?.target) {
           // Reset user control.
           this.userWantsControl = false;
           logger.debug("New lock target", entity.toString());
@@ -191,16 +199,17 @@ export class ViewportCamera {
           continue;
         }
       }
-      this.currentLock = nextTarget;
+      this.currentLock.next(nextTarget);
     });
   }
 
   public update() {
-    if (this.currentLock && !this.currentLock.target.destroyed) {
+    const currentTarget = this.currentLock.getValue();
+    if (currentTarget && !currentTarget.target.destroyed) {
       this.snapToPosition(
-        this.currentLock.target.sprite.position,
-        this.currentLock.priority,
-        this.currentLock.isLocal,
+        currentTarget.target.sprite.position,
+        currentTarget.priority,
+        currentTarget.isLocal,
       );
     }
   }

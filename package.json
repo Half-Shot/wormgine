@@ -14,7 +14,8 @@
     "assets": "node scripts/generateAssetManifest.mjs > src/assets/manifest.ts",
     "lint:prettier": "prettier 'src/**/*.(ts|tsx|md)' '*.md' -c",
     "lint:prettier-fix": "prettier 'src/**/*.(ts|tsx|md)' '*.md' -w",
-    "lint": "yarn lint:eslint && yarn lint:prettier"
+    "lint": "yarn lint:eslint && yarn lint:prettier",
+    "lint:fix": "yarn lint:eslint-fix && yarn lint:prettier-fix"
   },
   "dependencies": {
     "@dimforge/rapier2d-compat": "^0.15.0",
@@ -24,7 +25,7 @@
     "motion": "^11.13.5",
     "observable-hooks": "^4.2.4",
     "pixi-viewport": "^6.0.3",
-    "pixi.js": "8.10.2",
+    "pixi.js": "^8.10.2",
     "preact": "^10.26.4",
     "react": "npm:@preact/compat",
     "react-dom": "npm:@preact/compat",
@@ -46,6 +47,10 @@
     "typed-emitter": "^2.1.0",
     "typescript": "^5.8.2",
     "vite": "^6.2.2"
+  },
+  "resolutions": {
+    "earcut": "2.2.4",
+    "@types/earcut": "2.1.4"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
