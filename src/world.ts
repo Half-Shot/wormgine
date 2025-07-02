@@ -60,6 +60,8 @@ export function collisionGroupBitmask(
   return groupsInt + collidesInt;
 }
 
+type WindValue = -10|-9|-8|-7|-6|-5|-4|-3|-2|-1|0|1|2|3|4|5|6|7|8|9|10;
+
 /**
  * Global game world class for handling both entity update loops, and
  * physics operations.
@@ -69,7 +71,7 @@ export class GameWorld {
   public readonly entities = new Map<string, IGameEntity>();
   private readonly eventQueue = new EventQueue(true);
 
-  private readonly windSubject = new BehaviorSubject(0);
+  private readonly windSubject = new BehaviorSubject<WindValue>(0);
   public readonly wind$ = this.windSubject.asObservable();
 
   private readonly entitiesMoving = new BehaviorSubject(false);
@@ -126,7 +128,10 @@ export class GameWorld {
 
   public setWind(windSpeed: number) {
     logger.info(`setWind(${windSpeed})`);
-    this.windSubject.next(windSpeed);
+    if (!Number.isInteger(windSpeed) || windSpeed < -10 || windSpeed > 10 ) {
+      throw Error('Wind speed must be between -10 and 10, and be an integer');
+    }
+    this.windSubject.next(windSpeed as WindValue);
   }
 
   private areEntitiesMoving() {
