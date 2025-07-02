@@ -304,13 +304,6 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
 
   const roundHandlerFn = (dt: Ticker) => {
     gameState.update(dt);
-    if (
-      gameState.isPreRound &&
-      currentWorm?.hasPerformedAction &&
-      currentWorm instanceof RemoteWorm === false
-    ) {
-      gameState.playerMoved();
-    }
   };
 
   if (gameInstance instanceof RunningNetGameInstance) {

@@ -167,25 +167,40 @@ export class GameState {
     if (this.roundTransitionObservable) {
       throw Error("GameState already begun");
     }
-    this.roundTransitionObservable = combineLatest([
-      this.remainingRoundTimeSeconds$,
-      this.roundState$,
-      this.world.entitiesMoving$,
-    ])
+
+    combineLatest([this.remainingRoundTimeSeconds$, this.roundState$])
       .pipe(
         filter(([seconds]) => seconds === 0),
-        map(([_seconds, roundState, moving]) => [roundState, moving]),
+        map(([_seconds, roundState]) => [roundState]),
       )
       .pipe(delay(this.rules.roundTransitionDelayMs ?? POPUP_DELAY_MS))
-      .subscribe(([roundState, moving]) => {
-        logger.info("State accumulator", roundState, moving);
+      .subscribe(([roundState]) => {
+        logger.info("State accumulator", roundState);
         if (roundState === RoundState.Preround) {
           logger.info("Moving round to playing");
-          this.playerMoved();
+          this.remainingRoundTimeMs.next(this.roundDurationMs);
+          this.roundState.next(RoundState.Playing);
         } else if (roundState === RoundState.Playing) {
-          logger.info("Moving round to finished");
+          logger.info("Moving round to finished (was playing)", roundState);
           this.roundState.next(RoundState.Finished);
         }
+      });
+
+    combineLatest([
+      this.remainingRoundTimeSeconds$,
+      this.roundState$,
+      this.world.entitiesMoving$.pipe(skip(2)),
+    ])
+      .pipe(
+        filter(
+          ([_seconds, roundState, moving]) =>
+            moving && roundState === RoundState.Preround,
+        ),
+      )
+      .subscribe(() => {
+        logger.info("Moving round to playing due to movement");
+        this.remainingRoundTimeMs.next(this.roundDurationMs);
+        this.roundState.next(RoundState.Playing);
       });
 
     const obs = [...this.teams.values()].flatMap((t) =>
@@ -267,12 +282,6 @@ export class GameState {
     remainingRoundTimeMs = Math.max(0, remainingRoundTimeMs - ticker.deltaMS);
     logger.debug("remainingRoundTimeMs", remainingRoundTimeMs);
     this.remainingRoundTimeMs.next(remainingRoundTimeMs);
-  }
-
-  public playerMoved() {
-    this.remainingRoundTimeMs.next(this.roundDurationMs);
-    this.roundState.next(RoundState.Playing);
-    logger.debug("playerMoved", this.roundDurationMs);
   }
 
   public beginRound() {

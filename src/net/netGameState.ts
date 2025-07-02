@@ -105,8 +105,6 @@ export class NetGameState extends GameState {
     if (stateUpdate.round_state === RoundState.WaitingToBegin) {
       const result = this.advanceRound();
       return result;
-    } else if (stateUpdate.round_state === RoundState.Playing) {
-      this.playerMoved();
     } else {
       // TODO?
       this.roundState.next(stateUpdate.round_state);
