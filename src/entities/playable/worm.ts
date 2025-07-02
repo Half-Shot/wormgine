@@ -90,6 +90,8 @@ export interface WormRecordedState extends PlayableRecordedState {
 
 const FRICTION_WHEN_ACTIVE = 0.075;
 const FRICTION_WHEN_IDLE = 0.125;
+const RESITITION_WHEN_IDLE = 0.35;
+const RESITITION_WHEN_ACTIVE = 0.15;
 
 /**
  * Physical representation of a worm on the map. May be controlled.
@@ -220,7 +222,7 @@ export class Worm extends PlayableEntity<
         .setCollisionGroups(Worm.collisionBitmask)
         .setSolverGroups(Worm.collisionBitmask)
         .setFriction(FRICTION_WHEN_IDLE)
-        .setRestitution(0.65),
+        .setRestitution(RESITITION_WHEN_IDLE),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
         .lockRotations(),
@@ -313,6 +315,7 @@ export class Worm extends PlayableEntity<
     );
     this.safeUsePhys(({ collider }) => {
       collider.setFriction(FRICTION_WHEN_ACTIVE);
+      collider.setRestitution(RESITITION_WHEN_ACTIVE);
     });
     this.state.transition(InnerWormState.Idle);
     this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
@@ -361,6 +364,7 @@ export class Worm extends PlayableEntity<
     }
     this.safeUsePhys(({ collider }) => {
       collider.setFriction(FRICTION_WHEN_IDLE);
+      collider.setFriction(RESITITION_WHEN_IDLE);
     });
     this.state.transition(InnerWormState.Inactive);
     Controller.removeListener("inputBegin", this.onInputBegin);
@@ -375,7 +379,7 @@ export class Worm extends PlayableEntity<
     }
     this.recorder?.recordWormAction(this.wormIdent.uuid, StateWormAction.Jump);
     this.state.transition(InnerWormState.InMotion);
-    this.body.applyImpulse({ x: this.facingRight ? 8 : -8, y: -15 }, true);
+    this.body.applyImpulse({ x: this.facingRight ? 12 : -12, y: -30 }, true);
   }
 
   onBackflip() {
