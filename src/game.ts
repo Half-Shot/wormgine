@@ -167,11 +167,7 @@ export class Game<ReloadedGameState extends object = object> {
 
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
-    globalFlags.wormInstances = this.world.entities
-      .values()
-      .filter((e) => e instanceof PlayableEntity)
-      .map((e) => e.wormIdent)
-      .toArray();
+    globalFlags.bindWorld(this.world);
 
     import.meta.hot?.on("vite:beforeUpdate", this.hotReload);
 
@@ -202,6 +198,7 @@ export class Game<ReloadedGameState extends object = object> {
     this.overlay?.destroy();
     this.pixiApp.destroy();
     this.rapierWorld.free();
+    globalFlags.bindWorld(undefined);
   }
 
   public hotReload = () => {
