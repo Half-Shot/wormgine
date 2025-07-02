@@ -195,4 +195,6 @@ export default async function runScenario(game: Game) {
     }
     world.addEntity(entity);
   });
+
+  gameState.begin();
 }

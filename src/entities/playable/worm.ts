@@ -48,6 +48,7 @@ import { combineLatest, filter, first, timer } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import { getConditionTint } from "./conditions";
+import { POPUP_DELAY_MS } from "../../consts";
 
 export enum EndTurnReason {
   TimerElapsed = 0,
@@ -255,7 +256,7 @@ export class Worm extends PlayableEntity<
             WormName: this.wormIdent.name,
             TeamName: this.wormIdent.team.name,
           }),
-          3000,
+          POPUP_DELAY_MS,
         );
       });
     this.arrowSprite = new TiledSpriteAnimated({
@@ -306,7 +307,7 @@ export class Worm extends PlayableEntity<
         WormName: this.wormIdent.name,
         TeamName: this.wormIdent.team.name,
       }),
-      3000,
+      POPUP_DELAY_MS,
       teamGroupToColorSet(this.wormIdent.team.group).fg,
       true,
     );
@@ -355,7 +356,7 @@ export class Worm extends PlayableEntity<
           WormName: this.wormIdent.name,
           TeamName: this.wormIdent.team.name,
         }),
-        3000,
+        POPUP_DELAY_MS,
       );
     }
     this.safeUsePhys(({ collider }) => {
@@ -884,7 +885,7 @@ export class Worm extends PlayableEntity<
           WormName: this.wormIdent.name,
           TeamName: this.wormIdent.team.name,
         }),
-        3000,
+        POPUP_DELAY_MS,
       );
       // Sinking death
     }

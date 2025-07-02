@@ -1,1 +1,3 @@
 export const HEALTH_CHANGE_TENSION_TIMER_MS = 1250;
+export const POPUP_DELAY_MS = 3000;
+export const PREROUND_TIMER_MS = 5000;

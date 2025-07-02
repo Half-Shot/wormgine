@@ -7,12 +7,13 @@ import { IWeaponCode } from "../weapons/weapon";
 import {
   BehaviorSubject,
   combineLatest,
+  delay,
   distinctUntilChanged,
   filter,
   map,
   merge,
   skip,
-  timer,
+  Subscription,
 } from "rxjs";
 import {
   EndTurnTookDamange,
@@ -25,6 +26,7 @@ import {
   FireResultMiss,
   templateRandomText,
 } from "../text/toasts";
+import { POPUP_DELAY_MS, PREROUND_TIMER_MS } from "../consts";
 
 export interface GameRules {
   roundDurationMs?: number;
@@ -32,6 +34,7 @@ export interface GameRules {
   winWhenAllObjectsOfTypeDestroyed?: EntityType;
   wormHealth: number;
   ammoSchema: Record<IWeaponCode | string, number>;
+  roundTransitionDelayMs?: number;
 }
 
 interface RoundDamageDelta {
@@ -48,8 +51,6 @@ export enum RoundState {
   Paused = "paused",
   Finished = "finished",
 }
-
-const PREROUND_TIMER_MS = 5000;
 
 const logger = new Logger("GameState");
 
@@ -112,10 +113,6 @@ export class GameState {
     return this.wind;
   }
 
-  get remainingRoundTime() {
-    return this.remainingRoundTimeMs.value;
-  }
-
   get isPreRound() {
     return this.roundState.value === RoundState.Preround;
   }
@@ -127,6 +124,8 @@ export class GameState {
   get activeTeam() {
     return this.currentTeam.value;
   }
+
+  private roundTransitionObservable?: Subscription;
 
   constructor(
     teams: TeamDefinition[],
@@ -150,6 +149,45 @@ export class GameState {
         return [team.uuid, iTeam];
       }),
     );
+    if (this.teams.size !== teams.length) {
+      throw Error("Team had duplicate uuid, cannot start");
+    }
+
+    this.roundDurationMs = rules.roundDurationMs ?? 45000;
+    this.nextTeamStack = [...this.teams.values()];
+    this.roundState.subscribe((s) =>
+      logger.info(`Round state changed => ${s}`),
+    );
+    this.currentTeam.subscribe((s) =>
+      logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`),
+    );
+  }
+
+  public begin() {
+    if (this.roundTransitionObservable) {
+      throw Error("GameState already begun");
+    }
+    this.roundTransitionObservable = combineLatest([
+      this.remainingRoundTimeSeconds$,
+      this.roundState$,
+      this.world.entitiesMoving$,
+    ])
+      .pipe(
+        filter(([seconds]) => seconds === 0),
+        map(([_seconds, roundState, moving]) => [roundState, moving]),
+      )
+      .pipe(delay(this.rules.roundTransitionDelayMs ?? POPUP_DELAY_MS))
+      .subscribe(([roundState, moving]) => {
+        logger.info("State accumulator", roundState, moving);
+        if (roundState === RoundState.Preround) {
+          logger.info("Moving round to playing");
+          this.playerMoved();
+        } else if (roundState === RoundState.Playing) {
+          logger.info("Moving round to finished");
+          this.roundState.next(RoundState.Finished);
+        }
+      });
+
     const obs = [...this.teams.values()].flatMap((t) =>
       t.worms.map((w) => w.health$.pipe(map((health) => ({ health, w })))),
     );
@@ -166,37 +204,13 @@ export class GameState {
         this.roundDamageDelta.wormsDamaged.add(w.uuid);
       }
     });
-    if (this.teams.size !== teams.length) {
-      throw Error("Team had duplicate uuid, cannot start");
+  }
+
+  public stop() {
+    if (!this.roundTransitionObservable) {
+      throw Error("GameState never begun");
     }
-    this.nextTeamStack = [...this.teams.values()];
-    this.roundDurationMs = rules.roundDurationMs ?? 45000;
-    this.roundState.subscribe((s) =>
-      logger.info(`Round state changed => ${s}`),
-    );
-    this.currentTeam.subscribe((s) =>
-      logger.info(`Current team is now => ${s?.name} ${s?.playerUserId}`),
-    );
-    combineLatest([
-      timer(3000),
-      this.remainingRoundTimeSeconds$,
-      this.roundState$,
-      this.world.entitiesMoving$,
-    ])
-      .pipe(
-        filter(([timer, seconds]) => timer === 0 && seconds === 0),
-        map(([_timer, _seconds, roundState, moving]) => [roundState, moving]),
-      )
-      .subscribe(([roundState, moving]) => {
-        logger.info("State accumulator", roundState, moving);
-        if (roundState === RoundState.Preround) {
-          logger.info("Moving round to playing");
-          this.playerMoved();
-        } else if (roundState === RoundState.Playing) {
-          logger.info("Moving round to finished");
-          this.roundState.next(RoundState.Finished);
-        }
-      });
+    this.roundTransitionObservable.unsubscribe();
   }
 
   public pauseTimer() {
@@ -251,6 +265,7 @@ export class GameState {
     }
 
     remainingRoundTimeMs = Math.max(0, remainingRoundTimeMs - ticker.deltaMS);
+    logger.debug("remainingRoundTimeMs", remainingRoundTimeMs);
     this.remainingRoundTimeMs.next(remainingRoundTimeMs);
   }
 

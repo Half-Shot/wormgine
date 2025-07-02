@@ -129,4 +129,6 @@ export default async function runScenario(game: Game) {
     gameState.advanceRound();
     await new Promise((r) => setTimeout(r, 6000));
   } while (toastCounter < 50000);
+
+  gameState.begin();
 }

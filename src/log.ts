@@ -7,7 +7,7 @@ export enum LogLevels {
 }
 
 export default class Logger {
-  public static LogLevel = LogLevels.Error;
+  public static LogLevel = LogLevels.Verbose;
   constructor(private readonly moduleName: string) {}
 
   public verbose(...info: unknown[]) {

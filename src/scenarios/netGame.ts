@@ -322,6 +322,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       await gameInstance.ready();
       log.info("Marked as ready");
     }
+    gameState.begin();
   }
 
   combineLatest([gameState.roundState$])

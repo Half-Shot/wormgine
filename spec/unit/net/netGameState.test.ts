@@ -6,6 +6,8 @@ import { NetGameState } from "../../../src/net/netGameState";
 import { StateRecorder, StateRecorderStore } from "../../../src/state/recorder";
 import { StateRecordLine, StateRecordWormGameState } from "../../../src/state/model";
 import { EventEmitter } from "pixi.js";
+import { GameWorld } from "../../../src/world";
+import { of } from "rxjs";
 
 const DEAD_WORM: WormIdentity = {
   name: "fishbait",
@@ -90,13 +92,21 @@ class TestRecorderStore extends EventEmitter<{
 
 }
 
+const world = {
+  entitiesMoving$: of(false),
+} as Partial<GameWorld> as GameWorld;
+
 function createEnvironment() {
   const recorderStoreOne = new TestRecorderStore();
   const recorderStoreTwo = new TestRecorderStore();
   const recorderStoreThree = new TestRecorderStore();
-  const stateOne = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], {} as any, { ...DefaultRules }, new StateRecorder(recorderStoreOne), playerHost);
-  const stateTwo = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], {} as any, { ...DefaultRules }, new StateRecorder(recorderStoreTwo), playerTwo);
-  const stateThree = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], {} as any, { ...DefaultRules }, new StateRecorder(recorderStoreThree), playerThree);
+  const stateOne = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], world, { ...DefaultRules }, new StateRecorder(recorderStoreOne), playerHost);
+  const stateTwo = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], world, { ...DefaultRules }, new StateRecorder(recorderStoreTwo), playerTwo);
+  const stateThree = new NetGameState([{ ...RED_TEAM }, { ...BLUE_TEAM }, { ...GREEN_TEAM }], world, { ...DefaultRules }, new StateRecorder(recorderStoreThree), playerThree);
+
+  stateOne.begin();
+  stateTwo.begin();
+  stateThree.begin();
 
   recorderStoreOne.on('data', (d) => {
     // N.B: This needs filtering out in a different layer in runtime.
@@ -142,5 +152,9 @@ describe('NetGameState', () => {
     one.gameState.beginRound();
     one.gameState.playerMoved();
     one.gameState.markAsFinished();
+
+    one.gameState.stop();
+    two.gameState.stop();
+    three.gameState.stop();
   });
 });
