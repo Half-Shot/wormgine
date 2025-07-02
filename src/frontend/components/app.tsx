@@ -10,6 +10,9 @@ import {
   IRunningGameInstance,
   LocalGameInstance,
 } from "../../logic/gameinstance";
+import Logger from "../../log";
+
+const log = new Logger("App");
 
 interface LoadGameProps {
   scenario: string;
@@ -48,11 +51,18 @@ export function App() {
     if (!clientConfig) {
       return;
     }
-    const client = new NetGameClient(clientConfig);
-    setClient(client);
-    void client.start();
 
-    return () => client.stop();
+    void (async () => {
+      try {
+        const client = new NetGameClient(clientConfig);
+        void client.start();
+        setClient(client);
+      } catch (ex) {
+        log.error("Failed to connect to game server", ex);
+      }
+    });
+
+    return () => client?.stop();
   }, [clientConfig]);
 
   gameReactChannel.on("goToMenu", () => {
