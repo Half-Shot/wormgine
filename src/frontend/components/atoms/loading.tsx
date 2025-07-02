@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import video from "../../../assets/ui/loading.webm";
+import Logger from "../../../log";
+
+const log = new Logger("component.loading");
 
 const staticVideo = fetch(video, { priority: "high" })
   .then((v) => v.blob())
@@ -39,13 +42,17 @@ export function Loading({
       return;
     }
     if (progress === undefined) {
-      videoRef.current.play();
+      videoRef.current
+        .play()
+        .catch((ex) => log.error("Error while playing load animation", ex));
       return;
     }
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
-      videoRef.current.play();
+      videoRef.current
+        .play()
+        .catch((ex) => log.error("Error while resuming load animation", ex));
     } else if (currentTime >= expectedProgress) {
       videoRef.current.pause();
     }
