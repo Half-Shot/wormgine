@@ -29,6 +29,7 @@ import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";
 import globalFlags from "../flags";
+import { getAssets } from "../assets";
 
 const log = new Logger("scenario");
 
@@ -157,8 +158,12 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     gameInstance.myUserId,
   );
 
+
+  const waterLevel =
+    MetersValue.fromPixels(level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0);
+  
   const bg = await world.addEntity(
-    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, "bork"),
+    new Background(game.screenSize$, game.viewport, terrain, world, game.pixiApp.renderer, (await getAssets()).textures.particles_borealis, waterLevel),
   );
   bg.addToWorld(game.pixiApp.stage, parent);
   world.addEntity(terrain);
@@ -172,13 +177,10 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     game.screenSize$,
   );
 
-  const waterLevel =
-    level.objects.find((v) => v.type === "wormgine.water")?.tra.y ?? 0;
-
   const water = world.addEntity(
     new Water(
       MetersValue.fromPixels(worldWidth * 4),
-      MetersValue.fromPixels(waterLevel),
+      waterLevel,
       world,
     ),
   );
@@ -191,6 +193,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
     gameState.currentWorm$.pipe(map((w) => w?.team.playerUserId === null)),
   );
   globalFlags.viewportCamera = camera;
+  globalFlags.bindGameState(gameState);
 
   for (const levelObject of level.objects) {
     if (levelObject.type === "wormgine.target") {
@@ -356,12 +359,6 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       ) {
         world.setBroadcasting(false);
       }
-      log.info(
-        "GameState Round state sub fired for",
-        roundState,
-        worm,
-        entsMoving,
-      );
       if (
         worm === undefined &&
         roundState === RoundState.Finished &&

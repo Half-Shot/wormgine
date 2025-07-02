@@ -8,8 +8,6 @@ import {
 } from "pixi.js";
 import { IPhysicalEntity } from "./entity";
 import {
-  collisionGroupBitmask,
-  CollisionGroups,
   GameWorld,
   PIXELS_PER_METER,
   RapierPhysicsObject,
@@ -22,10 +20,6 @@ import { MetersValue } from "../utils";
  * and insta-kill them.
  */
 export class Water implements IPhysicalEntity {
-  private static readonly collisionBitmask = collisionGroupBitmask(
-    CollisionGroups.Terrain,
-    [CollisionGroups.WorldObjects],
-  );
   priority = UPDATE_PRIORITY.LOW;
   private readonly geometry: Geometry;
   private readonly waterMesh: Mesh<Geometry, Shader>;
@@ -73,18 +67,12 @@ export class Water implements IPhysicalEntity {
     this.geometry = new Geometry({
       attributes: {
         aPosition: [
-          -100,
-          0, // top left
-          -100,
-          100, // bottom left
-          0,
-          100, // bottom middle
-          0,
-          0, // top middle
-          100,
-          100, // bottom right
-          100,
-          0, // top right
+          -100, 0, // top left
+          -100,  100, // bottom left
+          0, 100, // bottom middle
+          0, 0, // top middle
+          100, 100, // bottom right
+          100, 0, // top right
         ],
       },
       indexBuffer,

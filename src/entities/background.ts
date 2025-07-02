@@ -18,7 +18,7 @@ import {
 import { IGameEntity } from "./entity";
 import { BitmapTerrain } from "./bitmapTerrain";
 import { Viewport } from "pixi-viewport";
-import { Coordinate } from "../utils";
+import { Coordinate, MetersValue } from "../utils";
 import globalFlags from "../flags";
 import { GameWorld } from "../world";
 import { Observable } from "rxjs";
@@ -45,7 +45,6 @@ const log = new Logger("Background");
  */
 export class Background implements IGameEntity {
   private rainSpeed = 2.5;
-  private rainSpeedVariation = 1;
   priority = UPDATE_PRIORITY.LOW;
 
   private currentWind = 0;
@@ -62,6 +61,9 @@ export class Background implements IGameEntity {
   rainGeometry: Geometry;
   rainMesh: Mesh<Geometry, Shader>;
 
+  private screenWidth = 0;
+  private screenHeight = 0;
+
   private static vertexSrc: string;
   private static fragmentSrc: string;
 
@@ -77,6 +79,7 @@ export class Background implements IGameEntity {
     world: GameWorld,
     renderer: Renderer,
     rain: string|Texture,
+    private readonly waterPosition: MetersValue,
   ) {
     this.rainGraphic = new Graphics(this.rainGraphicContext);
     this.gradientGraphics = new Graphics();
@@ -163,6 +166,8 @@ export class Background implements IGameEntity {
         this.rainParticles.splice(0, Math.abs(rainDelta));
       }
       this.updateInstanceBuffer();
+      this.screenHeight = height;
+      this.screenWidth = width;
     });
   }
 
@@ -222,21 +227,20 @@ export class Background implements IGameEntity {
   }
 
   update(): void {
+    this.rainGraphic.clear();
     if (globalFlags.DebugView) {
       // Don't render during debug view.
-      this.rainGraphic.clear();
       return;
     }
-    this.rainGraphic.clear();
+    const waterPos = this.waterPosition.pixels;
     for (
       let rainIndex = 0;
       rainIndex < this.rainParticles.length;
       rainIndex += 1
     ) {
       const particle = this.rainParticles[rainIndex];
-      // Hit water
-      if (particle.position.y > 900) {
-        // TODO: Properly detect terrain
+      // Out of viewport
+      if (particle.position.y > waterPos || particle.position.x > this.screenWidth || particle.position.x < 0) {
         this.rainParticles.splice(rainIndex, 1);
         // TODO: And splash
         this.addRainParticle();
