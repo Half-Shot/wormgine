@@ -44,7 +44,7 @@ import { CameraLockPriority } from "../../camera";
 import { OnDamageOpts } from "../entity";
 import Logger from "../../log";
 import { WormState, InnerWormState } from "./wormState";
-import { combineLatest, filter, first, timer } from "rxjs";
+import { BehaviorSubject, combineLatest, filter, first, timer } from "rxjs";
 import { TweenEngine } from "../../motion/tween";
 import { TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import { getConditionTint } from "./conditions";
@@ -118,7 +118,9 @@ export class Worm extends PlayableEntity<
   private arrowSprite: TiledSpriteAnimated;
   private currentWeapon: IWeaponDefinition = WeaponBazooka;
   private impactVelocity = 0;
-  private perRoundState: PerRoundState = { ...DEFAULT_PER_ROUND_STATE };
+  private perRoundState = new BehaviorSubject<PerRoundState>({
+    ...DEFAULT_PER_ROUND_STATE,
+  });
   private static idleAnim: Texture;
   private static impactDamageMultiplier = 0.75;
   private static minImpactForDamage = 12;
@@ -142,8 +144,8 @@ export class Worm extends PlayableEntity<
     return new Coordinate(trans.x - (width + 0.33), trans.y);
   }
 
-  get hasPerformedAction() {
-    return this.perRoundState.hasPerformedAction;
+  get perRoundState$() {
+    return this.perRoundState.asObservable();
   }
 
   static create(
@@ -278,7 +280,7 @@ export class Worm extends PlayableEntity<
   }
 
   public selectWeapon(weapon: IWeaponDefinition) {
-    if (this.perRoundState.shotsTaken > 0) {
+    if (this.perRoundState.value.shotsTaken > 0) {
       // Worm is already in progress of shooting things.
       return;
     }
@@ -319,7 +321,7 @@ export class Worm extends PlayableEntity<
     });
     this.state.transition(InnerWormState.Idle);
     this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
-    this.perRoundState = { ...DEFAULT_PER_ROUND_STATE };
+    this.perRoundState.next({ ...DEFAULT_PER_ROUND_STATE });
     if (bindInput) {
       Controller.on("inputBegin", this.onInputBegin);
       Controller.on("inputEnd", this.onInputEnd);
@@ -402,7 +404,10 @@ export class Worm extends PlayableEntity<
       // Ignore all input when the worm is firing.
       return;
     }
-    this.perRoundState.hasPerformedAction = true;
+    this.perRoundState.next({
+      ...this.perRoundState.value,
+      hasPerformedAction: true,
+    });
     logger.info(
       "Got input",
       inputKind,
@@ -437,7 +442,10 @@ export class Worm extends PlayableEntity<
       const screenPoint = this.parent.toWorld(point.x, point.y);
       const newCoodinate = Coordinate.fromScreen(screenPoint.x, screenPoint.y);
       logger.info("Picked target", position, point, newCoodinate);
-      this.perRoundState.weaponTarget = newCoodinate;
+      this.perRoundState.next({
+        ...this.perRoundState.value,
+        weaponTarget: newCoodinate,
+      });
     }
     if (this.currentWeapon.timerAdjustable) {
       const oldTime = this.weaponTimerSecs;
@@ -593,21 +601,25 @@ export class Worm extends PlayableEntity<
     this.wormIdent.team.consumeAmmo(this.weapon.code);
     const maxShots = this.weapon.shots ?? 1;
     const duration = this.fireWeaponDuration;
+    const { weaponTarget, shotsTaken } = this.perRoundState.value;
     const opts = remoteOpts ?? {
       duration,
       timer: this.weaponTimerSecs,
       angle: this.fireAngle,
-      target: this.perRoundState.weaponTarget,
+      target: weaponTarget,
     };
     this.recorder?.recordWormFire(this.wormIdent.uuid, opts);
     this.targettingGfx.visible = false;
-    this.perRoundState.shotsTaken++;
+    this.perRoundState.next({
+      ...this.perRoundState.value,
+      shotsTaken: shotsTaken + 1,
+    });
     // TODO: Need a middle state for while the world is still active.
     this.desiredCameraLockPriority.next(CameraLockPriority.NoLock);
     this.fireWeaponDuration = 0;
 
     // Determine worm state based on the kind of weapon
-    const hasMoreShots = maxShots > this.perRoundState.shotsTaken;
+    const hasMoreShots = maxShots > shotsTaken + 1;
     if (hasMoreShots) {
       this.state.transition(InnerWormState.FiringWaitingForNextShot);
       const sub = combineLatest([
@@ -731,7 +743,9 @@ export class Worm extends PlayableEntity<
   }
 
   get needsTarget() {
-    return !!this.weapon.showTargetPicker && !this.perRoundState.weaponTarget;
+    return (
+      !!this.weapon.showTargetPicker && !this.perRoundState.value.weaponTarget
+    );
   }
 
   update(dt: number, dMs: number): void {
@@ -749,7 +763,8 @@ export class Worm extends PlayableEntity<
       );
     }
     this.weaponSprite.visible = this.state.showWeapon;
-    this.arrowSprite.visible = this.state.canMove && !this.hasPerformedAction;
+    this.arrowSprite.visible =
+      this.state.canMove && !this.perRoundState.value.hasPerformedAction;
     if (this.arrowSprite.visible) {
       this.arrowSprite.visible = true;
       this.arrowSprite.update(dMs);

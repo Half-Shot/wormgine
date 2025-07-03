@@ -126,6 +126,7 @@ export class GameState {
   }
 
   private roundTransitionObservable?: Subscription;
+  private roundTransitionOnMovement?: Subscription;
 
   constructor(
     teams: TeamDefinition[],
@@ -163,6 +164,15 @@ export class GameState {
     );
   }
 
+  public playCurrentRound() {
+    if (this.roundState.value !== RoundState.Preround) {
+      throw Error("Expected round state to be preround");
+    }
+    logger.info("Moving round to playing");
+    this.remainingRoundTimeMs.next(this.roundDurationMs);
+    this.roundState.next(RoundState.Playing);
+  }
+
   public begin() {
     if (this.roundTransitionObservable) {
       throw Error("GameState already begun");
@@ -187,24 +197,6 @@ export class GameState {
           logger.info("Moving round to finished (was playing)", roundState);
           this.roundState.next(RoundState.Finished);
         }
-      });
-
-    combineLatest([
-      this.remainingRoundTimeSeconds$,
-      this.roundState$,
-      this.world.entitiesMoving$,
-    ])
-      .pipe(
-        // This skips the "settling stage" where entites move around
-        filter(
-          ([_seconds, roundState, moving]) =>
-            moving && roundState === RoundState.Preround,
-        ),
-      )
-      .subscribe(() => {
-        logger.info("Moving round to playing due to movement");
-        this.remainingRoundTimeMs.next(this.roundDurationMs);
-        this.roundState.next(RoundState.Playing);
       });
 
     const obs = [...this.teams.values()].flatMap((t) =>

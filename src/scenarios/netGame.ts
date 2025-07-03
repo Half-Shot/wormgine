@@ -297,6 +297,9 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   });
 
   function transitionHandler(prev: InnerWormState, next: InnerWormState) {
+    if (prev === InnerWormState.Idle && gameState.isPreRound) {
+      gameState.playCurrentRound();
+    }
     if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
       gameState.setTimer(5000);
     }

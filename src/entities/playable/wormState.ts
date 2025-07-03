@@ -1,5 +1,6 @@
 import TypedEmitter from "typed-emitter";
 import { EventEmitter } from "events";
+import Logger from "../../log";
 
 export enum InnerWormState {
   Idle = 0,
@@ -19,6 +20,16 @@ type Events = {
   transition: (before: InnerWormState, after: InnerWormState) => void;
 };
 
+const logger = new Logger("WormState");
+
+const validTransitionsWhileInGetaway = [
+  InnerWormState.Inactive,
+  InnerWormState.InMotion,
+  InnerWormState.Getaway,
+  InnerWormState.MovingLeft,
+  InnerWormState.MovingRight,
+];
+
 export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
   private innerStatePriorToMotion?: InnerWormState;
   private isGetaway = false;
@@ -28,9 +39,32 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   transition(newState: InnerWormState) {
+    const prev = this.innerState;
+    logger.debug(
+      `Transition from ${InnerWormState[prev]} to ${InnerWormState[newState]}`,
+    );
+    if (newState === this.innerState) {
+      logger.warning(
+        `Worm tried to transition to the same state (${InnerWormState[newState]})`,
+      );
+      return;
+    }
+    if (this.isGetaway && !validTransitionsWhileInGetaway.includes(newState)) {
+      throw Error(
+        `Worm tried to transition to ${InnerWormState[newState]} while in a getaway`,
+      );
+    }
+
     // Once we mark a worm as getaway, do not allow them to go back to an idle state.
     if (newState === InnerWormState.Getaway) {
       this.isGetaway = true;
+      // Important to avoid the Error above.
+      if (
+        !validTransitionsWhileInGetaway.includes(this.innerStatePriorToMotion!)
+      ) {
+        this.innerStatePriorToMotion = InnerWormState.Getaway;
+      }
+      this.innerStatePriorToMotion = InnerWormState.Getaway;
     } else if (newState === InnerWormState.Inactive) {
       this.isGetaway = false;
     }
@@ -42,7 +76,6 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     } else if (newState === InnerWormState.MovingRight) {
       this.innerStatePriorToMotion = this.innerState;
     }
-    const prev = this.innerState;
     this.innerState = newState;
     this.emit("transition", prev, newState);
   }
@@ -129,7 +162,6 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     return [
       InnerWormState.Idle,
       InnerWormState.InMotion,
-      InnerWormState.Getaway,
       InnerWormState.InactiveWaiting,
       InnerWormState.FiringWaitingForNextShot,
     ].includes(this.innerState);
