@@ -21,7 +21,6 @@ import { Coordinate, MetersValue } from "../utils";
 import globalFlags from "../flags";
 import { GameWorld } from "../world";
 import { Observable } from "rxjs";
-import Logger from "../log";
 
 interface RainParticle {
   position: Point;
@@ -33,17 +32,15 @@ interface RainParticle {
 
 const MAX_RAIN_LENGTH = 10;
 const MIN_RAIN_LENGTH = 6;
-const RAINDROP_COUNT = 350;
+const RAINDROP_COUNT = 200;
 const WIND_ADJUST_EVERY_PARTICLE = 10;
 const WIND_ADJUST_BY = 0.33;
-
-const log = new Logger("Background");
+const BASE_RAIN_SPEED = 20;
 
 /**
  * Background of the game world. Includes rain particles.
  */
 export class Background implements IGameEntity {
-  private rainSpeed = 2.5;
   priority = UPDATE_PRIORITY.LOW;
 
   private currentWind = 0;
@@ -52,16 +49,12 @@ export class Background implements IGameEntity {
 
   private gradientGraphics: Graphics;
 
-  private rainGraphic: Graphics;
   private rainGraphicContext = new GraphicsContext();
   private rainParticles: RainParticle[] = [];
   private rainShader: Shader;
   instancePositionBuffer: Buffer;
   rainGeometry: Geometry;
   rainMesh: Mesh<Geometry, Shader>;
-
-  private screenWidth = 0;
-  private screenHeight = 0;
 
   private static vertexSrc: string;
   private static fragmentSrc: string;
@@ -80,7 +73,6 @@ export class Background implements IGameEntity {
     rain: string | Texture,
     private readonly waterPosition: MetersValue,
   ) {
-    this.rainGraphic = new Graphics(this.rainGraphicContext);
     this.gradientGraphics = new Graphics();
     world.wind$.subscribe((wind) => {
       this.targetWind = wind;
@@ -109,7 +101,7 @@ export class Background implements IGameEntity {
         uTexture: rainTexture.source,
         uSampler: rainTexture.source.style,
         waveUniforms: {
-          time: { value: 2, type: "f32" },
+          time: { value: 0, type: "f32" },
         },
       },
     });
@@ -120,19 +112,19 @@ export class Background implements IGameEntity {
     this.rainGeometry = new Geometry({
       attributes: {
         aPosition: [
-          -10,
-          -10, // top left
-          10,
-          -10, // top right
-          10,
-          10, // bottom right
+          -12,
+          -12, // top left
+          12,
+          -12, // top right
+          12,
+          12, // bottom right
 
-          10,
-          10, // bottom right
-          -10,
-          10, // bottom left
-          -10,
-          -10, // top left
+          12,
+          12, // bottom right
+          -12,
+          12, // bottom left
+          -12,
+          -12, // top left
         ],
         aUV: [
           0,
@@ -165,11 +157,14 @@ export class Background implements IGameEntity {
       const halfViewHeight = height / 2;
       const gradient = new FillGradient({
         type: "linear",
-        start: { x: 0, y: -halfViewWidth },
-        end: { x: 0, y: height },
+        start: { x: 0, y: 0 },
+        end: { x: 0, y: 1 },
+        colorStops: [
+          { offset: 0, color: "rgba(3, 0, 51, 0.9)" },
+          { offset: 1, color: "rgba(39, 0, 5, 0.9)" },
+        ],
+        textureSpace: "local",
       });
-      gradient.addColorStop(0, "rgba(3, 0, 51, 0.9)");
-      gradient.addColorStop(1, "rgba(39, 0, 5, 0.9)");
       this.gradientGraphics.rect(
         -halfViewWidth,
         -halfViewHeight,
@@ -178,7 +173,6 @@ export class Background implements IGameEntity {
       );
       this.gradientGraphics.fill(gradient);
       this.gradientGraphics.position.set(halfViewWidth, halfViewHeight);
-      this.rainGraphic.position.set(0, 0);
       // Create some rain
       const rainDelta = rainCount - this.rainParticles.length;
       if (rainDelta > 0) {
@@ -189,8 +183,6 @@ export class Background implements IGameEntity {
         this.rainParticles.splice(0, Math.abs(rainDelta));
       }
       this.updateInstanceBuffer();
-      this.screenHeight = height;
-      this.screenWidth = width;
     });
   }
 
@@ -203,8 +195,13 @@ export class Background implements IGameEntity {
       buffer[count++] = particle.angle;
     }
     this.instancePositionBuffer.update();
-    this.rainShader.resources.waveUniforms.uniforms.time =
-      (performance.now() / 1500) * this.currentWind;
+    this.rainShader.resources.waveUniforms.uniforms.time +=
+      0.05 * this.currentWind;
+    if (
+      Math.abs(this.rainShader.resources.waveUniforms.uniforms.time) > Math.PI
+    ) {
+      this.rainShader.resources.waveUniforms.uniforms.time = 0;
+    }
   }
 
   addRainParticle(initial = false) {
@@ -223,17 +220,15 @@ export class Background implements IGameEntity {
         MIN_RAIN_LENGTH +
         Math.round(Math.random() * (MAX_RAIN_LENGTH - MIN_RAIN_LENGTH)),
       angle: (Math.random() - 0.5) * 15,
-      speed: windAdjust * this.rainSpeed,
+      speed: windAdjust * BASE_RAIN_SPEED,
       wind: this.currentWind,
     });
     if (Math.abs(this.targetWind - this.currentWind) > WIND_ADJUST_BY) {
-      log.debug("Background wind off", this.targetWind, this.currentWind);
       if (this.windAdjustParticleCount > WIND_ADJUST_EVERY_PARTICLE) {
         this.windAdjustParticleCount = 0;
         const adjustment =
           this.targetWind > this.currentWind ? WIND_ADJUST_BY : -WIND_ADJUST_BY;
         this.currentWind += adjustment;
-        log.debug("Wind adjusted", this.currentWind);
       } else {
         this.windAdjustParticleCount++;
       }
@@ -250,7 +245,11 @@ export class Background implements IGameEntity {
   }
 
   update(): void {
-    this.rainGraphic.clear();
+    const maxX =
+      this.viewport.center.x + this.viewport.screenWidthInWorldPixels / 2;
+    const minX =
+      this.viewport.center.x - this.viewport.screenWidthInWorldPixels / 2;
+
     if (globalFlags.DebugView) {
       // Don't render during debug view.
       return;
@@ -265,8 +264,8 @@ export class Background implements IGameEntity {
       // Out of viewport
       if (
         particle.position.y > waterPos ||
-        particle.position.x > this.screenWidth ||
-        particle.position.x < 0
+        particle.position.x > maxX ||
+        particle.position.x < minX
       ) {
         this.rainParticles.splice(rainIndex, 1);
         // TODO: And splash
