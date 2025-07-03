@@ -170,13 +170,14 @@ describe('GameState', () => {
       expect(await getFinalValue(gameState.remainingRoundTimeSeconds$)).toEqual(5);
     });
 
-    test('should handle the player moving during preround', async () => {
+    test('should handle the player moving (using playCurrentRound) during preround', async () => {
       gameState = new GameState([RED_TEAM, BLUE_TEAM], { entitiesMoving$: entitiesMoving } as Partial<GameWorld> as GameWorld, DefaultRules);
       gameState.begin();
       gameState.advanceRound();
       expect(gameState.iteration).toEqual(1);
       gameState.beginRound();
-      entitiesMoving.next(true);
+      // We no longer use entitiesMoving
+      gameState.playCurrentRound();
       expect(await getFinalValue(gameState.roundState$)).toEqual(RoundState.Playing);
       expect(gameState.paused).toEqual(false);
       expect(await getFinalValue(gameState.remainingRoundTimeSeconds$)).toEqual(DefaultRules.roundDurationMs / 1000);
