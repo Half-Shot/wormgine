@@ -1,8 +1,10 @@
 in vec2 aPosition;
 in vec2 aUV;
 in vec3 aPositionOffset;
+in vec4 aColor;
 
 out vec2 vUV;
+out vec4 vColor;
 
 uniform mat3 uProjectionMatrix;
 uniform mat3 uWorldTransformMatrix;
@@ -18,4 +20,5 @@ void main() {
 
     gl_Position = initialPos;
     vUV = aUV;
+    vColor = aColor;
 }

@@ -4,15 +4,13 @@ import {
   Graphics,
   Point,
   UPDATE_PRIORITY,
-  Text,
-  Renderer,
   Texture,
-  GraphicsContext,
   Buffer,
   BufferUsage,
   Geometry,
   Shader,
   Mesh,
+  Color,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { BitmapTerrain } from "./bitmapTerrain";
@@ -21,6 +19,7 @@ import { Coordinate, MetersValue } from "../utils";
 import globalFlags from "../flags";
 import { GameWorld } from "../world";
 import { Observable } from "rxjs";
+import { BackgroundPalettes } from "../color";
 
 interface RainParticle {
   position: Point;
@@ -49,7 +48,6 @@ export class Background implements IGameEntity {
 
   private gradientGraphics: Graphics;
 
-  private rainGraphicContext = new GraphicsContext();
   private rainParticles: RainParticle[] = [];
   private rainShader: Shader;
   instancePositionBuffer: Buffer;
@@ -58,6 +56,8 @@ export class Background implements IGameEntity {
 
   private static vertexSrc: string;
   private static fragmentSrc: string;
+
+  private palette = BackgroundPalettes[0];
 
   static async readAssets() {
     Background.vertexSrc = (await import("../shaders/rain.vert?raw")).default;
@@ -69,8 +69,7 @@ export class Background implements IGameEntity {
     private viewport: Viewport,
     private readonly terrain: BitmapTerrain,
     world: GameWorld,
-    renderer: Renderer,
-    rain: string | Texture,
+    rainTexture: Texture,
     private readonly waterPosition: MetersValue,
   ) {
     this.gradientGraphics = new Graphics();
@@ -78,20 +77,6 @@ export class Background implements IGameEntity {
       this.targetWind = wind;
     });
     const rainCount = Math.ceil(RAINDROP_COUNT);
-    let rainTexture;
-    if (typeof rain === "string") {
-      const emojiText = new Text({
-        text: rain,
-        style: {
-          fill: 0xffffff,
-          fontFamily: "Arial",
-          fontSize: 16,
-        },
-      });
-      rainTexture = renderer.generateTexture(emojiText);
-    } else {
-      rainTexture = rain;
-    }
     this.rainShader = Shader.from({
       gl: {
         vertex: Background.vertexSrc,
@@ -100,7 +85,7 @@ export class Background implements IGameEntity {
       resources: {
         uTexture: rainTexture.source,
         uSampler: rainTexture.source.style,
-        waveUniforms: {
+        uniforms: {
           time: { value: 0, type: "f32" },
         },
       },
@@ -118,7 +103,6 @@ export class Background implements IGameEntity {
           -12, // top right
           12,
           12, // bottom right
-
           12,
           12, // bottom right
           -12,
@@ -144,6 +128,9 @@ export class Background implements IGameEntity {
           buffer: this.instancePositionBuffer,
           instance: true,
         },
+        aColor: Array(6)
+          .fill(new Color(this.palette.rainColor).toArray())
+          .flat(),
       },
       instanceCount: rainCount,
     });
@@ -160,8 +147,8 @@ export class Background implements IGameEntity {
         start: { x: 0, y: 0 },
         end: { x: 0, y: 1 },
         colorStops: [
-          { offset: 0, color: "rgba(3, 0, 51, 0.9)" },
-          { offset: 1, color: "rgba(39, 0, 5, 0.9)" },
+          { offset: 0, color: this.palette.gradient[0] },
+          { offset: 1, color: this.palette.gradient[1] },
         ],
         textureSpace: "local",
       });
@@ -195,12 +182,9 @@ export class Background implements IGameEntity {
       buffer[count++] = particle.angle;
     }
     this.instancePositionBuffer.update();
-    this.rainShader.resources.waveUniforms.uniforms.time +=
-      0.05 * this.currentWind;
-    if (
-      Math.abs(this.rainShader.resources.waveUniforms.uniforms.time) > Math.PI
-    ) {
-      this.rainShader.resources.waveUniforms.uniforms.time = 0;
+    this.rainShader.resources.uniforms.uniforms.time += 0.01 * this.currentWind;
+    if (Math.abs(this.rainShader.resources.uniforms.uniforms.time) > Math.PI) {
+      this.rainShader.resources.uniforms.uniforms.time = 0;
     }
   }
 
@@ -286,7 +270,7 @@ export class Background implements IGameEntity {
       }
       const anglularVelocity = (particle.wind + particle.angle) * 0.15;
       particle.position.x += anglularVelocity;
-      particle.position.y += particle.speed;
+      particle.position.y += 4;
     }
 
     this.updateInstanceBuffer();

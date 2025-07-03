@@ -86,7 +86,7 @@ export class Water implements IPhysicalEntity {
         name: "water",
       },
       resources: {
-        waveUniforms: {
+        uniforms: {
           iTime: { type: "f32", value: 0 },
         },
       },
@@ -122,8 +122,7 @@ export class Water implements IPhysicalEntity {
   }
 
   update(): void {
-    this.shader.resources.waveUniforms.uniforms.iTime =
-      performance.now() / 1000;
+    this.shader.resources.uniforms.uniforms.iTime = performance.now() / 1000;
   }
 
   destroy(): void {

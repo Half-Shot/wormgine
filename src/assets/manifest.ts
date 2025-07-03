@@ -34,6 +34,7 @@ import levels_trainingTex from "./levels/training.png";
 import player_koboldIdleTex from "./player/kobold_idle.png";
 import player_koboldStaticTex from "./player/kobold_static.png";
 import particles_borealisTex from "./particles/borealis.png";
+import particles_cogTex from "./particles/cog.png";
 
 // Sounds
 import bazookafireSnd from "./bazookafire.ogg";
@@ -87,6 +88,7 @@ export interface AssetTextures {
   player_koboldIdle: Texture;
   player_koboldStatic: Texture;
   particles_borealis: Texture;
+  particles_cog: Texture;
 }
 
 export interface AssetSounds {
@@ -144,6 +146,7 @@ export const manifest = {
         { src: player_koboldIdleTex, alias: "player_koboldIdle" },
         { src: player_koboldStaticTex, alias: "player_koboldStatic" },
         { src: particles_borealisTex, alias: "particles_borealis" },
+        { src: particles_cogTex, alias: "particles_cog" },
       ],
     },
     {

@@ -168,8 +168,7 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       game.viewport,
       terrain,
       world,
-      game.pixiApp.renderer,
-      (await getAssets()).textures.particles_borealis,
+      (await getAssets()).textures.particles_cog,
       waterLevel,
     ),
   );
