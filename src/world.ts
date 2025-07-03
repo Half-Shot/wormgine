@@ -145,7 +145,7 @@ export class GameWorld {
       distinctUntilChanged(),
     );
     this.entitiesMoving$.subscribe((entsMoving) => {
-      logger.info(`Entities moving: ${entsMoving}`);
+      logger.debug(`Entities moving: ${entsMoving}`);
     });
     this.entityUpdatePool.set(UPDATE_PRIORITY.INTERACTION, new Set());
     this.entityUpdatePool.set(UPDATE_PRIORITY.HIGH, new Set());
