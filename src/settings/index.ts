@@ -8,11 +8,13 @@ export const WORMGINE_STORAGE_KEY_CLIENT_CONFIG = "wormgine.client_config";
 
 export interface GameSettings {
   soundEffectVolume: number;
+  musicVolume: number;
   reduceMotion: boolean;
 }
 
 const DEFAULT_SETTINGS: GameSettings = {
   soundEffectVolume: 0.1,
+  musicVolume: 0.5,
   reduceMotion: false,
 };
 

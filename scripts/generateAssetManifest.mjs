@@ -72,6 +72,9 @@ async function main() {
     for (const element of await readdir(join(assetLocation, "particles"))) {
         parseDirectory("./particles/", element, "particles");
     }
+    for (const element of await readdir(join(assetLocation, "music"))) {
+        parseDirectory("./music/", element, "music");
+    }
     console.log(MANIFEST_TEMPLATE
         .replace("$IMPORT_TEXTURES", importTextures)
         .replace("$IMPORT_SOUNDS", importSounds)

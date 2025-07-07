@@ -27,6 +27,8 @@ import {
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
 import globalFlags from "./flags";
+import MusicPlayer, { TrackCrossfadeState } from "./sound/music";
+import { TimedExplosive } from "./entities/phys/timedExplosive";
 
 const worldWidth = 1920;
 const worldHeight = 1080;
@@ -134,6 +136,7 @@ export class Game<ReloadedGameState extends object = object> {
   private async loadResources() {
     const assetPack = getAssets();
     await readAssetsForEntities(assetPack);
+    await MusicPlayer.loadMusic(assetPack.sounds);
     readAssetsForWeapons(assetPack);
     WindDial.loadAssets(assetPack.textures);
   }
@@ -166,11 +169,22 @@ export class Game<ReloadedGameState extends object = object> {
 
     this.pixiApp.stage.addChildAt(this.rapierGfx, 0);
     this.ready.next(true);
+    await MusicPlayer.playTrack();
     globalFlags.bindWorld(this.world);
 
     import.meta.hot?.on("vite:beforeUpdate", this.hotReload);
 
     this.pixiApp.ticker.add(this.tickWorld, undefined, UPDATE_PRIORITY.HIGH);
+    this.world.entitiesMoving$.subscribe((moving) => {
+      const hasExplosive = this.world.entities
+        .values()
+        .some((e) => e instanceof TimedExplosive);
+      if (moving && hasExplosive) {
+        MusicPlayer.switchCrossfade(TrackCrossfadeState.Full);
+      } else if (!hasExplosive) {
+        MusicPlayer.switchCrossfade(TrackCrossfadeState.Minor);
+      }
+    });
   }
 
   public get canvas() {
@@ -190,6 +204,7 @@ export class Game<ReloadedGameState extends object = object> {
     }
     this.overlay?.physicsSamples.push(performance.now() - startTime);
     this.world.updateEntities(dt);
+    MusicPlayer.update(dt.deltaMS);
   };
 
   public destroy() {
@@ -197,6 +212,7 @@ export class Game<ReloadedGameState extends object = object> {
     this.overlay?.destroy();
     this.pixiApp.destroy();
     this.rapierWorld.free();
+    MusicPlayer.stop();
     globalFlags.bindWorld(undefined);
   }
 

@@ -48,6 +48,8 @@ import mineBeepSnd from "./mine_beep.ogg";
 import placeholderSnd from "./placeholder.ogg";
 import shotgunSnd from "./shotgun.ogg";
 import splashSnd from "./splash.ogg";
+import music_track1FullSnd from "./music/track1_full.ogg";
+import music_track1MinorSnd from "./music/track1_minor.ogg";
 
 // Fonts
 import monogramFnt from "./monogram.woff2";
@@ -103,6 +105,8 @@ export interface AssetSounds {
   placeholder: Sound;
   shotgun: Sound;
   splash: Sound;
+  music_track1Full: Sound;
+  music_track1Minor: Sound;
 }
 
 export interface AssetData {
@@ -163,6 +167,8 @@ export const manifest = {
         { src: placeholderSnd, alias: "placeholder" },
         { src: shotgunSnd, alias: "shotgun" },
         { src: splashSnd, alias: "splash" },
+        { src: music_track1FullSnd, alias: "music_track1Full" },
+        { src: music_track1MinorSnd, alias: "music_track1Minor" },
       ],
     },
     {

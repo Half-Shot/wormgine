@@ -12,7 +12,7 @@ export default function SettingsMenu() {
     }));
   }, []);
 
-  const onVolumeSet: JSX.GenericEventHandler<HTMLInputElement> = useCallback(
+  const onSfxVolumeSet: JSX.GenericEventHandler<HTMLInputElement> = useCallback(
     (evt) => {
       const element = evt.target as HTMLInputElement;
       setSettings((s: GameSettings) => ({
@@ -23,6 +23,15 @@ export default function SettingsMenu() {
     [],
   );
 
+  const onMusicVolumeSet: JSX.GenericEventHandler<HTMLInputElement> =
+    useCallback((evt) => {
+      const element = evt.target as HTMLInputElement;
+      setSettings((s: GameSettings) => ({
+        ...s,
+        musicVolume: element.valueAsNumber / 100,
+      }));
+    }, []);
+
   return (
     <>
       <section>
@@ -32,8 +41,19 @@ export default function SettingsMenu() {
           id="sound-effect-meter"
           type="range"
           style={{ width: "200px" }}
-          onChange={onVolumeSet}
+          onChange={onSfxVolumeSet}
           value={settings.soundEffectVolume * 100}
+          step={5}
+          min={0}
+          max={100}
+        />
+        <label for="music-meter">Music Volume:</label>
+        <input
+          id="music-meter"
+          type="range"
+          style={{ width: "200px" }}
+          onChange={onMusicVolumeSet}
+          value={settings.musicVolume * 100}
           step={5}
           min={0}
           max={100}
