@@ -178,7 +178,7 @@ export class Game<ReloadedGameState extends object = object> {
     this.world.entitiesMoving$.subscribe((moving) => {
       const hasExplosive = this.world.entities
         .values()
-        .some((e) => e instanceof TimedExplosive);
+        .some((e) => e instanceof TimedExplosive && !e.sinking && !e.destroyed);
       if (moving && hasExplosive) {
         MusicPlayer.switchCrossfade(TrackCrossfadeState.Full);
       } else if (!hasExplosive) {
