@@ -204,7 +204,6 @@ export class Game<ReloadedGameState extends object = object> {
     }
     this.overlay?.physicsSamples.push(performance.now() - startTime);
     this.world.updateEntities(dt);
-    MusicPlayer.update(dt.deltaMS);
   };
 
   public destroy() {
