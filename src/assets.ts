@@ -25,17 +25,16 @@ export const assetsAreReady = internalAssetLoadPercentage.pipe(
 export async function loadAssets() {
   await Assets.init({ manifest });
 
-  const bundleCount = Object.keys(manifest.bundles).length;
-  let bundleIndex = 0;
+  const totalAssetCount = Object.values(manifest.bundles).map((b) => b.assets.length).reduce((a,b) => a+b, 0);
+  let loadedAssets = 0;
   for (const { name } of manifest.bundles) {
-    log.debug('Loading bundle', name, bundleIndex, bundleCount);
+    log.debug('Loading bundle', name);
     const bundle = await Assets.loadBundle(name, (progress) => {
       log.debug('Bundle progress', name, progress);
-      const totalProgress = bundleIndex / bundleCount + progress / bundleCount;
-      internalAssetLoadPercentage.next(totalProgress);
+      loadedAssets++;
+      internalAssetLoadPercentage.next(loadedAssets/totalAssetCount);
     });
     log.debug('Loaded bundle', name);
-    bundleIndex++;
     if (name === "textures") {
       textures = bundle;
     } else if (name === "sounds") {
