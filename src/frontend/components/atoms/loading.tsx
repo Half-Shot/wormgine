@@ -5,10 +5,6 @@ import { JSX } from "preact";
 
 const log = new Logger("component.Loading");
 
-const staticVideo = fetch(video, { priority: "high" })
-  .then((v) => v.blob())
-  .then((v) => URL.createObjectURL(v));
-
 const VIDEO_TIME_S = 3;
 
 export function Loading({
@@ -21,14 +17,6 @@ export function Loading({
   loadingDone: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  useEffect(() => {
-    const ref = videoRef.current;
-    if (!ref) {
-      return;
-    }
-    staticVideo.then((src) => (ref.src = src));
-  }, [videoRef]);
-
   const onEnded = useCallback<JSX.GenericEventHandler<HTMLVideoElement>>(
     (evt) => {
       if ((evt.target as HTMLVideoElement).currentTime === VIDEO_TIME_S) {
@@ -78,6 +66,7 @@ export function Loading({
       style={{ maxWidth: "500px", width: "15vw" }}
       className={className}
       ref={videoRef}
+      src={video}
       onEnded={onEnded}
       playbackRate={2}
       controls={false}
