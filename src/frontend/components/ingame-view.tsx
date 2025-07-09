@@ -80,6 +80,7 @@ export function IngameView({
   };
 
   useEffect(() => {
+    let newGame: Game;
     async function init() {
       if (gameInstance instanceof LocalGameInstance) {
         // XXX: Only so the game feels more responsive by capturing this inside the loading phase.
@@ -87,7 +88,7 @@ export function IngameView({
         log.info("Game started");
       }
       const { Game } = await import("../../game");
-      const newGame = await Game.create(
+      newGame = await Game.create(
         window,
         scenario,
         gameReactChannel,
@@ -102,6 +103,11 @@ export function IngameView({
     void init().catch((ex) => {
       setFatalError(ex);
     });
+
+    return () => {
+      log.info('Ingame view destroyed');
+      newGame?.destroy();
+    }
   }, []);
 
   useEffect(() => {
