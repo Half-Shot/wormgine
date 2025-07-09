@@ -34,6 +34,7 @@ export async function loadAssets() {
       const totalProgress = bundleIndex / bundleCount + progress / bundleCount;
       internalAssetLoadPercentage.next(totalProgress);
     });
+    log.debug('Loaded bundle', name);
     bundleIndex++;
     if (name === "textures") {
       textures = bundle;
@@ -43,7 +44,7 @@ export async function loadAssets() {
       data = bundle;
     }
   }
-  log.debug('Bundle load complete',);
+  log.debug('Bundle load complete');
   internalAssetLoadPercentage.next(1);
 }
 
