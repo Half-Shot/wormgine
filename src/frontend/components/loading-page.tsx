@@ -2,6 +2,9 @@ import { useEffect, useState } from "preact/hooks";
 import { Loading } from "./atoms/loading";
 import styles from "./loading-page.module.css";
 import { useAnimate } from "framer-motion";
+import Logger from "../../log";
+
+const log = new Logger("LoadingPage");
 
 export function LoadingPage({
   progress,
@@ -15,7 +18,7 @@ export function LoadingPage({
   force?: boolean;
 }) {
   const [scope, animate] = useAnimate();
-  const [isLoadingDone, setLoadingDone] = useState(false);
+  const [hasLoadingVideoPlayed, setLoadingVideoPlayed] = useState(false);
   const [shouldOverlay, setShouldOverlay] = useState(true);
 
   useEffect(() => {
@@ -29,17 +32,18 @@ export function LoadingPage({
           { opacity: 1 },
           { delay: 0, duration: 0.25, ease: "easeIn" },
         );
-      } else if (isLoadingDone || force) {
+      } else if (hasLoadingVideoPlayed || force) {
         await animate(
           scope.current,
           { opacity: 0 },
           { delay: 0.5, duration: 0.5, ease: "easeIn" },
         );
+        log.info("setShouldOverlay(false)");
         setShouldOverlay(false);
       }
     }
     void runAnim();
-  }, [visible, force, isLoadingDone, scope.current]);
+  }, [visible, force, hasLoadingVideoPlayed, scope.current]);
 
   if (!shouldOverlay) {
     return null;
@@ -51,7 +55,7 @@ export function LoadingPage({
         <Loading
           className={styles.loading}
           progress={progress}
-          loadingDone={() => setLoadingDone(true)}
+          loadingDone={() => setLoadingVideoPlayed(true)}
         />
       </main>
     </>

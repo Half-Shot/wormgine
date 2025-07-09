@@ -6,12 +6,12 @@ import { loadAssets } from "./assets";
 import { useEffect, useState } from "preact/hooks";
 import { Preloader } from "./frontend/components/preloader";
 import type { App as AppType } from "./frontend/components/app";
-import Logger, { LogLevels } from "./log";
+import Logger, { LogLevel } from "./log";
 
 function Main() {
   const [AppImport, setApp] = useState<{ App: typeof AppType }>();
   useEffect(() => {
-    Logger.LogLevel = LogLevels.Verbose;
+    Logger.LogLevel = LogLevel.Verbose;
     void loadAssets();
     // TODO: Error state.
     import("./frontend/components/app").then((_app) => setApp(_app));

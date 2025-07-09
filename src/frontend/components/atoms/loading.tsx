@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef } from "preact/hooks";
 import video from "../../../assets/ui/loading.webm";
 import Logger from "../../../log";
+import { JSX } from "preact";
 
-const log = new Logger("component.loading");
+const log = new Logger("component.Loading");
 
 const staticVideo = fetch(video, { priority: "high" })
   .then((v) => v.blob())
@@ -20,28 +21,30 @@ export function Loading({
   loadingDone: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoSrc, setVideoSrc] = useState<string>();
   useEffect(() => {
-    staticVideo.then((src) => setVideoSrc(src));
-  }, []);
-
-  useEffect(() => {
-    if (!videoRef.current) {
+    const ref = videoRef.current;
+    if (!ref) {
       return;
     }
-    videoRef.current.playbackRate = 2;
-    videoRef.current.addEventListener("ended", () => {
-      if (videoRef.current?.currentTime === VIDEO_TIME_S) {
+    staticVideo.then((src) => (ref.src = src));
+  }, [videoRef]);
+
+  const onEnded = useCallback<JSX.GenericEventHandler<HTMLVideoElement>>(
+    (evt) => {
+      if ((evt.target as HTMLVideoElement).currentTime === VIDEO_TIME_S) {
+        log.debug("Video complete");
         loadingDone();
       }
-    });
-  }, [videoRef]);
+    },
+    [loadingDone],
+  );
 
   useEffect(() => {
     if (!videoRef.current) {
       return;
     }
     if (progress === undefined) {
+      log.debug("Video playing with no progress");
       videoRef.current
         .play()
         .catch((ex) => log.error("Error while playing load animation", ex));
@@ -50,10 +53,20 @@ export function Loading({
     const expectedProgress = VIDEO_TIME_S * progress;
     const currentTime = videoRef.current.currentTime;
     if (expectedProgress > currentTime) {
+      log.debug(
+        "Video resumed as there was progress",
+        expectedProgress,
+        currentTime,
+      );
       videoRef.current
         .play()
         .catch((ex) => log.error("Error while resuming load animation", ex));
     } else if (currentTime >= expectedProgress) {
+      log.debug(
+        "Video paused as progress reached",
+        expectedProgress,
+        currentTime,
+      );
       videoRef.current.pause();
     }
   }, [videoRef, progress]);
@@ -65,7 +78,8 @@ export function Loading({
       style={{ maxWidth: "500px", width: "15vw" }}
       className={className}
       ref={videoRef}
-      src={videoSrc}
+      onEnded={onEnded}
+      playbackRate={2}
       controls={false}
       preload="auto"
     />

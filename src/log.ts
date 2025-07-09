@@ -1,4 +1,4 @@
-export enum LogLevels {
+export enum LogLevel {
   Verbose = 0,
   Debug = 1,
   Info = 2,
@@ -7,11 +7,28 @@ export enum LogLevels {
 }
 
 export default class Logger {
-  public static LogLevel = LogLevels.Verbose;
+  public static parseLogLevel(level: string | null): LogLevel | undefined {
+    switch (level?.toLocaleLowerCase()) {
+      case "verbose":
+        return LogLevel.Verbose;
+      case "debug":
+        return LogLevel.Verbose;
+      case "info":
+        return LogLevel.Verbose;
+      case "warning":
+        return LogLevel.Verbose;
+      case "error":
+        return LogLevel.Verbose;
+      default:
+        return undefined;
+    }
+  }
+
+  public static LogLevel = LogLevel.Info;
   constructor(private readonly moduleName: string) {}
 
   public verbose(...info: unknown[]) {
-    if (Logger.LogLevel > LogLevels.Verbose) {
+    if (Logger.LogLevel > LogLevel.Verbose) {
       return;
     }
     console.debug(
@@ -22,7 +39,7 @@ export default class Logger {
   }
 
   public debug(...info: unknown[]) {
-    if (Logger.LogLevel > LogLevels.Debug) {
+    if (Logger.LogLevel > LogLevel.Debug) {
       return;
     }
     console.debug(
@@ -33,7 +50,7 @@ export default class Logger {
   }
 
   public info(...info: unknown[]) {
-    if (Logger.LogLevel > LogLevels.Info) {
+    if (Logger.LogLevel > LogLevel.Info) {
       return;
     }
     console.debug(
@@ -44,7 +61,7 @@ export default class Logger {
   }
 
   public warning(...info: unknown[]) {
-    if (Logger.LogLevel > LogLevels.Warning) {
+    if (Logger.LogLevel > LogLevel.Warning) {
       return;
     }
     console.warn(

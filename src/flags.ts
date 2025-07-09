@@ -1,9 +1,10 @@
 import { EventEmitter } from "pixi.js";
 import Input, { InputKind } from "./input";
-import { ViewportCamera } from "./camera";
+import type { ViewportCamera } from "./camera";
 import type { GameWorld } from "./world";
 import type { PlayableEntity } from "./entities/playable/playable";
 import type { GameState } from "./logic/gamestate";
+import Logger from "./log";
 
 export enum DebugLevel {
   None = 0,
@@ -28,6 +29,11 @@ class Flags extends EventEmitter {
       ? DebugLevel.PhysicsOverlay
       : DebugLevel.None;
 
+    const logLevelParameter = Logger.parseLogLevel(qs.get("log"));
+    if (logLevelParameter) {
+      Logger.LogLevel = logLevelParameter;
+    }
+
     Input.on("inputEnd", (type) => {
       if (type === InputKind.ToggleDebugView) {
         if (++this.DebugView > DebugLevel.PhysicsOverlay) {
@@ -47,6 +53,13 @@ class Flags extends EventEmitter {
       setWindSpeed: this.setWindSpeed,
       pauseGame: this.pauseGame,
       getCamera: () => this.viewportCamera,
+      setLogLevel: (level: string) => {
+        const parsedLevel = Logger.parseLogLevel(level);
+        if (!parsedLevel) {
+          throw Error("Unknown log level");
+        }
+        Logger.LogLevel = parsedLevel;
+      },
     };
   }
 
@@ -82,6 +95,7 @@ class Flags extends EventEmitter {
   bindWorld(world?: GameWorld) {
     this.world = world;
   }
+
   bindGameState(gameState: GameState) {
     this.gameState = gameState;
   }
