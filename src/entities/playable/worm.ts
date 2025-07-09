@@ -320,7 +320,7 @@ export class Worm extends PlayableEntity<
       collider.setRestitution(RESITITION_WHEN_ACTIVE);
     });
     this.state.transition(InnerWormState.Idle);
-    this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
+    this.desiredCameraLockPriority.next(CameraLockPriority.AlwaysLock);
     this.perRoundState.next({ ...DEFAULT_PER_ROUND_STATE });
     if (bindInput) {
       Controller.on("inputBegin", this.onInputBegin);
@@ -403,6 +403,10 @@ export class Worm extends PlayableEntity<
     if (!this.state.shouldHandleNewInput) {
       // Ignore all input when the worm is firing.
       return;
+    }
+    if (this.desiredCameraLockPriority.value === CameraLockPriority.AlwaysLock) {
+      // Once the player has moved, reduce down to a suggested lock.
+      this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
     }
     this.perRoundState.next({
       ...this.perRoundState.value,

@@ -16,6 +16,7 @@ import {
   PlayableCondition,
 } from "./conditions";
 import { PlayableInfoBox } from "../../overlays/playableInfoBox";
+import { CameraLockPriority } from "../../camera";
 
 interface Opts {
   explosionRadius: MetersValue;
@@ -226,6 +227,7 @@ export abstract class PlayableEntity<
       { x: forceMag, y: forceMag },
     );
     log.info("onDamage force", "=>", force);
+    this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
     this.physObject.body.applyImpulse(force, true);
     if (opts.applyCondition) {
       this.addCondition(opts.applyCondition);
