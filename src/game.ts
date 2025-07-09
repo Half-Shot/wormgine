@@ -23,7 +23,6 @@ import {
   merge,
   Observable,
   of,
-  Subscription,
 } from "rxjs";
 import { IRunningGameInstance } from "./logic/gameinstance";
 import { RunningNetGameInstance } from "./net/netgameinstance";
