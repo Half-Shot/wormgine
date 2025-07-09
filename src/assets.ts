@@ -23,6 +23,8 @@ export const assetsAreReady = internalAssetLoadPercentage.pipe(
 );
 
 export async function loadAssets() {
+  await Assets.init({ manifest });
+
   const bundleCount = Object.keys(manifest.bundles).length;
   let bundleIndex = 0;
   for (const { name } of manifest.bundles) {
@@ -41,7 +43,7 @@ export async function loadAssets() {
       data = bundle;
     }
   }
-  log.debug('Bundle load complete');
+  log.debug('Bundle load complete',);
   internalAssetLoadPercentage.next(1);
 }
 
