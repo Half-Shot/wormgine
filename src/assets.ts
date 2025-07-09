@@ -7,6 +7,9 @@ import {
 } from "./assets/manifest";
 import { Sound } from "@pixi/sound";
 import { BehaviorSubject, map } from "rxjs";
+import Logger from "./log";
+
+const log = new Logger('Assets');
 
 let textures: Record<string, Texture>;
 let sounds: Record<string, Sound>;
@@ -25,7 +28,9 @@ export async function loadAssets() {
   const bundleCount = Object.keys(manifest.bundles).length;
   let bundleIndex = 0;
   for (const { name } of manifest.bundles) {
+    log.debug('Loading bundle', name, bundleIndex, bundleCount);
     const bundle = await Assets.loadBundle(name, (progress) => {
+      log.debug('Bundle progress', name, progress);
       const totalProgress = bundleIndex / bundleCount + progress / bundleCount;
       internalAssetLoadPercentage.next(totalProgress);
     });
@@ -38,6 +43,8 @@ export async function loadAssets() {
       data = bundle;
     }
   }
+  log.debug('Bundle load complete');
+  internalAssetLoadPercentage.next(1);
 }
 
 export function getAssets() {
