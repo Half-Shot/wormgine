@@ -11,7 +11,10 @@ import { Scenario } from "../levels/scenarioParser";
 import { TeamDefinition, TeamGroup } from "../logic/teams";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { GameDebugOverlay } from "../overlays/debugOverlay";
+import Logger from "../log";
+import { BaseRecordedState } from "../entities/state/base";
 
+const log = new Logger('Spawner');
 interface SpawnerOpts {
   waterLevel: number;
   wormHeightBuffer: number;
@@ -85,17 +88,21 @@ export function getSpawnPoints(
   bitmap: Texture,
   objects: Scenario["objects"],
   teams: TeamDefinition[],
-): WormSpawnRecordedState[] {
-  const waterHeight = objects.find((o) => o.type === "wormgine.water")?.tra.y;
-  if (!waterHeight) {
-    throw Error("Map contains no water height marker");
-  }
+): BaseRecordedState[] {
   const tmpCanvas = BitmapTerrain.drawToCanvas(bitmap);
   const context = tmpCanvas.getContext("2d")!;
   const imgData = context.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
-
+  const extraRecordedState: BaseRecordedState[] = []
   const alphas = imageDataToAlpha(0, 0, imgData);
-  const { boundaries } = imageDataToTerrainBoundaries(alphas, imgData);
+  const { boundaries, boundingBox } = imageDataToTerrainBoundaries(alphas, imgData);
+  let waterState = objects.find((o) => o.type === "wormgine.water");
+  if (!waterState) {
+    log.info('No wormgine.water height in level, generating one');
+    // TODO: Magic numbers!
+    waterState = new BaseRecordedState({type: 'wormgine.water', properties: {}, x: 0, y: boundingBox.bottom+100 });
+    extraRecordedState.push(waterState as BaseRecordedState);
+  }
+  const waterHeight = waterState.tra.y;
   tmpCanvas.remove();
   // Turn it into a quadtree of rects
   const quadtreeRects = generateQuadsFromTerrain(
@@ -144,7 +151,7 @@ export function getSpawnPoints(
     });
   }
 
-  return spawns.map(
+  return [...extraRecordedState, ...spawns.map(
     (w) =>
       new WormSpawnRecordedState({
         type: "wormgine.worm_spawn",
@@ -154,5 +161,5 @@ export function getSpawnPoints(
           "wormgine.worm_uuid": w.uuid,
         },
       }),
-  );
+  )];
 }
