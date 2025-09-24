@@ -16,7 +16,10 @@ import { GameWorld } from "../world";
 import { RecordedEntityState } from "../state/model";
 import { WeaponTarget } from "../entities/phys/target";
 import { Mine } from "../entities/phys/mine";
-import { HealthCrate, HealthCrateRecordedState } from "../entities/phys/collectable/healthCrate";
+import {
+  HealthCrate,
+  HealthCrateRecordedState,
+} from "../entities/phys/collectable/healthCrate";
 import { EntityType } from "../entities/type";
 import { FireMarker, FireMarkerRecordedState } from "../entities/phys/fire";
 
@@ -99,7 +102,7 @@ export function getSpawnPoints(
   const tmpCanvas = BitmapTerrain.drawToCanvas(bitmap);
   const context = tmpCanvas.getContext("2d")!;
   const imgData = context.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
-  const extraRecordedState: BaseRecordedState[] = []
+  const extraRecordedState: BaseRecordedState[] = [];
   const alphas = imageDataToAlpha(0, 0, imgData);
   const { boundaries } = imageDataToTerrainBoundaries(alphas, imgData);
   tmpCanvas.remove();
@@ -150,20 +153,27 @@ export function getSpawnPoints(
     });
   }
 
-  return [...extraRecordedState, ...spawns.map(
-    (w) =>
-      new WormSpawnRecordedState({
-        type: "wormgine.worm_spawn",
-        x: w.x,
-        y: w.y,
-        properties: {
-          "wormgine.worm_uuid": w.uuid,
-        },
-      }),
-  )];
+  return [
+    ...extraRecordedState,
+    ...spawns.map(
+      (w) =>
+        new WormSpawnRecordedState({
+          type: "wormgine.worm_spawn",
+          x: w.x,
+          y: w.y,
+          properties: {
+            "wormgine.worm_uuid": w.uuid,
+          },
+        }),
+    ),
+  ];
 }
 
-export function addEntitiesToWorld(world: GameWorld, container: Container, objects: RecordedEntityState[]) {
+export function addEntitiesToWorld(
+  world: GameWorld,
+  container: Container,
+  objects: RecordedEntityState[],
+) {
   for (const levelObject of objects) {
     if (levelObject.type === "wormgine.target") {
       const t = new WeaponTarget(

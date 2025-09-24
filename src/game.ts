@@ -207,7 +207,7 @@ export class Game<ReloadedGameState extends object = object> {
   };
 
   public destroy() {
-    logger.info('Game destroy called');
+    logger.info("Game destroy called");
     import.meta.hot?.off("vite:beforeUpdate", this.hotReload);
     this.overlay?.destroy();
     this.pixiApp.destroy();

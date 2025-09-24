@@ -57,13 +57,15 @@ export function collisionGroupBitmask(
   filter = Array.isArray(filter) ? filter : [filter];
 
   let groupsInt = 0;
-  for (const groupInt of Array.isArray(membership) ? membership : [membership]) {
-      groupsInt += 1 << groupInt;
+  for (const groupInt of Array.isArray(membership)
+    ? membership
+    : [membership]) {
+    groupsInt += 1 << groupInt;
   }
 
   let collidesInt = 0;
   for (const collideInt of Array.isArray(filter) ? filter : [filter]) {
-      collidesInt += 1 << collideInt;
+    collidesInt += 1 << collideInt;
   }
 
   console.log(groupsInt, collidesInt);
@@ -72,8 +74,7 @@ export function collisionGroupBitmask(
 }
 
 export function wouldCollide(A: number, B: number) {
-  return ((A >> 16) & (B & 0xffff)) != 0
-&& ((B >> 16) & (A & 0xffff)) != 0
+  return ((A >> 16) & (B & 0xffff)) != 0 && ((B >> 16) & (A & 0xffff)) != 0;
 }
 
 type WindValue =

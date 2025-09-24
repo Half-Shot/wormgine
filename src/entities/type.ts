@@ -9,5 +9,5 @@ export enum EntityType {
   TestDummy = "wormgine.test_dummy",
   Target = "wormgine.target",
   HealthCrate = "wormgine.collectable.health_crate",
-  FireMarker = "wormgine.fire"
+  FireMarker = "wormgine.fire",
 }

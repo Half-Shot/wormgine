@@ -105,9 +105,9 @@ export function IngameView({
     });
 
     return () => {
-      log.info('Ingame view destroyed');
+      log.info("Ingame view destroyed");
       newGame?.destroy();
-    }
+    };
   }, []);
 
   useEffect(() => {

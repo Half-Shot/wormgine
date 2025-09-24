@@ -102,7 +102,11 @@ export class Worm extends PlayableEntity<
 > {
   private static readonly collisionBitmask = collisionGroupBitmask(
     [CollisionGroups.WorldObjects, CollisionGroups.Player],
-    [CollisionGroups.Terrain, CollisionGroups.WorldObjects, CollisionGroups.Fire],
+    [
+      CollisionGroups.Terrain,
+      CollisionGroups.WorldObjects,
+      CollisionGroups.Fire,
+    ],
   );
   protected static readonly movementSpeed: Vector2 = {
     x: 0.005,
@@ -403,9 +407,13 @@ export class Worm extends PlayableEntity<
       // Ignore all input when the worm is firing.
       return;
     }
-    if (this.desiredCameraLockPriority.value === CameraLockPriority.AlwaysLock) {
+    if (
+      this.desiredCameraLockPriority.value === CameraLockPriority.AlwaysLock
+    ) {
       // Once the player has moved, reduce down to a suggested lock.
-      this.desiredCameraLockPriority.next(CameraLockPriority.SuggestedLockLocal);
+      this.desiredCameraLockPriority.next(
+        CameraLockPriority.SuggestedLockLocal,
+      );
     }
     this.perRoundState.next({
       ...this.perRoundState.value,
@@ -565,13 +573,8 @@ export class Worm extends PlayableEntity<
       moveState === InnerWormState.MovingLeft ? -movementMod : movementMod,
       0,
     );
-    this.safeUsePhys(obj => {
-      const move = calculateMovement(
-        obj,
-        moveMod,
-        maxWormStep,
-        this.gameWorld,
-      );
+    this.safeUsePhys((obj) => {
+      const move = calculateMovement(obj, moveMod, maxWormStep, this.gameWorld);
       this.motionTween = new TweenEngine(
         obj.body,
         Worm.movementSpeed,
@@ -585,9 +588,9 @@ export class Worm extends PlayableEntity<
   }
 
   public reduceHealth(damage: number): void {
-    
+    super.reduceHealth(damage);
     if (this.state.isPlaying) {
-      logger.info('Took damage while playing', this.state.stateName);
+      logger.info("Took damage while playing", this.state.stateName);
 
       this.state.transition(InnerWormState.InactiveWaiting);
       this.turnEndedReason = EndTurnReason.TookDamage;

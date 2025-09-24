@@ -7,7 +7,7 @@
    viewBox="0 0 297 210"
    version="1.1"
    id="svg1"
-   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
    sodipodi:docname="icons.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -26,10 +26,10 @@
      showgrid="true"
      inkscape:lockguides="false"
      inkscape:zoom="3.4547485"
-     inkscape:cx="140.53122"
-     inkscape:cy="61.654271"
-     inkscape:window-width="2486"
-     inkscape:window-height="1289"
+     inkscape:cx="266.73432"
+     inkscape:cy="119.11142"
+     inkscape:window-width="2560"
+     inkscape:window-height="1440"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -51,6 +51,12 @@
   </sodipodi:namedview>
   <defs
      id="defs1">
+    <rect
+       x="174.97656"
+       y="24.459089"
+       width="55.575681"
+       height="46.457796"
+       id="rect4" />
     <rect
        x="8.9731569"
        y="32.708604"
@@ -132,5 +138,22 @@
        style="font-weight:bold;font-size:40px;line-height:1.25;font-family:Monospace;-inkscape-font-specification:'Monospace Bold';text-align:center;text-anchor:middle;white-space:pre;fill:#008000;stroke:#000000;stroke-opacity:1;stroke-width:1.8897638;stroke-dasharray:none"
        transform="matrix(0.26458333,0,0,0.26458333,48.938078,8.1180536)"
        aria-label="R" />
+    <path
+       id="path1-3"
+       style="fill:#ff6600;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 83.896588,14.049237 a 8.4957294,8.4957294 0 0 0 -8.474934,8.204667 h -0.02842 l 0.02532,0.04393 a 8.4957294,8.4957294 0 0 0 -0.01757,0.247014 8.4957294,8.4957294 0 0 0 4.463293,7.453808 l 4.030245,6.979936 4.027662,-6.976318 a 8.4957294,8.4957294 0 0 0 4.470528,-7.457426 8.4957294,8.4957294 0 0 0 -0.0067,-0.273885 l 0.0098,-0.01705 h -0.01033 a 8.4957294,8.4957294 0 0 0 -8.488888,-8.204667 z m 0.07131,1.63711 a 6.9510274,6.9510274 0 0 1 6.950997,6.950996 6.9510274,6.9510274 0 0 1 -6.950997,6.951514 6.9510274,6.9510274 0 0 1 -6.950997,-6.951514 6.9510274,6.9510274 0 0 1 6.950997,-6.950996 z"
+       inkscape:export-filename="rules_icon.png"
+       inkscape:export-xdpi="48"
+       inkscape:export-ydpi="48" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,34.693192,10.721958)"
+       id="text1"
+       style="font-size:37.3333px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect4);fill:#ff6600;fill-opacity:1;stroke:#000000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"><tspan
+         x="174.97656"
+         y="58.087121"
+         id="tspan2"><tspan
+           style="font-weight:bold;-inkscape-font-specification:'sans-serif Bold'"
+           id="tspan1">F</tspan></tspan></text>
   </g>
 </svg>

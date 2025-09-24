@@ -17,7 +17,7 @@ export interface IGameEntity {
 }
 
 export interface OnDamageOpts {
-  forceDamange?: number,
+  forceDamange?: number;
   maxDamage?: number;
   forceMultiplier?: number;
   applyCondition?: PlayableCondition;

@@ -9,7 +9,7 @@ import { Sound } from "@pixi/sound";
 import { BehaviorSubject, map } from "rxjs";
 import Logger from "./log";
 
-const log = new Logger('Assets');
+const log = new Logger("Assets");
 
 let textures: Record<string, Texture>;
 let sounds: Record<string, Sound>;
@@ -25,16 +25,18 @@ export const assetsAreReady = internalAssetLoadPercentage.pipe(
 export async function loadAssets() {
   await Assets.init({ manifest });
 
-  const totalAssetCount = Object.values(manifest.bundles).map((b) => b.assets.length).reduce((a,b) => a+b, 0);
+  const totalAssetCount = Object.values(manifest.bundles)
+    .map((b) => b.assets.length)
+    .reduce((a, b) => a + b, 0);
   let loadedAssets = 0;
   for (const { name } of manifest.bundles) {
-    log.debug('Loading bundle', name);
+    log.debug("Loading bundle", name);
     const bundle = await Assets.loadBundle(name, (progress) => {
-      log.debug('Bundle progress', name, progress);
+      log.debug("Bundle progress", name, progress);
       loadedAssets++;
-      internalAssetLoadPercentage.next(loadedAssets/totalAssetCount);
+      internalAssetLoadPercentage.next(loadedAssets / totalAssetCount);
     });
-    log.debug('Loaded bundle', name);
+    log.debug("Loaded bundle", name);
     if (name === "textures") {
       textures = bundle;
     } else if (name === "sounds") {
@@ -43,7 +45,7 @@ export async function loadAssets() {
       data = bundle;
     }
   }
-  log.debug('Bundle load complete');
+  log.debug("Bundle load complete");
   internalAssetLoadPercentage.next(1);
 }
 

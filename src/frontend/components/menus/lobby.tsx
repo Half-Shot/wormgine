@@ -22,7 +22,7 @@ import { MapPicker } from "../lobby/map-render";
 const logger = new Logger("Lobby");
 
 const MAX_WORMS = 8;
-const DEFAULT_WORMS = 3;
+const DEFAULT_WORMS = 1;
 const MIN_PLAYERS = 1;
 
 interface Props {

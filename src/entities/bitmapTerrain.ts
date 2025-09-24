@@ -45,7 +45,7 @@ export class BitmapTerrain implements IPhysicalEntity {
       CollisionGroups.Terrain,
       CollisionGroups.WorldObjects,
       CollisionGroups.Player,
-      CollisionGroups.Fire
+      CollisionGroups.Fire,
     ],
   );
 
@@ -209,8 +209,7 @@ export class BitmapTerrain implements IPhysicalEntity {
         ColliderDesc.cuboid(
           quad.width / (PIXELS_PER_METER * 2),
           quad.height / (PIXELS_PER_METER * 2),
-        )
-          .setCollisionGroups(BitmapTerrain.collisionBitmask),
+        ).setCollisionGroups(BitmapTerrain.collisionBitmask),
 
         RigidBodyDesc.fixed().setTranslation(
           (quad.x + this.sprite.x) / PIXELS_PER_METER,
@@ -240,8 +239,8 @@ export class BitmapTerrain implements IPhysicalEntity {
     const imageX = point.x * PIXELS_PER_METER - this.sprite.x;
     const imageY = point.y * PIXELS_PER_METER - this.sprite.y;
     const radiusMargin = radius.pixels * 4;
-    const snapshotX = imageX - (radiusMargin/2);
-    const snapshotY = imageY - (radiusMargin/2);
+    const snapshotX = imageX - radiusMargin / 2;
+    const snapshotY = imageY - radiusMargin / 2;
     const snapshotWidth = radiusMargin;
     const snapshotHeight = radiusMargin;
 
@@ -271,7 +270,7 @@ export class BitmapTerrain implements IPhysicalEntity {
       snapshotWidth,
       snapshotHeight,
     );
-  
+
     // Show the new image with our newly created hole.
     context.putImageData(after, snapshotX, snapshotY);
 

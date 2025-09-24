@@ -1,46 +1,47 @@
-import {
-  UPDATE_PRIORITY,
-  Sprite,
-  Container,
-} from "pixi.js";
-import { IPhysicalEntity, OnDamageOpts } from "../entity";
+import { UPDATE_PRIORITY, Sprite, Container } from "pixi.js";
+import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
-import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../../world";
-import { ActiveEvents, Collider, ColliderDesc, Vector2 } from "@dimforge/rapier2d-compat";
+import {
+  collisionGroupBitmask,
+  CollisionGroups,
+  GameWorld,
+  RapierPhysicsObject,
+} from "../../world";
+import {
+  ActiveEvents,
+  Collider,
+  ColliderDesc,
+  Vector2,
+} from "@dimforge/rapier2d-compat";
 import { RecordedEntityState } from "../../state/model";
 import { PlayableEntity } from "../playable/playable";
 import { MetersValue } from "../../utils";
 import { BitmapTerrain } from "../bitmapTerrain";
 import { handleDamageInRadius } from "../../utils/damage";
 
-
-export interface CollectableRecordedState extends RecordedEntityState {
-    
-}
-
 /**
  * An item collectable by a playable. On contact with a playable, it makes a change to that playable.
  */
 export abstract class CollectableEntity<
-  T extends CollectableRecordedState = CollectableRecordedState,
+  T extends RecordedEntityState = RecordedEntityState,
 > extends PhysicsEntity<T> {
   priority = UPDATE_PRIORITY.LOW;
 
-    private static readonly sensorCollisionBitmask = collisionGroupBitmask(
-        CollisionGroups.WorldObjects,
-        [CollisionGroups.Player],
-    );
-    sensor: Collider;
+  private static readonly sensorCollisionBitmask = collisionGroupBitmask(
+    CollisionGroups.WorldObjects,
+    [CollisionGroups.Player],
+  );
+  sensor: Collider;
 
   constructor(
     sprite: Sprite,
     body: RapierPhysicsObject,
     gameWorld: GameWorld,
-    private readonly parent: Container
+    private readonly parent: Container,
   ) {
     super(sprite, body, gameWorld);
     this.sensor = gameWorld.rapierWorld.createCollider(
-        ColliderDesc.ball(new MetersValue(1.5).value)
+      ColliderDesc.ball(new MetersValue(1.5).value)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(CollectableEntity.sensorCollisionBitmask)
         .setSensor(true),
@@ -57,7 +58,7 @@ export abstract class CollectableEntity<
   }
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
-    console.log('Health crate collision');
+    console.log("Health crate collision");
     if (super.onCollision(otherEnt, contactPoint)) {
       return true;
     }
@@ -66,9 +67,9 @@ export abstract class CollectableEntity<
       return false;
     }
     if (otherEnt instanceof PlayableEntity) {
-        console.log('Deleted');
-        this.onCollected(otherEnt);
-        this.destroy();
+      console.log("Deleted");
+      this.onCollected(otherEnt);
+      this.destroy();
     }
 
     return false;
@@ -76,13 +77,19 @@ export abstract class CollectableEntity<
 
   public onDamage(): void {
     let position: Vector2;
-    this.safeUsePhys(({body}) => {
-        position = body.translation();
-        this.destroy();
+    this.safeUsePhys(({ body }) => {
+      position = body.translation();
+      this.destroy();
     });
-    handleDamageInRadius(this.gameWorld, this.parent, position!, new MetersValue(5), {
+    handleDamageInRadius(
+      this.gameWorld,
+      this.parent,
+      position!,
+      new MetersValue(5),
+      {
         maxDamage: 33,
-    });
+      },
+    );
   }
 
   public destroy(): void {

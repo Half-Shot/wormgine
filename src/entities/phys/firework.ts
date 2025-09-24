@@ -48,7 +48,9 @@ export class Firework extends TimedExplosive {
   ) {
     const ent = new Firework(position, world, parent, force, owner);
     parent.addChild(ent.sprite, ent.wireframe.renderable);
-    parent.addChild(world.addEntity(ParticleTrail.create(ent.sprite.position, ent)).gfx);
+    parent.addChild(
+      world.addEntity(ParticleTrail.create(ent.sprite.position, ent)).gfx,
+    );
     return ent;
   }
 
@@ -60,7 +62,7 @@ export class Firework extends TimedExplosive {
     owner?: WormInstance,
   ) {
     const sprite = new Sprite(Firework.texture);
-    sprite.scale.set(0.10);
+    sprite.scale.set(0.1);
     sprite.anchor.set(0.5);
 
     const primaryColor =
@@ -110,14 +112,19 @@ export class Firework extends TimedExplosive {
 
   onExplode(): void {
     let rocketPos!: Coordinate;
-    this.safeUsePhys(({body}) => {
-      rocketPos = Coordinate.fromWorld(body.translation())
-    })
+    this.safeUsePhys(({ body }) => {
+      rocketPos = Coordinate.fromWorld(body.translation());
+    });
     super.onExplode();
     for (let index = 0; index < 10; index++) {
       const randomX = (Math.random() - 0.5) * 1;
-      const pos = Coordinate.fromWorld(rocketPos.worldX + randomX, rocketPos.worldY-1);
-      this.gameWorld.addEntity(new FireMarker(this.gameWorld, pos, this.parent, 5000));
+      const pos = Coordinate.fromWorld(
+        rocketPos.worldX + randomX,
+        rocketPos.worldY - 1,
+      );
+      this.gameWorld.addEntity(
+        new FireMarker(this.gameWorld, pos, this.parent, 5000),
+      );
     }
   }
 

@@ -15,7 +15,6 @@ import { PhysicsEntity } from "../entities/phys/physicsEntity";
 import staticController, { InputKind } from "../input";
 import { StateRecorder } from "../state/recorder";
 import { ViewportCamera } from "../camera";
-import { WeaponTarget } from "../entities/phys/target";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { InnerWormState } from "../entities/playable/wormState";
 import Logger from "../log";
@@ -27,7 +26,6 @@ import { NetGameWorld } from "../net/netGameWorld";
 import { combineLatest, filter, map, Observable } from "rxjs";
 import { RoundState } from "../logic/gamestate";
 import { RunningNetGameInstance } from "../net/netgameinstance";
-import { Mine } from "../entities/phys/mine";
 import globalFlags from "../flags";
 import { getAssets } from "../assets";
 import { addEntitiesToWorld } from "../terrain/spawner";
@@ -215,18 +213,18 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
         `Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`,
         spawnPositions,
       );
-      const spawnPointForWorm = spawnPositions.find(
-        (s) => s.wormUuid === wormInstance.uuid,
-      ) || spawnPositions.find(
-        (s) => s.teamGroup === wormInstance.team.group,
-      ) || spawnPositions.find(
-        (s) => !s.teamGroup,
-      );
+      const spawnPointForWorm =
+        spawnPositions.find((s) => s.wormUuid === wormInstance.uuid) ||
+        spawnPositions.find((s) => s.teamGroup === wormInstance.team.group) ||
+        spawnPositions.find((s) => !s.teamGroup);
       if (!spawnPointForWorm) {
         throw Error("No location to spawn worm");
       }
-      spawnPositions = spawnPositions.filter(s => s !== spawnPointForWorm);
-      const pos = Coordinate.fromScreen(spawnPointForWorm.tra.x, spawnPointForWorm.tra.y);
+      spawnPositions = spawnPositions.filter((s) => s !== spawnPointForWorm);
+      const pos = Coordinate.fromScreen(
+        spawnPointForWorm.tra.x,
+        spawnPointForWorm.tra.y,
+      );
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
         if (newProjectile) {

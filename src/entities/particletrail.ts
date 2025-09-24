@@ -1,6 +1,5 @@
 import {
   ColorSource,
-  Container,
   Graphics,
   ObservablePoint,
   Point,
@@ -26,7 +25,7 @@ interface Opts {
   initialSpeed: PointData;
   acceleration: PointData;
   offset: PointData;
-  count: number,
+  count: number;
 }
 
 const DEFAULT_OPTS: Opts = {
@@ -95,7 +94,10 @@ export class ParticleTrail implements IGameEntity {
 
   private constructor(
     private readonly parent: ObservablePoint,
-    private readonly parentObject: PhysicsEntity<RecordedEntityState, ViewContainer>,
+    private readonly parentObject: PhysicsEntity<
+      RecordedEntityState,
+      ViewContainer
+    >,
     private readonly opts: Opts,
   ) {
     this.gfx = new Graphics();
@@ -111,10 +113,17 @@ export class ParticleTrail implements IGameEntity {
     const xSpeedRandMod = Math.random() * 0.5 - 0.25;
     const { color, size } = randomChoice(this.chanceArray);
     const requiredCount = this.opts.count * this.scale;
-    if (!this.parentObject.destroyed && !this.parentObject.sinking && this.trail.length < requiredCount) {
+    if (
+      !this.parentObject.destroyed &&
+      !this.parentObject.sinking &&
+      this.trail.length < requiredCount
+    ) {
       this.trail.push({
         alpha: 1,
-        point: new Point(this.parent.x + this.opts.offset.x, this.parent.y + this.opts.offset.y),
+        point: new Point(
+          this.parent.x + this.opts.offset.x,
+          this.parent.y + this.opts.offset.y,
+        ),
         speed: new Point(
           xSpeedRandMod * this.opts.initialSpeed.x,
           this.opts.initialSpeed.y,

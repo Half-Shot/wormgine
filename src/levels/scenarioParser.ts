@@ -19,7 +19,7 @@ import { IWeaponCode } from "../weapons/weapon";
 import { DefaultWeaponSchema } from "../weapons/schema";
 import { getSpawnPoints } from "../terrain/spawner";
 import { BaseRecordedState } from "../entities/state/base";
-import { HealthCrate, HealthCrateRecordedState } from "../entities/phys/collectable/healthCrate";
+import { HealthCrateRecordedState } from "../entities/phys/collectable/healthCrate";
 import { imageDataToAlpha, imageDataToTerrainBoundaries } from "../terrain";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import { FireMarkerRecordedState } from "../entities/phys/fire";
@@ -167,9 +167,7 @@ export class ScenarioBuilder {
   private readonly providedTeams: TeamDefinition[];
 
   get hasWormSpawns() {
-    return this.objectState.some(
-      (o) => o.type === "wormgine.worm_spawn",
-    );
+    return this.objectState.some((o) => o.type === "wormgine.worm_spawn");
   }
 
   get waterLevel() {
@@ -193,21 +191,23 @@ export class ScenarioBuilder {
       throw Error("Tiled map is missing object layer");
     }
     this.objectLayer = objectLayer;
-    const foregroundLayers = scenarioMap.layers.filter(
-      (l) => {
-        if (l.type !== "imagelayer") {
-          return;
-        }
-        const layerRole = l.properties?.find(p => p.name === 'wormgine.layer_role'); 
-        if (!layerRole) {
-          logger.warning('Scenario has a imagelayer without a wormgine.layer_role, assuming foreground');
-          return true;
-        }
-        return layerRole.value === 'foreground';
+    const foregroundLayers = scenarioMap.layers.filter((l) => {
+      if (l.type !== "imagelayer") {
+        return;
       }
-    ) as TiledForgroundLayer[];
+      const layerRole = l.properties?.find(
+        (p) => p.name === "wormgine.layer_role",
+      );
+      if (!layerRole) {
+        logger.warning(
+          "Scenario has a imagelayer without a wormgine.layer_role, assuming foreground",
+        );
+        return true;
+      }
+      return layerRole.value === "foreground";
+    }) as TiledForgroundLayer[];
     if (foregroundLayers.length > 1) {
-      throw Error('Multiple foreground layers are not supported');
+      throw Error("Multiple foreground layers are not supported");
     }
     if (!foregroundLayers[0]) {
       throw Error("Tiled map is missing foreground layer");
@@ -240,7 +240,8 @@ export class ScenarioBuilder {
       })
       .filter((v) => v !== undefined);
 
-    this.bitmapAssetName = "levels_" + this.foregroundLayer.image.split(".png")[0];
+    this.bitmapAssetName =
+      "levels_" + this.foregroundLayer.image.split(".png")[0];
   }
 
   public loadBitmapFromAssets(
@@ -269,24 +270,41 @@ export class ScenarioBuilder {
     return this;
   }
 
-  addMissingObjects(finalTeams: TeamDefinition[]):ScenarioBuilder {
+  addMissingObjects(finalTeams: TeamDefinition[]): ScenarioBuilder {
     if (!this.bitmap) {
-      throw Error('Bitmap must be loaded first');
+      throw Error("Bitmap must be loaded first");
     }
     const tmpCanvas = BitmapTerrain.drawToCanvas(this.bitmap);
     const context = tmpCanvas.getContext("2d")!;
-    const imgData = context.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+    const imgData = context.getImageData(
+      0,
+      0,
+      tmpCanvas.width,
+      tmpCanvas.height,
+    );
     const alphas = imageDataToAlpha(0, 0, imgData);
     const { boundingBox } = imageDataToTerrainBoundaries(alphas, imgData);
     let waterLevel = this.waterLevel;
     if (waterLevel === undefined) {
-      logger.info('No wormgine.water height in level, generating one');
+      logger.info("No wormgine.water height in level, generating one");
       // TODO: Magic numbers!
-      waterLevel = boundingBox.bottom+100;
-      this.objectState.push(new BaseRecordedState({type: 'wormgine.water', properties: {}, x: 0, y: waterLevel }));
+      waterLevel = boundingBox.bottom + 100;
+      this.objectState.push(
+        new BaseRecordedState({
+          type: "wormgine.water",
+          properties: {},
+          x: 0,
+          y: waterLevel,
+        }),
+      );
     }
     if (!this.hasWormSpawns) {
-      const newSpawns = getSpawnPoints(this.bitmap, this.objectState, finalTeams, waterLevel);
+      const newSpawns = getSpawnPoints(
+        this.bitmap,
+        this.objectState,
+        finalTeams,
+        waterLevel,
+      );
       this.insertObjects(newSpawns);
     }
 

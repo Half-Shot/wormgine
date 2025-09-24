@@ -51,7 +51,11 @@ export class BazookaShell extends TimedExplosive {
   ) {
     const ent = new BazookaShell(position, gameWorld, parent, force, owner);
     gameWorld.addBody(ent, ent.physObject.collider);
-    parent.addChild(gameWorld.addEntity(ParticleTrail.create(ent.sprite.position, ent, { count: 200 })).gfx);
+    parent.addChild(
+      gameWorld.addEntity(
+        ParticleTrail.create(ent.sprite.position, ent, { count: 200 }),
+      ).gfx,
+    );
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
     return ent;

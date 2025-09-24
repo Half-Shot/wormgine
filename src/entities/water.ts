@@ -7,7 +7,13 @@ import {
   UPDATE_PRIORITY,
 } from "pixi.js";
 import { IPhysicalEntity } from "./entity";
-import { collisionGroupBitmask, CollisionGroups, GameWorld, PIXELS_PER_METER, RapierPhysicsObject } from "../world";
+import {
+  collisionGroupBitmask,
+  CollisionGroups,
+  GameWorld,
+  PIXELS_PER_METER,
+  RapierPhysicsObject,
+} from "../world";
 import { ColliderDesc, Cuboid, RigidBodyDesc } from "@dimforge/rapier2d-compat";
 import { MetersValue } from "../utils";
 
@@ -21,7 +27,11 @@ export class Water implements IPhysicalEntity {
   private readonly waterMesh: Mesh<Geometry, Shader>;
   private static readonly collisionBitmask = collisionGroupBitmask(
     CollisionGroups.WorldObjects,
-    [CollisionGroups.WorldObjects, CollisionGroups.Fire, CollisionGroups.Player],
+    [
+      CollisionGroups.WorldObjects,
+      CollisionGroups.Fire,
+      CollisionGroups.Player,
+    ],
   );
 
   // Never active.
@@ -96,7 +106,9 @@ export class Water implements IPhysicalEntity {
       },
     });
     this.physObject = world.createRigidBodyCollider(
-      ColliderDesc.cuboid(width.value / 10, 6).setSensor(true).setCollisionGroups(Water.collisionBitmask),
+      ColliderDesc.cuboid(width.value / 10, 6)
+        .setSensor(true)
+        .setCollisionGroups(Water.collisionBitmask),
       RigidBodyDesc.fixed().setTranslation(0, height.value),
     );
     const meshPos = this.physObject.body.translation();

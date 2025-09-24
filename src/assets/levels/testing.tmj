@@ -3,6 +3,25 @@
  "infinite":false,
  "layers":[
         {
+         "id":7,
+         "image":"boneisles.png",
+         "imageheight":1080,
+         "imagewidth":1920,
+         "locked":true,
+         "name":"background",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"wormgine.layer_role",
+                 "type":"string",
+                 "value":"background"
+                }],
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "id":3,
          "image":"testingGround.png",
          "imageheight":1080,
@@ -117,18 +136,104 @@
                  "width":33,
                  "x":213.420556310513,
                  "y":-134.445898424984
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":31,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"health",
+                         "type":"int",
+                         "value":50
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":539.703980764093,
+                 "y":322.561047288271
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":32,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"health",
+                         "type":"int",
+                         "value":10
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":1257.04301362543,
+                 "y":326.568527918782
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":33,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":1477.4544483035,
+                 "y":488.20358001603
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":34,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":440.852791878173,
+                 "y":481.524445631846
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":35,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":244.486240983169,
+                 "y":684.570130911034
+                }, 
+                {
+                 "gid":11,
+                 "height":44,
+                 "id":36,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":33,
+                 "x":1589.66390595779,
+                 "y":683.234304034197
                 }],
+         "offsetx":5.34330750734705,
+         "offsety":-4.00748063051026,
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
- "nextlayerid":7,
- "nextobjectid":31,
+ "nextlayerid":8,
+ "nextobjectid":37,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.1",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {

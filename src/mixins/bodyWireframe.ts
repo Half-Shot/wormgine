@@ -14,8 +14,8 @@ export class BodyWireframe {
     },
   });
 
-  public renderColor: ColorSource = 0xFF0000;
-  
+  public renderColor: ColorSource = 0xff0000;
+
   private shouldRender: boolean;
   public set enabled(value: boolean) {
     this.shouldRender = value;

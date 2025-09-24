@@ -32,29 +32,31 @@ export class GasGrenade extends Grenade {
       timerSecs,
       worm,
     );
-    parent.addChild(world.addEntity(
-      ParticleTrail.create(ent.sprite.position, ent, {
-        colours: [
-          {
-            color: "rgba(34, 204, 0, 0.47)",
-            size: 10,
-            chance: 2,
-          },
-          {
-            color: "rgba(115, 241, 90, 0.81)",
-            size: 3,
-            chance: 4,
-          },
-          {
-            color: "rgba(172, 204, 31, 0.84)",
-            size: 5,
-            chance: 2,
-          },
-        ],
-        initialSpeed: { x: 0, y: 0.15 },
-        acceleration: { x: 0, y: 0.05 },
-      }),
-    ).gfx);
+    parent.addChild(
+      world.addEntity(
+        ParticleTrail.create(ent.sprite.position, ent, {
+          colours: [
+            {
+              color: "rgba(34, 204, 0, 0.47)",
+              size: 10,
+              chance: 2,
+            },
+            {
+              color: "rgba(115, 241, 90, 0.81)",
+              size: 3,
+              chance: 4,
+            },
+            {
+              color: "rgba(172, 204, 31, 0.84)",
+              size: 5,
+              chance: 2,
+            },
+          ],
+          initialSpeed: { x: 0, y: 0.15 },
+          acceleration: { x: 0, y: 0.05 },
+        }),
+      ).gfx,
+    );
     parent.addChild(ent.sprite, ent.wireframe.renderable);
     return ent;
   }

@@ -47,10 +47,13 @@ export function calculateMovement(
 ): Vector2 {
   const currentTranslation = physObject.body.translation();
   // Offset from current shape
-  if (physObject.collider.shape instanceof Cuboid === false && physObject.collider.shape instanceof RoundCuboid === false) {
+  if (
+    physObject.collider.shape instanceof Cuboid === false &&
+    physObject.collider.shape instanceof RoundCuboid === false
+  ) {
     throw Error("calculateMovement only supports cuboid objects");
   }
-  const currentShape = physObject.collider.shape as Cuboid|RoundCuboid;
+  const currentShape = physObject.collider.shape as Cuboid | RoundCuboid;
   const move = add(
     mult(
       add(currentTranslation, movement),
@@ -61,9 +64,7 @@ export function calculateMovement(
     { y: 0, x: 0 },
   );
 
-  const { y: objHalfHeight, x: objHalfWidth } = (
-    currentShape
-  ).halfExtents;
+  const { y: objHalfHeight, x: objHalfWidth } = currentShape.halfExtents;
   // Get the extremity.
   const rayCoodinate = new Coordinate(
     // Coodinate check in advance of the current shape
@@ -77,7 +78,7 @@ export function calculateMovement(
 
   // Increase by steppy amount.
   const initialCollisionShape = new Cuboid(
-    (objHalfWidth / 2),
+    objHalfWidth / 2,
     objHalfHeight + maxSteppy.value,
   );
   debugData = { rayCoodinate, shape: initialCollisionShape };
@@ -89,7 +90,14 @@ export function calculateMovement(
   );
   // Pop the highest collider
   const highestCollider = collides
-    .filter((s) => !s.collider.isSensor() && wouldCollide(physObject.collider.collisionGroups(), s.collider.collisionGroups()))
+    .filter(
+      (s) =>
+        !s.collider.isSensor() &&
+        wouldCollide(
+          physObject.collider.collisionGroups(),
+          s.collider.collisionGroups(),
+        ),
+    )
     .sort((a, b) => a.collider.translation().y - b.collider.translation().y)[0];
 
   // No collisions, go go go!

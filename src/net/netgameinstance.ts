@@ -340,7 +340,7 @@ export class NetGameInstance implements IGameInstance {
     if (!builder.hasWormSpawns) {
       // TODO: We assume if there are no spawn points then we are fine to add in our own, but there
       // should be a better switch for this
-      builder.addSpawns(teams);
+      builder.addMissingObjects(teams);
       const newLevel = builder.toBlob();
       levelMxc = await this.client.uploadMedia(newLevel);
     }

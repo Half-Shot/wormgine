@@ -1,4 +1,4 @@
-import { UPDATE_PRIORITY, Sprite, Container, Texture, Graphics, ViewContainer, RenderLayer } from "pixi.js";
+import { UPDATE_PRIORITY, Container, Texture } from "pixi.js";
 import { IPhysicalEntity } from "../entity";
 import { PhysicsEntity } from "./physicsEntity";
 import { collisionGroupBitmask, CollisionGroups, GameWorld } from "../../world";
@@ -8,7 +8,7 @@ import {
   RigidBodyDesc,
   Vector2,
 } from "@dimforge/rapier2d-compat";
-import { add, Coordinate, MetersValue, randomChoice, sub } from "../../utils";
+import { add, Coordinate, MetersValue, randomChoice } from "../../utils";
 import { AssetPack } from "../../assets";
 import { EntityType } from "../type";
 import { BaseRecordedState } from "../state/base";
@@ -16,20 +16,25 @@ import { ParsedTiledObject } from "../../levels/scenarioParser";
 import { BitmapTerrain } from "../bitmapTerrain";
 import Logger from "../../log";
 import { ParticleTrail } from "../particletrail";
-import { SequencedTiledSpriteAnimated, TiledSpriteAnimated } from "../../utils/tiledspriteanimated";
+import { SequencedTiledSpriteAnimated } from "../../utils/tiledspriteanimated";
 import { PlayableEntity } from "../playable/playable";
+import { RecordedEntityState } from "../../state/model";
 
 export class FireMarkerRecordedState extends BaseRecordedState {
-    public readonly burnDuration: number;
-    constructor(obj: Omit<ParsedTiledObject, "id" | "gid">) {
-        super(obj);
-        const burnDuration = obj.properties['burn_duration'] ?? 5;
-        if (typeof burnDuration === "number" && Number.isInteger(burnDuration) && burnDuration > 0) {
-            this.burnDuration = burnDuration;
-            return;
-        }
-        throw Error(`Invalid burnDuration on object, got '${burnDuration}'`);
+  public readonly burnDuration: number;
+  constructor(obj: Omit<ParsedTiledObject, "id" | "gid">) {
+    super(obj);
+    const burnDuration = obj.properties["burn_duration"] ?? 5;
+    if (
+      typeof burnDuration === "number" &&
+      Number.isInteger(burnDuration) &&
+      burnDuration > 0
+    ) {
+      this.burnDuration = burnDuration;
+      return;
     }
+    throw Error(`Invalid burnDuration on object, got '${burnDuration}'`);
+  }
 }
 
 const fireDamageRadius = new MetersValue(0.25);
@@ -39,17 +44,17 @@ const burnEveryMs = 100;
 const ParticleOpts = {
   colours: [
     {
-      color: 'rgba(107, 107, 107, 0.75)',
+      color: "rgba(107, 107, 107, 0.75)",
       chance: 1,
       size: 7,
     },
     {
-      color: 'rgba(190, 190, 190, 0.91)',
+      color: "rgba(190, 190, 190, 0.91)",
       chance: 1,
       size: 5,
     },
     {
-      color: 'rgba(133, 133, 133, 0.53)',
+      color: "rgba(133, 133, 133, 0.53)",
       chance: 1,
       size: 3,
     },
@@ -65,14 +70,16 @@ const ParticleOpts = {
   offset: {
     x: 0,
     y: 5,
-  }
+  },
 };
 
 /**
- * 
+ *
  */
-export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledSpriteAnimated> {
-  
+export class FireMarker extends PhysicsEntity<
+  RecordedEntityState,
+  SequencedTiledSpriteAnimated
+> {
   public readonly type = EntityType.Target;
   private static readonly collisionBitmask = collisionGroupBitmask(
     CollisionGroups.Fire,
@@ -102,10 +109,10 @@ export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledS
     state: FireMarkerRecordedState,
   ): FireMarker {
     return new FireMarker(
-          gameWorld,
-          Coordinate.fromScreen(state.tra.x, state.tra.y),
-          parent,
-          state.burnDuration * 1000
+      gameWorld,
+      Coordinate.fromScreen(state.tra.x, state.tra.y),
+      parent,
+      state.burnDuration * 1000,
     );
   }
 
@@ -116,35 +123,45 @@ export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledS
     private readonly parent: Container,
     private readonly initialMs: number,
   ) {
-    const sprite = new SequencedTiledSpriteAnimated({
-      columns: 8,
-      width: 24,
-      height: 32,
-      fps: 15,
-      tileCount: 4,
-      anchor: { x: 0.5, y: 0.6},
-      scale: { x: 1.5, y: 1.5},
-      randomizeStartFrame: false, // Not for start.
-    }, [{
-      texture: FireMarker.textureStart,
-      tileCount: 4,
-    }, {
-      texture: FireMarker.textureLoop,
-      tileCount: 8,
-      loop: true,
-    }, {
-      texture: FireMarker.textureEnd,
-      tileCount: 5,
-    }]);
+    const sprite = new SequencedTiledSpriteAnimated(
+      {
+        columns: 8,
+        width: 24,
+        height: 32,
+        fps: 15,
+        tileCount: 4,
+        anchor: { x: 0.5, y: 0.6 },
+        scale: { x: 1.5, y: 1.5 },
+        randomizeStartFrame: false, // Not for start.
+      },
+      [
+        {
+          texture: FireMarker.textureStart,
+          tileCount: 4,
+        },
+        {
+          texture: FireMarker.textureLoop,
+          tileCount: 8,
+          loop: true,
+        },
+        {
+          texture: FireMarker.textureEnd,
+          tileCount: 5,
+        },
+      ],
+    );
     const body = world.createRigidBodyCollider(
       ColliderDesc.cuboid(0.35, 0.35)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
-        .setCollisionGroups(FireMarker.collisionBitmask).setSolverGroups(FireMarker.solverGroup),
-      RigidBodyDesc.dynamic().lockRotations().setTranslation(position.worldX, position.worldY),
+        .setCollisionGroups(FireMarker.collisionBitmask)
+        .setSolverGroups(FireMarker.solverGroup),
+      RigidBodyDesc.dynamic()
+        .lockRotations()
+        .setTranslation(position.worldX, position.worldY),
     );
     super(sprite, body, world);
     this.trail = ParticleTrail.create(sprite.position, this, ParticleOpts);
-    this.wireframe.renderColor = '#d18a20';
+    this.wireframe.renderColor = "#d18a20";
     // a layer..
     this.parent.addChild(this.trail.gfx);
     this.parent.addChild(sprite);
@@ -156,14 +173,14 @@ export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledS
   update(_dt: number, dMs: number): void {
     // TODO: Randomness doesn't travel across network well!
     super.update(_dt, dMs);
-    this.sprite.update(dMs)
+    this.sprite.update(dMs);
     this.remainingMs -= dMs;
     this.lastDamageMs += dMs;
     if (this.remainingMs <= 0) {
       this.destroy();
       return;
     }
-    const scale = Math.max(0.10, this.remainingMs/this.initialMs);
+    const scale = Math.max(0.1, this.remainingMs / this.initialMs);
     this.sprite.scale.set(1.5 * scale);
     this.trail.scale = scale;
     if (this.lastDamageMs < burnEveryMs) {
@@ -175,18 +192,30 @@ export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledS
       return;
     }
     this.lastDamageMs -= burnEveryMs;
-    this.safeUsePhys(({body}) => {
+    this.safeUsePhys(({ body }) => {
       if (body.isMoving()) {
         return;
       }
-      logger.debug('Applying fire damange');
-      const terrain = [...this.gameWorld.entities.values()].find((v) => v instanceof BitmapTerrain);
+      logger.debug("Applying fire damange");
+      const terrain = [...this.gameWorld.entities.values()].find(
+        (v) => v instanceof BitmapTerrain,
+      );
       const translation = body.translation();
-      const burnAt = randomChoice([0.20*scale,0.10*scale,0.5*scale,0,-0.5*scale,-0.10*scale,0.20*scale]);
-      terrain?.onDamage(add(translation, { x: burnAt, y: 0.5}), fireDamageRadius.multiply(scale));
+      const burnAt = randomChoice([
+        0.2 * scale,
+        0.1 * scale,
+        0.5 * scale,
+        0,
+        -0.5 * scale,
+        -0.1 * scale,
+        0.2 * scale,
+      ]);
+      terrain?.onDamage(
+        add(translation, { x: burnAt, y: 0.5 }),
+        fireDamageRadius.multiply(scale),
+      );
     });
   }
-
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {
     if (super.onCollision(otherEnt, contactPoint)) {
@@ -194,8 +223,11 @@ export class FireMarker extends PhysicsEntity<BaseRecordedState, SequencedTiledS
     }
 
     if (otherEnt instanceof PlayableEntity) {
-      logger.debug('Player collided with fire');
-      otherEnt.onDamage(contactPoint, fireDamageRadius, { forceMultiplier: 2, forceDamange: 3 });
+      logger.debug("Player collided with fire");
+      otherEnt.onDamage(contactPoint, fireDamageRadius, {
+        forceMultiplier: 2,
+        forceDamange: 3,
+      });
       return true;
     }
 
