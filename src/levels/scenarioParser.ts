@@ -19,6 +19,7 @@ import { IWeaponCode } from "../weapons/weapon";
 import { DefaultWeaponSchema } from "../weapons/schema";
 import { getSpawnPoints } from "../terrain/spawner";
 import { BaseRecordedState } from "../entities/state/base";
+import { HealthCrate, HealthCrateRecordedState } from "../entities/phys/collectable/healthCrate";
 import { imageDataToAlpha, imageDataToTerrainBoundaries } from "../terrain";
 import { BitmapTerrain } from "../entities/bitmapTerrain";
 import { FireMarkerRecordedState } from "../entities/phys/fire";
@@ -44,6 +45,8 @@ function parseObjectToRecordedState(
   switch (object.type) {
     case "wormgine.worm_spawn":
       return new WormSpawnRecordedState(object);
+    case EntityType.HealthCrate:
+      return new HealthCrateRecordedState(object);
     case EntityType.FireMarker:
       return new FireMarkerRecordedState(object);
     case "wormgine.mine":

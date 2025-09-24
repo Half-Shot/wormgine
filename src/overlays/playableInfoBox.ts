@@ -133,6 +133,7 @@ export class PlayableInfoBox {
     // Show damage.
     this.subs.push(
       this.healthChange.subscribe((value) => {
+        log.info("Updating health target");
         if (value === 0) {
           return;
         }
@@ -204,11 +205,15 @@ export class PlayableInfoBox {
       this.container.position.set(parent.x - parent.width / 4, parent.y - 85);
     }
 
-    if (this.visibleHealth > this.healthTarget) {
-      this.visibleHealth--;
+    if (this.visibleHealth !== this.healthTarget) {
+      if (this.healthTarget > this.visibleHealth) {
+        this.visibleHealth++;
+      } else {
+        this.visibleHealth--;
+      }
       this.healthText.text = this.visibleHealth;
       this.setHealthTextPosition();
-      if (this.visibleHealth <= this.healthTarget) {
+      if (this.visibleHealth !== this.healthTarget) {
         this.onChanged.next(this.visibleHealth);
       }
     }

@@ -81,7 +81,6 @@ export class TestDummy extends PlayableEntity {
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(TestDummy.collisionBitmask)
-        .setSolverGroups(TestDummy.collisionBitmask)
         .setMass(0.35),
       RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY),
     );

@@ -8,8 +8,8 @@
  "margin":0,
  "name":"objects",
  "spacing":0,
- "tilecount":5,
- "tiledversion":"1.11.0",
+ "tilecount":7,
+ "tiledversion":"1.11.2",
  "tileheight":44,
  "tiles":[
         {
@@ -46,6 +46,19 @@
          "imageheight":44,
          "imagewidth":33,
          "type":"wormgine.weapon_loadout"
+        }, 
+        {
+         "id":10,
+         "image":"level_tileset\/placeholder_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "properties":[
+                {
+                 "name":"health",
+                 "type":"int",
+                 "value":25
+                }],
+         "type":"wormgine.collectable.health_crate"
         }, 
         {
          "id":11,
