@@ -8,4 +8,5 @@ export enum EntityType {
   Firework = "wormgine.firework",
   TestDummy = "wormgine.test_dummy",
   Target = "wormgine.target",
+  FireMarker = "wormgine.fire"
 }

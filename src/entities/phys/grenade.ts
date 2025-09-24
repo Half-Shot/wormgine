@@ -81,7 +81,6 @@ export class Grenade extends TimedExplosive {
       ColliderDesc.roundCuboid(0.05, 0.05, 0.5)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Grenade.collisionBitmask)
-        .setSolverGroups(Grenade.collisionBitmask)
         .setMass(0.1),
       RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY),
     );

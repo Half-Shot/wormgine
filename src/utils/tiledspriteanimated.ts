@@ -1,5 +1,6 @@
-import { TilingSprite, TilingSpriteOptions } from "pixi.js";
+import { Texture, TilingSprite, TilingSpriteOptions } from "pixi.js";
 import Flags from "../flags";
+import Logger from "../log";
 
 interface TiledSpriteAnimatedOptions extends TilingSpriteOptions {
   columns: number;
@@ -9,10 +10,10 @@ interface TiledSpriteAnimatedOptions extends TilingSpriteOptions {
 }
 
 export class TiledSpriteAnimated extends TilingSprite {
-  private tileCounter = 0;
+  public tileCounter = 0;
   private timeSinceLastAnim = 0;
   private readonly targetFrameMs;
-  private readonly tileCount: number;
+  protected tileCount: number;
   private readonly columns: number;
   private debugStepAnim: string = "";
   constructor(opts: TiledSpriteAnimatedOptions) {
@@ -55,5 +56,59 @@ export class TiledSpriteAnimated extends TilingSprite {
     const tileRow = Math.floor(this.tileCounter / this.columns);
     this.tilePosition.x = tileColumn * this.width;
     this.tilePosition.y = tileRow * this.height;
+  }
+}
+
+interface PlaylistItem {
+  texture: Texture;
+  tileCount: number;
+  loop?: true;
+
+}
+
+export class SequencedTiledSpriteAnimated extends TiledSpriteAnimated {
+  private isLooping = false;
+  private hasPlayedFirstFrame = false;
+  private static log = new Logger('SequencedTiledSpriteAnimated');
+
+  public get hasNextAnimation() {
+    return this.playlist.length !== 0;
+  }
+
+  constructor(opts: TiledSpriteAnimatedOptions, private readonly playlist: PlaylistItem[]) {
+    super(opts);
+    this.loadNextAnim();
+  }
+
+  public loadNextAnim() {
+    const [ next ] = this.playlist.splice(0, 1);
+    if (!next) {
+      throw Error('Unepected loadNextAnim when no items are left in the sequence');
+      return;
+    }
+    this.texture = next.texture;
+    this.tileCount = next.tileCount;
+    this.isLooping = next.loop ?? false;
+    this.hasPlayedFirstFrame = false;
+    SequencedTiledSpriteAnimated.log.debug('Loaded next animation', this.texture.label, this.tileCount, this.isLooping);
+  }
+
+  public update(deltaMs: number): void {
+    if (this.tileCounter > 0 && !this.hasPlayedFirstFrame) {
+      this.hasPlayedFirstFrame = true;
+    }
+    if (!this.isLooping && this.tileCounter === 0 && this.hasPlayedFirstFrame) {
+      if (!this.hasNextAnimation) {
+        // Skip any animations if this has played out.
+        SequencedTiledSpriteAnimated.log.debug('Animation played out');
+        return;
+      }
+      this.loadNextAnim();
+    }
+    super.update(deltaMs);
+  }
+
+  public endLoop() {
+    this.isLooping = false;
   }
 }

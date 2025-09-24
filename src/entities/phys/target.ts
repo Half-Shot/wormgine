@@ -20,8 +20,7 @@ interface Opts {
 }
 
 /**
- * Any projectile type that can explode after a set timer. Implementing classes
- * must include their own timer.
+ * Simple target that can be hit as part of a scenario or tutorial
  */
 export class WeaponTarget extends PhysicsEntity {
   public readonly type = EntityType.Target;
@@ -49,8 +48,7 @@ export class WeaponTarget extends PhysicsEntity {
     const body = world.createRigidBodyCollider(
       ColliderDesc.ball(1)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
-        .setCollisionGroups(WeaponTarget.collisionBitmask)
-        .setSolverGroups(WeaponTarget.collisionBitmask),
+        .setCollisionGroups(WeaponTarget.collisionBitmask),
       RigidBodyDesc.fixed().setTranslation(position.worldX, position.worldY),
     );
     super(sprite, body, world);

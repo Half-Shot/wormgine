@@ -51,7 +51,7 @@ export class BazookaShell extends TimedExplosive {
   ) {
     const ent = new BazookaShell(position, gameWorld, parent, force, owner);
     gameWorld.addBody(ent, ent.physObject.collider);
-    gameWorld.addEntity(ParticleTrail.create(parent, ent.sprite.position, ent));
+    parent.addChild(gameWorld.addEntity(ParticleTrail.create(ent.sprite.position, ent, { count: 200 })).gfx);
     parent.addChild(ent.sprite);
     parent.addChild(ent.wireframe.renderable);
     return ent;
@@ -69,7 +69,6 @@ export class BazookaShell extends TimedExplosive {
       ColliderDesc.cuboid(0.5, 0.2)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(BazookaShell.collisionBitmask)
-        .setSolverGroups(BazookaShell.collisionBitmask)
         .setMass(1),
       // TODO: Angle rotation the right way.
       RigidBodyDesc.dynamic()

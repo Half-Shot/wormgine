@@ -6,10 +6,12 @@ import {
   Point,
   PointData,
   UPDATE_PRIORITY,
+  ViewContainer,
 } from "pixi.js";
 import { IGameEntity } from "./entity";
 import { PhysicsEntity } from "./phys/physicsEntity";
 import { randomChoice } from "../utils";
+import { RecordedEntityState } from "../state/model";
 
 /**
  * Standard, reusable particle trail.
@@ -23,6 +25,8 @@ interface Opts {
   }[];
   initialSpeed: PointData;
   acceleration: PointData;
+  offset: PointData;
+  count: number,
 }
 
 const DEFAULT_OPTS: Opts = {
@@ -51,15 +55,21 @@ const DEFAULT_OPTS: Opts = {
     x: 0,
     y: 0.15,
   },
+  offset: {
+    x: 0,
+    y: 0,
+  },
+  count: 50,
 };
 
 export class ParticleTrail implements IGameEntity {
   priority = UPDATE_PRIORITY.LOW;
+  public scale = 1;
 
   public get destroyed() {
     return this.gfx.destroyed;
   }
-  private readonly gfx: Graphics;
+  public readonly gfx: Graphics;
   private trail: {
     point: Point;
     speed: Point;
@@ -70,16 +80,14 @@ export class ParticleTrail implements IGameEntity {
   }[] = [];
 
   static create(
-    container: Container,
     parent: ObservablePoint,
-    parentObject: PhysicsEntity,
+    parentObject: PhysicsEntity<RecordedEntityState, ViewContainer>,
     opts: Partial<Opts> = DEFAULT_OPTS,
   ) {
     const ent = new ParticleTrail(parent, parentObject, {
       ...DEFAULT_OPTS,
       ...opts,
     });
-    container.addChild(ent.gfx);
     return ent;
   }
 
@@ -87,7 +95,7 @@ export class ParticleTrail implements IGameEntity {
 
   private constructor(
     private readonly parent: ObservablePoint,
-    private readonly parentObject: PhysicsEntity,
+    private readonly parentObject: PhysicsEntity<RecordedEntityState, ViewContainer>,
     private readonly opts: Opts,
   ) {
     this.gfx = new Graphics();
@@ -102,10 +110,11 @@ export class ParticleTrail implements IGameEntity {
   update(dt: number) {
     const xSpeedRandMod = Math.random() * 0.5 - 0.25;
     const { color, size } = randomChoice(this.chanceArray);
-    if (!this.parentObject.destroyed && !this.parentObject.sinking) {
+    const requiredCount = this.opts.count * this.scale;
+    if (!this.parentObject.destroyed && !this.parentObject.sinking && this.trail.length < requiredCount) {
       this.trail.push({
         alpha: 1,
-        point: this.parent.clone(),
+        point: new Point(this.parent.x + this.opts.offset.x, this.parent.y + this.opts.offset.y),
         speed: new Point(
           xSpeedRandMod * this.opts.initialSpeed.x,
           this.opts.initialSpeed.y,
@@ -115,7 +124,7 @@ export class ParticleTrail implements IGameEntity {
           this.opts.acceleration.x,
           this.opts.acceleration.y,
         ),
-        radius: 1 + Math.random() * size,
+        radius: 1 + Math.random() * size * this.scale,
         color,
       });
     }

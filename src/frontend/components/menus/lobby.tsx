@@ -94,7 +94,6 @@ export function TeamPicker({
       ) as TeamGroup) ?? TeamGroup.Red,
     [proposedTeams],
   );
-  console.log(nextTeamGroup);
   const [storedLocalTeams] = useLocalTeamsHook();
   const localTeams = useMemo(
     () =>

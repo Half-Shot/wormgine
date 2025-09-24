@@ -1,4 +1,4 @@
-import { Point, Rectangle, Texture } from "pixi.js";
+import { Container, Point, Rectangle, Texture } from "pixi.js";
 import { Vector } from "@dimforge/rapier2d-compat";
 import { Coordinate, magnitude, shuffle, sub } from "../utils";
 import {
@@ -11,10 +11,15 @@ import { Scenario } from "../levels/scenarioParser";
 import { TeamDefinition, TeamGroup } from "../logic/teams";
 import { WormSpawnRecordedState } from "../entities/state/wormSpawn";
 import { GameDebugOverlay } from "../overlays/debugOverlay";
-import Logger from "../log";
 import { BaseRecordedState } from "../entities/state/base";
+import { GameWorld } from "../world";
+import { RecordedEntityState } from "../state/model";
+import { WeaponTarget } from "../entities/phys/target";
+import { Mine } from "../entities/phys/mine";
+import { HealthCrate, HealthCrateRecordedState } from "../entities/phys/collectable/healthCrate";
+import { EntityType } from "../entities/type";
+import { FireMarker, FireMarkerRecordedState } from "../entities/phys/fire";
 
-const log = new Logger('Spawner');
 interface SpawnerOpts {
   waterLevel: number;
   wormHeightBuffer: number;
@@ -88,21 +93,15 @@ export function getSpawnPoints(
   bitmap: Texture,
   objects: Scenario["objects"],
   teams: TeamDefinition[],
+  waterHeight: number,
 ): BaseRecordedState[] {
+  // TODO: Rendered twice.
   const tmpCanvas = BitmapTerrain.drawToCanvas(bitmap);
   const context = tmpCanvas.getContext("2d")!;
   const imgData = context.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
   const extraRecordedState: BaseRecordedState[] = []
   const alphas = imageDataToAlpha(0, 0, imgData);
-  const { boundaries, boundingBox } = imageDataToTerrainBoundaries(alphas, imgData);
-  let waterState = objects.find((o) => o.type === "wormgine.water");
-  if (!waterState) {
-    log.info('No wormgine.water height in level, generating one');
-    // TODO: Magic numbers!
-    waterState = new BaseRecordedState({type: 'wormgine.water', properties: {}, x: 0, y: boundingBox.bottom+100 });
-    extraRecordedState.push(waterState as BaseRecordedState);
-  }
-  const waterHeight = waterState.tra.y;
+  const { boundaries } = imageDataToTerrainBoundaries(alphas, imgData);
   tmpCanvas.remove();
   // Turn it into a quadtree of rects
   const quadtreeRects = generateQuadsFromTerrain(
@@ -146,8 +145,8 @@ export function getSpawnPoints(
     spawns.push({
       uuid: worm.uuid,
       group: worm.group,
-      x: nextSpawn.worldX,
-      y: nextSpawn.worldY,
+      x: nextSpawn.screenX,
+      y: nextSpawn.screenY,
     });
   }
 
@@ -162,4 +161,39 @@ export function getSpawnPoints(
         },
       }),
   )];
+}
+
+export function addEntitiesToWorld(world: GameWorld, container: Container, objects: RecordedEntityState[]) {
+  for (const levelObject of objects) {
+    if (levelObject.type === "wormgine.target") {
+      const t = new WeaponTarget(
+        world,
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
+        container,
+      );
+      world.addEntity(t);
+      container.addChild(t.sprite);
+    } else if (levelObject.type === "wormgine.mine") {
+      const t = Mine.create(
+        container,
+        world,
+        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
+      );
+      world.addEntity(t);
+    } else if (levelObject.type === EntityType.HealthCrate) {
+      const t = HealthCrate.loadFromRecordedState(
+        container,
+        world,
+        levelObject as HealthCrateRecordedState,
+      );
+      world.addEntity(t);
+    } else if (levelObject.type === EntityType.FireMarker) {
+      const t = FireMarker.loadFromRecordedState(
+        container,
+        world,
+        levelObject as FireMarkerRecordedState,
+      );
+      world.addEntity(t);
+    }
+  }
 }

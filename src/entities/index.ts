@@ -2,6 +2,8 @@ import { AssetPack } from "../assets";
 import { Background } from "./background";
 import { Explosion } from "./explosion";
 import { BazookaShell } from "./phys/bazookaShell";
+import { HealthCrate } from "./phys/collectable/healthCrate";
+import { FireMarker } from "./phys/fire";
 import { Firework } from "./phys/firework";
 import { GasGrenade } from "./phys/gas-grenade";
 import { Grenade } from "./phys/grenade";
@@ -31,5 +33,7 @@ export async function readAssetsForEntities(assets: AssetPack): Promise<void> {
   PhysicsEntity.readAssets(assets);
   HomingMissile.readAssets(assets);
   WeaponTarget.readAssets(assets);
+  HealthCrate.readAssets(assets);
+  FireMarker.readAssets(assets);
   await p;
 }

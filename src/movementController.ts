@@ -2,10 +2,11 @@ import {
   Ball,
   Collider,
   Cuboid,
+  RoundCuboid,
   Shape,
   Vector2,
 } from "@dimforge/rapier2d-compat";
-import { GameWorld, RapierPhysicsObject } from "./world";
+import { GameWorld, RapierPhysicsObject, wouldCollide } from "./world";
 import { add, Coordinate, MetersValue, mult } from "./utils";
 import Logger from "./log";
 
@@ -22,6 +23,9 @@ export function getHalfHeight(shape: Shape) {
   }
   if (shape instanceof Ball) {
     return shape.radius;
+  }
+  if (shape instanceof RoundCuboid) {
+    return shape.halfExtents.y;
   }
   throw Error(`Unknown shape ${shape.type}`);
 }
@@ -43,10 +47,10 @@ export function calculateMovement(
 ): Vector2 {
   const currentTranslation = physObject.body.translation();
   // Offset from current shape
-  if (physObject.collider.shape instanceof Cuboid === false) {
+  if (physObject.collider.shape instanceof Cuboid === false && physObject.collider.shape instanceof RoundCuboid === false) {
     throw Error("calculateMovement only supports cuboid objects");
   }
-  const currentShape = physObject.collider.shape as Cuboid;
+  const currentShape = physObject.collider.shape as Cuboid|RoundCuboid;
   const move = add(
     mult(
       add(currentTranslation, movement),
@@ -58,7 +62,7 @@ export function calculateMovement(
   );
 
   const { y: objHalfHeight, x: objHalfWidth } = (
-    physObject.collider.shape as Cuboid
+    currentShape
   ).halfExtents;
   // Get the extremity.
   const rayCoodinate = new Coordinate(
@@ -73,7 +77,7 @@ export function calculateMovement(
 
   // Increase by steppy amount.
   const initialCollisionShape = new Cuboid(
-    objHalfWidth,
+    (objHalfWidth / 2),
     objHalfHeight + maxSteppy.value,
   );
   debugData = { rayCoodinate, shape: initialCollisionShape };
@@ -85,7 +89,7 @@ export function calculateMovement(
   );
   // Pop the highest collider
   const highestCollider = collides
-    .filter((s) => !s.collider.isSensor())
+    .filter((s) => !s.collider.isSensor() && wouldCollide(physObject.collider.collisionGroups(), s.collider.collisionGroups()))
     .sort((a, b) => a.collider.translation().y - b.collider.translation().y)[0];
 
   // No collisions, go go go!

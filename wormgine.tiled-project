@@ -34,6 +34,25 @@
         {
             "color": "#ffa0a0a4",
             "drawFill": true,
+            "id": 13,
+            "members": [
+                {
+                    "name": "burn_duration",
+                    "type": "int",
+                    "value": 60
+                }
+            ],
+            "name": "wormgine.fire",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
             "id": 3,
             "members": [
                 {
@@ -54,6 +73,47 @@
             "useAs": [
                 "object",
                 "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 6,
+            "members": [
+                {
+                    "name": "wormgine.loadout",
+                    "propertyType": "wormgine.weapon_loadout",
+                    "type": "class",
+                    "value": {
+                    }
+                },
+                {
+                    "name": "wormgine.starting_health",
+                    "type": "int",
+                    "value": 100
+                },
+                {
+                    "name": "wormgine.team_group",
+                    "propertyType": "WormTeamGroup",
+                    "type": "string",
+                    "value": "None"
+                },
+                {
+                    "name": "wormgine.team_name",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "wormgine.worm_names",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "wormgine.team",
+            "type": "class",
+            "useAs": [
+                "object",
                 "project"
             ]
         },
@@ -137,47 +197,6 @@
             "useAs": [
                 "object",
                 "tile",
-                "project"
-            ]
-        },
-        {
-            "color": "#ffa0a0a4",
-            "drawFill": true,
-            "id": 6,
-            "members": [
-                {
-                    "name": "wormgine.loadout",
-                    "propertyType": "wormgine.weapon_loadout",
-                    "type": "class",
-                    "value": {
-                    }
-                },
-                {
-                    "name": "wormgine.starting_health",
-                    "type": "int",
-                    "value": 100
-                },
-                {
-                    "name": "wormgine.team_group",
-                    "propertyType": "WormTeamGroup",
-                    "type": "string",
-                    "value": "None"
-                },
-                {
-                    "name": "wormgine.team_name",
-                    "type": "string",
-                    "value": ""
-                },
-                {
-                    "name": "wormgine.worm_names",
-                    "type": "string",
-                    "value": ""
-                }
-            ],
-            "name": "wormgine.team",
-            "type": "class",
-            "useAs": [
-                "object",
                 "project"
             ]
         },

@@ -72,6 +72,11 @@ async function main() {
     for (const element of await readdir(join(assetLocation, "particles"))) {
         parseDirectory("./particles/", element, "particles");
     }
+    for (const entityName of await readdir(join(assetLocation, "entities"))) {
+        for (const entityAsset of await readdir(join(assetLocation, "entities", entityName))) {
+            parseDirectory("./" + join("entities", entityName, "/"), entityAsset, `entity_${entityName}`);
+        }
+    }
     for (const element of await readdir(join(assetLocation, "music"))) {
         parseDirectory("./music/", element, "music");
     }

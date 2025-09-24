@@ -46,6 +46,19 @@
          "imageheight":44,
          "imagewidth":33,
          "type":"wormgine.weapon_loadout"
+        }, 
+        {
+         "id":11,
+         "image":"level_tileset\/fire_icon.png",
+         "imageheight":44,
+         "imagewidth":33,
+         "properties":[
+                {
+                 "name":"burn_duration",
+                 "type":"int",
+                 "value":30
+                }],
+         "type":"wormgine.fire"
         }],
  "tilewidth":35,
  "type":"tileset",

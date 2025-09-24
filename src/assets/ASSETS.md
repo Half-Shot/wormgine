@@ -1,6 +1,10 @@
 ## Acknowledgements
 
-#### Sounds provided by https://gameburp.itch.io:
+### Textures
+
+- Fire texture provided by https://brullov.itch.io/fire-animation
+
+### Sounds provided by https://gameburp.itch.io:
 
 - `explosion_1.ogg`
 - `explosion_2.ogg`
@@ -10,12 +14,12 @@
 
 These are provided under a commercial licence and will need removing prior to the game being open sourced.
 
-#### Sounds provided by https://pixabay.com
+### Sounds provided by https://pixabay.com
 
 - `splash.ogg`
 - `firework.ogg`
 - `shotgun.ogg`
 
-#### "Monogram" font provided by https://datagoblin.itch.io/monogram uncer [CC0](https://creativecommons.org/publicdomain/zero/1.0/)
+### "Monogram" font provided by https://datagoblin.itch.io/monogram uncer [CC0](https://creativecommons.org/publicdomain/zero/1.0/)
 
 - `monogram.woff2`

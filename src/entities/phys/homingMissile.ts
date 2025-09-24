@@ -98,7 +98,6 @@ export class HomingMissile extends TimedExplosive<HomingMissileRecordedState> {
       ColliderDesc.cuboid(0.5, 0.2)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(HomingMissile.collisionBitmask)
-        .setSolverGroups(HomingMissile.collisionBitmask)
         .setMass(1),
       // TODO: Angle rotation the right way.
       RigidBodyDesc.dynamic()

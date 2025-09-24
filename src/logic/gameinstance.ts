@@ -238,14 +238,8 @@ export class LocalGameInstance implements IRunningGameInstance {
     } else {
       await builder.loadBitmapFromBlob(levelData.terrainAsset);
     }
-    // Load the scenario
-    if (!builder.hasWormSpawns) {
-      // TODO: We assume if there are no spawn points then we are fine to add in our own, but there
-      // should be a better switch for this.
-      builder.addSpawns(this.finalTeams);
-    }
+    builder.addMissingObjects(this.finalTeams);
     this.scenario = builder.parse();
-
     this._stage.next(GameStage.InProgress);
   }
 

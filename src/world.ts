@@ -42,23 +42,38 @@ export const PIXELS_PER_METER = 20;
 export const MAX_WIND = 10;
 
 export enum CollisionGroups {
-  Terrain = 1, // 0001
-  WorldObjects = 2, //0010
-  Player = 4,
+  Terrain = 0,
+  WorldObjects = 1,
+  Player = 2,
+  Fire = 3,
 }
 
 export function collisionGroupBitmask(
-  groups: CollisionGroups | CollisionGroups[],
-  collides: CollisionGroups | CollisionGroups[],
+  membership: CollisionGroups | CollisionGroups[],
+  filter: CollisionGroups | CollisionGroups[],
 ) {
   // https://rapier.rs/docs/user_guides/javascript/colliders/#collision-groups-and-solver-groups
-  groups = Array.isArray(groups) ? groups : [groups];
-  collides = Array.isArray(collides) ? groups : [collides];
+  membership = Array.isArray(membership) ? membership : [membership];
+  filter = Array.isArray(filter) ? filter : [filter];
 
-  const groupsInt = groups.reduce((o, c) => o + c) << 16;
-  const collidesInt = collides.reduce((o, c) => o + c);
+  let groupsInt = 0;
+  for (const groupInt of Array.isArray(membership) ? membership : [membership]) {
+      groupsInt += 1 << groupInt;
+  }
 
-  return groupsInt + collidesInt;
+  let collidesInt = 0;
+  for (const collideInt of Array.isArray(filter) ? filter : [filter]) {
+      collidesInt += 1 << collideInt;
+  }
+
+  console.log(groupsInt, collidesInt);
+
+  return (groupsInt << 16) + collidesInt;
+}
+
+export function wouldCollide(A: number, B: number) {
+  return ((A >> 16) & (B & 0xffff)) != 0
+&& ((B >> 16) & (A & 0xffff)) != 0
 }
 
 type WindValue =

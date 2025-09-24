@@ -82,7 +82,6 @@ export class Mine extends TimedExplosive {
       ColliderDesc.cuboid(0.05, 0.05)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Mine.collisionBitmask)
-        .setSolverGroups(Mine.collisionBitmask)
         .setMass(50),
       RigidBodyDesc.dynamic().setTranslation(position.worldX, position.worldY),
     );
@@ -101,7 +100,6 @@ export class Mine extends TimedExplosive {
       ColliderDesc.ball(Mine.MineTriggerRadius.value)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Mine.sensorCollisionBitmask)
-        .setSolverGroups(Mine.sensorCollisionBitmask)
         .setSensor(true),
     );
     this.gameWorld.addBody(this, this.sensor);

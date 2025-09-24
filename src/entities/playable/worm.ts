@@ -101,8 +101,8 @@ export class Worm extends PlayableEntity<
   TiledSpriteAnimated
 > {
   private static readonly collisionBitmask = collisionGroupBitmask(
-    [CollisionGroups.WorldObjects],
-    [CollisionGroups.Terrain, CollisionGroups.WorldObjects],
+    [CollisionGroups.WorldObjects, CollisionGroups.Player],
+    [CollisionGroups.Terrain, CollisionGroups.WorldObjects, CollisionGroups.Fire],
   );
   protected static readonly movementSpeed: Vector2 = {
     x: 0.005,
@@ -222,7 +222,6 @@ export class Worm extends PlayableEntity<
       )
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Worm.collisionBitmask)
-        .setSolverGroups(Worm.collisionBitmask)
         .setFriction(FRICTION_WHEN_IDLE)
         .setRestitution(RESITITION_WHEN_IDLE),
       RigidBodyDesc.dynamic()
@@ -566,21 +565,33 @@ export class Worm extends PlayableEntity<
       moveState === InnerWormState.MovingLeft ? -movementMod : movementMod,
       0,
     );
-    const move = calculateMovement(
-      this.physObject,
-      moveMod,
-      maxWormStep,
-      this.gameWorld,
-    );
-    this.motionTween = new TweenEngine(
-      this.body,
-      Worm.movementSpeed,
-      Coordinate.fromWorld(move),
-    );
+    this.safeUsePhys(obj => {
+      const move = calculateMovement(
+        obj,
+        moveMod,
+        maxWormStep,
+        this.gameWorld,
+      );
+      this.motionTween = new TweenEngine(
+        obj.body,
+        Worm.movementSpeed,
+        Coordinate.fromWorld(move),
+      );
+    });
   }
 
   onBeginFireWeapon() {
     this.state.transition(InnerWormState.Firing);
+  }
+
+  public reduceHealth(damage: number): void {
+    
+    if (this.state.isPlaying) {
+      logger.info('Took damage while playing', this.state.stateName);
+
+      this.state.transition(InnerWormState.InactiveWaiting);
+      this.turnEndedReason = EndTurnReason.TookDamage;
+    }
   }
 
   public onDamage(
@@ -592,10 +603,6 @@ export class Worm extends PlayableEntity<
       collider.setFriction(FRICTION_WHEN_ACTIVE);
     });
     super.onDamage(point, radius, opts);
-    if (this.state.isPlaying) {
-      this.state.transition(InnerWormState.Inactive);
-      this.turnEndedReason = EndTurnReason.TookDamage;
-    }
   }
 
   onEndFireWeapon(remoteOpts?: FireOpts) {
@@ -763,7 +770,7 @@ export class Worm extends PlayableEntity<
     }
     if (this.wireframe.enabled) {
       this.wireframe.setDebugText(
-        `worm_state: ${this.state.stateName}, velocity: ${this.body.linvel().y} ${this.impactVelocity}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.keys().toArray().join(", ")}`,
+        `worm_state: ${this.state.stateName} ptm: ${this.state.stateNamePriorToMotion}, aim: ${this.fireAngle}, friction: ${this.collider.friction()}, conditions: ${this.conditions.keys().toArray().join(", ")}`,
       );
     }
     this.weaponSprite.visible = this.state.showWeapon;
@@ -848,8 +855,6 @@ export class Worm extends PlayableEntity<
         if (this.impactVelocity > Worm.minImpactForDamage) {
           const damage = this.impactVelocity * Worm.impactDamageMultiplier;
           this.reduceHealth(damage);
-          this.state.transition(InnerWormState.Inactive);
-          this.turnEndedReason = EndTurnReason.FallDamage;
         }
         this.impactVelocity = 0;
       }
@@ -862,7 +867,6 @@ export class Worm extends PlayableEntity<
         this.fireWeaponDuration += dt;
       }
     } else if (falling) {
-      this.resetMoveDirection();
       this.state.transition(InnerWormState.InMotion);
     } else if (
       this.state.state === InnerWormState.MovingLeft ||

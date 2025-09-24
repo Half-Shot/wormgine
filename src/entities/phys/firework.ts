@@ -16,6 +16,7 @@ import { angleForVector } from "../../utils";
 import { EntityType } from "../type";
 import { WormInstance } from "../../logic";
 import { ParticleTrail } from "../particletrail";
+import { FireMarker } from "./fire";
 
 const COLOUR_SET = [0x08ff08, 0xffcf00, 0xfe1493, 0xff5555, 0x00fdff, 0xccff02];
 
@@ -47,7 +48,7 @@ export class Firework extends TimedExplosive {
   ) {
     const ent = new Firework(position, world, parent, force, owner);
     parent.addChild(ent.sprite, ent.wireframe.renderable);
-    world.addEntity(ParticleTrail.create(parent, ent.sprite.position, ent));
+    parent.addChild(world.addEntity(ParticleTrail.create(ent.sprite.position, ent)).gfx);
     return ent;
   }
 
@@ -59,7 +60,7 @@ export class Firework extends TimedExplosive {
     owner?: WormInstance,
   ) {
     const sprite = new Sprite(Firework.texture);
-    sprite.scale.set(0.15);
+    sprite.scale.set(0.10);
     sprite.anchor.set(0.5);
 
     const primaryColor =
@@ -71,7 +72,6 @@ export class Firework extends TimedExplosive {
       ColliderDesc.roundCuboid(0.05, 0.05, 0.5)
         .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
         .setCollisionGroups(Firework.collisionBitmask)
-        .setSolverGroups(Firework.collisionBitmask)
         .setMass(0.5),
       RigidBodyDesc.dynamic()
         .setTranslation(position.worldX, position.worldY)
@@ -82,13 +82,13 @@ export class Firework extends TimedExplosive {
 
     sprite.position = body.body.translation();
     super(sprite, body, world, parent, {
-      explosionRadius: new MetersValue(4),
+      explosionRadius: new MetersValue(2),
       explodeOnContact: true,
       explosionHue: primaryColor,
       explosionShrapnelHue: secondaryColor,
       timerSecs: 1.33,
       autostartTimer: true,
-      maxDamage: 35,
+      maxDamage: 25,
       ownerWorm: owner,
     });
     this.rotationOffset = Math.PI / 2;
@@ -106,6 +106,19 @@ export class Firework extends TimedExplosive {
         `${body.rotation()} ${Math.round(body.linvel().x)} ${Math.round(body.linvel().y)}`,
       );
     });
+  }
+
+  onExplode(): void {
+    let rocketPos!: Coordinate;
+    this.safeUsePhys(({body}) => {
+      rocketPos = Coordinate.fromWorld(body.translation())
+    })
+    super.onExplode();
+    for (let index = 0; index < 10; index++) {
+      const randomX = (Math.random() - 0.5) * 1;
+      const pos = Coordinate.fromWorld(rocketPos.worldX + randomX, rocketPos.worldY-1);
+      this.gameWorld.addEntity(new FireMarker(this.gameWorld, pos, this.parent, 5000));
+    }
   }
 
   onCollision(otherEnt: IPhysicalEntity, contactPoint: Vector2) {

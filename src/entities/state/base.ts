@@ -3,7 +3,7 @@ import { TiledObject } from "../../levels/types";
 import { RecordedEntityState } from "../../state/model";
 
 export class BaseRecordedState implements RecordedEntityState {
-  public type: number | string;
+  public type: string;
   // Translation
   public tra: { x: number; y: number };
   // Rotation
@@ -27,7 +27,7 @@ export class BaseRecordedState implements RecordedEntityState {
     properties: TiledObject["properties"] = [],
   ): TiledObject {
     return {
-      type: "wormgine.worm_spawn",
+      type: this.type,
       gid: 3,
       id,
       x: this.tra.x,
