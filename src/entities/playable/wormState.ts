@@ -30,6 +30,12 @@ const validTransitionsWhileInGetaway = [
   InnerWormState.MovingRight,
 ];
 
+
+const validTransitionsWhileInactiveWaiting = [
+  InnerWormState.Inactive,
+  InnerWormState.InMotion,
+];
+
 export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) {
   private innerStatePriorToMotion?: InnerWormState;
   private isGetaway = false;
@@ -52,6 +58,11 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     if (this.isGetaway && !validTransitionsWhileInGetaway.includes(newState)) {
       throw Error(
         `Worm tried to transition to ${InnerWormState[newState]} while in a getaway`,
+      );
+    }
+    if (prev === InnerWormState.InactiveWaiting && !validTransitionsWhileInactiveWaiting.includes(newState)) {
+      throw Error(
+        `Worm tried to transition to ${InnerWormState[newState]} while in a InactiveWaiting`,
       );
     }
 
@@ -81,6 +92,7 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   voidStatePriorToMotion() {
+    logger.debug('voidStatePriorToMotion while in', this.stateName)
     this.innerStatePriorToMotion = this.isGetaway
       ? InnerWormState.Getaway
       : InnerWormState.Idle;
@@ -114,7 +126,8 @@ export class WormState extends (EventEmitter as new () => TypedEmitter<Events>) 
     return (
       this.innerState !== InnerWormState.Firing &&
       this.innerState !== InnerWormState.InactiveWaiting &&
-      this.innerState !== InnerWormState.FiringWaitingForNextShot
+      this.innerState !== InnerWormState.FiringWaitingForNextShot &&
+      this.innerStatePriorToMotion !== InnerWormState.InactiveWaiting
     );
   }
 

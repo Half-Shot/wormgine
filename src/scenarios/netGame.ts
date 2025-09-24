@@ -30,6 +30,7 @@ import { RunningNetGameInstance } from "../net/netgameinstance";
 import { Mine } from "../entities/phys/mine";
 import globalFlags from "../flags";
 import { getAssets } from "../assets";
+import { addEntitiesToWorld } from "../terrain/spawner";
 
 const log = new Logger("scenario");
 
@@ -203,26 +204,9 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
   globalFlags.viewportCamera = camera;
   globalFlags.bindGameState(gameState);
 
-  for (const levelObject of level.objects) {
-    if (levelObject.type === "wormgine.target") {
-      const t = new WeaponTarget(
-        world,
-        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
-        parent,
-      );
-      world.addEntity(t);
-      parent.addChild(t.sprite);
-    } else if (levelObject.type === "wormgine.mine") {
-      const t = Mine.create(
-        parent,
-        world,
-        Coordinate.fromScreen(levelObject.tra.x, levelObject.tra.y),
-      );
-      world.addEntity(t);
-    }
-  }
+  addEntitiesToWorld(world, parent, level.objects);
 
-  const spawnPositions = level.objects.filter(
+  let spawnPositions = level.objects.filter(
     (v) => v.type === "wormgine.worm_spawn",
   ) as WormSpawnRecordedState[];
   for (const team of gameState.getActiveTeams()) {
@@ -231,13 +215,18 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
         `Spawning ${wormInstance.name} / ${wormInstance.team.name} / ${wormInstance.team.playerUserId} ${wormInstance.team.group}`,
         spawnPositions,
       );
-      const spawnPoint = spawnPositions.find(
+      const spawnPointForWorm = spawnPositions.find(
         (s) => s.wormUuid === wormInstance.uuid,
-      )?.tra;
-      if (!spawnPoint) {
+      ) || spawnPositions.find(
+        (s) => s.teamGroup === wormInstance.team.group,
+      ) || spawnPositions.find(
+        (s) => !s.teamGroup,
+      );
+      if (!spawnPointForWorm) {
         throw Error("No location to spawn worm");
       }
-      const pos = Coordinate.fromWorld(spawnPoint);
+      spawnPositions = spawnPositions.filter(s => s !== spawnPointForWorm);
+      const pos = Coordinate.fromScreen(spawnPointForWorm.tra.x, spawnPointForWorm.tra.y);
       const fireFn: FireFn = async (worm, definition, opts) => {
         const newProjectile = definition.fireFn(parent, world, worm, opts);
         if (newProjectile) {
@@ -300,6 +289,9 @@ export default async function runScenario(game: Game<HotReloadGameState>) {
       gameState.playCurrentRound();
     }
     if (next === InnerWormState.Getaway && prev === InnerWormState.Firing) {
+      gameState.setTimer(5000);
+    }
+    if (next === InnerWormState.InactiveWaiting) {
       gameState.setTimer(5000);
     }
   }

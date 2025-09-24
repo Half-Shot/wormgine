@@ -40,11 +40,12 @@ export type OnDamage = () => void;
 export class BitmapTerrain implements IPhysicalEntity {
   public readonly priority = UPDATE_PRIORITY.LOW;
   private static readonly collisionBitmask = collisionGroupBitmask(
-    CollisionGroups.WorldObjects,
+    CollisionGroups.Terrain,
     [
       CollisionGroups.Terrain,
       CollisionGroups.WorldObjects,
       CollisionGroups.Player,
+      CollisionGroups.Fire
     ],
   );
 
@@ -209,8 +210,7 @@ export class BitmapTerrain implements IPhysicalEntity {
           quad.width / (PIXELS_PER_METER * 2),
           quad.height / (PIXELS_PER_METER * 2),
         )
-          .setCollisionGroups(BitmapTerrain.collisionBitmask)
-          .setSolverGroups(BitmapTerrain.collisionBitmask),
+          .setCollisionGroups(BitmapTerrain.collisionBitmask),
 
         RigidBodyDesc.fixed().setTranslation(
           (quad.x + this.sprite.x) / PIXELS_PER_METER,
@@ -239,10 +239,11 @@ export class BitmapTerrain implements IPhysicalEntity {
     // Optmise this check!
     const imageX = point.x * PIXELS_PER_METER - this.sprite.x;
     const imageY = point.y * PIXELS_PER_METER - this.sprite.y;
-    const snapshotX = imageX - radius.pixels - 30;
-    const snapshotY = imageY - radius.pixels - 30;
-    const snapshotWidth = radius.pixels * 3;
-    const snapshotHeight = radius.pixels * 3;
+    const radiusMargin = radius.pixels * 4;
+    const snapshotX = imageX - (radiusMargin/2);
+    const snapshotY = imageY - (radiusMargin/2);
+    const snapshotWidth = radiusMargin;
+    const snapshotHeight = radiusMargin;
 
     // Fetch the current image
     const before = context.getImageData(
@@ -258,6 +259,7 @@ export class BitmapTerrain implements IPhysicalEntity {
     // context.arc(imageX, imageY, radius + 15, 0, 2 * Math.PI);
     // context.fill();
 
+    context.globalCompositeOperation = "destination-out";
     context.fillStyle = "grey";
     context.beginPath();
     context.arc(imageX, imageY, radius.pixels, 0, 2 * Math.PI);
@@ -269,28 +271,7 @@ export class BitmapTerrain implements IPhysicalEntity {
       snapshotWidth,
       snapshotHeight,
     );
-
-    // See what has changed, hopefully a red cricle!
-    for (let i = 0; i < before.data.length; i += 4) {
-      const oldDataValue =
-        before.data[i] +
-        before.data[i + 1] +
-        before.data[i + 2] +
-        before.data[i + 3];
-      const newDataValue =
-        after.data[i] +
-        after.data[i + 1] +
-        after.data[i + 2] +
-        after.data[i + 3];
-      if (oldDataValue !== newDataValue) {
-        // Zero the alpha channel for anything that has changed...like a red cricle
-        after.data[i + 0] = 0;
-        after.data[i + 1] = 0;
-        after.data[i + 2] = 0;
-        after.data[i + 3] = 0;
-      }
-    }
-
+  
     // Show the new image with our newly created hole.
     context.putImageData(after, snapshotX, snapshotY);
 

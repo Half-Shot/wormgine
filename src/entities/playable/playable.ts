@@ -200,7 +200,8 @@ export abstract class PlayableEntity<
       1,
       Math.abs(magnitude(sub(point, this.physObject.body.translation()))),
     );
-    const damage = maxDamage / distance;
+    const damage = opts.forceDamange ?? maxDamage / distance;
+    log.info(`Calculated damage to ${this} to be ${damage} (${maxDamage}/ ${distance})`)
     this.reduceHealth(damage);
     const forceMultiplier = this.conditions
       .keys()

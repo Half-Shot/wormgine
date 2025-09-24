@@ -1,4 +1,4 @@
-import { Graphics, Text } from "pixi.js";
+import { ColorSource, Graphics, Text } from "pixi.js";
 import { PIXELS_PER_METER, RapierPhysicsObject } from "../world";
 import { Ball, Cuboid } from "@dimforge/rapier2d-compat";
 import { DefaultTextStyle } from "./styles";
@@ -14,6 +14,8 @@ export class BodyWireframe {
     },
   });
 
+  public renderColor: ColorSource = 0xFF0000;
+  
   private shouldRender: boolean;
   public set enabled(value: boolean) {
     this.shouldRender = value;
@@ -67,7 +69,7 @@ export class BodyWireframe {
     }
     this.gfx
       .circle(this.width / 2, this.height / 2, 3)
-      .stroke({ width: 1, color: 0xff0000 });
+      .stroke({ width: 1, color: this.renderColor });
     if (this.parent.collider.shape instanceof Ball === false) {
       this.gfx.rect(0, 0, this.width, this.height);
     } else {

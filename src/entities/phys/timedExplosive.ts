@@ -52,7 +52,7 @@ export abstract class TimedExplosive<
     sprite: Sprite,
     body: RapierPhysicsObject,
     gameWorld: GameWorld,
-    private readonly parent: Container,
+    protected readonly parent: Container,
     protected readonly opts: TimedExplosiveOpts,
   ) {
     super(sprite, body, gameWorld);
